@@ -1,0 +1,33 @@
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BASE_DIR = Path(__file__).parent.parent
+
+class Settings:
+    APP_NAME: str = os.getenv("APP_NAME", "Labourious")
+    APP_VERSION: str = os.getenv("APP_VERSION", "0.1.0")
+    DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
+
+    HOST: str = os.getenv("HOST", "127.0.0.1")
+    PORT: int = int(os.getenv("PORT", "8000"))
+
+    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/data/labourious.db")
+
+    VAULT_PASSWORD: str = os.getenv("VAULT_PASSWORD", "")
+    VAULT_SALT: str = os.getenv("VAULT_SALT", "labourious-salt-v1")
+
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_DIR: str = os.getenv("LOG_DIR", str(BASE_DIR / "logs"))
+
+    CORS_ORIGINS: list = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
+
+    WS_HEARTBEAT_INTERVAL: int = int(os.getenv("WS_HEARTBEAT_INTERVAL", "30"))
+
+    EXCHANGE_API_KEY: str = os.getenv("EXCHANGE_API_KEY", "")
+    EXCHANGE_API_SECRET: str = os.getenv("EXCHANGE_API_SECRET", "")
+    EXCHANGE_TESTNET: bool = os.getenv("EXCHANGE_TESTNET", "true").lower() == "true"
+
+settings = Settings()
