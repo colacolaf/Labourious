@@ -36,6 +36,9 @@ app.add_middleware(
 
 app.include_router(health_router)
 
+from backend.middleware.error_handler import register_error_handlers
+register_error_handlers(app)
+
 
 @app.get("/")
 async def root():

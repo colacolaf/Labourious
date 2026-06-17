@@ -105,7 +105,7 @@ class Trade(Base):
 
     entry_reason = Column(Text, nullable=True)
     exit_reason = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    trade_metadata = Column(JSON, nullable=True)
 
     opened_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     closed_at = Column(DateTime, nullable=True)
