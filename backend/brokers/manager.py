@@ -18,3 +18,8 @@ def get_connector(broker: str, vault) -> BrokerConnector:
             secret=vault.get("binance_secret"),
         )
     raise ValueError(f"Unsupported broker: {broker}")
+
+
+def list_brokers() -> list[str]:
+    """Return supported broker names."""
+    return ["alpaca", "binance"]

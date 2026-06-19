@@ -1,16 +1,23 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import useDashboardStore from './stores/dashboard.store';
 import useAgentsStore from './stores/agents.store';
-import { ROUTES, POLL_INTERVALS } from './utils/constants';
+import { useWebSocket } from './hooks/useWebSocket';
+import { POLL_INTERVALS } from './utils/constants';
+
+// Pages
+import Dashboard from './pages/Dashboard';
+import WarroomDay from './pages/WarroomDay';
+import WarroomSwing from './pages/WarroomSwing';
+import WarroomLongTerm from './pages/WarroomLongTerm';
+import ContextBuilder from './components/Warroom/ContextBuilder';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -8 },
 };
-
 const pageTransition = { duration: 0.18, ease: 'easeOut' };
 
 function PlaceholderPage({ title }) {
@@ -34,7 +41,7 @@ function PlaceholderPage({ title }) {
     >
       <span style={{ fontSize: '2rem', color: 'var(--color-accent-primary)' }}>⬡</span>
       <h2 style={{ color: 'var(--color-text-primary)', fontSize: '1.25rem' }}>{title}</h2>
-      <p style={{ fontSize: '0.75rem' }}>Phase 2 implementation pending</p>
+      <p style={{ fontSize: '0.75rem' }}>Phase 3 implementation pending</p>
     </motion.div>
   );
 }
@@ -44,8 +51,8 @@ function AppShell({ children }) {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'var(--sidebar-width) 1fr',
-        gridTemplateRows: 'var(--topbar-height) 1fr',
+        gridTemplateColumns: 'var(--sidebar-width, 200px) 1fr',
+        gridTemplateRows: 'var(--topbar-height, 48px) 1fr',
         height: '100vh',
         background: 'var(--color-bg-primary)',
       }}
@@ -57,7 +64,7 @@ function AppShell({ children }) {
           gridColumn: 2,
           gridRow: 2,
           overflow: 'auto',
-          padding: 'var(--space-6)',
+          padding: 'var(--space-6, 1.5rem)',
         }}
       >
         {children}
@@ -71,8 +78,8 @@ function TopBar() {
 
   const statusColor = {
     connected: 'var(--color-accent-primary)',
-    disconnected: 'var(--color-accent-danger)',
-    degraded: 'var(--color-accent-warning)',
+    disconnected: 'var(--color-accent-danger, #ff4444)',
+    degraded: 'var(--color-accent-warning, #ffb020)',
     unknown: 'var(--color-text-muted)',
   }[backendStatus] ?? 'var(--color-text-muted)';
 
@@ -84,12 +91,12 @@ function TopBar() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 var(--space-6)',
+        padding: '0 var(--space-6, 1.5rem)',
         borderBottom: '1px solid var(--color-border)',
         background: 'var(--color-bg-secondary)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3, 0.75rem)' }}>
         <span style={{ color: 'var(--color-accent-primary)', fontSize: '1.25rem' }}>⬡</span>
         <span
           style={{
@@ -102,26 +109,17 @@ function TopBar() {
           LABOURIOUS
         </span>
       </div>
-
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 'var(--space-2)',
+          gap: 'var(--space-2, 0.5rem)',
           fontFamily: 'var(--font-mono)',
-          fontSize: 'var(--font-size-xs)',
+          fontSize: 'var(--font-size-xs, 0.7rem)',
           color: 'var(--color-text-muted)',
         }}
       >
-        <span
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: statusColor,
-            display: 'inline-block',
-          }}
-        />
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, display: 'inline-block' }} />
         <span style={{ color: statusColor }}>{backendStatus.toUpperCase()}</span>
         {backendVersion && <span>v{backendVersion}</span>}
       </div>
@@ -129,16 +127,18 @@ function TopBar() {
   );
 }
 
-function Sidebar() {
-  const navItems = [
-    { label: 'Dashboard', path: ROUTES.DASHBOARD, icon: '◈' },
-    { label: 'Agents', path: ROUTES.AGENTS, icon: '◉' },
-    { label: 'Trades', path: ROUTES.TRADES, icon: '◇' },
-    { label: 'Performance', path: ROUTES.PERFORMANCE, icon: '◆' },
-    { label: 'Vault', path: ROUTES.VAULT, icon: '◫' },
-    { label: 'Settings', path: ROUTES.SETTINGS, icon: '⊙' },
-  ];
+const NAV_ITEMS = [
+  { label: 'Dashboard', path: '/', icon: '◈', end: true },
+  { label: 'Day Trading', path: '/warroom/day', icon: '◉' },
+  { label: 'Swing', path: '/warroom/swing', icon: '◎' },
+  { label: 'Long-Term', path: '/warroom/long', icon: '◌' },
+  { label: 'New Agent', path: '/agents/new', icon: '✦' },
+  { label: 'Trades', path: '/trades', icon: '◇' },
+  { label: 'Vault', path: '/vault', icon: '◫' },
+  { label: 'Settings', path: '/settings', icon: '⊙' },
+];
 
+function Sidebar() {
   return (
     <nav
       style={{
@@ -146,42 +146,44 @@ function Sidebar() {
         gridRow: 2,
         borderRight: '1px solid var(--color-border)',
         background: 'var(--color-bg-secondary)',
-        padding: 'var(--space-4) 0',
+        padding: 'var(--space-4, 1rem) 0',
         display: 'flex',
         flexDirection: 'column',
-        gap: 'var(--space-1)',
+        gap: 'var(--space-1, 0.25rem)',
+        overflowY: 'auto',
       }}
     >
-      {navItems.map((item) => (
-        <a
+      {NAV_ITEMS.map((item) => (
+        <NavLink
           key={item.path}
-          href={item.path}
-          style={{
+          to={item.path}
+          end={item.end}
+          style={({ isActive }) => ({
             display: 'flex',
             alignItems: 'center',
-            gap: 'var(--space-3)',
-            padding: 'var(--space-3) var(--space-6)',
+            gap: 'var(--space-3, 0.75rem)',
+            padding: 'var(--space-3, 0.75rem) var(--space-6, 1.5rem)',
             fontFamily: 'var(--font-mono)',
-            fontSize: 'var(--font-size-sm)',
-            color: 'var(--color-text-secondary)',
+            fontSize: 'var(--font-size-sm, 0.8rem)',
+            color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
             textDecoration: 'none',
-            transition: 'color var(--transition-fast)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'var(--color-text-primary)';
-            e.currentTarget.style.background = 'var(--color-bg-tertiary)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'var(--color-text-secondary)';
-            e.currentTarget.style.background = 'transparent';
-          }}
+            background: isActive ? 'var(--color-bg-tertiary)' : 'transparent',
+            borderLeft: isActive ? '2px solid var(--color-accent-primary)' : '2px solid transparent',
+            transition: 'all 0.12s',
+          })}
         >
           <span style={{ color: 'var(--color-accent-primary)' }}>{item.icon}</span>
           {item.label}
-        </a>
+        </NavLink>
       ))}
     </nav>
   );
+}
+
+// Initialise WS at app level (singleton)
+function WSInitialiser() {
+  useWebSocket();
+  return null;
 }
 
 export default function App() {
@@ -206,16 +208,23 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <WSInitialiser />
       <AppShell>
         <AnimatePresence mode="wait">
           <Routes>
-            <Route path={ROUTES.DASHBOARD} element={<PlaceholderPage title="Dashboard" />} />
-            <Route path={ROUTES.AGENTS} element={<PlaceholderPage title="Agents" />} />
-            <Route path={ROUTES.TRADES} element={<PlaceholderPage title="Trades" />} />
-            <Route path={ROUTES.PERFORMANCE} element={<PlaceholderPage title="Performance" />} />
-            <Route path={ROUTES.VAULT} element={<PlaceholderPage title="Vault" />} />
-            <Route path={ROUTES.SETTINGS} element={<PlaceholderPage title="Settings" />} />
-            <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/warroom/day" element={<WarroomDay />} />
+            <Route path="/warroom/swing" element={<WarroomSwing />} />
+            <Route path="/warroom/long" element={<WarroomLongTerm />} />
+            <Route path="/agents/new" element={
+              <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                <ContextBuilder />
+              </motion.div>
+            } />
+            <Route path="/trades" element={<PlaceholderPage title="Trades" />} />
+            <Route path="/vault" element={<PlaceholderPage title="Vault" />} />
+            <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>
       </AppShell>

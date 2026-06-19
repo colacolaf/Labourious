@@ -1,4 +1,4 @@
-import { PlaceholderPage } from '../components/PlaceholderPage';
+import Warroom from '../components/Warroom/Warroom';
 export default function WarroomDay() {
-  return <PlaceholderPage title="Day Trading Room" />;
+  return <Warroom room="day_trading" />;
 }

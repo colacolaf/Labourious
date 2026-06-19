@@ -60,6 +60,14 @@ export const performanceApi = {
   portfolio: (params) => apiClient.get('/api/performance/portfolio', { params }),
 };
 
+export const dashboardApi = {
+  summary: () => apiClient.get('/api/dashboard/summary'),
+  performance: () => apiClient.get('/api/dashboard/performance'),
+  equityCurve: (days = 30) => apiClient.get('/api/dashboard/equity-curve', { params: { days } }),
+  allocation: () => apiClient.get('/api/dashboard/allocation'),
+  risk: () => apiClient.get('/api/dashboard/risk'),
+};
+
 export const vaultApi = {
   listKeys: () => apiClient.get('/api/vault/keys'),
   setKey: (data) => apiClient.post('/api/vault/set', data),

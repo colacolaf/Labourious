@@ -1,4 +1,4 @@
-import { PlaceholderPage } from '../components/PlaceholderPage';
+import Warroom from '../components/Warroom/Warroom';
 export default function WarroomSwing() {
-  return <PlaceholderPage title="Swing Trading Room" />;
+  return <Warroom room="swing_trading" />;
 }

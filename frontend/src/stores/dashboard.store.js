@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { performanceApi, healthApi } from '../utils/api-client';
+import { performanceApi, healthApi, dashboardApi } from '../utils/api-client';
 
 const useDashboardStore = create(
   devtools(
@@ -32,7 +32,13 @@ const useDashboardStore = create(
       fetchPortfolioSummary: async () => {
         set({ portfolioLoading: true, error: null });
         try {
-          const data = await performanceApi.summary();
+          // Try dashboard/summary first (Phase 2 endpoint), fall back to performance/summary
+          let data;
+          try {
+            data = await dashboardApi.summary();
+          } catch {
+            data = await performanceApi.summary();
+          }
           set({
             portfolio: {
               totalValue: data.total_value ?? 0,
@@ -41,7 +47,7 @@ const useDashboardStore = create(
               realizedPnl: data.realized_pnl ?? 0,
               totalPnl: data.total_pnl ?? 0,
               totalPnlPct: data.total_pnl_pct ?? 0,
-              activeAgents: data.active_agents ?? 0,
+              activeAgents: data.active_agents ?? data.running_agents ?? 0,
               totalTrades: data.total_trades ?? 0,
               winRate: data.win_rate ?? 0,
             },
@@ -53,10 +59,10 @@ const useDashboardStore = create(
         }
       },
 
-      fetchPortfolioHistory: async (params) => {
+      fetchPortfolioHistory: async (days = 30) => {
         try {
-          const data = await performanceApi.portfolio(params);
-          set({ portfolioHistory: Array.isArray(data) ? data : data?.items ?? [] });
+          const data = await dashboardApi.equityCurve(days);
+          set({ portfolioHistory: Array.isArray(data) ? data : [] });
         } catch (err) {
           set({ error: err.message });
         }

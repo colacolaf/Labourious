@@ -1,4 +1,4 @@
-import { PlaceholderPage } from '../components/PlaceholderPage';
+import Warroom from '../components/Warroom/Warroom';
 export default function WarroomLongTerm() {
-  return <PlaceholderPage title="Long-Term Investment Room" />;
+  return <Warroom room="long_term" />;
 }
