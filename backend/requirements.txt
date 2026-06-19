@@ -14,7 +14,27 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 orjson==3.10.7
 
+# Broker connectivity
+alpaca-trade-api==3.3.2
+ccxt==4.3.99
+krakenex==2.1.0
+ib_insync==0.9.86
+
+# Agent engine
+apscheduler==3.10.4
+pandas==2.2.3
+pandas-ta==0.3.14b
+numpy==1.26.4
+yfinance==0.2.44
+python-dateutil==2.9.0
+
+# LLM
+anthropic==0.39.0
+litellm==1.51.3
+
 # Testing
 pytest==8.3.3
 pytest-asyncio==0.24.0
 python-json-logger==2.0.7
+faker==30.8.1
+responses==0.25.3

@@ -64,6 +64,19 @@ class Agent(Base):
     is_paper_trading = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)
 
+    # Phase 2
+    room = Column(String(50), default="day_trading")
+    broker = Column(String(50), default="alpaca")
+    context_file_path = Column(String(255), nullable=True)
+    confidence_score = Column(Integer, default=10)
+    execution_mode = Column(String(20), default="human_in_loop")
+    check_frequency = Column(Integer, default=300)
+    paper_trading_balance = Column(Float, default=100000.0)
+    consecutive_losses = Column(Integer, default=0)
+    grid_col = Column(Integer, default=0)
+    grid_row = Column(Integer, default=0)
+    use_local_llm = Column(Boolean, default=True)
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_heartbeat = Column(DateTime, nullable=True)
@@ -155,3 +168,35 @@ class Performance(Base):
 
     def __repr__(self) -> str:
         return f"<Performance(id={self.id}, agent_id={self.agent_id}, period={self.period})>"
+
+
+class BrokerConfig(Base):
+    __tablename__ = "broker_configs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    broker_name = Column(String(50), nullable=False, unique=True)
+    connected_at = Column(DateTime, nullable=True)
+    last_tested_at = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=False)
+
+
+class Log(Base):
+    __tablename__ = "logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    agent_id = Column(Integer, ForeignKey("agents.id", ondelete="SET NULL"), nullable=True)
+    level = Column(String(20), nullable=False, default="INFO")
+    message = Column(Text, nullable=False)
+    extra_json = Column(JSON, nullable=True)
+
+
+class PendingApproval(Base):
+    __tablename__ = "pending_approvals"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trade_id = Column(String(100), nullable=False, unique=True)
+    agent_id = Column(Integer, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
+    decision_json = Column(JSON, nullable=False)
+    timeout_at = Column(DateTime, nullable=False)
+    status = Column(String(20), nullable=False, default="waiting")
