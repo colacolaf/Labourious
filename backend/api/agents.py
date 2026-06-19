@@ -252,6 +252,42 @@ async def resume_agent(agent_id: int):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.post("/{agent_id}/approve")
+async def approve_trade(agent_id: int, data: dict):
+    """Resolve a pending human-in-loop trade approval."""
+    trade_id = data.get("trade_id")
+    approved = data.get("approved", False)
+    if not trade_id:
+        raise HTTPException(status_code=400, detail="trade_id required")
+    from backend.main import _orchestrator
+    if _orchestrator and hasattr(_orchestrator, "executor"):
+        result = await _orchestrator.executor.approve_trade(trade_id, approved)
+        return result
+    return {"status": "acknowledged", "trade_id": trade_id, "approved": approved}
+
+
+@router.post("/{agent_id}/update-context")
+async def update_agent_context(agent_id: int, data: dict):
+    """Update agent's context file content."""
+    content = data.get("content", "")
+    try:
+        with get_db_session(settings.DATABASE_URL) as session:
+            result = session.execute(select(Agent).where(Agent.id == agent_id))
+            agent = result.scalar_one_or_none()
+            if not agent:
+                raise HTTPException(status_code=404, detail="Agent not found")
+            cfg = agent.strategy_config or {}
+            cfg["context_content"] = content
+            agent.strategy_config = cfg
+            agent.updated_at = datetime.utcnow()
+            session.add(agent)
+            return {"status": "updated", "agent_id": agent_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{agent_id}/trades", response_model=list[TradeResponse])
 async def get_agent_trades(agent_id: int):
     """Get last 50 trades for agent."""

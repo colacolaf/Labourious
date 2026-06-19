@@ -42,6 +42,13 @@ def set_approval_handler(fn):
     _approval_handler = fn
 
 
+async def _handle_inbound(data: dict):
+    """Route inbound WS messages."""
+    if data.get("type") == "approve_trade":
+        if _approval_handler:
+            await _approval_handler(data)
+
+
 @router.websocket("/connect")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time trading updates and trade approvals."""
@@ -50,9 +57,18 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_json({"type": "connected"})
         while True:
             data = await websocket.receive_json()
-            # Route inbound messages
-            if data.get("type") == "approve_trade":
-                if _approval_handler:
-                    await _approval_handler(data)
+            await _handle_inbound(data)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+
+@router.websocket("")
+async def websocket_root(websocket: WebSocket):
+    """WS endpoint at /ws (spec-compliant path)."""
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            await _handle_inbound(data)
     except WebSocketDisconnect:
         manager.disconnect(websocket)

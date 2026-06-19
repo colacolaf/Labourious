@@ -80,3 +80,15 @@ async def test_broker_connection(broker_name: str):
 async def get_available_brokers():
     """List supported broker names."""
     return {"brokers": list_brokers()}
+
+
+@router.get("/{broker_name}/accounts")
+async def get_broker_accounts(broker_name: str):
+    """Get account info for a connected broker."""
+    if broker_name not in list_brokers():
+        raise HTTPException(status_code=400, detail=f"Unknown broker: {broker_name}")
+    return {
+        "broker": broker_name,
+        "accounts": [],
+        "note": "Configure vault credentials to see live accounts",
+    }

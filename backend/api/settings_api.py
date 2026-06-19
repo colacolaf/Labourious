@@ -52,3 +52,24 @@ async def update_allocation_settings(data: AllocationSettings):
     global _allocation_settings
     _allocation_settings = data
     return {"status": "updated", "allocation": _allocation_settings.model_dump()}
+
+
+class VaultPasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/vault-password")
+async def change_vault_password(data: VaultPasswordChange):
+    """Change vault encryption password."""
+    from backend.vault.encrypted_vault import EncryptedVault, InvalidPasswordError
+    from backend.config import settings as cfg
+    vault_path = cfg.BASE_DIR / "data" / "vault.db"
+    try:
+        vault = EncryptedVault(vault_path, data.current_password)
+        vault.rotate_password(data.new_password)
+        return {"status": "ok", "message": "Vault password changed"}
+    except InvalidPasswordError:
+        raise HTTPException(status_code=401, detail="Current password incorrect")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
