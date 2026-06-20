@@ -14,6 +14,9 @@ import sqlalchemy as sa
 # revision identifiers, used by Alembic.
 revision: str = '692528d26114'
 down_revision: Union[str, Sequence[str], None] = '8f0215e54b42'
+
+# NOTE: This migration has agent_id as nullable=False with FK constraint,
+# but will be fixed by a subsequent migration to make it nullable.
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
