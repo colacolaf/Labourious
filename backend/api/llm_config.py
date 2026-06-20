@@ -24,7 +24,8 @@ def _vault():
         from pathlib import Path
         vault_path = Path(BASE_DIR) / "data" / "vault.db"
         return EncryptedVault(vault_path, settings.VAULT_PASSWORD)
-    except Exception:
+    except Exception as e:
+        logger.warning(f"vault open error: {e}")
         return None
 
 
