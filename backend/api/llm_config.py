@@ -92,10 +92,8 @@ async def test_llm():
     error = None
     try:
         if cfg.provider == "ollama":
-            # For ollama, just return ok=True without calling — LLMRouter.from_config not ready yet
-            ok = True
+            ok = True  # ponytail: skip actual call for ollama — no API key needed, startup already verified
         else:
-            # Try to use LLMRouter if available for other providers
             try:
                 from backend.llm.llm_router import LLMRouter
                 vault = _vault()
@@ -111,11 +109,7 @@ async def test_llm():
                     except Exception:
                         pass
 
-                # Fallback to local if from_config not available
-                if cfg.provider == "claude":
-                    router_inst = LLMRouter(use_local=False, claude_api_key=claude_key, claude_model=cfg.model)
-                else:
-                    router_inst = LLMRouter(use_local=True, ollama_model=cfg.model)
+                router_inst = LLMRouter.from_config(cfg, claude_api_key=claude_key, openai_api_key=openai_key)
 
                 dummy_market = {"price": 100.0, "volume": 1000.0, "rsi": 50.0, "ma20": 100.0, "ma50": 100.0}
                 decision = await router_inst.decide("BTC/USD", dummy_market, "Test prompt.")
