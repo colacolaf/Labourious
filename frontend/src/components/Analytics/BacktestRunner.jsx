@@ -22,7 +22,7 @@ const labelStyle = {
 };
 
 export default function BacktestRunner({ agents = [] }) {
-  const { runBacktest, backtestStatus, backtestResult, backtestHistory } = useAnalyticsStore();
+  const { runBacktest, backtestStatus, backtestResult } = useAnalyticsStore();
   const [form, setForm] = useState({
     agent_id: agents[0]?.id ?? '',
     start_date: '2024-01-01',
