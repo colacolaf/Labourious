@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { llmApi } from '../../utils/api-client';
 
-// ponytail: inline cost formula — avoids a separate js module for two lines
-const PRICES = { claude: { 'claude-sonnet-4-6': 3.0 / 1e6 }, openai: { 'gpt-4o': 5.0 / 1e6 } };
-const TOKENS = 800;
-function estimateCost(provider, model, checkFreq) {
-  if (provider === 'ollama' || !checkFreq) return 0;
-  const price = PRICES[provider]?.[model] ?? 0;
-  if (!price) return null; // unknown model
-  const callsPerMonth = (86400 / checkFreq) * 30;
-  return (TOKENS * callsPerMonth * price).toFixed(2);
-}
-
 const mono = { fontFamily: 'var(--font-mono)', fontSize: 'var(--font-size-sm)' };
 const label = { ...mono, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', letterSpacing: '0.08em' };
 const inputStyle = {
@@ -51,6 +40,7 @@ export default function LLMTab({ agent }) {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);
   const [savingKey, setSavingKey] = useState(false);
+  const [cost, setCost] = useState(null);
 
   useEffect(() => {
     llmApi.getConfig().then((data) => {
@@ -59,6 +49,13 @@ export default function LLMTab({ agent }) {
       setModel(data.model);
     }).catch(() => {});
   }, []);
+
+  const checkFreq = agent?.check_frequency ?? 300;
+
+  useEffect(() => {
+    if (selected === 'ollama') { setCost(0); return; }
+    llmApi.getCost(selected, model, checkFreq).then(d => setCost(d.cost)).catch(() => setCost(null));
+  }, [selected, model, checkFreq]);
 
   const handleTest = async () => {
     setTesting(true);
@@ -104,8 +101,6 @@ export default function LLMTab({ agent }) {
     }
   };
 
-  const checkFreq = agent?.check_frequency ?? 300;
-  const cost = estimateCost(selected, model, checkFreq);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', padding: 'var(--space-2) 0' }}>

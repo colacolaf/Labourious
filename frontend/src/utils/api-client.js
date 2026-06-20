@@ -109,6 +109,8 @@ export const llmApi = {
   patchConfig: (data) => apiClient.patch('/api/llm/config', data),
   test: () => apiClient.post('/api/llm/test'),
   saveKey: (keyName, value) => apiClient.post('/api/llm/key', { key_name: keyName, value }),
+  getCost: (provider, model, checkFrequency) =>
+    apiClient.get(`/api/llm/cost`, { params: { provider, model, check_frequency: checkFrequency } }),
 };
 
 export default apiClient;
