@@ -121,6 +121,11 @@ class LLMRouter:
                 elif self.provider == "claude" and self._claude:
                     raw = await self._claude.generate(prompt)
                 else:
+                    if self.provider != "ollama":
+                        logger.warning(
+                            f"LLM routing degraded: provider={self.provider!r} client not initialised "
+                            f"(missing API key?), falling back to Ollama"
+                        )
                     raw = await self._ollama.generate(prompt)
 
                 if not raw:
