@@ -44,7 +44,6 @@ Respond ONLY with raw JSON, no markdown:
 
 
 def _parse(text: str) -> Optional[TradeDecision]:
-    """Try raw JSON, then regex-extracted JSON."""
     for candidate in [text, *_JSON_RE.findall(text)]:
         try:
             return TradeDecision.model_validate(json.loads(candidate))
@@ -61,13 +60,38 @@ class LLMRouter:
         ollama_model: str = "mistral",
         claude_api_key: Optional[str] = None,
         claude_model: str = "claude-sonnet-4-6",
+        openai_api_key: Optional[str] = None,
+        openai_model: str = "gpt-4o",
+        provider: str = "ollama",
     ):
         self.use_local = use_local
-        self._ollama = OllamaClient(base_url=ollama_url, model=ollama_model) if use_local else None
+        self.provider = provider
+        self._ollama = OllamaClient(base_url=ollama_url, model=ollama_model)
         self._claude = (
             ClaudeClient(api_key=claude_api_key, model=claude_model)
-            if not use_local and claude_api_key
-            else None
+            if claude_api_key else None
+        )
+        self._openai = None
+        if openai_api_key:
+            from backend.llm.openai_client import OpenAIClient
+            self._openai = OpenAIClient(api_key=openai_api_key, model=openai_model)
+
+    @classmethod
+    def from_config(
+        cls,
+        cfg,  # LLMConfig
+        claude_api_key: Optional[str] = None,
+        openai_api_key: Optional[str] = None,
+    ) -> "LLMRouter":
+        return cls(
+            use_local=cfg.provider == "ollama",
+            ollama_url=cfg.ollama_url,
+            ollama_model=cfg.model if cfg.provider == "ollama" else "mistral",
+            claude_api_key=claude_api_key,
+            claude_model=cfg.model if cfg.provider == "claude" else "claude-sonnet-4-6",
+            openai_api_key=openai_api_key,
+            openai_model=cfg.model if cfg.provider == "openai" else "gpt-4o",
+            provider=cfg.provider,
         )
 
     def build_prompt(self, symbol: str, market_data: dict, context: str) -> str:
@@ -92,13 +116,12 @@ class LLMRouter:
 
         for attempt in range(max_retries):
             try:
-                if self.use_local and self._ollama:
-                    raw = await self._ollama.generate(prompt)
-                elif self._claude:
+                if self.provider == "openai" and self._openai:
+                    raw = await self._openai.generate(prompt)
+                elif self.provider == "claude" and self._claude:
                     raw = await self._claude.generate(prompt)
                 else:
-                    logger.error("no LLM configured")
-                    return _HOLD
+                    raw = await self._ollama.generate(prompt)
 
                 if not raw:
                     logger.warning(f"empty LLM response (attempt {attempt + 1})")
@@ -109,7 +132,6 @@ class LLMRouter:
                         return decision
                     logger.warning(f"parse failed (attempt {attempt + 1}): {raw[:80]}")
 
-                # append clarification for next attempt
                 prompt += "\n\nPrevious response invalid. Reply ONLY with raw JSON."
             except Exception as e:
                 logger.error(f"LLM error attempt {attempt + 1}: {e}")
