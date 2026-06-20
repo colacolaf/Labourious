@@ -3,7 +3,7 @@ import time
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.llm.config import read_config, write_config, LLMConfig
 from backend.config import settings, BASE_DIR
@@ -128,7 +128,7 @@ async def test_llm():
 
 class VaultKeyRequest(BaseModel):
     key_name: str
-    value: str
+    value: str = Field(min_length=1)
 
 
 @router.post("/key")
