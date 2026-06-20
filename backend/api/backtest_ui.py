@@ -70,8 +70,12 @@ async def _run_backtest_task(run_id: str, req: BacktestRunRequest) -> None:
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
 
         if proc.returncode == 0:
-            result_data = json.loads(stdout.decode())
-            status = "done"
+            try:
+                result_data = json.loads(stdout.decode())
+                status = "done"
+            except json.JSONDecodeError as e:
+                result_data = {"error": f"Invalid JSON from backtest: {str(e)[:100]}", "raw_output": stdout.decode()[:200]}
+                status = "failed"
         else:
             result_data = {"error": stderr.decode()[:500]}
             status = "failed"

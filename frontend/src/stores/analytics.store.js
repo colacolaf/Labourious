@@ -17,6 +17,7 @@ const useAnalyticsStore = create(
       backtestHistory: [],
       loading: false,
       error: null,
+      _pollHandle: null,
 
       fetchPortfolio: async () => {
         try {
@@ -76,20 +77,29 @@ const useAnalyticsStore = create(
         }
       },
 
-      _pollBacktest: async (runId) => {
+      _pollBacktest: (runId) => {
         const poll = async () => {
           try {
             const data = await backtestApi.poll(runId);
             if (data.status === 'running') {
-              setTimeout(poll, 2000);
+              const handle = setTimeout(poll, 2000);
+              set({ _pollHandle: handle });
             } else {
-              set({ backtestStatus: data.status, backtestResult: data.result_json });
+              set({ backtestStatus: data.status, backtestResult: data.result_json, _pollHandle: null });
             }
           } catch (err) {
-            set({ backtestStatus: 'failed', error: err.message });
+            set({ backtestStatus: 'failed', error: err.message, _pollHandle: null });
           }
         };
         poll();
+      },
+
+      cancelPoll: () => {
+        const { _pollHandle } = get();
+        if (_pollHandle) {
+          clearTimeout(_pollHandle);
+          set({ _pollHandle: null, backtestStatus: null });
+        }
       },
 
       fetchBacktestHistory: async (agentId = null) => {
