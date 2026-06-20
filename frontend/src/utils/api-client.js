@@ -75,4 +75,33 @@ export const vaultApi = {
   testConnection: (exchange) => apiClient.post(`/api/vault/test/${exchange}`),
 };
 
+export const analyticsApi = {
+  portfolio: () => apiClient.get('/api/analytics/portfolio'),
+  equityCurve: (days = 30, agentId = null) => {
+    const params = new URLSearchParams({ days });
+    if (agentId != null) params.append('agent_id', agentId);
+    return apiClient.get(`/api/analytics/equity-curve?${params}`);
+  },
+  leaderboard: (sortBy = 'return') =>
+    apiClient.get(`/api/analytics/leaderboard?sort_by=${sortBy}`),
+  correlation: () => apiClient.get('/api/analytics/correlation'),
+  attribution: (dateStr = null) => {
+    const url = dateStr
+      ? `/api/analytics/attribution?date=${dateStr}`
+      : '/api/analytics/attribution';
+    return apiClient.get(url);
+  },
+};
+
+export const backtestApi = {
+  run: (payload) => apiClient.post('/api/backtest/run', payload),
+  poll: (runId) => apiClient.get(`/api/backtest/${runId}`),
+  history: (agentId = null) => {
+    const url = agentId != null
+      ? `/api/backtest/history?agent_id=${agentId}`
+      : '/api/backtest/history';
+    return apiClient.get(url);
+  },
+};
+
 export default apiClient;
