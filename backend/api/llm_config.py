@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from backend.llm.config import read_config, write_config, LLMConfig
-from backend.config import settings
+from backend.config import settings, BASE_DIR
 from backend.utils.logger import setup_logger
 
 router = APIRouter(prefix="/api/llm", tags=["llm"])
@@ -22,7 +22,7 @@ def _vault():
     try:
         from backend.vault.encrypted_vault import EncryptedVault
         from pathlib import Path
-        vault_path = Path(settings.BASE_DIR) / "data" / "vault.db"
+        vault_path = Path(BASE_DIR) / "data" / "vault.db"
         return EncryptedVault(vault_path, settings.VAULT_PASSWORD)
     except Exception:
         return None
