@@ -1,5 +1,4 @@
 import math
-from typing import Optional
 
 
 def compute_sharpe(daily_returns: list[float], risk_free_rate: float = 0.0) -> float:
