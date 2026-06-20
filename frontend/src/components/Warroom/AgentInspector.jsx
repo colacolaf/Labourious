@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import useAgentsStore from '../../stores/agents.store';
 import { tradesApi, performanceApi } from '../../utils/api-client';
+import LLMTab from './LLMTab';
 
-const TABS = ['Overview', 'Trades', 'Rules', 'Performance', 'Settings'];
+const TABS = ['Overview', 'Trades', 'Rules', 'Performance', 'Settings', 'LLM'];
 
 function Row({ label, value, valueColor }) {
   return (
@@ -243,6 +244,7 @@ export default function AgentInspector({ agent, onClose }) {
               {tab === 'Rules' && <RulesTab agent={agent} />}
               {tab === 'Performance' && <PerformanceTab agentId={agent.id} />}
               {tab === 'Settings' && <SettingsTab agent={agent} />}
+              {tab === 'LLM' && <LLMTab agent={agent} />}
             </div>
           </motion.div>
         </>

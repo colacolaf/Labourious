@@ -104,4 +104,11 @@ export const backtestApi = {
   },
 };
 
+export const llmApi = {
+  getConfig: () => apiClient.get('/api/llm/config'),
+  patchConfig: (data) => apiClient.patch('/api/llm/config', data),
+  test: () => apiClient.post('/api/llm/test'),
+  saveKey: (keyName, value) => apiClient.post('/api/llm/key', { key_name: keyName, value }),
+};
+
 export default apiClient;
