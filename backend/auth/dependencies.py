@@ -51,10 +51,10 @@ async def get_current_user(
 
 def require_role(*allowed_roles):
     """Dependency factory: check user has one of the allowed roles."""
+    allowed = {r.value if hasattr(r, 'value') else r for r in allowed_roles}
     async def check_role(current_user: User = Depends(get_current_user)) -> User:
-        # Check both UserRole enum and string value for flexibility
-        user_role_value = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
-        if current_user.role not in allowed_roles and user_role_value not in allowed_roles:
+        role_val = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
+        if role_val not in allowed:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",

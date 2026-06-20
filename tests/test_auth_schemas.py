@@ -6,14 +6,14 @@ from backend.auth.utils import create_access_token, create_refresh_token, decode
 
 
 def test_user_create_schema():
-    data = UserCreate(username="alice", email="alice@example.com", password="secure123")
+    data = UserCreate(username="alice", email="alice@example.com", password="SecurePass123!")
     assert data.username == "alice"
     assert data.email == "alice@example.com"
 
 
 def test_user_create_invalid_email():
     with pytest.raises(ValidationError):
-        UserCreate(username="alice", email="not-an-email", password="secure123")
+        UserCreate(username="alice", email="not-an-email", password="SecurePass123!")
 
 
 def test_user_out_no_password():

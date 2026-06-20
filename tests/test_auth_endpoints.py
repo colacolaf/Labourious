@@ -38,7 +38,7 @@ def admin_user(test_db):
         id="admin-1",
         username="admin",
         email="admin@example.com",
-        hashed_password=hash_password("adminpass123"),
+        hashed_password=hash_password("AdminPass123!"),
         role=UserRole.ADMIN,
     )
     test_db.add(user)
@@ -51,7 +51,7 @@ def trader_user(test_db):
         id="trader-1",
         username="trader",
         email="trader@example.com",
-        hashed_password=hash_password("traderpass123"),
+        hashed_password=hash_password("TraderPass123!"),
         role=UserRole.TRADER,
     )
     test_db.add(user)
@@ -62,7 +62,7 @@ def test_register_success(client):
     response = client.post("/api/auth/register", json={
         "username": "newuser",
         "email": "new@example.com",
-        "password": "SecurePass123"
+        "password": "SecurePass123!"
     })
     assert response.status_code == 201
     data = response.json()
@@ -73,7 +73,7 @@ def test_register_duplicate_username(client, trader_user):
     response = client.post("/api/auth/register", json={
         "username": "trader",
         "email": "other@example.com",
-        "password": "SecurePass123"
+        "password": "SecurePass123!"
     })
     assert response.status_code == 409
 
@@ -81,14 +81,14 @@ def test_register_invalid_email(client):
     response = client.post("/api/auth/register", json={
         "username": "newuser",
         "email": "not-an-email",
-        "password": "SecurePass123"
+        "password": "SecurePass123!"
     })
     assert response.status_code == 422
 
 def test_login_success(client, trader_user):
     response = client.post("/api/auth/login", json={
         "email": "trader@example.com",
-        "password": "traderpass123"
+        "password": "TraderPass123!"
     })
     assert response.status_code == 200
     data = response.json()
@@ -113,7 +113,7 @@ def test_login_nonexistent_user(client):
 def test_refresh_token(client, trader_user):
     login_resp = client.post("/api/auth/login", json={
         "email": "trader@example.com",
-        "password": "traderpass123"
+        "password": "TraderPass123!"
     })
     refresh_token = login_resp.json()["refresh_token"]
     response = client.post("/api/auth/refresh", json={"refresh_token": refresh_token})

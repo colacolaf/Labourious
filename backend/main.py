@@ -31,6 +31,9 @@ async def lifespan(app: FastAPI):
     init_db(settings.DATABASE_URL)
     logger.info("Database initialized")
 
+    if settings.JWT_SECRET_KEY == "change-me-in-production-32-chars-min":
+        logger.warning("JWT_SECRET_KEY is using insecure default — set JWT_SECRET_KEY env var in production")
+
     # Start orchestrator if vault password configured
     if settings.VAULT_PASSWORD:
         try:
