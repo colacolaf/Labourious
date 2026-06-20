@@ -30,4 +30,6 @@ class Settings:
     EXCHANGE_API_SECRET: str = os.getenv("EXCHANGE_API_SECRET", "")
     EXCHANGE_TESTNET: bool = os.getenv("EXCHANGE_TESTNET", "true").lower() == "true"
 
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "change-me-in-production-32-chars-min")
+
 settings = Settings()
