@@ -3,7 +3,7 @@ import uuid
 import asyncio
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -36,7 +36,7 @@ async def run_backtest(req: BacktestRunRequest):
         result = BacktestResult(
             id=run_id,
             agent_id=req.agent_id,
-            run_at=datetime.utcnow(),
+            run_at=datetime.now(timezone.utc),
             start_date=req.start_date,
             end_date=req.end_date,
             mode=req.mode,
