@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useAnalyticsStore from '../../stores/analytics.store';
 import EquityChart from './EquityChart';
 
@@ -29,6 +29,13 @@ export default function BacktestRunner({ agents = [] }) {
     end_date: '2024-06-30',
     mode: 'basic',
   });
+
+  useEffect(() => {
+    if (!form.agent_id && agents.length > 0) {
+      setForm((f) => ({ ...f, agent_id: agents[0].id }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agents]);
 
   const handleRun = () => {
     if (!form.agent_id) return;

@@ -10,6 +10,25 @@ import {
   ReferenceLine,
 } from 'recharts';
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  const val = payload[0].value;
+  return (
+    <div style={{
+      background: 'var(--color-bg-elevated)',
+      border: '1px solid var(--color-border-bright)',
+      padding: '8px 12px',
+      fontFamily: 'var(--font-mono)',
+      fontSize: 'var(--font-size-xs)',
+    }}>
+      <div style={{ color: 'var(--color-text-secondary)', marginBottom: 2 }}>{label}</div>
+      <div style={{ color: val >= 0 ? 'var(--color-pnl-positive)' : 'var(--color-pnl-negative)', fontWeight: 700 }}>
+        {val >= 0 ? '+' : ''}{val.toFixed(1)}%
+      </div>
+    </div>
+  );
+};
+
 export default function AttributionWaterfall({ data = null }) {
   if (!data || !data.contributions || Object.keys(data.contributions).length === 0) {
     return (
@@ -23,25 +42,6 @@ export default function AttributionWaterfall({ data = null }) {
     .sort((a, b) => b[1] - a[1]);
 
   const chartData = entries.map(([name, pct]) => ({ name, pct }));
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null;
-    const val = payload[0].value;
-    return (
-      <div style={{
-        background: 'var(--color-bg-elevated)',
-        border: '1px solid var(--color-border-bright)',
-        padding: '8px 12px',
-        fontFamily: 'var(--font-mono)',
-        fontSize: 'var(--font-size-xs)',
-      }}>
-        <div style={{ color: 'var(--color-text-secondary)', marginBottom: 2 }}>{label}</div>
-        <div style={{ color: val >= 0 ? 'var(--color-pnl-positive)' : 'var(--color-pnl-negative)', fontWeight: 700 }}>
-          {val >= 0 ? '+' : ''}{val.toFixed(1)}%
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div>

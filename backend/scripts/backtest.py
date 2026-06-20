@@ -215,15 +215,15 @@ def main():
     parser.add_argument("--balance", type=float, default=100_000.0, help="Initial paper balance")
     args = parser.parse_args()
 
-    print(f"Fetching {args.symbol} {args.start} → {args.end}...")
+    print(f"Fetching {args.symbol} {args.start} → {args.end}...", file=sys.stderr)
     try:
         df = fetch_ohlcv(args.symbol, args.start, args.end)
     except Exception as e:
-        print(f"Error fetching data: {e}")
+        print(f"Error fetching data: {e}", file=sys.stderr)
         sys.exit(1)
 
     if df.empty:
-        print("No data returned. Check symbol and date range.")
+        print("No data returned. Check symbol and date range.", file=sys.stderr)
         sys.exit(1)
 
     df = add_indicators(df)
@@ -231,19 +231,19 @@ def main():
 
     if args.mode == "basic":
         metrics = run_simulation(df, args.balance)
-        print(f"\n=== Basic Backtest: {args.symbol} ===")
-        for k, v in metrics.items():
-            print(f"  {k}: {v}")
+        output = {
+            "total_return": round(metrics["total_return_pct"] / 100, 6),
+            "win_rate": round(metrics["win_rate_pct"] / 100, 6),
+            "sharpe_ratio": metrics["sharpe_ratio"],
+            "max_drawdown": metrics["max_drawdown"],
+            "equity_curve": [],
+        }
+        print(json.dumps(output))
 
     else:
         result = run_walk_forward(df, {"symbol": args.symbol, "initial_balance": args.balance})
-        windows = result["windows"]
-        print(f"\n=== Walk-Forward Backtest: {args.symbol} ({len(windows)} windows) ===")
-        for w in windows:
-            print(f"\n  Window {w['window']} ({w['test_start']} → {w['test_end']})")
-            print(f"    Return: {w['total_return_pct']}%  Win rate: {w['win_rate_pct']}%  Sharpe: {w['sharpe_ratio']}")
-
-        print(f"\n  Average return across windows: {result['efficiency']}%")
+        print(f"Walk-Forward: {args.symbol} ({len(result['windows'])} windows)", file=sys.stderr)
+        print(json.dumps({"windows": result["windows"], "efficiency": result["efficiency"]}))
 
 
 if __name__ == "__main__":
