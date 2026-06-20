@@ -27,8 +27,8 @@ def upgrade() -> None:
     sa.Column('run_at', sa.DateTime(), nullable=False),
     sa.Column('start_date', sa.String(length=10), nullable=False),
     sa.Column('end_date', sa.String(length=10), nullable=False),
-    sa.Column('mode', sa.String(length=20), nullable=False),
-    sa.Column('status', sa.String(length=20), nullable=False),
+    sa.Column('mode', sa.String(length=20), nullable=False, server_default=sa.text("'basic'")),
+    sa.Column('status', sa.String(length=20), nullable=False, server_default=sa.text("'running'")),
     sa.Column('result_json', sa.JSON(), nullable=True),
     sa.ForeignKeyConstraint(['agent_id'], ['agents.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
