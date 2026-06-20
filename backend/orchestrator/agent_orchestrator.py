@@ -7,6 +7,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from backend.database.models import Agent, AgentStatus
 from backend.trading.trade_executor import TradeExecutor
 from backend.llm.llm_router import LLMRouter
+from backend.llm.config import read_config
 from backend.trading.risk_manager import check_agent_risk
 from backend.brokers.manager import get_connector
 from backend.api.websocket import manager
@@ -151,13 +152,18 @@ class AgentOrchestrator:
                     logger.warning(f"agent {agent_id} context file read error: {e}")
 
             # Get LLM decision
-            router = LLMRouter(
-                use_local=agent.use_local_llm,
-                ollama_url="http://localhost:11434",
-                ollama_model="mistral",
-                claude_api_key=self.vault.get("anthropic_api_key") if not agent.use_local_llm else None,
-                claude_model="claude-sonnet-4-6",
-            )
+            llm_cfg = read_config()
+            claude_key = None
+            openai_key = None
+            try:
+                claude_key = self.vault.get("anthropic_api_key")
+            except Exception:
+                pass
+            try:
+                openai_key = self.vault.get("openai_api_key")
+            except Exception:
+                pass
+            router = LLMRouter.from_config(llm_cfg, claude_api_key=claude_key, openai_api_key=openai_key)
 
             decision = await router.decide(agent.symbol, market_data, context)
 
