@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import (
-    Column, Integer, String, Float, Boolean, DateTime, Text, Enum, ForeignKey, JSON
+    Column, Integer, String, Float, Boolean, DateTime, Text, Enum, ForeignKey, JSON, UniqueConstraint
 )
 from sqlalchemy.orm import declarative_base, relationship
 import enum
@@ -204,6 +204,7 @@ class PendingApproval(Base):
 
 class DailySnapshot(Base):
     __tablename__ = "daily_snapshots"
+    __table_args__ = (UniqueConstraint('agent_id', 'date', name='uq_daily_snapshot_agent_date'),)
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     agent_id = Column(Integer, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
@@ -216,7 +217,6 @@ class DailySnapshot(Base):
     trade_count = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # ponytail: no UNIQUE constraint here — enforced in snapshot_job via upsert logic
     agent = relationship("Agent", backref="snapshots")
 
 

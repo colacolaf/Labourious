@@ -23,9 +23,9 @@ async def get_portfolio_summary():
                 "win_rate": 0.0, "return_30d_pct": 0.0, "agent_count": 0,
             }
 
-        total_pnl = sum(a.total_pnl for a in agents)
-        total_trades = sum(a.total_trades for a in agents)
-        total_wins = sum(a.winning_trades for a in agents)
+        total_pnl = sum((a.total_pnl or 0.0) for a in agents)
+        total_trades = sum((a.total_trades or 0) for a in agents)
+        total_wins = sum((a.winning_trades or 0) for a in agents)
         win_rate = round((total_wins / total_trades * 100), 1) if total_trades else 0.0
 
         # Last 30 days: sum daily_return_pct across all agents
@@ -88,17 +88,16 @@ async def get_leaderboard(sort_by: str = Query(default="return", enum=["return",
     with get_db_session(settings.DATABASE_URL) as session:
         agents = session.execute(select(Agent)).scalars().all()
 
-        # Pull latest snapshot per agent
+        # Pull latest snapshot per agent — single query instead of N+1
+        all_snaps = session.execute(
+            select(DailySnapshot)
+            .order_by(DailySnapshot.agent_id, DailySnapshot.date.desc())
+        ).scalars().all()
+
         latest: dict[int, DailySnapshot] = {}
-        for agent in agents:
-            snap = session.execute(
-                select(DailySnapshot)
-                .where(DailySnapshot.agent_id == agent.id)
-                .order_by(DailySnapshot.date.desc())
-                .limit(1)
-            ).scalar_one_or_none()
-            if snap:
-                latest[agent.id] = snap
+        for snap in all_snaps:
+            if snap.agent_id not in latest:
+                latest[snap.agent_id] = snap
 
     rows = []
     for a in agents:
@@ -107,13 +106,13 @@ async def get_leaderboard(sort_by: str = Query(default="return", enum=["return",
             "id": a.id,
             "name": a.name,
             "room": a.room,
-            "total_pnl": round(a.total_pnl, 2),
+            "total_pnl": round((a.total_pnl or 0.0), 2),
             "return_pct": snap.daily_return_pct if snap else 0.0,
             "sharpe_ratio": snap.sharpe_ratio if snap else None,
             "max_drawdown": snap.max_drawdown if snap else None,
-            "win_rate": round(a.win_rate, 1),
-            "total_trades": a.total_trades,
-            "confidence_score": a.confidence_score,
+            "win_rate": round((a.win_rate or 0.0), 1),
+            "total_trades": (a.total_trades or 0),
+            "confidence_score": (a.confidence_score or 0),
             "status": a.status.value,
         })
 
@@ -157,10 +156,15 @@ async def get_attribution(date_str: Optional[str] = Query(default=None, alias="d
     target_date = date_str or date.today().isoformat()
 
     with get_db_session(settings.DATABASE_URL) as session:
+        date_start = datetime.fromisoformat(target_date)
+        date_end = date_start + timedelta(days=1)
+
         trades = session.execute(
             select(Trade)
             .where(Trade.status == TradeStatus.CLOSED)
             .where(Trade.pnl.isnot(None))
+            .where(Trade.closed_at >= date_start)
+            .where(Trade.closed_at < date_end)
         ).scalars().all()
 
         agents = session.execute(select(Agent)).scalars().all()

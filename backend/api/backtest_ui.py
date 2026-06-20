@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from backend.database.db import get_db_session
@@ -21,8 +21,8 @@ logger = setup_logger("backtest_ui")
 
 class BacktestRunRequest(BaseModel):
     agent_id: int
-    start_date: str          # "YYYY-MM-DD"
-    end_date: str            # "YYYY-MM-DD"
+    start_date: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$')
+    end_date: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$')
     mode: str = "basic"      # "basic" | "walk_forward"
     symbol: Optional[str] = None  # override; defaults to agent's symbol
 

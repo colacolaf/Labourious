@@ -69,7 +69,6 @@ export default function AnalyticsPage() {
 
   const handleDaysChange = (days) => {
     setActiveDays(days);
-    fetchEquityCurve(days);
   };
 
   const p = portfolio;
