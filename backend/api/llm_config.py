@@ -133,8 +133,8 @@ class VaultKeyRequest(BaseModel):
 
 @router.post("/key")
 async def save_vault_key(req: VaultKeyRequest):
-    """Save an API key to vault. key_name must be 'openai_api_key'."""
-    allowed = {"openai_api_key"}
+    """Save an API key to vault. key_name must be 'openai_api_key' or 'anthropic_api_key'."""
+    allowed = {"openai_api_key", "anthropic_api_key"}
     if req.key_name not in allowed:
         raise HTTPException(status_code=422, detail=f"key_name must be one of {allowed}")
     vault = _vault()
