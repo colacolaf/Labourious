@@ -35,6 +35,7 @@ logs/
 # Vault (NEVER commit)
 vault.enc
 *.vault
+data/llm_config.json
 
 # Node
 node_modules/
