@@ -1,12 +1,13 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
-from backend.database.models import Agent, AgentStatus, Trade, Performance, TradeSide, TradeStatus
+from backend.database.models import Agent, AgentStatus, Trade, Performance, TradeSide, TradeStatus, User, UserRole
 from backend.database.db import get_db_session
+from backend.auth.dependencies import get_current_user
 from backend.config import settings
 
 router = APIRouter(prefix="/api/agents", tags=["agents"])
@@ -101,11 +102,15 @@ class PerformanceResponse(BaseModel):
 async def list_agents(
     room: Optional[str] = Query(None),
     is_active: Optional[bool] = Query(None),
+    current_user: User = Depends(get_current_user),
 ):
-    """List agents with optional filters."""
+    """List agents. Admins see all; traders see own agents only."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
             query = select(Agent)
+            role_val = current_user.role.value if hasattr(current_user.role, "value") else current_user.role
+            if role_val != UserRole.ADMIN.value:
+                query = query.where(Agent.user_id == current_user.id)
             if room:
                 query = query.where(Agent.room == room)
             if is_active is not None:
@@ -118,11 +123,15 @@ async def list_agents(
 
 
 @router.post("", response_model=AgentResponse, status_code=201)
-async def create_agent(agent_data: AgentCreate):
-    """Create a new agent."""
+async def create_agent(
+    agent_data: AgentCreate,
+    current_user: User = Depends(get_current_user),
+):
+    """Create a new agent owned by current user."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
             agent = Agent(
+                user_id=current_user.id,
                 name=agent_data.name,
                 symbol=agent_data.symbol,
                 exchange=agent_data.exchange or "binance",
@@ -147,8 +156,18 @@ async def create_agent(agent_data: AgentCreate):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+def _check_agent_access(agent: Agent, current_user: User) -> None:
+    """Raise 403 if non-admin user tries to access an agent they don't own."""
+    role_val = current_user.role.value if hasattr(current_user.role, "value") else current_user.role
+    if role_val != UserRole.ADMIN.value and agent.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+
 @router.get("/{agent_id}", response_model=AgentResponse)
-async def get_agent(agent_id: int):
+async def get_agent(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """Get agent detail by ID."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
@@ -156,6 +175,7 @@ async def get_agent(agent_id: int):
             agent = result.scalar_one_or_none()
             if not agent:
                 raise HTTPException(status_code=404, detail="Agent not found")
+            _check_agent_access(agent, current_user)
             return AgentResponse.model_validate(agent)
     except HTTPException:
         raise
@@ -164,7 +184,11 @@ async def get_agent(agent_id: int):
 
 
 @router.put("/{agent_id}", response_model=AgentResponse)
-async def update_agent(agent_id: int, agent_data: AgentUpdate):
+async def update_agent(
+    agent_id: int,
+    agent_data: AgentUpdate,
+    current_user: User = Depends(get_current_user),
+):
     """Update agent configuration."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
@@ -172,6 +196,7 @@ async def update_agent(agent_id: int, agent_data: AgentUpdate):
             agent = result.scalar_one_or_none()
             if not agent:
                 raise HTTPException(status_code=404, detail="Agent not found")
+            _check_agent_access(agent, current_user)
 
             update_data = agent_data.model_dump(exclude_unset=True)
             for field, value in update_data.items():
@@ -190,7 +215,10 @@ async def update_agent(agent_id: int, agent_data: AgentUpdate):
 
 
 @router.delete("/{agent_id}", status_code=204)
-async def delete_agent(agent_id: int):
+async def delete_agent(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """Delete an agent."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
@@ -198,7 +226,7 @@ async def delete_agent(agent_id: int):
             agent = result.scalar_one_or_none()
             if not agent:
                 raise HTTPException(status_code=404, detail="Agent not found")
-
+            _check_agent_access(agent, current_user)
             session.delete(agent)
             session.commit()
     except HTTPException:
@@ -208,7 +236,10 @@ async def delete_agent(agent_id: int):
 
 
 @router.post("/{agent_id}/toggle", response_model=AgentResponse)
-async def toggle_agent(agent_id: int):
+async def toggle_agent(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """Toggle agent is_active status."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
@@ -216,7 +247,7 @@ async def toggle_agent(agent_id: int):
             agent = result.scalar_one_or_none()
             if not agent:
                 raise HTTPException(status_code=404, detail="Agent not found")
-
+            _check_agent_access(agent, current_user)
             agent.is_active = not agent.is_active
             session.add(agent)
             session.flush()
@@ -230,7 +261,10 @@ async def toggle_agent(agent_id: int):
 
 
 @router.post("/{agent_id}/resume", response_model=AgentResponse)
-async def resume_agent(agent_id: int):
+async def resume_agent(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """Resume agent: reset consecutive_losses and status to IDLE."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
@@ -238,7 +272,7 @@ async def resume_agent(agent_id: int):
             agent = result.scalar_one_or_none()
             if not agent:
                 raise HTTPException(status_code=404, detail="Agent not found")
-
+            _check_agent_access(agent, current_user)
             agent.consecutive_losses = 0
             agent.status = AgentStatus.IDLE
             session.add(agent)
@@ -253,7 +287,11 @@ async def resume_agent(agent_id: int):
 
 
 @router.post("/{agent_id}/approve")
-async def approve_trade(agent_id: int, data: dict):
+async def approve_trade(
+    agent_id: int,
+    data: dict,
+    current_user: User = Depends(get_current_user),
+):
     """Resolve a pending human-in-loop trade approval."""
     trade_id = data.get("trade_id")
     approved = data.get("approved", False)
@@ -267,7 +305,11 @@ async def approve_trade(agent_id: int, data: dict):
 
 
 @router.post("/{agent_id}/update-context")
-async def update_agent_context(agent_id: int, data: dict):
+async def update_agent_context(
+    agent_id: int,
+    data: dict,
+    current_user: User = Depends(get_current_user),
+):
     """Update agent's context file content."""
     content = data.get("content", "")
     try:
@@ -276,6 +318,7 @@ async def update_agent_context(agent_id: int, data: dict):
             agent = result.scalar_one_or_none()
             if not agent:
                 raise HTTPException(status_code=404, detail="Agent not found")
+            _check_agent_access(agent, current_user)
             cfg = agent.strategy_config or {}
             cfg["context_content"] = content
             agent.strategy_config = cfg
@@ -289,7 +332,10 @@ async def update_agent_context(agent_id: int, data: dict):
 
 
 @router.get("/{agent_id}/trades", response_model=list[TradeResponse])
-async def get_agent_trades(agent_id: int):
+async def get_agent_trades(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """Get last 50 trades for agent."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
@@ -297,6 +343,7 @@ async def get_agent_trades(agent_id: int):
             agent = result.scalar_one_or_none()
             if not agent:
                 raise HTTPException(status_code=404, detail="Agent not found")
+            _check_agent_access(agent, current_user)
 
             trades_result = session.execute(
                 select(Trade).where(Trade.agent_id == agent_id).order_by(Trade.opened_at.desc()).limit(50)
@@ -310,7 +357,10 @@ async def get_agent_trades(agent_id: int):
 
 
 @router.get("/{agent_id}/performance", response_model=list[PerformanceResponse])
-async def get_agent_performance(agent_id: int):
+async def get_agent_performance(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+):
     """Get performance records for agent."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
@@ -318,6 +368,7 @@ async def get_agent_performance(agent_id: int):
             agent = result.scalar_one_or_none()
             if not agent:
                 raise HTTPException(status_code=404, detail="Agent not found")
+            _check_agent_access(agent, current_user)
 
             perf_result = session.execute(
                 select(Performance).where(Performance.agent_id == agent_id).order_by(Performance.timestamp.desc()).limit(50)

@@ -8,7 +8,7 @@ import tempfile
 import os
 
 from backend.main import app
-from backend.database.models import Base, Agent, AgentStatus, Trade, TradeSide, TradeStatus, Performance
+from backend.database.models import Base, Agent, AgentStatus, Trade, TradeSide, TradeStatus, Performance, User, UserRole
 from backend.config import settings
 
 # Global test database and session factory
@@ -68,11 +68,18 @@ def client():
     original_get_db_session = agents_module.get_db_session
     agents_module.get_db_session = override_get_db_session
 
+    # Override auth so legacy tests don't need tokens — inject admin user
+    from backend.auth.dependencies import get_current_user
+    _admin = User(id="test-admin", username="testadmin", email="a@a.com",
+                  hashed_password="x", role=UserRole.ADMIN)
+    app.dependency_overrides[get_current_user] = lambda: _admin
+
     client = TestClient(app)
     yield client
 
-    # Restore original
+    # Restore originals
     agents_module.get_db_session = original_get_db_session
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.fixture
