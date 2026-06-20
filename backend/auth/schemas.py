@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional, Literal
 
 
@@ -14,14 +14,13 @@ class UserLogin(BaseModel):
 
 
 class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     username: str
     email: str
     role: str
     created_at: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 class TokenResponse(BaseModel):
