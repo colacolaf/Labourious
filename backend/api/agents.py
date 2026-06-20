@@ -297,6 +297,12 @@ async def approve_trade(
     approved = data.get("approved", False)
     if not trade_id:
         raise HTTPException(status_code=400, detail="trade_id required")
+    with get_db_session(settings.DATABASE_URL) as session:
+        result = session.execute(select(Agent).where(Agent.id == agent_id))
+        agent = result.scalar_one_or_none()
+        if not agent:
+            raise HTTPException(status_code=404, detail="Agent not found")
+        _check_agent_access(agent, current_user)
     from backend.main import _orchestrator
     if _orchestrator and hasattr(_orchestrator, "executor"):
         result = await _orchestrator.executor.approve_trade(trade_id, approved)
