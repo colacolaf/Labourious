@@ -1,22 +1,6 @@
 import pytest
-from unittest.mock import patch, MagicMock
-from datetime import datetime, date
 
 
-def make_mock_agent(agent_id: int, total_pnl: float = 500.0):
-    agent = MagicMock()
-    agent.id = agent_id
-    agent.total_pnl = total_pnl
-    agent.paper_trading_balance = 100000.0
-    return agent
-
-
-def make_mock_trade(agent_id: int, pnl: float, is_win: bool):
-    trade = MagicMock()
-    trade.agent_id = agent_id
-    trade.pnl = pnl
-    trade.closed_at = datetime(2026, 6, 19, 15, 0, 0)
-    return trade
 
 
 def test_run_eod_snapshot_writes_row(tmp_path):
@@ -25,7 +9,6 @@ def test_run_eod_snapshot_writes_row(tmp_path):
     # Bootstrap real tables
     from backend.database.db import init_db, get_db_session
     from backend.database.models import Agent, AgentStatus, AgentType, DailySnapshot, Trade, TradeSide, TradeStatus
-    from datetime import datetime
     from sqlalchemy import select
 
     init_db(db_url)
