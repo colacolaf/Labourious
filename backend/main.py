@@ -23,6 +23,7 @@ _orchestrator = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _orchestrator
+    _snapshot_scheduler = None
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     init_db(settings.DATABASE_URL)
     logger.info("Database initialized")
@@ -41,8 +42,30 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Orchestrator startup skipped: {e}")
 
+    # Schedule EOD snapshot job (fires at 16:05 EST = 21:05 UTC)
+    try:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from backend.analytics.snapshot_job import run_eod_snapshot
+
+        _snapshot_scheduler = AsyncIOScheduler()
+        _snapshot_scheduler.add_job(
+            run_eod_snapshot,
+            trigger="cron",
+            hour=21,
+            minute=5,
+            args=[settings.DATABASE_URL],
+            id="eod_snapshot",
+            replace_existing=True,
+        )
+        _snapshot_scheduler.start()
+        logger.info("EOD snapshot scheduler started (21:05 UTC daily)")
+    except Exception as e:
+        logger.warning(f"Snapshot scheduler startup skipped: {e}")
+
     yield
 
+    if _snapshot_scheduler and _snapshot_scheduler.running:
+        _snapshot_scheduler.shutdown(wait=False)
     if _orchestrator:
         await _orchestrator.shutdown()
         logger.info("Agent orchestrator stopped")
