@@ -57,6 +57,8 @@ async def test_run_agent_hold_decision(orchestrator, sample_agent, mock_vault):
     ) as mock_get_conn, patch(
         "backend.orchestrator.agent_orchestrator.LLMRouter"
     ) as mock_router_class, patch(
+        "backend.orchestrator.agent_orchestrator.read_config"
+    ), patch(
         "backend.orchestrator.agent_orchestrator.check_agent_risk"
     ) as mock_check_risk, patch(
         "backend.orchestrator.agent_orchestrator.manager.broadcast"
@@ -84,13 +86,13 @@ async def test_run_agent_hold_decision(orchestrator, sample_agent, mock_vault):
         mock_connector.get_market_data.return_value = market_data_obj
         mock_get_conn.return_value = mock_connector
 
-        # Setup router mock
+        # Setup router mock (from_config classmethod returns the instance)
         mock_router = AsyncMock()
         hold_decision = TradeDecision(
             action="HOLD", confidence=0.5, position_size=0.0, reasoning="test hold"
         )
         mock_router.decide.return_value = hold_decision
-        mock_router_class.return_value = mock_router
+        mock_router_class.from_config.return_value = mock_router
 
         # Risk check passes
         mock_check_risk.return_value = (False, None)
@@ -141,6 +143,8 @@ async def test_run_agent_risk_pause(orchestrator, sample_agent, mock_vault):
     ) as mock_get_conn, patch(
         "backend.orchestrator.agent_orchestrator.LLMRouter"
     ) as mock_router_class, patch(
+        "backend.orchestrator.agent_orchestrator.read_config"
+    ), patch(
         "backend.orchestrator.agent_orchestrator.check_agent_risk"
     ) as mock_check_risk, patch(
         "backend.orchestrator.agent_orchestrator.manager.broadcast"
@@ -168,13 +172,13 @@ async def test_run_agent_risk_pause(orchestrator, sample_agent, mock_vault):
         mock_connector.get_market_data.return_value = market_data_obj
         mock_get_conn.return_value = mock_connector
 
-        # Setup router mock
+        # Setup router mock (from_config classmethod returns the instance)
         mock_router = AsyncMock()
         buy_decision = TradeDecision(
             action="BUY", confidence=0.8, position_size=0.5, reasoning="test buy"
         )
         mock_router.decide.return_value = buy_decision
-        mock_router_class.return_value = mock_router
+        mock_router_class.from_config.return_value = mock_router
 
         # Risk check FAILS (should pause)
         mock_check_risk.return_value = (True, "confidence too low")
@@ -198,6 +202,8 @@ async def test_run_agent_buy_decision_executes(orchestrator, sample_agent, mock_
     ) as mock_get_conn, patch(
         "backend.orchestrator.agent_orchestrator.LLMRouter"
     ) as mock_router_class, patch(
+        "backend.orchestrator.agent_orchestrator.read_config"
+    ), patch(
         "backend.orchestrator.agent_orchestrator.check_agent_risk"
     ) as mock_check_risk, patch(
         "backend.orchestrator.agent_orchestrator.manager.broadcast"
@@ -225,13 +231,13 @@ async def test_run_agent_buy_decision_executes(orchestrator, sample_agent, mock_
         mock_connector.get_market_data.return_value = market_data_obj
         mock_get_conn.return_value = mock_connector
 
-        # Setup router mock
+        # Setup router mock (from_config classmethod returns the instance)
         mock_router = AsyncMock()
         buy_decision = TradeDecision(
             action="BUY", confidence=0.8, position_size=0.5, reasoning="test buy"
         )
         mock_router.decide.return_value = buy_decision
-        mock_router_class.return_value = mock_router
+        mock_router_class.from_config.return_value = mock_router
 
         # Risk check passes
         mock_check_risk.return_value = (False, None)

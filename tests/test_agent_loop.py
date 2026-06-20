@@ -65,6 +65,7 @@ async def test_full_agent_loop_hold():
 
     with patch("backend.orchestrator.agent_orchestrator.get_connector") as mock_conn, \
          patch("backend.orchestrator.agent_orchestrator.LLMRouter") as mock_router_cls, \
+         patch("backend.orchestrator.agent_orchestrator.read_config"), \
          patch("backend.orchestrator.agent_orchestrator.check_agent_risk", return_value=(False, None)), \
          patch("backend.orchestrator.agent_orchestrator.manager.broadcast"):
 
@@ -74,7 +75,7 @@ async def test_full_agent_loop_hold():
 
         router = AsyncMock()
         router.decide.return_value = hold_decision
-        mock_router_cls.return_value = router
+        mock_router_cls.from_config.return_value = router
 
         orchestrator.executor.execute = AsyncMock(return_value={"status": "skipped", "reason": "HOLD decision"})
 
@@ -104,6 +105,7 @@ async def test_full_agent_loop_buy_paper():
 
     with patch("backend.orchestrator.agent_orchestrator.get_connector") as mock_conn, \
          patch("backend.orchestrator.agent_orchestrator.LLMRouter") as mock_router_cls, \
+         patch("backend.orchestrator.agent_orchestrator.read_config"), \
          patch("backend.orchestrator.agent_orchestrator.check_agent_risk", return_value=(False, None)), \
          patch("backend.orchestrator.agent_orchestrator.manager.broadcast"):
 
@@ -113,7 +115,7 @@ async def test_full_agent_loop_buy_paper():
 
         router = AsyncMock()
         router.decide.return_value = buy_decision
-        mock_router_cls.return_value = router
+        mock_router_cls.from_config.return_value = router
 
         orchestrator.executor.execute = AsyncMock(return_value={"status": "executed", "order_id": "abc"})
 
