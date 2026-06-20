@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date as date_type
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, Text, Enum, ForeignKey, JSON
 )
@@ -200,3 +200,36 @@ class PendingApproval(Base):
     decision_json = Column(JSON, nullable=False)
     timeout_at = Column(DateTime, nullable=False)
     status = Column(String(20), nullable=False, default="waiting")
+
+
+class DailySnapshot(Base):
+    __tablename__ = "daily_snapshots"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    agent_id = Column(Integer, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
+    date = Column(String(10), nullable=False)          # ISO date string "YYYY-MM-DD"
+    total_pnl = Column(Float, nullable=False, default=0.0)
+    daily_return_pct = Column(Float, nullable=False, default=0.0)
+    sharpe_ratio = Column(Float, nullable=True)        # NULL until 30 days of data
+    max_drawdown = Column(Float, nullable=True)
+    win_rate = Column(Float, nullable=True)
+    trade_count = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # ponytail: no UNIQUE constraint here — enforced in snapshot_job via upsert logic
+    agent = relationship("Agent", backref="snapshots")
+
+
+class BacktestResult(Base):
+    __tablename__ = "backtest_results"
+
+    id = Column(String(36), primary_key=True)          # UUID string
+    agent_id = Column(Integer, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
+    run_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    start_date = Column(String(10), nullable=False)    # "YYYY-MM-DD"
+    end_date = Column(String(10), nullable=False)
+    mode = Column(String(20), nullable=False, default="basic")  # "basic" | "walk_forward"
+    status = Column(String(20), nullable=False, default="running")  # "running" | "done" | "failed"
+    result_json = Column(JSON, nullable=True)          # NULL until done
+
+    agent = relationship("Agent", backref="backtest_results")
