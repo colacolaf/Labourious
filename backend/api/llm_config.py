@@ -75,6 +75,16 @@ async def patch_config(req: PatchConfigRequest):
                     pass
             if not has_key:
                 raise HTTPException(status_code=422, detail="openai_api_key not found in vault — save it first")
+        if req.provider == "claude":
+            vault = _vault()
+            has_key = False
+            if vault:
+                try:
+                    has_key = bool(vault.get("anthropic_api_key"))
+                except Exception:
+                    pass
+            if not has_key:
+                raise HTTPException(status_code=422, detail="anthropic_api_key not found in vault — save it first")
         cfg.provider = req.provider
     if req.model is not None:
         cfg.model = req.model
