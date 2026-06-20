@@ -224,12 +224,10 @@ class BacktestResult(Base):
     __tablename__ = "backtest_results"
 
     id = Column(String(36), primary_key=True)          # UUID string
-    agent_id = Column(Integer, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
+    agent_id = Column(Integer, nullable=True)          # optional; no FK constraint to allow ad-hoc backtests
     run_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     start_date = Column(String(10), nullable=False)    # "YYYY-MM-DD"
     end_date = Column(String(10), nullable=False)
     mode = Column(String(20), nullable=False, default="basic")  # "basic" | "walk_forward"
     status = Column(String(20), nullable=False, default="running")  # "running" | "done" | "failed"
     result_json = Column(JSON, nullable=True)          # NULL until done
-
-    agent = relationship("Agent", backref="backtest_results")
