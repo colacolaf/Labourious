@@ -16,6 +16,7 @@ from backend.api.settings_api import router as settings_router
 from backend.api.analytics import router as analytics_router
 from backend.api.backtest_ui import router as backtest_ui_router
 from backend.api.llm_config import router as llm_config_router
+from backend.auth.router import router as auth_router
 
 logger = setup_logger("labourious", settings.LOG_DIR, settings.LOG_LEVEL)
 
@@ -109,6 +110,7 @@ app.include_router(settings_router)
 app.include_router(analytics_router)
 app.include_router(backtest_ui_router)
 app.include_router(llm_config_router)
+app.include_router(auth_router)
 
 from backend.middleware.error_handler import register_error_handlers
 register_error_handlers(app)

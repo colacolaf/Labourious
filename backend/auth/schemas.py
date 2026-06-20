@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional, Literal
+from datetime import datetime
 
 
 class UserCreate(BaseModel):
@@ -14,13 +15,13 @@ class UserLogin(BaseModel):
 
 
 class UserOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, ser_json_timedelta='float')
 
     id: str
     username: str
     email: str
     role: str
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None
 
 
 class TokenResponse(BaseModel):
