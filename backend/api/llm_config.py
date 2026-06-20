@@ -155,3 +155,16 @@ async def save_vault_key(req: VaultKeyRequest):
         return {"status": "saved", "key_name": req.key_name}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Vault write failed: {e}")
+
+
+@router.get("/cost")
+async def get_cost_estimate(provider: str, model: str, check_frequency: int = 300):
+    """Estimate monthly cost for a provider + model combo."""
+    from backend.analytics.cost_estimator import estimate_monthly_cost, _PRICES
+    cost = estimate_monthly_cost(provider, model, check_frequency)
+    # estimate_monthly_cost returns 0.0 for ollama/unknown — distinguish unknown model
+    if provider != "ollama" and check_frequency > 0:
+        price_map = _PRICES.get(provider)
+        if price_map is not None and model not in price_map:
+            return {"cost": None}  # unknown model
+    return {"cost": cost}
