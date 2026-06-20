@@ -1,12 +1,5 @@
 import React from 'react';
 
-const COL_LABELS = {
-  return: 'P&L',
-  sharpe: 'Sharpe',
-  win_rate: 'Win %',
-  trades: 'Trades',
-};
-
 const BAR_MAX_WIDTH = 80; // px
 
 function InlineBar({ value, max, color }) {
@@ -53,7 +46,7 @@ export default function AgentLeaderboard({ rows = [], sortBy = 'return', onSort 
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr>
-          {col('return', 'AGENT')}
+          <th style={{ padding: '6px 12px', fontFamily: 'var(--font-mono)', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', letterSpacing: '0.08em', textAlign: 'left', borderBottom: '1px solid var(--color-border)', whiteSpace: 'nowrap' }}>AGENT</th>
           {col('return', 'P&L')}
           <th style={{ padding: '6px 12px', borderBottom: '1px solid var(--color-border)' }} />
           {col('win_rate', 'WIN %')}
