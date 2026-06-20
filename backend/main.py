@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from backend.config import settings
 from backend.database.db import init_db, get_session_factory
@@ -15,6 +16,7 @@ from backend.api.settings_api import router as settings_router
 from backend.api.analytics import router as analytics_router
 from backend.api.backtest_ui import router as backtest_ui_router
 from backend.api.llm_config import router as llm_config_router
+from backend.auth.router import router as auth_router
 
 logger = setup_logger("labourious", settings.LOG_DIR, settings.LOG_LEVEL)
 
@@ -28,6 +30,9 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     init_db(settings.DATABASE_URL)
     logger.info("Database initialized")
+
+    if settings.JWT_SECRET_KEY == "change-me-in-production-32-chars-min":
+        logger.warning("JWT_SECRET_KEY is using insecure default — set JWT_SECRET_KEY env var in production")
 
     # Start orchestrator if vault password configured
     if settings.VAULT_PASSWORD:
@@ -80,6 +85,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=dict(exc.headers) if exc.headers else None,
+    )
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -98,6 +113,7 @@ app.include_router(settings_router)
 app.include_router(analytics_router)
 app.include_router(backtest_ui_router)
 app.include_router(llm_config_router)
+app.include_router(auth_router)
 
 from backend.middleware.error_handler import register_error_handlers
 register_error_handlers(app)

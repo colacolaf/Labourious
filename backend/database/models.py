@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import uuid4
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, Text, Enum, ForeignKey, JSON, UniqueConstraint
 )
@@ -6,6 +7,12 @@ from sqlalchemy.orm import declarative_base, relationship
 import enum
 
 Base = declarative_base()
+
+
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    TRADER = "trader"
+    VIEWER = "viewer"
 
 
 class AgentStatus(str, enum.Enum):
@@ -37,10 +44,27 @@ class TradeSide(str, enum.Enum):
     SELL = "sell"
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    username = Column(String(50), nullable=False, unique=True, index=True)
+    email = Column(String(100), nullable=False, unique=True, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.TRADER)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    agents = relationship("Agent", back_populates="owner")
+
+    def __repr__(self) -> str:
+        return f"<User(id={self.id}, username={self.username}, role={self.role})>"
+
+
 class Agent(Base):
     __tablename__ = "agents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
     name = Column(String(100), nullable=False, unique=True)
     agent_type = Column(Enum(AgentType), nullable=False, default=AgentType.CUSTOM)
     status = Column(Enum(AgentStatus), nullable=False, default=AgentStatus.IDLE)
@@ -81,6 +105,7 @@ class Agent(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_heartbeat = Column(DateTime, nullable=True)
 
+    owner = relationship("User", back_populates="agents")
     trades = relationship("Trade", back_populates="agent", cascade="all, delete-orphan")
     performance = relationship("Performance", back_populates="agent", cascade="all, delete-orphan")
 
