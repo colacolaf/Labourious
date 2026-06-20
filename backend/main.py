@@ -12,6 +12,7 @@ from backend.api.brokers import router as brokers_router
 from backend.api.trades import router as trades_router
 from backend.api.dashboard import router as dashboard_router
 from backend.api.settings_api import router as settings_router
+from backend.api.analytics import router as analytics_router
 
 logger = setup_logger("labourious", settings.LOG_DIR, settings.LOG_LEVEL)
 
@@ -69,6 +70,7 @@ app.include_router(brokers_router)
 app.include_router(trades_router)
 app.include_router(dashboard_router)
 app.include_router(settings_router)
+app.include_router(analytics_router)
 
 from backend.middleware.error_handler import register_error_handlers
 register_error_handlers(app)
