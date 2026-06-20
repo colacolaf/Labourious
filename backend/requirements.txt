@@ -30,6 +30,7 @@ python-dateutil==2.9.0
 
 # LLM
 anthropic==0.39.0
+openai>=1.35.0
 litellm==1.51.3
 
 # Testing
