@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import WarroomDay from './pages/WarroomDay';
 import WarroomSwing from './pages/WarroomSwing';
 import WarroomLongTerm from './pages/WarroomLongTerm';
+import AnalyticsPage from './pages/AnalyticsPage';
 import ContextBuilder from './components/Warroom/ContextBuilder';
 
 const pageVariants = {
@@ -132,6 +133,7 @@ const NAV_ITEMS = [
   { label: 'Day Trading', path: '/warroom/day', icon: '◉' },
   { label: 'Swing', path: '/warroom/swing', icon: '◎' },
   { label: 'Long-Term', path: '/warroom/long', icon: '◌' },
+  { label: 'Analytics', path: '/analytics', icon: '◈' },
   { label: 'New Agent', path: '/agents/new', icon: '✦' },
   { label: 'Trades', path: '/trades', icon: '◇' },
   { label: 'Vault', path: '/vault', icon: '◫' },
@@ -216,6 +218,11 @@ export default function App() {
             <Route path="/warroom/day" element={<WarroomDay />} />
             <Route path="/warroom/swing" element={<WarroomSwing />} />
             <Route path="/warroom/long" element={<WarroomLongTerm />} />
+            <Route path="/analytics" element={
+              <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                <AnalyticsPage />
+              </motion.div>
+            } />
             <Route path="/agents/new" element={
               <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
                 <ContextBuilder />
