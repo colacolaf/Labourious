@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import IsometricGrid, { toScreen, TILE_W, TILE_H } from './IsometricGrid';
+import IsometricGrid, { toScreen, TILE_W } from './IsometricGrid';
 import AgentSprite from './AgentSprite';
 import AgentInspector from './AgentInspector';
 import TradeNotification from './TradeNotification';
@@ -10,12 +10,18 @@ import { useWebSocketStore } from '../../stores/websocket.store';
 import { useWebSocket } from '../../hooks/useWebSocket';
 
 export default function Warroom({ room }) {
-  const { agents, selectAgent, selectedAgent } = useAgentsStore();
+  const { agents, selectAgent, selectedAgent, startPolling, stopPolling } = useAgentsStore();
   const { lastMessage } = useWebSocketStore();
   const { approveTrade } = useWebSocket();
 
   const [notifications, setNotifications] = useState([]); // [{id, trade, svgX, svgY}]
   const [pendingApproval, setPendingApproval] = useState(null);
+
+  // Start polling on mount, stop on unmount
+  useEffect(() => {
+    startPolling();
+    return () => stopPolling();
+  }, [startPolling, stopPolling]);
 
   // Filter agents for this room
   const roomAgents = room ? agents.filter((a) => a.room === room) : agents;

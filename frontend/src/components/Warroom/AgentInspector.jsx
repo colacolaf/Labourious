@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import useAgentsStore from '../../stores/agents.store';
@@ -18,11 +18,13 @@ function Row({ label, value, valueColor }) {
 
 function OverviewTab({ agent }) {
   const pnl = agent.total_pnl ?? 0;
+  const conf = agent.confidence_score ?? 10;
+  const confColor = conf >= 70 ? 'var(--color-accent-primary)' : conf >= 35 ? '#ff8c00' : 'var(--color-danger, #ff4444)';
   return (
     <div>
       <Row label="Status" value={agent.status?.toUpperCase()} valueColor={agent.status === 'running' ? 'var(--color-accent-primary)' : undefined} />
       <Row label="P&L" value={`${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`} valueColor={pnl >= 0 ? 'var(--color-accent-primary)' : '#ff4444'} />
-      <Row label="Confidence" value={`${agent.confidence_score ?? 10}%`} />
+      <Row label="Confidence" value={`${conf}%`} valueColor={confColor} />
       <Row label="Win Rate" value={agent.win_rate != null ? `${agent.win_rate.toFixed(1)}%` : '—'} />
       <Row label="Total Trades" value={agent.total_trades ?? 0} />
       <Row label="Consec. Losses" value={agent.consecutive_losses ?? 0} valueColor={(agent.consecutive_losses ?? 0) >= 3 ? '#ff4444' : undefined} />
@@ -74,20 +76,22 @@ function TradesTab({ agentId }) {
 }
 
 function RulesTab({ agent }) {
-  const rules = agent.strategy_config?.context ?? agent.strategy_config?.rules ?? null;
-  if (!rules) return <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', marginTop: '1rem' }}>No context file set.</div>;
+  const content = agent.strategy_config?.context_content
+    ?? agent.strategy_config?.context
+    ?? agent.strategy_config?.rules
+    ?? null;
+  if (!content) return (
+    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', marginTop: '1rem' }}>
+      No context file — agent uses default LLM reasoning
+    </div>
+  );
   return (
     <pre style={{
-      fontSize: '0.75rem',
-      color: 'var(--color-text-secondary)',
-      background: 'var(--color-bg-tertiary)',
-      padding: '0.75rem',
-      borderRadius: 4,
-      overflowX: 'auto',
-      whiteSpace: 'pre-wrap',
-      marginTop: '0.5rem',
+      fontSize: '0.75rem', color: 'var(--color-text-secondary)',
+      background: 'var(--color-bg-tertiary)', padding: '0.75rem',
+      borderRadius: 4, overflowX: 'auto', whiteSpace: 'pre-wrap', marginTop: '0.5rem',
     }}>
-      {typeof rules === 'string' ? rules : JSON.stringify(rules, null, 2)}
+      {typeof content === 'string' ? content : JSON.stringify(content, null, 2)}
     </pre>
   );
 }
@@ -112,135 +116,103 @@ function PerformanceTab({ agentId }) {
   );
 }
 
-// Maps the 4 user-facing trading modes to backend field pairs
-const TRADING_MODES = [
-  {
-    id: 'paper_only',
-    label: 'Paper Trading Only',
-    desc: 'Safest — simulated trades, no real money ever',
-    is_paper_trading: true,
-    execution_mode: 'autonomous',
-  },
-  {
-    id: 'human_in_loop',
-    label: 'Human Approval Required',
-    desc: 'Live trades need your approval before executing',
-    is_paper_trading: false,
-    execution_mode: 'human_in_loop',
-  },
-  {
-    id: 'risk_based',
-    label: 'Semi-Autonomous',
-    desc: 'Small/high-confidence trades auto-execute; large/risky ones ask first',
-    is_paper_trading: false,
-    execution_mode: 'risk_based',
-  },
-  {
-    id: 'autonomous',
-    label: 'Fully Autonomous',
-    desc: 'Agent executes all trades without asking — use only when confident',
-    is_paper_trading: false,
-    execution_mode: 'autonomous',
-  },
-];
-
-function currentModeId(agent) {
-  if (agent.is_paper_trading) return 'paper_only';
-  return agent.execution_mode ?? 'human_in_loop';
-}
-
 function SettingsTab({ agent }) {
   const { updateAgent } = useAgentsStore();
   const [busy, setBusy] = useState(false);
-  const [modeId, setModeId] = useState(() => currentModeId(agent));
+  const [local, setLocal] = useState({
+    execution_mode: agent.execution_mode ?? 'human_in_loop',
+    check_frequency: agent.check_frequency ?? 300,
+    max_position_size: agent.max_position_size ?? 1000,
+    stop_loss_pct: agent.stop_loss_pct ?? 2.0,
+    take_profit_pct: agent.take_profit_pct ?? 4.0,
+  });
 
-  // Sync when agent changes (WS update or inspector opens on different agent)
-  useEffect(() => { setModeId(currentModeId(agent)); }, [agent.id, agent.is_paper_trading, agent.execution_mode]);
+  // Sync local state when agent prop changes (e.g., WS update)
+  useEffect(() => {
+    setLocal({
+      execution_mode: agent.execution_mode ?? 'human_in_loop',
+      check_frequency: agent.check_frequency ?? 300,
+      max_position_size: agent.max_position_size ?? 1000,
+      stop_loss_pct: agent.stop_loss_pct ?? 2.0,
+      take_profit_pct: agent.take_profit_pct ?? 4.0,
+    });
+  }, [agent.id, agent.execution_mode, agent.check_frequency, agent.max_position_size, agent.stop_loss_pct, agent.take_profit_pct]);
 
-  const saveMode = useCallback(async (id) => {
-    const mode = TRADING_MODES.find((m) => m.id === id);
-    if (!mode) return;
-    setModeId(id);
+  const save = async () => {
     setBusy(true);
-    await updateAgent(agent.id, {
-      is_paper_trading: mode.is_paper_trading,
-      execution_mode: mode.execution_mode,
-    }).catch(() => {});
+    await updateAgent(agent.id, local).catch(() => {});
     setBusy(false);
-  }, [agent.id, updateAgent]);
+  };
 
-  const toggle = useCallback(async (field) => {
+  const toggle = async (field) => {
     setBusy(true);
     await updateAgent(agent.id, { [field]: !agent[field] }).catch(() => {});
     setBusy(false);
-  }, [agent, updateAgent]);
+  };
+
+  const field = (label, key, type = 'number') => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0', borderBottom: '1px solid var(--color-border)', fontSize: '0.8rem' }}>
+      <span style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+      <input
+        type={type}
+        value={local[key]}
+        onChange={(e) => setLocal((p) => ({ ...p, [key]: type === 'number' ? parseFloat(e.target.value) : e.target.value }))}
+        style={{
+          width: 80, background: 'var(--color-bg-tertiary)',
+          border: '1px solid var(--color-border)', color: 'var(--color-text-primary)',
+          fontFamily: 'var(--font-mono)', fontSize: '0.75rem', padding: '0.2rem 0.4rem',
+        }}
+      />
+    </div>
+  );
+
+  const btnStyle = (danger) => ({
+    padding: '0.3rem 0.7rem', fontFamily: 'var(--font-mono)', fontSize: '0.7rem',
+    cursor: 'pointer', background: 'transparent',
+    border: `1px solid ${danger ? 'var(--color-danger, #ff4444)' : 'var(--color-accent-primary, #00ff88)'}`,
+    color: danger ? 'var(--color-danger, #ff4444)' : 'var(--color-accent-primary)',
+    borderRadius: 3,
+  });
 
   return (
     <div>
-      {/* Trading mode selector */}
-      <div style={{ marginBottom: '1rem' }}>
-        <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-          TRADING MODE
-        </div>
-        {TRADING_MODES.map((m) => {
-          const active = modeId === m.id;
-          const isLive = !m.is_paper_trading;
-          return (
-            <button
-              key={m.id}
-              onClick={() => saveMode(m.id)}
-              disabled={busy}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '0.55rem 0.75rem',
-                marginBottom: '0.35rem',
-                background: active ? 'var(--color-bg-tertiary)' : 'transparent',
-                border: `1px solid ${active ? (isLive ? 'var(--color-accent-primary, #00ff88)' : 'var(--color-border)') : 'var(--color-border)'}`,
-                borderRadius: 4,
-                cursor: busy ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-mono)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: active ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', fontWeight: active ? 700 : 400 }}>
-                  {m.label}
-                </span>
-                {active && (
-                  <span style={{ fontSize: '0.6rem', color: 'var(--color-accent-primary, #00ff88)', letterSpacing: '0.08em' }}>
-                    ACTIVE
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: 2 }}>
-                {m.desc}
-              </div>
-            </button>
-          );
-        })}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0', borderBottom: '1px solid var(--color-border)', fontSize: '0.8rem' }}>
+        <span style={{ color: 'var(--color-text-muted)' }}>Execution Mode</span>
+        <select
+          value={local.execution_mode}
+          onChange={(e) => setLocal((p) => ({ ...p, execution_mode: e.target.value }))}
+          style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}
+        >
+          <option value="autonomous">Autonomous</option>
+          <option value="human_in_loop">Human-in-Loop</option>
+          <option value="risk_based">Risk-Based</option>
+        </select>
       </div>
-
-      {/* Active toggle */}
+      {field('Check Freq (s)', 'check_frequency')}
+      {field('Max Position $', 'max_position_size')}
+      {field('Stop Loss %', 'stop_loss_pct')}
+      {field('Take Profit %', 'take_profit_pct')}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid var(--color-border)', fontSize: '0.8rem' }}>
         <span style={{ color: 'var(--color-text-muted)' }}>Active</span>
-        <button
-          onClick={() => toggle('is_active')}
-          disabled={busy}
-          style={{
-            padding: '0.3rem 0.7rem', fontFamily: 'var(--font-mono)', fontSize: '0.7rem',
-            cursor: 'pointer', background: 'transparent', borderRadius: 3,
-            border: `1px solid ${!agent.is_active ? 'var(--color-accent-primary, #00ff88)' : 'var(--color-danger, #ff4444)'}`,
-            color: !agent.is_active ? 'var(--color-accent-primary)' : 'var(--color-danger, #ff4444)',
-          }}
-        >
+        <button disabled={busy} onClick={() => toggle('is_active')} style={btnStyle(!agent.is_active)}>
           {agent.is_active ? 'Disable' : 'Enable'}
         </button>
       </div>
-
-      <Row label="Check Freq" value={agent.check_frequency ? `${agent.check_frequency}s` : '—'} />
-      <Row label="Max Position" value={agent.max_position_size != null ? `$${agent.max_position_size}` : '—'} />
-      <Row label="LLM" value={agent.use_local_llm ? 'Local (Ollama)' : 'Claude'} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid var(--color-border)', fontSize: '0.8rem' }}>
+        <span style={{ color: 'var(--color-text-muted)' }}>Paper Trading</span>
+        <button disabled={busy} onClick={() => toggle('is_paper_trading')} style={btnStyle(agent.is_paper_trading)}>
+          {agent.is_paper_trading ? 'Switch Live' : 'Switch Paper'}
+        </button>
+      </div>
+      <div style={{ marginTop: '1rem' }}>
+        <button
+          onClick={save}
+          disabled={busy}
+          style={{ width: '100%', padding: '0.5rem', background: 'var(--color-accent-primary, #00ff88)', color: '#000', border: 'none', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', borderRadius: 3 }}
+        >
+          {busy ? 'SAVING…' : 'SAVE SETTINGS'}
+        </button>
+      </div>
     </div>
   );
 }

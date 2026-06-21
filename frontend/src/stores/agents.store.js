@@ -10,6 +10,7 @@ const useAgentsStore = create(
       loading: false,
       error: null,
       lastFetched: null,
+      _pollTimer: null,
 
       fetchAgents: async () => {
         set({ loading: true, error: null });
@@ -139,6 +140,19 @@ const useAgentsStore = create(
 
       getTotalPnl: () =>
         get().agents.reduce((sum, a) => sum + (a.total_pnl ?? 0), 0),
+
+      startPolling: () => {
+        const { fetchAgents, _pollTimer } = get();
+        if (_pollTimer) return;
+        fetchAgents();
+        const timer = setInterval(() => get().fetchAgents(), 30_000);
+        set({ _pollTimer: timer });
+      },
+
+      stopPolling: () => {
+        const { _pollTimer } = get();
+        if (_pollTimer) { clearInterval(_pollTimer); set({ _pollTimer: null }); }
+      },
     }),
     { name: 'agents-store' }
   )
