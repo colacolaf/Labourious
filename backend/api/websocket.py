@@ -44,7 +44,8 @@ def set_approval_handler(fn):
 
 async def _handle_inbound(data: dict):
     """Route inbound WS messages."""
-    if data.get("type") == "approve_trade":
+    msg_type = data.get("type")
+    if msg_type in ("approve_trade", "reject_trade"):
         if _approval_handler:
             await _approval_handler(data)
 

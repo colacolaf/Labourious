@@ -73,3 +73,16 @@ def test_set_approval_handler():
     set_approval_handler(test_handler)
     from backend.api import websocket
     assert websocket._approval_handler == test_handler
+
+
+@pytest.mark.asyncio
+async def test_reject_trade_routes_to_handler():
+    """reject_trade inbound message calls approval handler with approved=False."""
+    from backend.api.websocket import _handle_inbound, set_approval_handler
+    calls = []
+    async def handler(data):
+        calls.append(data)
+    set_approval_handler(handler)
+    await _handle_inbound({"type": "reject_trade", "trade_id": "abc"})
+    assert len(calls) == 1
+    assert calls[0]["type"] == "reject_trade"
