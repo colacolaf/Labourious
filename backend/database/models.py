@@ -145,6 +145,8 @@ class Trade(Base):
     pnl_pct = Column(Float, nullable=True)
     fees = Column(Float, default=0.0)
 
+    is_paper = Column(Boolean, default=False, nullable=False)
+
     entry_reason = Column(Text, nullable=True)
     exit_reason = Column(Text, nullable=True)
     trade_metadata = Column(JSON, nullable=True)
