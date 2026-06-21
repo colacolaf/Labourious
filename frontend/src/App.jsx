@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import useDashboardStore from './stores/dashboard.store';
 import useAgentsStore from './stores/agents.store';
+import useWizardStore from './stores/wizard.store';
 import { useWebSocket } from './hooks/useWebSocket';
 import { POLL_INTERVALS } from './utils/constants';
+import WizardShell from './components/Wizard/WizardShell';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -195,6 +197,15 @@ function WSInitialiser() {
 export default function App() {
   const { checkBackendHealth, fetchPortfolioSummary } = useDashboardStore();
   const { fetchAgents } = useAgentsStore();
+  const isComplete = useWizardStore((s) => s.isComplete);
+  const [showWizard, setShowWizard] = useState(() => !localStorage.getItem('wizard_complete'));
+
+  useEffect(() => {
+    if (isComplete) {
+      localStorage.setItem('wizard_complete', '1');
+      setShowWizard(false);
+    }
+  }, [isComplete]);
 
   useEffect(() => {
     checkBackendHealth();
@@ -214,6 +225,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      {showWizard && <WizardShell />}
       <WSInitialiser />
       <AppShell>
         <AnimatePresence mode="wait">
