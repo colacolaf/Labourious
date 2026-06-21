@@ -178,20 +178,21 @@ async def vault_check_broker(
     current_user: User = Depends(get_current_user),
 ):
     """Check if vault has credentials for the given broker."""
+    broker = broker.lower()
+    key_map = {
+        "alpaca": ["alpaca_api_key", "alpaca_secret"],
+        "binance": ["binance_api_key", "binance_secret"],
+        "kraken": ["kraken_api_key", "kraken_api_secret"],
+    }
+    required_keys = key_map.get(broker, [f"{broker}_api_key", f"{broker}_secret"])
+
     try:
         vault_path = Path(BASE_DIR) / "data" / "vault.db"
         vault = EncryptedVault(vault_path, settings.VAULT_PASSWORD)
-        broker = broker.lower()
-        key_map = {
-            "alpaca": ["alpaca_api_key", "alpaca_secret"],
-            "binance": ["binance_api_key", "binance_secret"],
-            "kraken": ["kraken_api_key", "kraken_api_secret"],
-        }
-        required_keys = key_map.get(broker, [f"{broker}_api_key", f"{broker}_secret"])
         has_all = all(bool(vault.get(k)) for k in required_keys)
         return {"broker": broker, "has_credentials": has_all, "required_keys": required_keys}
     except Exception as e:
-        return {"broker": broker, "has_credentials": False, "error": str(e)}
+        return {"broker": broker, "has_credentials": False, "required_keys": required_keys, "error": str(e)}
 
 
 @router.get("/{agent_id}", response_model=AgentResponse)

@@ -404,3 +404,4 @@ class TestVaultCheck:
         data = resp.json()
         assert "has_credentials" in data
         assert "broker" in data
+        assert "required_keys" in data
