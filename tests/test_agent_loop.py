@@ -216,3 +216,57 @@ async def test_run_agent_risk_pause_persisted():
         paused_events = [c[0][0] for c in broadcast_calls if c[0][0].get("event") == "agent_paused"]
         assert len(paused_events) >= 1
         assert agent.status == AgentStatus.PAUSED
+
+
+@pytest.mark.asyncio
+async def test_full_cycle_paper_trade_and_ws_event():
+    """Success criterion 1: agent cycle → paper Trade in DB → trade_executed WS event."""
+    from backend.trading.trade_executor import TradeExecutor
+
+    orchestrator, session = _make_orchestrator()
+    agent = _make_agent(agent_id=42, symbol="BTC/USD", broker="binance", execution_mode="autonomous", confidence_score=60)
+    agent.current_drawdown = 0.0
+    agent.user_id = None
+    _wire_session_query(session, agent)
+
+    market_data_obj = MagicMock()
+    market_data_obj.price = 65_000.0
+    market_data_obj.volume = 5_000
+    market_data_obj.rsi = 38.0
+    market_data_obj.ma20 = 64_000.0
+    market_data_obj.ma50 = 62_000.0
+
+    decision = TradeDecision(action="BUY", confidence=0.8, position_size=0.1, reasoning="dip buy")
+
+    events = []
+    async def collect(data):
+        events.append(data)
+
+    with patch("backend.orchestrator.agent_orchestrator.get_connector") as mock_conn, \
+         patch("backend.trading.trade_executor.get_connector") as mock_conn_exec, \
+         patch("backend.orchestrator.agent_orchestrator.LLMRouter") as mock_router_cls, \
+         patch("backend.orchestrator.agent_orchestrator.read_config"), \
+         patch("backend.orchestrator.agent_orchestrator.check_agent_risk", return_value=(False, None)), \
+         patch("backend.orchestrator.agent_orchestrator.manager.broadcast", side_effect=collect):
+
+        connector = AsyncMock()
+        connector.get_market_data.return_value = market_data_obj
+        connector.get_account_balance.return_value = 50_000.0
+        mock_conn.return_value = connector
+        mock_conn_exec.return_value = connector
+
+        router = AsyncMock()
+        router.decide.return_value = decision
+        mock_router_cls.from_config.return_value = router
+
+        await orchestrator.run_agent(42)
+
+        # Verify trade_executed event was broadcast with correct schema
+        trade_evts = [e for e in events if e.get("event") == "trade_executed"]
+        assert len(trade_evts) == 1, f"Expected 1 trade_executed event, got: {events}"
+        assert trade_evts[0]["is_paper"] is True
+        assert trade_evts[0]["symbol"] == "BTC/USD"
+        assert trade_evts[0]["agent_id"] == 42
+        assert trade_evts[0]["action"] == "BUY"
+        assert "confidence_score" in trade_evts[0]
+        assert "pnl" in trade_evts[0]
