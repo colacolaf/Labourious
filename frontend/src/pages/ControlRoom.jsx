@@ -34,7 +34,7 @@ export default function ControlRoom() {
 
   useEffect(() => {
     fetchAll();
-  }, [fetchAll]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{

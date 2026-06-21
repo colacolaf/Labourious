@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '../Common/Button';
 import { Spinner } from '../Common/Spinner';
 import useControlRoomStore from '../../stores/controlRoom.store';
@@ -41,6 +41,11 @@ export default function LLMSection() {
   const [testResult, setTestResult] = useState(null);
   const [testing, setTesting] = useState(false);
   const [patchError, setPatchError] = useState(null);
+  const [ollamaUrl, setOllamaUrl] = useState(llmConfig?.ollama_url ?? 'http://localhost:11434');
+
+  useEffect(() => {
+    if (llmConfig?.ollama_url) setOllamaUrl(llmConfig.ollama_url);
+  }, [llmConfig?.ollama_url]);
 
   if (loading && !llmConfig) {
     return <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}><Spinner /></div>;
@@ -132,8 +137,9 @@ export default function LLMSection() {
           </div>
           <input
             type="text"
-            defaultValue={llmConfig.ollama_url}
-            onBlur={(e) => patchLLM({ ollama_url: e.target.value })}
+            value={ollamaUrl}
+            onChange={(e) => setOllamaUrl(e.target.value)}
+            onBlur={() => patchLLM({ ollama_url: ollamaUrl })}
             style={{ ...input, width: 300 }}
           />
         </div>
