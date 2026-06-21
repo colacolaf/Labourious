@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useDashboardStore from './stores/dashboard.store';
 import useAgentsStore from './stores/agents.store';
 import useWizardStore from './stores/wizard.store';
+import useAuthStore from './stores/auth.store';
 import { useWebSocket } from './hooks/useWebSocket';
 import { POLL_INTERVALS } from './utils/constants';
 import WizardShell from './components/Wizard/WizardShell';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -17,6 +19,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ContextBuilder from './components/Warroom/ContextBuilder';
 import Lobby from './pages/Lobby';
+import Login from './pages/Login';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -198,7 +201,11 @@ export default function App() {
   const { checkBackendHealth, fetchPortfolioSummary } = useDashboardStore();
   const { fetchAgents } = useAgentsStore();
   const isComplete = useWizardStore((s) => s.isComplete);
+  const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
   const [showWizard, setShowWizard] = useState(() => !localStorage.getItem('wizard_complete'));
+
+  // Rehydrate auth tokens on boot
+  useEffect(() => { loadFromStorage(); }, [loadFromStorage]);
 
   useEffect(() => {
     if (isComplete) {
@@ -225,34 +232,49 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {showWizard && <WizardShell />}
       <WSInitialiser />
-      <AppShell>
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/lobby" element={<Lobby />} />
-            <Route path="/warroom/day" element={<WarroomDay />} />
-            <Route path="/warroom/swing" element={<WarroomSwing />} />
-            <Route path="/warroom/long" element={<WarroomLongTerm />} />
-            <Route path="/analytics" element={
-              <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
-                <AnalyticsPage />
-              </motion.div>
-            } />
-            <Route path="/agents/new" element={
-              <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
-                <ContextBuilder />
-              </motion.div>
-            } />
-            <Route path="/trades" element={<PlaceholderPage title="Trades" />} />
-            <Route path="/vault" element={<PlaceholderPage title="Vault" />} />
-            <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
-            <Route path="/settings/notifications" element={<NotificationsPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AnimatePresence>
-      </AppShell>
+      <Routes>
+        {/* Public */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Protected — AppShell + wizard overlay */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="*" element={
+            <>
+              {showWizard && <WizardShell />}
+              <AppShell>
+                <AnimatePresence mode="wait">
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/lobby" element={<Lobby />} />
+                    <Route path="/warroom/day" element={<WarroomDay />} />
+                    <Route path="/warroom/swing" element={<WarroomSwing />} />
+                    <Route path="/warroom/long" element={<WarroomLongTerm />} />
+                    <Route path="/analytics" element={
+                      <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                        <AnalyticsPage />
+                      </motion.div>
+                    } />
+                    <Route path="/agents/new" element={
+                      <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                        <ContextBuilder />
+                      </motion.div>
+                    } />
+                    {/* TODO: implement Trades page (Phase 5) */}
+                    <Route path="/trades" element={<PlaceholderPage title="Trades" />} />
+                    {/* TODO: implement Vault page (Phase 5) */}
+                    <Route path="/vault" element={<PlaceholderPage title="Vault" />} />
+                    {/* TODO: implement Settings page (Phase 5) */}
+                    <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+                    <Route path="/settings/notifications" element={<NotificationsPage />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </AnimatePresence>
+              </AppShell>
+            </>
+          } />
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }
