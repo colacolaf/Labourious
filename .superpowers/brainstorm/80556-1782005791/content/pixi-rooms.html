@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#050305;color:#e8e8f0;font-family:'VT323',monospace;padding:14px;}
+h2{font-family:'Press Start 2P',monospace;font-size:10px;color:#00ff88;text-shadow:0 0 8px rgba(0,255,136,0.5);margin-bottom:4px;}
+.sub{font-size:17px;color:#606080;margin-bottom:14px;}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.rw{display:flex;flex-direction:column;gap:5px;}
+
+.rlabel{font-family:'Press Start 2P',monospace;font-size:6px;padding:5px 8px;letter-spacing:1px;text-align:center;border:1px solid;}
+
+.rwrap{position:relative;border:2px solid;cursor:pointer;overflow:hidden;transition:outline 0.1s;}
+.rwrap canvas{display:block;width:100%!important;height:auto!important;}
+
+/* Overlays */
+.pnl{position:absolute;top:4px;left:0;right:0;display:flex;justify-content:center;pointer-events:none;z-index:20;}
+.pnl-inner{font-family:'Press Start 2P',monospace;font-size:6px;padding:3px 7px;background:rgba(0,0,0,0.75);border:1px solid;}
+
+.ticker{position:absolute;bottom:0;left:0;right:0;height:15px;overflow:hidden;z-index:20;display:flex;align-items:center;}
+.ttext{white-space:nowrap;font-family:'Press Start 2P',monospace;font-size:5px;animation:tickmove 18s linear infinite;}
+@keyframes tickmove{from{transform:translateX(110%)}to{transform:translateX(-200%)}}
+
+.scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px);pointer-events:none;z-index:15;}
+
+.rdesc{font-size:14px;color:#8080a0;padding:5px 7px;background:#0d0d18;border:1px solid #1a1a30;line-height:1.4;}
+
+.footer{text-align:center;font-size:15px;color:#606080;border-top:1px solid #1e1e3a;padding-top:10px;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<h2>▶ LABOURIOUS WARROOMS — PIXIJS LIVE MOCKUP</h2>
+<p class="sub">Birds-eye top-down · Sensible Soccer walk · PixiJS renderer · Agents live · Click room to select</p>
+
+<div class="grid">
+
+  <!-- BLOOMBERG -->
+  <div class="rw">
+    <div class="rlabel" style="color:#D4AF37;border-color:#D4AF3744;background:#0d0b0890;">◈ THE BLOOMBERG · LONG-TERM</div>
+    <div class="rwrap" id="wrap-bloom" style="border-color:#D4AF37;" onclick="sel('bloom')">
+      <canvas id="cv-bloom"></canvas>
+      <div class="pnl"><div class="pnl-inner" id="pnl-bloom" style="color:#D4AF37;border-color:#D4AF3766;">$47,500 (+12.3%) YTD</div></div>
+      <div class="ticker" style="background:#0c0a06;border-top:1px solid #D4AF3733;">
+        <div class="ttext" style="color:#D4AF37;animation-duration:22s;">AAPL +0.4% &nbsp;·&nbsp; MSFT +1.2% &nbsp;·&nbsp; BRK.B +0.1% &nbsp;·&nbsp; JNJ -0.2% &nbsp;·&nbsp; VOO +0.3% &nbsp;·&nbsp; SPY +0.5% &nbsp;·&nbsp; AMZN +0.9%</div>
+      </div>
+      <div class="scanlines"></div>
+    </div>
+    <div class="rdesc">Hedge fund floor. Bloomberg terminals. City skyline view. Suit agents walk slow. Gold & mahogany.</div>
+  </div>
+
+  <!-- OAK OFFICE -->
+  <div class="rw">
+    <div class="rlabel" style="color:#CC8833;border-color:#CC883344;background:#0e0a0890;">◎ THE OAK OFFICE · SWING</div>
+    <div class="rwrap" id="wrap-oak" style="border-color:#CC8833;" onclick="sel('oak')">
+      <canvas id="cv-oak"></canvas>
+      <div class="pnl"><div class="pnl-inner" style="color:#CC8833;border-color:#CC883366;">+$18,200 (+8.5%) THIS MONTH</div></div>
+      <div class="ticker" style="background:#0c0806;border-top:1px solid #CC883333;">
+        <div class="ttext" style="color:#CC8833;animation-duration:16s;animation-delay:-4s;">TECH ▲ +2.4% &nbsp;·&nbsp; ENERGY ▼ -1.1% &nbsp;·&nbsp; HEALTH ▲ +0.8% &nbsp;·&nbsp; FINANCE — +0.1% &nbsp;·&nbsp; MATERIALS ▲ +1.3%</div>
+      </div>
+      <div class="scanlines"></div>
+    </div>
+    <div class="rdesc">Prop trading office. Oak desks. Bookshelf. Whiteboard. Business casual agents. Warm amber light.</div>
+  </div>
+
+  <!-- THE PIT -->
+  <div class="rw">
+    <div class="rlabel" style="color:#FF3333;border-color:#FF333344;background:#0f080890;">◉ THE PIT · DAY TRADING</div>
+    <div class="rwrap" id="wrap-pit" style="border-color:#FF3333;" onclick="sel('pit')">
+      <canvas id="cv-pit"></canvas>
+      <div class="pnl"><div class="pnl-inner" id="pnl-pit" style="color:#00FF00;border-color:#00FF0066;">+$3,420 TODAY (+2.1%)</div></div>
+      <div class="ticker" style="background:#080202;border-top:1px solid #FF333344;">
+        <div class="ttext" style="color:#ff6666;animation-duration:9s;animation-delay:-2s;"><span style="color:#FF3333;">TSLA ▼ -2.1%</span> &nbsp; <span style="color:#00FF00;">NVDA ▲ +4.3%</span> &nbsp; <span style="color:#FF3333;">GME ▼ -8.2%</span> &nbsp; <span style="color:#00FF00;">AMD ▲ +1.9%</span> &nbsp; <span style="color:#FF8C00;">SPY — +0.1%</span></div>
+      </div>
+      <div class="scanlines" style="background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,0,0,0.04) 2px,rgba(255,0,0,0.04) 4px);"></div>
+    </div>
+    <div class="rdesc">Chaos floor. Screen wall. Crumpled trade sheets. Vested agents sprint. Red/green flashing.</div>
+  </div>
+
+</div>
+
+<div class="footer">Click room to select · Tell me in terminal: decor tweaks, agent count, color shifts, or "approve all" to proceed to implementation plan</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+<script>
+const W = 280, H = 255;
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function boot(canvasId, bg) {
+  const cv = document.getElementById(canvasId);
+  const app = new PIXI.Application({ view:cv, width:W, height:H, backgroundColor:bg, antialias:false, resolution:1 });
+  return app;
+}
+
+function checkerFloor(g, x, y, w, h, c1, c2, sz=14) {
+  for (let tx=x; tx<x+w; tx+=sz)
+    for (let ty=y; ty<y+h; ty+=sz) {
+      g.beginFill((Math.floor((tx-x)/sz)+Math.floor((ty-y)/sz))%2===0?c1:c2);
+      g.drawRect(tx, ty, Math.min(sz,x+w-tx), Math.min(sz,y+h-ty));
+    }
+}
+
+function desk(g, x, y, w, h, fill, border) {
+  g.beginFill(fill); g.drawRect(x,y,w,h);
+  g.lineStyle(1,border,0.6); g.drawRect(x,y,w,h); g.lineStyle(0);
+}
+
+function monitor(g, x, y, w, h, screen, frame) {
+  g.beginFill(frame); g.drawRect(x-2,y-2,w+4,h+4);
+  g.beginFill(screen); g.drawRect(x,y,w,h);
+}
+
+// ── Agent ────────────────────────────────────────────────────────────────────
+
+class Agent {
+  constructor(app, x, y, spd, col, headCol, border, vest=null) {
+    this.x=x; this.y=y; this.tx=x; this.ty=y;
+    this.spd=spd; this.app=app;
+    this.pause=0; this.tradeT=80+Math.random()*250;
+    this.stepF=0; this.legPh=0; this.dir=1;
+
+    this.c = new PIXI.Container();
+    app.stage.addChild(this.c);
+
+    const g = new PIXI.Graphics();
+    // shadow
+    g.beginFill(0x000000,0.25); g.drawEllipse(7,15,6,2.5);
+    // body oval (top-down)
+    g.beginFill(col); g.lineStyle(1.5,border,0.95); g.drawEllipse(7,9,5,7); g.lineStyle(0);
+    // vest stripe
+    if (vest) { g.beginFill(vest,0.75); g.drawRect(4,6,6,5); }
+    // head
+    g.beginFill(headCol); g.lineStyle(1,border,0.8); g.drawCircle(7,3,4); g.lineStyle(0);
+    // eyes
+    g.beginFill(0x000000,0.85); g.drawCircle(5,3,1); g.drawCircle(9,3,1);
+    this.c.addChild(g); this.gfx=g;
+
+    // legs — separate graphics for animation
+    this.ll = new PIXI.Graphics();
+    this.rl = new PIXI.Graphics();
+    this.ll.beginFill(border,0.7); this.ll.drawCircle(5,15,2);
+    this.rl.beginFill(border,0.7); this.rl.drawCircle(9,15,2);
+    this.c.addChild(this.ll); this.c.addChild(this.rl);
+
+    this.c.x=x; this.c.y=y;
+    this.c.interactive=true; this.c.buttonMode=true;
+    this.c.on('pointerdown', ()=>this.select());
+    this.selected=false;
+  }
+
+  retarget(b) {
+    this.tx = b.x0 + Math.random()*(b.x1-b.x0);
+    this.ty = b.y0 + Math.random()*(b.y1-b.y0);
+  }
+
+  select() {
+    this.selected=!this.selected;
+    this.gfx.tint = this.selected ? 0xffffff : 0xffffff;
+    // add highlight ring
+    if (this.selected) {
+      if (!this._ring) {
+        const r = new PIXI.Graphics();
+        r.lineStyle(2,0xffffff,0.8); r.drawCircle(7,7,10);
+        this.c.addChildAt(r,0); this._ring=r;
+      }
+    } else if (this._ring) {
+      this.c.removeChild(this._ring); this._ring=null;
+    }
+  }
+
+  tick(b, texts) {
+    if (this.pause>0) { this.pause--; return; }
+
+    const dx=this.tx-this.x, dy=this.ty-this.y, d=Math.sqrt(dx*dx+dy*dy);
+    if (d<3) {
+      const p = this.spd<0.5?[60,130]:this.spd<0.9?[25,65]:[8,25];
+      this.pause = p[0]+Math.random()*(p[1]-p[0]);
+      this.retarget(b);
+    } else {
+      const vx=(dx/d)*this.spd, vy=(dy/d)*this.spd;
+      this.x+=vx; this.y+=vy;
+      this.dir = vx>0?1:-1;
+      // leg walk cycle
+      this.stepF++;
+      const rate=this.spd<0.5?10:this.spd<0.9?6:3;
+      if (this.stepF%rate===0) this.legPh=1-this.legPh;
+      this.ll.y = this.legPh===0?-1.5:1.5;
+      this.rl.y = this.legPh===0?1.5:-1.5;
+    }
+
+    this.c.scale.x = this.dir<0?-1:1;
+    this.c.x = this.x + (this.dir<0?14:0);
+    this.c.y = this.y;
+
+    this.tradeT--;
+    if (this.tradeT<=0) {
+      this.bubble(texts);
+      const r=this.spd<0.5?[280,550]:this.spd<0.9?[120,280]:[40,120];
+      this.tradeT=r[0]+Math.random()*(r[1]-r[0]);
+    }
+  }
+
+  bubble(texts) {
+    const txt=texts[Math.floor(Math.random()*texts.length)];
+    const up=txt.includes('+')||txt.includes('BUY')||txt.includes('ADD')||txt.includes('▲');
+    const t = new PIXI.Text(txt,{fontFamily:'"Press Start 2P",monospace',fontSize:5,fill:up?0x00ff88:0xff4444,resolution:2});
+    const bg=new PIXI.Graphics();
+    bg.beginFill(0x000000,0.75); bg.drawRect(-2,-2,t.width+4,t.height+4);
+    const w=new PIXI.Container(); w.addChild(bg); w.addChild(t);
+    w.x=this.x-8; w.y=this.y-20;
+    this.app.stage.addChild(w);
+    let lf=0;
+    const fn=()=>{ lf++; w.y-=0.12; if(lf>80) w.alpha=1-(lf-80)/40; if(lf>120){this.app.stage.removeChild(w);this.app.ticker.remove(fn);}};
+    this.app.ticker.add(fn);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BLOOMBERG ROOM — The Bloomberg
+// ════════════════════════════════════════════════════════════════════════════
+;(()=>{
+  const app = boot('cv-bloom', 0x0d0b08);
+  const GOLD=0xD4AF37, MAH=0x2a1808, TEAL=0x1A3A3A;
+
+  const bg = new PIXI.Graphics();
+
+  // Night sky behind windows
+  bg.beginFill(0x08111e); bg.drawRect(0,0,W,72);
+
+  // Stars
+  bg.beginFill(0xffffff,0.5);
+  for(let i=0;i<35;i++) bg.drawRect(Math.random()*W|0, Math.random()*14|0, 1,1);
+
+  // Moon
+  bg.beginFill(0xD4AF37,0.3); bg.drawCircle(260,10,5);
+  bg.beginFill(0x08111e); bg.drawCircle(262,9,4);
+
+  // City skyline — geometric pixel buildings
+  const blds=[
+    {x:2,y:18,w:22,h:50},{x:26,y:26,w:14,h:42},{x:42,y:10,w:26,h:58},
+    {x:70,y:30,w:16,h:38},{x:88,y:8,w:28,h:60},{x:118,y:22,w:18,h:46},
+    {x:138,y:14,w:12,h:54},{x:152,y:28,w:20,h:40},{x:174,y:6,w:26,h:62},
+    {x:202,y:20,w:14,h:48},{x:218,y:10,w:22,h:58},{x:242,y:24,w:20,h:44},
+    {x:264,y:15,w:18,h:53},
+  ];
+  blds.forEach(b=>{
+    const shade = 0x14202e+(Math.random()*0x060608|0);
+    bg.beginFill(shade); bg.drawRect(b.x,b.y,b.w,b.h);
+    // window lights (random lit offices)
+    bg.beginFill(GOLD,0.25);
+    for(let wy=b.y+4;wy<b.y+b.h-4;wy+=7)
+      for(let wx=b.x+3;wx<b.x+b.w-3;wx+=5)
+        if(Math.random()>0.45) bg.drawRect(wx,wy,2,3);
+  });
+
+  // Window frame — 3 panes separated by mahogany mullions
+  bg.beginFill(MAH); bg.drawRect(0,0,3,72); bg.drawRect(W-3,0,3,72);
+  bg.drawRect(91,0,4,72); bg.drawRect(185,0,4,72);
+  bg.drawRect(0,70,W,4); // sill
+
+  // Wall below windows (wood paneling)
+  bg.beginFill(0x1a1208); bg.drawRect(0,74,W,10);
+  bg.lineStyle(1,GOLD,0.12);
+  for(let wx=0;wx<W;wx+=36){bg.moveTo(wx,74);bg.lineTo(wx,84);}
+  bg.lineStyle(0);
+
+  // Floor — dark checker tiles
+  checkerFloor(bg,0,84,W,H-100,0x1e1808,0x161208,16);
+
+  app.stage.addChild(bg);
+
+  // FURNITURE
+  const f=new PIXI.Graphics();
+
+  // Left desk bank — 2 long desks
+  desk(f,14,98,82,26,0x2a1c0a,GOLD);
+  monitor(f,20,102,20,16,0x060608,0x3a2410);
+  monitor(f,46,102,20,16,0x060608,0x3a2410);
+  // screen glow lines
+  f.beginFill(GOLD,0.35);
+  for(let i=0;i<4;i++){ f.drawRect(22,104+i*3,14,1); f.drawRect(48,104+i*3,14,1); }
+
+  desk(f,14,144,82,26,0x2a1c0a,GOLD);
+  monitor(f,20,148,20,16,0x060608,0x3a2410);
+  monitor(f,46,148,20,16,0x060608,0x3a2410);
+  f.beginFill(GOLD,0.35);
+  for(let i=0;i<4;i++){ f.drawRect(22,150+i*3,14,1); f.drawRect(48,150+i*3,14,1); }
+
+  // Right executive desk (larger)
+  desk(f,198,98,66,70,0x2e1e0a,GOLD);
+  monitor(f,204,103,26,20,0x040608,0x3a2410);
+  monitor(f,236,103,22,20,0x040608,0x3a2410);
+  f.beginFill(GOLD,0.35);
+  for(let i=0;i<5;i++){ f.drawRect(206,105+i*3,18,1); f.drawRect(238,105+i*3,14,1); }
+  // Papers on desk
+  f.beginFill(0x2a2818,0.6); f.drawRect(206,128,18,12);
+  f.beginFill(0x242016,0.5); f.drawRect(226,130,16,10);
+
+  // Potted plant (top-down circle)
+  f.beginFill(0x0a1e0a); f.drawCircle(190,115,9);
+  f.beginFill(0x1a3a12); f.drawCircle(188,113,6);
+  f.beginFill(0x2a5a1a); f.drawCircle(190,111,4);
+  f.beginFill(0x3a2a14); f.drawRect(186,120,8,5); // pot
+
+  // Filing cabinet
+  f.beginFill(0x1e1e18); f.lineStyle(1,GOLD,0.3); f.drawRect(154,90,16,32);
+  f.lineStyle(1,GOLD,0.2); f.moveTo(154,104);f.lineTo(170,104);
+  f.moveTo(154,112);f.lineTo(170,112); f.lineStyle(0);
+
+  // Framed award on wall
+  f.beginFill(0x2a1e0a); f.lineStyle(1,GOLD,0.5); f.drawRect(106,84,36,18);
+  f.lineStyle(0); f.beginFill(GOLD,0.3); f.drawRect(114,88,6,6);
+  f.beginFill(GOLD,0.25); f.drawRect(124,87,8,8);
+  f.beginFill(GOLD,0.2); f.drawRect(136,89,5,5);
+
+  app.stage.addChild(f);
+
+  // Agents
+  const B={x0:15,y0:86,x1:W-20,y1:H-18};
+  const agents=[
+    new Agent(app,34,132,0.38,0x1a1408,0xc8a870,GOLD),
+    new Agent(app,218,175,0.33,0x1a1408,0xc8a870,GOLD),
+    new Agent(app,100,158,0.36,0x1a1408,0xc8a870,GOLD),
+  ];
+  agents.forEach(a=>a.retarget(B));
+
+  const TX=['HOLD BRK.B','ADD VOO','HOLD AAPL','+$2,400','HOLD MSFT','BUY SPY','REVIEW'];
+  app.ticker.add(()=>agents.forEach(a=>a.tick(B,TX)));
+
+  // Monitor flicker
+  let ft=0; const fg=new PIXI.Graphics(); app.stage.addChild(fg);
+  app.ticker.add(()=>{
+    ft++;fg.clear();
+    if(ft%190<2){fg.beginFill(GOLD,0.1);fg.drawRect(20,102,20,16);fg.drawRect(46,102,20,16);}
+  });
+})();
+
+// ════════════════════════════════════════════════════════════════════════════
+// OAK OFFICE — The Swing Room
+// ════════════════════════════════════════════════════════════════════════════
+;(()=>{
+  const app = boot('cv-oak', 0x0e0a08);
+  const AMBER=0xCC8833, COPPER=0xB87333, OAK=0x3a2010;
+
+  const bg=new PIXI.Graphics();
+
+  // Window wall — right side, warm afternoon light
+  bg.beginFill(0x0e0806); bg.drawRect(W-56,0,56,H-15);
+  // Warm glow from window
+  bg.beginFill(0xCC6600,0.05); bg.drawRect(W-56,0,56,H-15);
+  // Window panes
+  bg.beginFill(0x3a2010);
+  bg.drawRect(W-56,0,3,H-15); bg.drawRect(W-3,0,3,H-15);
+  bg.drawRect(W-56,38,56,3); bg.drawRect(W-56,80,56,3); bg.drawRect(W-56,122,56,3);
+  // Outside light (cream/amber squares)
+  bg.beginFill(0xCC8833,0.06); bg.drawRect(W-52,1,49,36);
+  bg.beginFill(0xCC8833,0.05); bg.drawRect(W-52,42,49,37);
+  bg.beginFill(0xCC7700,0.04); bg.drawRect(W-52,84,49,37);
+
+  // Top wall
+  bg.beginFill(0x1a1008); bg.drawRect(0,0,W-56,12);
+
+  // Wood plank floor (horizontal planks)
+  const pColors=[0x1a1008,0x160e06,0x1c1208,0x141006];
+  for(let y=12;y<H-15;y+=12){
+    bg.beginFill(pColors[(y/12|0)%4]); bg.drawRect(0,y,W-56,12);
+  }
+  bg.lineStyle(1,0x0e0806,0.9);
+  for(let y=12;y<H-15;y+=12){bg.moveTo(0,y);bg.lineTo(W-56,y);}
+  // Plank seams
+  for(let y=12;y<H-15;y+=12){
+    const off=((y/12|0)%3)*45;
+    for(let x=off;x<W-56;x+=90){bg.moveTo(x,y);bg.lineTo(x,y+12);}
+  }
+  bg.lineStyle(0);
+
+  app.stage.addChild(bg);
+
+  const f=new PIXI.Graphics();
+
+  // Bookshelf — left wall
+  f.beginFill(0x2a1808); f.lineStyle(1,AMBER,0.4); f.drawRect(0,14,20,72);
+  const bkc=[0x8b2010,0x2a4a8a,0x1a5a2a,0x5a4a10,0x8a3a00,0x3a2a6a,0x8a5a00];
+  for(let by=18;by<82;by+=9){let bx=2;while(bx<18){const bw=3+Math.random()*5|0;f.beginFill(bkc[Math.random()*bkc.length|0]);f.drawRect(bx,by,bw,7);bx+=bw+1;}}
+
+  // Whiteboard — top wall, center
+  f.lineStyle(0);
+  f.beginFill(0x1e1e18); f.lineStyle(1,AMBER,0.3); f.drawRect(68,14,58,30);
+  // Scribbled content (amber lines)
+  f.lineStyle(1,AMBER,0.18);
+  f.moveTo(74,21);f.lineTo(108,21); f.moveTo(74,27);f.lineTo(118,27);
+  f.moveTo(74,33);f.lineTo(96,33);
+  // Mini chart sketch
+  const pts=[72,41,80,36,88,39,96,31,104,34,112,27,120,30];
+  f.lineStyle(1,AMBER,0.25);
+  for(let i=0;i<pts.length-2;i+=2){f.moveTo(pts[i],pts[i+1]);f.lineTo(pts[i+2],pts[i+3]);}
+  f.lineStyle(0);
+
+  // Desk cluster A (2 desks)
+  desk(f,26,58,52,28,0x2a1c0a,AMBER);
+  monitor(f,32,62,16,13,0x060402,0x3a2010);
+  monitor(f,52,62,16,13,0x060402,0x3a2010);
+  // Desk lamp (top-down glow)
+  f.beginFill(AMBER,0.12); f.drawEllipse(45,68,18,10);
+  // Coffee cup
+  f.beginFill(0x4a3020); f.drawCircle(68,78,3);
+  f.beginFill(0x2a1a0a); f.drawCircle(68,78,2);
+  // Notepad
+  f.beginFill(0x282416,0.8); f.drawRect(56,74,10,8);
+
+  // Desk cluster B
+  desk(f,95,108,52,28,0x2a1c0a,AMBER);
+  monitor(f,101,112,16,13,0x060402,0x3a2010);
+  monitor(f,121,112,16,13,0x060402,0x3a2010);
+  f.beginFill(AMBER,0.1); f.drawEllipse(118,118,18,10);
+
+  // Side desk
+  desk(f,26,138,38,22,0x2a1c0a,AMBER);
+  monitor(f,32,142,14,11,0x060402,0x3a2010);
+
+  // Screen content lines
+  f.beginFill(AMBER,0.3);
+  [[34,64,10],[54,64,10],[34,148,8],[103,114,10],[123,114,10]].forEach(([x,y,l])=>{
+    for(let i=0;i<3;i++) f.drawRect(x,y+i*3,l,1);
+  });
+
+  // Framed market chart on wall
+  f.beginFill(0x1a1410); f.lineStyle(1,AMBER,0.3); f.drawRect(134,14,30,22);
+  f.lineStyle(1,COPPER,0.4);
+  const cp=[136,34,141,30,146,32,151,26,156,29,161,22,162,24];
+  for(let i=0;i<cp.length-2;i+=2){f.moveTo(cp[i],cp[i+1]);f.lineTo(cp[i+2],cp[i+3]);}
+  f.lineStyle(0);
+
+  app.stage.addChild(f);
+
+  const B={x0:24,y0:52,x1:W-62,y1:H-18};
+  const agents=[
+    new Agent(app,60,92,0.54,0x2a1808,0xd4b896,AMBER),
+    new Agent(app,128,148,0.50,0x2a1808,0xd4b896,AMBER),
+    new Agent(app,88,165,0.52,0x2a1808,0xd4b896,AMBER),
+  ];
+  agents.forEach(a=>a.retarget(B));
+  const TX=['+TECH','-UTIL','ROTATE','+$840','HOLD','SECTOR+','REBAL'];
+  app.ticker.add(()=>agents.forEach(a=>a.tick(B,TX)));
+})();
+
+// ════════════════════════════════════════════════════════════════════════════
+// THE PIT — Day Trading
+// ════════════════════════════════════════════════════════════════════════════
+;(()=>{
+  const app = boot('cv-pit', 0x070303);
+  const RED=0xFF3333, GREEN=0x00FF00;
+
+  const bg=new PIXI.Graphics();
+
+  // Screen wall at top
+  bg.beginFill(0x0a0202); bg.drawRect(0,0,W,54);
+  bg.lineStyle(1,0x330000,0.9); bg.moveTo(0,54); bg.lineTo(W,54); bg.lineStyle(0);
+
+  // Overhead cable tray
+  bg.beginFill(0x050101); bg.drawRect(0,52,W,4);
+  bg.lineStyle(1,0x220000,0.4);
+  [45,95,148,195,238].forEach(x=>{bg.moveTo(x,0);bg.lineTo(x,56);});
+  bg.lineStyle(0);
+
+  // Floor — dark checker
+  checkerFloor(bg,0,56,W,H-72,0x0f0505,0x0a0303,11);
+
+  // Crumpled trade sheets on floor
+  bg.beginFill(0x1e1010,0.4);
+  for(let i=0;i<14;i++) bg.drawEllipse(15+Math.random()*(W-30)|0,62+Math.random()*(H-90)|0,4+Math.random()*7|0,3+Math.random()*4|0);
+
+  app.stage.addChild(bg);
+
+  // Screen wall monitors — 5 big screens
+  const screens=[
+    {x:4,y:3,w:48,h:44,c:RED,t:'SELL',v:'-2.1%'},
+    {x:56,y:3,w:48,h:44,c:GREEN,t:'BUY',v:'+4.3%'},
+    {x:108,y:3,w:48,h:44,c:RED,t:'SELL',v:'-0.8%'},
+    {x:160,y:3,w:48,h:44,c:GREEN,t:'BUY',v:'+1.9%'},
+    {x:212,y:3,w:64,h:44,c:0xFF8C00,t:'HOLD',v:'+0.1%'},
+  ];
+
+  const sf=new PIXI.Graphics();
+  screens.forEach(s=>{
+    sf.beginFill(0x070101); sf.drawRect(s.x,s.y,s.w,s.h);
+    sf.lineStyle(1.5,s.c,0.75); sf.drawRect(s.x,s.y,s.w,s.h); sf.lineStyle(0);
+    sf.beginFill(s.c,0.04); sf.drawRect(s.x+1,s.y+1,s.w-2,s.h-2);
+    // mini bar chart at bottom of screen
+    sf.beginFill(s.c,0.4);
+    const bh=[8,12,6,16,10,14,18,10,20];
+    bh.forEach((h,i)=>{sf.drawRect(s.x+3+i*5,s.y+s.h-4-h,4,h);});
+  });
+  app.stage.addChild(sf);
+
+  // Screen labels
+  screens.forEach(s=>{
+    const t1=new PIXI.Text(s.t,{fontFamily:'"Press Start 2P",monospace',fontSize:7,fill:s.c,resolution:2});
+    const t2=new PIXI.Text(s.v,{fontFamily:'"Press Start 2P",monospace',fontSize:8,fill:s.c,resolution:2});
+    t1.x=s.x+4; t1.y=s.y+4;
+    t2.x=s.x+4; t2.y=s.y+20;
+    app.stage.addChild(t1); app.stage.addChild(t2);
+  });
+
+  // Standing desk stations
+  const f=new PIXI.Graphics();
+  const stas=[
+    {x:8,y:62},{x:62,y:62},{x:116,y:62},{x:170,y:62},{x:224,y:62},
+    {x:22,y:118},{x:88,y:118},{x:154,y:118},{x:210,y:118},
+    {x:10,y:170},{x:80,y:170},{x:148,y:170},{x:206,y:170},
+  ];
+  stas.forEach(s=>{
+    f.beginFill(0x160606); f.lineStyle(1,0xff333322); f.drawRect(s.x,s.y,22,14);
+    f.lineStyle(0);
+    f.beginFill(0x050101); f.drawRect(s.x+2,s.y+2,9,7);
+    // screen glow
+    const up=Math.random()>0.4;
+    f.beginFill(up?0x001a00:0x1a0000,0.8); f.drawRect(s.x+3,s.y+3,7,5);
+    // LED
+    f.beginFill(up?GREEN:RED,0.9); f.drawCircle(s.x+19,s.y+2,1.5);
+    // keyboard dots
+    f.beginFill(0x1a0808,0.6); f.drawRect(s.x+2,s.y+10,9,3);
+  });
+
+  // RED PANIC BUTTON (top-down)
+  f.beginFill(0xff0000); f.lineStyle(2,0x660000); f.drawCircle(W-14,68,8); f.lineStyle(0);
+  f.beginFill(0xcc0000); f.drawCircle(W-14,68,5);
+  // PANIC label
+  const panic=new PIXI.Text('PANIC',{fontFamily:'"Press Start 2P",monospace',fontSize:4,fill:0xff6666,resolution:2});
+  panic.x=W-28; panic.y=76;
+
+  // Speed timer display
+  f.beginFill(0x0a0202); f.lineStyle(1,0xff333344); f.drawRect(W-52,88,44,16);
+  f.lineStyle(0);
+  app.stage.addChild(f);
+  app.stage.addChild(panic);
+
+  const timer=new PIXI.Text('09:24:38',{fontFamily:'"Press Start 2P",monospace',fontSize:5,fill:0xff4444,resolution:2});
+  timer.x=W-50; timer.y=93;
+  app.stage.addChild(timer);
+
+  // Screen flicker + P&L update
+  let ft=0; const fg=new PIXI.Graphics(); app.stage.addChild(fg);
+  app.ticker.add(()=>{
+    ft++;
+    fg.clear();
+    // random screen flash
+    if(ft%55<2){
+      const s=screens[Math.random()*screens.length|0];
+      fg.beginFill(s.c,0.12); fg.drawRect(s.x,s.y,s.w,s.h);
+    }
+    // timer update
+    if(ft%60===0){
+      const h=9,m=24+Math.floor(ft/60)%30,s2=ft%60;
+      timer.text=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s2).padStart(2,'0')}`;
+    }
+    // P&L flash
+    if(ft%100===0){
+      const up=Math.random()>0.3;
+      const el=document.getElementById('pnl-pit');
+      if(el){
+        el.textContent=up?`+$${(2800+Math.random()*2000|0).toLocaleString()} TODAY (+${(1.2+Math.random()*2.5).toFixed(1)}%)`:
+          `-$${(Math.random()*600|0).toLocaleString()} TODAY (-${(Math.random()*0.4).toFixed(1)}%)`;
+        el.style.color=up?'#00FF00':'#FF3333';
+        el.style.borderColor=up?'#00FF0066':'#FF333366';
+      }
+    }
+  });
+
+  // Agents — trading vests
+  const B={x0:8,y0:57,x1:W-18,y1:H-18};
+  const vestDefs=[
+    {x:18,y:88,vest:0xff3333},{x:80,y:78,vest:0x3355ff},
+    {x:148,y:90,vest:0xffcc00},{x:210,y:78,vest:0x00cc44},
+    {x:44,y:150,vest:0xff3333},{x:130,y:145,vest:0x3355ff},
+  ];
+  const agents=vestDefs.map(d=>new Agent(app,d.x,d.y,1.0+Math.random()*0.5,0x160606,0xe0a080,0xff4444,d.vest));
+  agents.forEach(a=>a.retarget(B));
+  const TX=['BUY!','SELL!','+$420','-$80','+$1.2K','EXEC!','FILL!','+3%','DUMP!'];
+  app.ticker.add(()=>agents.forEach(a=>a.tick(B,TX)));
+})();
+
+// ── selection ─────────────────────────────────────────────────────────────
+const RCOL={bloom:'#D4AF37',oak:'#CC8833',pit:'#FF3333'};
+function sel(k){
+  Object.keys(RCOL).forEach(r=>{ const w=document.getElementById('wrap-'+r); if(w) w.style.outline='none'; });
+  const w=document.getElementById('wrap-'+k);
+  if(w){ w.style.outline='3px solid '+RCOL[k]; w.style.outlineOffset='3px'; }
+}
+</script>
+</body>
+</html>

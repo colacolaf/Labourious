@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#1a1a2e;color:#e8e8f0;font-family:'VT723',monospace;padding:12px;}
+h2{font-family:'Press Start 2P',monospace;font-size:9px;color:#00ff88;margin-bottom:3px;}
+.sub{font-size:16px;color:#606080;margin-bottom:12px;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.rw{display:flex;flex-direction:column;gap:4px;}
+.rlabel{font-family:'Press Start 2P',monospace;font-size:6px;padding:4px 8px;text-align:center;border:1px solid;letter-spacing:1px;}
+.rwrap{position:relative;border:2px solid;cursor:pointer;overflow:hidden;}
+.rwrap canvas{display:block;width:100%!important;height:auto!important;}
+.pnl{position:absolute;top:4px;left:4px;z-index:20;pointer-events:none;}
+.pnl-inner{font-family:'Press Start 2P',monospace;font-size:5px;padding:3px 6px;border:1px solid;}
+.ticker{position:absolute;bottom:0;left:0;right:0;height:14px;overflow:hidden;z-index:20;display:flex;align-items:center;}
+.ttext{white-space:nowrap;font-family:'Press Start 2P',monospace;font-size:4px;animation:tmove 20s linear infinite;}
+@keyframes tmove{from{transform:translateX(110%)}to{transform:translateX(-200%)}}
+.scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:15;}
+.rdesc{font-size:13px;color:#8080a0;padding:4px 6px;background:#0d0d18;border:1px solid #1a1a30;line-height:1.4;}
+.footer{text-align:center;font-size:14px;color:#505070;border-top:1px solid #1e1e3a;padding-top:8px;margin-top:6px;}
+</style>
+</head>
+<body>
+<h2>▶ LABOURIOUS WARROOMS — FINAL</h2>
+<p class="sub">Desk collision · Backend-driven trades · Click agents · Approve = implementation</p>
+<div class="grid">
+
+  <div class="rw">
+    <div class="rlabel" style="color:#4a7eba;border-color:#4a7eba55;background:#e8f0f820;">◈ THE BLOOMBERG</div>
+    <div class="rwrap" id="wrap-bloom" style="border-color:#4a7eba;" onclick="sel('bloom')">
+      <canvas id="cv-bloom"></canvas>
+      <div class="pnl"><div class="pnl-inner" style="color:#1A3A3A;border-color:#4a7eba88;background:rgba(232,240,255,0.92);">$47,500 (+12.3%) YTD</div></div>
+      <div class="ticker" style="background:#dde8f4;border-top:1px solid #4a7eba44;">
+        <div class="ttext" style="color:#1A3A3A;">AAPL +0.4% &nbsp;·&nbsp; MSFT +1.2% &nbsp;·&nbsp; BRK.B +0.1% &nbsp;·&nbsp; VOO +0.3% &nbsp;·&nbsp; SPY +0.5%</div>
+      </div>
+      <div class="scanlines" style="opacity:0.35;"></div>
+    </div>
+    <div class="rdesc">Agents avoid desks. Free walk in aisles. Backend P&L updates live.</div>
+  </div>
+
+  <div class="rw">
+    <div class="rlabel" style="color:#CC8833;border-color:#CC883344;background:#36454F90;">◎ THE OAK OFFICE</div>
+    <div class="rwrap" id="wrap-oak" style="border-color:#CC8833;" onclick="sel('oak')">
+      <canvas id="cv-oak"></canvas>
+      <div class="pnl"><div class="pnl-inner" style="color:#F5DEB3;border-color:#CC883366;background:rgba(20,12,4,0.88);">+$18,200 (+8.5%) THIS MONTH</div></div>
+      <div class="ticker" style="background:#2a1e0e;border-top:1px solid #CC883333;">
+        <div class="ttext" style="color:#CC8833;animation-duration:16s;">TECH ▲ +2.4% &nbsp;·&nbsp; ENERGY ▼ -1.1% &nbsp;·&nbsp; HEALTH ▲ +0.8%</div>
+      </div>
+      <div class="scanlines"></div>
+    </div>
+    <div class="rdesc">Desk-bound micro movement. Real trade events from WS → text above head.</div>
+  </div>
+
+  <div class="rw">
+    <div class="rlabel" style="color:#FF3333;border-color:#FF333344;background:#0a0a0a90;">◉ THE PIT</div>
+    <div class="rwrap" id="wrap-pit" style="border-color:#FF3333;" onclick="sel('pit')">
+      <canvas id="cv-pit"></canvas>
+      <div class="pnl"><div class="pnl-inner" id="pnl-pit" style="color:#00FF00;border-color:#00FF0066;background:rgba(4,0,0,0.9);">+$3,420 TODAY (+2.1%)</div></div>
+      <div class="ticker" style="background:#050101;border-top:1px solid #FF333344;">
+        <div class="ttext" style="color:#ff6666;animation-duration:7s;"><span style="color:#FF3333;">TSLA ▼ -2.1%</span> &nbsp; <span style="color:#00FF00;">NVDA ▲ +4.3%</span> &nbsp; <span style="color:#FF3333;">GME ▼ -8.2%</span></div>
+      </div>
+      <div class="scanlines" style="background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,30,0,0.04) 2px,rgba(255,30,0,0.04) 4px);"></div>
+    </div>
+    <div class="rdesc">Seated chaos. Symbols orbit on real trades. Fast spinner on LLM processing.</div>
+  </div>
+
+</div>
+<div class="footer">▶ APPROVED — proceeding to implementation plan</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+<script>
+const W=280,H=250;
+
+// ── collision helpers ──────────────────────────────────────────────────────
+// rectHit: does point (px,py) with agent radius r overlap rect?
+function rectHit(px,py,r,rx,ry,rw,rh){
+  return px+r>rx && px-r<rx+rw && py+r>ry && py-r<ry+rh;
+}
+// pick target not inside any blocked rect (max 12 tries, else fallback)
+function safeTarget(bnd,blocked,r){
+  for(let t=0;t<12;t++){
+    const tx=bnd.x0+Math.random()*(bnd.x1-bnd.x0);
+    const ty=bnd.y0+Math.random()*(bnd.y1-bnd.y0);
+    if(!blocked.some(b=>rectHit(tx,ty,r,b.x,b.y,b.w,b.h))) return {tx,ty};
+  }
+  return {tx:(bnd.x0+bnd.x1)/2,ty:(bnd.y0+bnd.y1)/2};
+}
+// nudge agent out of any desk rect
+function nudgeOut(agent,blocked){
+  for(const b of blocked){
+    if(rectHit(agent.x,agent.y,5,b.x,b.y,b.w,b.h)){
+      // push toward nearest edge
+      const cx=b.x+b.w/2, cy=b.y+b.h/2;
+      const dx=agent.x-cx, dy=agent.y-cy;
+      const d=Math.sqrt(dx*dx+dy*dy)||1;
+      agent.x+=dx/d*3; agent.y+=dy/d*3;
+    }
+  }
+}
+
+function mkApp(id,bg){
+  const cv=document.getElementById(id);
+  return new PIXI.Application({view:cv,width:W,height:H,backgroundColor:bg,antialias:false,resolution:1});
+}
+function checker(g,x,y,w,h,c1,c2,sz){
+  for(let tx=x;tx<x+w;tx+=sz)for(let ty=y;ty<y+h;ty+=sz){
+    g.beginFill(((Math.floor((tx-x)/sz)+Math.floor((ty-y)/sz))%2===0)?c1:c2);
+    g.drawRect(tx,ty,Math.min(sz,x+w-tx),Math.min(sz,y+h-ty));
+  }
+}
+function dsk(g,x,y,w,h,fill,brd){g.beginFill(fill);g.drawRect(x,y,w,h);g.lineStyle(1,brd,0.6);g.drawRect(x,y,w,h);g.lineStyle(0);}
+function mon(g,x,y,w,h,sc,fr){g.beginFill(fr);g.drawRect(x-2,y-2,w+4,h+4);g.beginFill(sc);g.drawRect(x,y,w,h);}
+
+// ── Agent base class ───────────────────────────────────────────────────────
+class Agent{
+  constructor(A,x,y,bodyCol,headCol,brdCol,vestCol){
+    this.app=A; this.x=x; this.y=y; this.tx=x; this.ty=y;
+    this.spd=0.35; this.pause=Math.random()*60;
+    this.stepF=0; this.legPh=0; this.dir=1;
+    this.tradeT=150+Math.random()*300;
+    this.spinA=0; this.spinning=false; this.spinT=0;
+    this.blocked=[]; // desk rects — set after construction
+    this.bnd={x0:0,y0:0,x1:W,y1:H};
+
+    this.c=new PIXI.Container();
+    A.stage.addChild(this.c);
+
+    const g=new PIXI.Graphics();
+    g.beginFill(0x000000,0.15); g.drawEllipse(7,15,5,2);
+    g.beginFill(bodyCol); g.lineStyle(1.5,brdCol,0.9); g.drawEllipse(7,9,5,7); g.lineStyle(0);
+    if(vestCol){g.beginFill(vestCol,0.8);g.drawRect(4,6,6,5);}
+    g.beginFill(headCol); g.lineStyle(1,brdCol,0.8); g.drawCircle(7,3,3.5); g.lineStyle(0);
+    g.beginFill(0x000000,0.75); g.drawCircle(5.5,3,0.9); g.drawCircle(8.5,3,0.9);
+    g.beginFill(0x000000,0.55); g.drawRect(3.5,1.5,8,1.5);
+    this.c.addChild(g);
+
+    this.ll=new PIXI.Graphics(); this.rl=new PIXI.Graphics();
+    this.ll.beginFill(brdCol,0.6); this.ll.drawCircle(5,16,2);
+    this.rl.beginFill(brdCol,0.6); this.rl.drawCircle(9,16,2);
+    this.c.addChild(this.ll); this.c.addChild(this.rl);
+
+    this.spinner=new PIXI.Graphics();
+    this.spinner.lineStyle(2,0xffffff,0.9); this.spinner.arc(7,-6,4,0,Math.PI*1.5);
+    this.spinner.visible=false; this.c.addChild(this.spinner);
+
+    this.ttxt=new PIXI.Text('',{fontFamily:'"Press Start 2P",monospace',fontSize:5,fill:0x00ff88,resolution:2});
+    this.ttxt.anchor.set(0.5,1); this.ttxt.x=7; this.ttxt.y=-9;
+    this.ttxt.visible=false; this.c.addChild(this.ttxt);
+    this.ttxtLife=0;
+
+    this.flash=new PIXI.Graphics(); this.flashLife=0; this.flashCol=0x00ff88;
+    this.c.addChild(this.flash);
+
+    this.c.interactive=true; this.c.buttonMode=true;
+    this.c.on('pointerdown',()=>{
+      if(!this._r){const r=new PIXI.Graphics();r.lineStyle(2,0xffffff,0.7);r.drawCircle(7,8,11);this.c.addChildAt(r,0);this._r=r;}
+      else{this.c.removeChild(this._r);this._r=null;}
+    });
+  }
+
+  // ── called by WS event: trade_executed ──
+  onTrade(symbol,action,pnl){
+    const up=action==='BUY'||pnl>=0;
+    const col=up?0x00ff88:0xff4444;
+    const label=`${action} ${symbol}`;
+    this.ttxt.text=label; this.ttxt.style.fill=col;
+    this.ttxt.visible=true; this.ttxtLife=150; this.ttxt.alpha=1;
+    this.flashCol=col; this.flashLife=22;
+  }
+  // ── called by WS event: agent_update (status=processing) ──
+  onProcessing(){this.spinning=true;this.spinT=90;this.spinner.visible=true;}
+
+  retarget(){
+    const {tx,ty}=safeTarget(this.bnd,this.blocked,6);
+    this.tx=tx; this.ty=ty;
+  }
+
+  tick(texts,wanderRad,spinSpd){
+    spinSpd=spinSpd||0.1;
+    if(this.pause>0){this.pause--;return;}
+    const dx=this.tx-this.x,dy=this.ty-this.y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<2){
+      this.pause=40+Math.random()*80;
+      if(wanderRad){// desk-bound
+        this.tx=this.bx+(Math.random()-0.5)*wanderRad*2;
+        this.ty=this.by+(Math.random()-0.5)*wanderRad*2;
+      } else this.retarget();
+    } else {
+      this.x+=dx/d*this.spd; this.y+=dy/d*this.spd; this.dir=dx>0?1:-1;
+      // collision: nudge out of desks
+      if(!wanderRad) nudgeOut(this,this.blocked);
+      // leg cycle
+      this.stepF++;
+      if(this.stepF%(wanderRad?14:6)===0)this.legPh=1-this.legPh;
+      this.ll.y=this.legPh===0?(wanderRad?-0.8:-1.5):(wanderRad?0.8:1.5);
+      this.rl.y=this.legPh===0?(wanderRad?0.8:1.5):(wanderRad?-0.8:-1.5);
+    }
+    this.c.scale.x=this.dir<0?-1:1;
+    this.c.x=this.x+(this.dir<0?14:0);
+    this.c.y=this.y;
+
+    if(this.spinning){this.spinA+=spinSpd;this.spinner.rotation=this.spinA;this.spinT--;if(this.spinT<=0){this.spinning=false;this.spinner.visible=false;}}
+    if(this.ttxtLife>0){this.ttxtLife--;if(this.ttxtLife<30)this.ttxt.alpha=this.ttxtLife/30;if(this.ttxtLife===0){this.ttxt.visible=false;this.ttxt.alpha=1;}}
+    if(this.flashLife>0){this.flashLife--;this.flash.clear();this.flash.beginFill(this.flashCol,this.flashLife/22*0.4);this.flash.drawEllipse(7,8,7,10);}
+
+    // demo-mode fallback (no real WS in mockup)
+    this.tradeT--;
+    if(this.tradeT<=0){
+      const t=texts[Math.random()*texts.length|0];
+      const up=t.includes('BUY')||t.includes('+');
+      this.onTrade(t.replace('BUY ','').replace('SELL ',''),t.includes('BUY')?'BUY':'SELL',up?1:-1);
+      if(Math.random()>0.6)this.onProcessing();
+      this.tradeT=wanderRad?250+Math.random()*350:70+Math.random()*130;
+    }
+  }
+}
+
+// ── Chaos symbol (pit only) ───────────────────────────────────────────────
+class ChaosSymbol{
+  constructor(A,cx,cy,sym,col){
+    this.cx=cx;this.cy=cy;this.angle=Math.random()*Math.PI*2;
+    this.r=14+Math.random()*8;this.spd=(Math.random()-0.5)*0.06+0.045;
+    this.life=100+Math.random()*150;
+    this.t=new PIXI.Text(sym,{fontFamily:'"Press Start 2P",monospace',fontSize:5,fill:col,resolution:2});
+    this.t.anchor.set(0.5); A.stage.addChild(this.t);
+  }
+  tick(agX,agY){
+    this.cx=agX;this.cy=agY; // follow agent
+    this.angle+=this.spd;
+    this.t.x=this.cx+Math.cos(this.angle)*this.r;
+    this.t.y=this.cy+Math.sin(this.angle)*this.r*0.55;
+    this.life--;
+    this.t.alpha=this.life<25?this.life/25:1;
+    return this.life>0;
+  }
+  destroy(A){A.stage.removeChild(this.t);}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BLOOMBERG
+// ═══════════════════════════════════════════════════════════════════════════
+;(()=>{
+  const A=mkApp('cv-bloom',0xe8f0f8);
+  const BLUE=0x4a7eba,GOLD=0xD4AF37,TEAL=0x1A3A3A;
+  const SKY=H*0.35|0;
+
+  const bg=new PIXI.Graphics();
+  for(let i=0;i<SKY;i+=3){
+    const t=i/SKY,r=Math.round(0xb0+(0xe8-0xb0)*t),g2=Math.round(0xcc+(0xf0-0xcc)*t),b=Math.round(0xf0+(0xf8-0xf0)*t);
+    bg.beginFill((r<<16)|(g2<<8)|b,0.95);bg.drawRect(0,i,W,3);
+  }
+  [[20,6,60,12],[108,4,78,13],[220,9,55,11]].forEach(([cx,cy,cw,ch])=>{
+    bg.beginFill(0xffffff,0.7);bg.drawRoundedRect(cx,cy,cw,ch,ch/2);
+    bg.beginFill(0xffffff,0.5);bg.drawRoundedRect(cx+8,cy-4,cw*0.6,ch,ch/2);
+  });
+  const blds=[{x:0,y:12,w:20,h:SKY-12},{x:22,y:6,w:26,h:SKY-6},{x:50,y:18,w:15,h:SKY-18},{x:67,y:4,w:28,h:SKY-4},{x:97,y:16,w:20,h:SKY-16},{x:119,y:8,w:24,h:SKY-8},{x:145,y:22,w:16,h:SKY-22},{x:163,y:5,w:28,h:SKY-5},{x:193,y:19,w:18,h:SKY-19},{x:213,y:11,w:22,h:SKY-11},{x:237,y:3,w:26,h:SKY-3},{x:265,y:16,w:18,h:SKY-16}];
+  blds.forEach(b=>{
+    const lum=0x4a6880+(Math.random()*0x101820|0);bg.beginFill(lum);bg.drawRect(b.x,b.y,b.w,b.h);
+    bg.beginFill(0xd0e8f8,0.5);
+    for(let wy=b.y+4;wy<b.y+b.h-4;wy+=6)for(let wx=b.x+3;wx<b.x+b.w-2;wx+=5)if(Math.random()>0.35)bg.drawRect(wx,wy,2,3);
+  });
+  bg.beginFill(0xd0dcea);bg.drawRect(0,SKY,W,6);
+  checker(bg,0,SKY+6,W,H-SKY-20,0xeef2f8,0xe4ecf4,16);
+  A.stage.addChild(bg);
+
+  const f=new PIXI.Graphics();
+
+  // Define desk rects — also used for collision
+  const DESKS=[
+    {x:12,y:SKY+20,w:72,h:24},{x:12,y:SKY+66,w:72,h:24},
+    {x:96,y:SKY+38,w:70,h:28},
+    {x:184,y:SKY+20,w:86,h:66},
+    {x:166,y:SKY+18,w:16,h:32}, // filing cabinet
+  ];
+
+  DESKS.slice(0,4).forEach((d,di)=>{
+    dsk(f,d.x,d.y,d.w,d.h,0xc8a870,GOLD);
+    [17,39,61].slice(0,di===2?2:di===3?3:3).forEach((ox,mi)=>{
+      mon(f,d.x+ox,d.y+4,16,13,0x1a2a1a,0xa08040);
+      const col=mi%2===0?GOLD:BLUE;
+      f.beginFill(col,0.45); for(let i=0;i<3;i++)f.drawRect(d.x+ox+2,d.y+6+i*3,10,1);
+    });
+    f.beginFill(0xf8f0e0,0.8);f.drawRect(d.x+2,d.y+d.h-10,20,8);
+  });
+  // filing cabinet
+  f.beginFill(0xccd4e0);f.lineStyle(1,BLUE,0.3);f.drawRect(166,SKY+18,14,32);f.lineStyle(0);
+  f.lineStyle(1,BLUE,0.15);f.moveTo(166,SKY+31);f.lineTo(180,SKY+31);f.moveTo(166,SKY+40);f.lineTo(180,SKY+40);f.lineStyle(0);
+
+  // Plants
+  [[88,SKY+22],[174,SKY+88],[8,SKY+108],[268,SKY+108]].forEach(([px,py])=>{
+    f.beginFill(0x2a5a10);f.drawCircle(px,py,9);f.beginFill(0x3a8018);f.drawCircle(px-2,py-3,6);
+    f.beginFill(0x4aaa22);f.drawCircle(px+2,py-5,4);f.beginFill(0x5a5030);f.drawRect(px-5,py+6,10,6);
+  });
+  A.stage.addChild(f);
+
+  // Aisle walkable bounds — agents walk in gaps BETWEEN desks
+  // Walkable patches: left aisle, center aisle, right aisle, back strip
+  const BND={x0:14,y0:SKY+10,x1:W-14,y1:H-18};
+
+  const SHIRTS=[0x1a3a6a,0x1a5a3a,0x3a1a5a,0x5a3a1a,0x1a4a5a,0x5a1a3a,0x3a3a1a];
+  const agents=[];
+  // Spawn agents in aisle areas (not on desks)
+  const spawnPts=[
+    [8,SKY+50],[8,SKY+96],[84,SKY+96],[84,SKY+50],[140,SKY+70],[140,SKY+100],[260,SKY+100],
+  ];
+  spawnPts.forEach((sp,i)=>{
+    const ag=new Agent(A,sp[0],sp[1],SHIRTS[i%SHIRTS.length],0xdfc090,TEAL,null);
+    ag.blocked=DESKS; ag.bnd=BND; ag.spd=0.38+Math.random()*0.08;
+    ag.retarget(); agents.push(ag);
+  });
+
+  const TX=['AAPL','MSFT','VOO','BRK.B','SPY','AMZN','JNJ'];
+  A.ticker.add(()=>agents.forEach(a=>a.tick(TX,0,0.08)));
+
+  // subtle monitor flicker
+  let ft=0;const fg=new PIXI.Graphics();A.stage.addChild(fg);
+  A.ticker.add(()=>{ft++;fg.clear();if(ft%210<3){fg.beginFill(BLUE,0.1);fg.drawRect(17,SKY+23,16,13);}});
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OAK OFFICE
+// ═══════════════════════════════════════════════════════════════════════════
+;(()=>{
+  const A=mkApp('cv-oak',0x36454F);
+  const AMBER=0xCC8833,COPPER=0xB87333;
+
+  const bg=new PIXI.Graphics();
+  bg.beginFill(0x2a3840);bg.drawRect(0,0,W,14);
+  [[45,7],[128,7],[210,7]].forEach(([lx])=>{bg.beginFill(0xfff8e0,0.15);bg.drawEllipse(lx,7,28,7);bg.beginFill(0xfff8e0,0.22);bg.drawRect(lx-18,5,36,4);});
+  bg.beginFill(0x2e2014);bg.drawRect(0,0,10,H);bg.beginFill(0x2e2014);bg.drawRect(W-10,0,10,H);
+  bg.lineStyle(1,AMBER,0.07);for(let y=20;y<H;y+=22){bg.moveTo(0,y);bg.lineTo(10,y);bg.moveTo(W-10,y);bg.lineTo(W,y);}bg.lineStyle(0);
+  for(let y=14;y<H-14;y+=11){bg.beginFill(0x2a1c0a+(((y/11|0)%4)*0x020200));bg.drawRect(10,y,W-20,11);}
+  bg.lineStyle(1,0x1a1008,0.6);for(let y=14;y<H-14;y+=11){bg.moveTo(10,y);bg.lineTo(W-10,y);}bg.lineStyle(0);
+  A.stage.addChild(bg);
+
+  const f=new PIXI.Graphics();
+  [[14,15],[100,15],[186,15]].forEach(([wx,wy])=>{
+    f.beginFill(0x2e2e28);f.lineStyle(1,AMBER,0.3);f.drawRect(wx,wy,68,28);f.lineStyle(0);
+    f.lineStyle(1.5,AMBER,0.16);
+    for(let i=0;i<3;i++){f.moveTo(wx+5+i*8,wy+8);f.lineTo(wx+18+i*8+10,wy+10+14*Math.random());}
+    const pp=[wx+4,wy+24,wx+12,wy+18,wx+20,wy+21,wx+30,wy+13,wx+40,wy+17,wx+50,wy+11,wx+62,wy+16];
+    for(let i=0;i<pp.length-2;i+=2){f.moveTo(pp[i],pp[i+1]);f.lineTo(pp[i+2],pp[i+3]);}
+    f.lineStyle(0);
+  });
+  [[W-46,50],[W-46,114]].forEach(([cx,cy])=>{
+    f.beginFill(0x1e1c14);f.lineStyle(1,AMBER,0.3);f.drawRect(cx,cy,32,24);f.lineStyle(0);
+    f.lineStyle(1,COPPER,0.4);
+    const cp=[cx+3,cy+20,cx+8,cy+14,cx+14,cy+17,cx+20,cy+10,cx+26,cy+13,cx+30,cy+7];
+    for(let i=0;i<cp.length-2;i+=2){f.moveTo(cp[i],cp[i+1]);f.lineTo(cp[i+2],cp[i+3]);}
+    f.lineStyle(0);
+  });
+
+  const deskDefs=[
+    {x:14,y:58,w:62,h:24},{x:14,y:116,w:62,h:24},
+    {x:94,y:78,w:62,h:24},{x:94,y:140,w:62,h:24},
+    {x:164,y:58,w:50,h:24},{x:164,y:116,w:50,h:24},
+  ];
+  // seat = front-center of each desk
+  const seatPos=deskDefs.map(d=>({sx:d.x+d.w/2-7,sy:d.y+d.h+3}));
+
+  deskDefs.forEach(d=>{
+    f.beginFill(0x2a1c0a);f.lineStyle(1,AMBER,0.55);f.drawRect(d.x,d.y,d.w,d.h);f.lineStyle(0);
+    mon(f,d.x+4,d.y+4,16,13,0x060402,0x3a2010);
+    f.beginFill(AMBER,0.3);for(let i=0;i<3;i++)f.drawRect(d.x+6,d.y+6+i*3,10,1);
+    if(d.w>50){mon(f,d.x+26,d.y+4,16,13,0x060402,0x3a2010);f.beginFill(AMBER,0.3);for(let i=0;i<3;i++)f.drawRect(d.x+28,d.y+6+i*3,10,1);}
+    f.beginFill(0x4a3020);f.drawCircle(d.x+d.w-6,d.y+d.h-6,3);f.beginFill(0x2a1a0a);f.drawCircle(d.x+d.w-6,d.y+d.h-6,2);
+    f.beginFill(0x282416,0.75);f.drawRect(d.x+d.w-20,d.y+d.h-14,14,8);
+    f.beginFill(0xCC6600,0.07);f.drawEllipse(d.x+d.w*0.4,d.y+d.h*0.5,22,12);
+  });
+  f.beginFill(0x1e1008);f.lineStyle(1,AMBER,0.2);f.drawRect(100,195,80,20);f.lineStyle(0);
+  f.beginFill(0x2a1810);f.drawRect(103,198,74,14);
+  [[105,199],[140,199]].forEach(([cx,cy])=>{f.beginFill(0x321e0e);f.drawRoundedRect(cx,cy,30,10,3);});
+  A.stage.addChild(f);
+
+  const SHIRTS=[0x2a3a5a,0x1a3a28,0x3a2a1a,0x2a1a3a,0x1e3a2a,0x3a2a2a];
+  const agents=seatPos.map((s,i)=>{
+    const ag=new Agent(A,s.sx,s.sy,SHIRTS[i%SHIRTS.length],0xd4b896,AMBER,null);
+    ag.bx=s.sx; ag.by=s.sy; ag.spd=0.25; ag.blocked=[];
+    // override retarget for desk-bound
+    ag.retarget=function(){this.tx=this.bx+(Math.random()-0.5)*12;this.ty=this.by+(Math.random()-0.5)*8;};
+    ag.retarget(); return ag;
+  });
+  const TX=['TECH','UTIL','HLTH','ENRG','FINL','XLF','ROTATE'];
+  A.ticker.add(()=>agents.forEach(a=>a.tick(TX,6,0.09)));
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE PIT
+// ═══════════════════════════════════════════════════════════════════════════
+;(()=>{
+  const A=mkApp('cv-pit',0x080404);
+  const RED=0xFF3333,GREEN=0x00FF00,ORG=0xFF8C00;
+
+  const bg=new PIXI.Graphics();
+  bg.beginFill(0x060202);bg.drawRect(0,0,W,H);
+  checker(bg,0,52,W,H-66,0x0d0404,0x090202,10);
+  bg.beginFill(0x1a1010,0.45);
+  for(let i=0;i<20;i++)bg.drawEllipse(10+Math.random()*(W-20)|0,55+Math.random()*(H-75)|0,2+Math.random()*7|0,2+Math.random()*4|0);
+  [[18,H-32],[W-26,H-32]].forEach(([tx,ty])=>{bg.beginFill(0x1a0808);bg.lineStyle(1,RED,0.3);bg.drawCircle(tx,ty,8);bg.lineStyle(0);bg.beginFill(0x0a0404);bg.drawCircle(tx,ty,5);for(let i=0;i<4;i++)bg.drawEllipse(tx-12+Math.random()*24|0,ty-10+Math.random()*20|0,3+Math.random()*5|0,2+Math.random()*3|0);});
+  A.stage.addChild(bg);
+
+  const sm=new PIXI.Graphics();
+  sm.beginFill(0x050101);sm.drawRect(0,0,W,50);
+  sm.lineStyle(1,0x1a0000,0.5);sm.moveTo(0,50);sm.lineTo(W,50);sm.lineStyle(0);
+  const scrs=[{x:3,y:2,w:50,h:45,c:RED},{x:57,y:2,w:50,h:45,c:GREEN},{x:111,y:2,w:50,h:45,c:RED},{x:165,y:2,w:50,h:45,c:GREEN},{x:219,y:2,w:57,h:45,c:ORG}];
+  const sLbls=['SELL -2.1%','BUY +4.3%','SELL -0.8%','BUY +1.9%','HOLD'];
+  scrs.forEach((s,si)=>{
+    sm.beginFill(0x040101);sm.drawRect(s.x,s.y,s.w,s.h);sm.lineStyle(1.5,s.c,0.6);sm.drawRect(s.x,s.y,s.w,s.h);sm.lineStyle(0);
+    sm.beginFill(s.c,0.04);sm.drawRect(s.x+1,s.y+1,s.w-2,s.h-2);
+    [7,11,5,15,9,17,13,19,9,21].forEach((bh,i)=>{sm.beginFill(s.c,0.45);sm.drawRect(s.x+3+i*5,s.y+s.h-3-bh,4,bh);});
+    sm.beginFill(s.c,0.9);sm.drawCircle(s.x+s.w-5,s.y+5,2);
+    const t=new PIXI.Text(sLbls[si],{fontFamily:'"Press Start 2P",monospace',fontSize:4,fill:s.c,resolution:2});
+    t.x=s.x+3;t.y=s.y+4;A.stage.addChild(t);
+  });
+  A.stage.addChild(sm);
+
+  const f=new PIXI.Graphics();
+  const deskRows=[
+    [{x:4,y:52},{x:58,y:52},{x:112,y:52},{x:166,y:52},{x:220,y:52}],
+    [{x:22,y:108},{x:88,y:108},{x:154,y:108},{x:220,y:108}],
+    [{x:10,y:162},{x:80,y:162},{x:150,y:162},{x:214,y:162}],
+  ];
+  const seatPositions=[];
+  deskRows.forEach(row=>row.forEach(d=>{
+    f.beginFill(0x120404);f.lineStyle(1,RED,0.2);f.drawRect(d.x,d.y,48,18);f.lineStyle(0);
+    f.beginFill(0x030101);f.lineStyle(1,RED,0.3);f.drawRect(d.x+2,d.y+2,20,12);f.lineStyle(0);
+    f.beginFill(Math.random()>0.45?GREEN:RED,0.9);f.drawCircle(d.x+44,d.y+3,1.5);
+    f.beginFill(0x1a0606,0.65);f.drawRect(d.x+24,d.y+10,16,5);
+    seatPositions.push({sx:d.x+16,sy:d.y+20});
+  }));
+  f.beginFill(0xff0000);f.lineStyle(2,0x660000);f.drawCircle(W-12,H-22,8);f.lineStyle(0);f.beginFill(0xcc0000);f.drawCircle(W-12,H-22,5);
+  A.stage.addChild(f);
+
+  const timerTxt=new PIXI.Text('09:24:38',{fontFamily:'"Press Start 2P",monospace',fontSize:5,fill:RED,resolution:2});
+  timerTxt.x=W-62;timerTxt.y=H-30;A.stage.addChild(timerTxt);
+
+  const VESTS=[0xff2222,0x2244ff,0xffcc00,0x22aa44,0xff6600,0xaa22ff,0x22aaff,0xff22aa,0x88ff22,0xffaa22,0xff4488,0x44aaff,0x88aa22];
+  const agents=seatPositions.slice(0,13).map((s,i)=>{
+    const ag=new Agent(A,s.sx,s.sy,0x120404,0xe0a070,RED,VESTS[i%VESTS.length]);
+    ag.bx=s.sx;ag.by=s.sy;ag.spd=0.25;ag.blocked=[];
+    ag.retarget=function(){this.tx=this.bx+(Math.random()-0.5)*10;this.ty=this.by+(Math.random()-0.5)*6;};
+    ag.retarget(); return ag;
+  });
+
+  // chaos symbols — spawn on trade events, orbit agent
+  const SYMS=[{s:'▲',c:GREEN},{s:'▼',c:RED},{s:'!!',c:RED},{s:'$',c:GREEN},{s:'BUY',c:GREEN},{s:'▲▲',c:GREEN},{s:'⚡',c:RED},{s:'$$',c:GREEN},{s:'SELL',c:RED},{s:'%%%',c:ORG}];
+  let chaos=[];
+  let symTimer=0;
+
+  const TX=['TSLA','NVDA','AMD','GME','SPY','QQQ','AAPL'];
+  A.ticker.add(()=>{
+    agents.forEach(a=>a.tick(TX,5,0.18));
+    symTimer++;
+    // spawn 2-3 chaos symbols per second, attached to random agents
+    if(symTimer%15===0&&agents.length>0){
+      const ag=agents[Math.random()*agents.length|0];
+      const sym=SYMS[Math.random()*SYMS.length|0];
+      chaos.push({sym:new ChaosSymbol(A,ag.x+7,ag.y+8,sym.s,sym.c),ag});
+    }
+    chaos=chaos.filter(({sym,ag})=>{
+      const alive=sym.tick(ag.x+7,ag.y+8);
+      if(!alive)sym.destroy(A);
+      return alive;
+    });
+  });
+
+  let ft=0;const fg=new PIXI.Graphics();A.stage.addChild(fg);
+  A.ticker.add(()=>{
+    ft++;fg.clear();
+    if(ft%40<2){const s=scrs[Math.random()*scrs.length|0];fg.beginFill(s.c,0.1);fg.drawRect(s.x,s.y,s.w,s.h);}
+    if(ft%60===0){const mn=24+(ft/60|0)%30,s2=ft%60;timerTxt.text=`09:${String(mn).padStart(2,'0')}:${String(s2).padStart(2,'0')}`;}
+    if(ft%75===0){
+      const up=Math.random()>0.35;
+      const el=document.getElementById('pnl-pit');
+      if(el){el.textContent=up?`+$${(1800+Math.random()*3500|0).toLocaleString()} TODAY (+${(0.8+Math.random()*3).toFixed(1)}%)`:
+        `-$${(Math.random()*600|0).toLocaleString()} TODAY (-${(Math.random()*0.4).toFixed(1)}%)`;
+        el.style.color=up?'#00FF00':'#FF3333';el.style.borderColor=up?'#00FF0066':'#FF333366';}
+    }
+  });
+})();
+
+const RC={bloom:'#4a7eba',oak:'#CC8833',pit:'#FF3333'};
+function sel(k){Object.keys(RC).forEach(r=>{const w=document.getElementById('wrap-'+r);if(w)w.style.outline='none';});const w=document.getElementById('wrap-'+k);if(w){w.style.outline='3px solid '+RC[k];w.style.outlineOffset='2px';}}
+</script>
+</body>
+</html>

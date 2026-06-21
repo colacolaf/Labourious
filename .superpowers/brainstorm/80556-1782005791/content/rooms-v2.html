@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#050508;color:#e8e8f0;font-family:'VT323',monospace;padding:12px;}
+h2{font-family:'Press Start 2P',monospace;font-size:9px;color:#00ff88;text-shadow:0 0 8px rgba(0,255,136,0.4);margin-bottom:3px;}
+.sub{font-size:16px;color:#606080;margin-bottom:12px;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.rw{display:flex;flex-direction:column;gap:4px;}
+.rlabel{font-family:'Press Start 2P',monospace;font-size:6px;padding:4px 8px;letter-spacing:1px;text-align:center;border:1px solid;}
+.rwrap{position:relative;border:2px solid;cursor:pointer;overflow:hidden;}
+.rwrap canvas{display:block;width:100%!important;height:auto!important;}
+.scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px);pointer-events:none;z-index:15;}
+.pnl{position:absolute;top:4px;left:4px;z-index:20;pointer-events:none;}
+.pnl-inner{font-family:'Press Start 2P',monospace;font-size:5px;padding:3px 6px;background:rgba(0,0,0,0.8);border:1px solid;}
+.ticker{position:absolute;bottom:0;left:0;right:0;height:14px;overflow:hidden;z-index:20;display:flex;align-items:center;}
+.ttext{white-space:nowrap;font-family:'Press Start 2P',monospace;font-size:4px;animation:tmove 20s linear infinite;}
+@keyframes tmove{from{transform:translateX(110%)}to{transform:translateX(-200%)}}
+.rdesc{font-size:13px;color:#8080a0;padding:4px 6px;background:#0d0d18;border:1px solid #1a1a30;line-height:1.4;}
+.footer{text-align:center;font-size:14px;color:#505070;border-top:1px solid #1e1e3a;padding-top:8px;margin-top:6px;}
+</style>
+</head>
+<body>
+<h2>▶ LABOURIOUS WARROOMS v2 — REVISED SPEC</h2>
+<p class="sub">Bloomberg: blue calm · Oak Office: amber pro · The Pit: black chaos · 15 agents · 30fps · click to select</p>
+
+<div class="grid">
+
+  <!-- BLOOMBERG -->
+  <div class="rw">
+    <div class="rlabel" style="color:#4a7eba;border-color:#4a7eba44;background:#0a1a2a90;">◈ THE BLOOMBERG · LONG-TERM</div>
+    <div class="rwrap" id="wrap-bloom" style="border-color:#4a7eba;" onclick="sel('bloom')">
+      <canvas id="cv-bloom"></canvas>
+      <div class="pnl"><div class="pnl-inner" style="color:#4a7eba;border-color:#4a7eba66;">$47,500 (+12.3%) YTD</div></div>
+      <div class="ticker" style="background:#0a1222;border-top:1px solid #4a7eba33;">
+        <div class="ttext" style="color:#4a7eba;">AAPL +0.4% &nbsp;·&nbsp; MSFT +1.2% &nbsp;·&nbsp; BRK.B +0.1% &nbsp;·&nbsp; VOO +0.3% &nbsp;·&nbsp; SPY +0.5% &nbsp;·&nbsp; AMZN +0.9%</div>
+      </div>
+      <div class="scanlines"></div>
+    </div>
+    <div class="rdesc">Blue teal. City skyline. Clean tile floor. Plants. Suit agents deliberate & slow. Trade text 2-3s fade.</div>
+  </div>
+
+  <!-- OAK OFFICE -->
+  <div class="rw">
+    <div class="rlabel" style="color:#CC8833;border-color:#CC883344;background:#36454F90;">◎ THE OAK OFFICE · SWING</div>
+    <div class="rwrap" id="wrap-oak" style="border-color:#CC8833;" onclick="sel('oak')">
+      <canvas id="cv-oak"></canvas>
+      <div class="pnl"><div class="pnl-inner" style="color:#CC8833;border-color:#CC883366;">+$18,200 (+8.5%) THIS MONTH</div></div>
+      <div class="ticker" style="background:#2a1e0e;border-top:1px solid #CC883333;">
+        <div class="ttext" style="color:#CC8833;animation-duration:16s;animation-delay:-3s;">TECH ▲ +2.4% &nbsp;·&nbsp; ENERGY ▼ -1.1% &nbsp;·&nbsp; HEALTH ▲ +0.8% &nbsp;·&nbsp; FINANCE — +0.1% &nbsp;·&nbsp; MATERIALS ▲ +1.3%</div>
+      </div>
+      <div class="scanlines"></div>
+    </div>
+    <div class="rdesc">Charcoal walls. Wood floor. Whiteboards. Charts on walls. Business casual agents. Moderate pace.</div>
+  </div>
+
+  <!-- THE PIT -->
+  <div class="rw">
+    <div class="rlabel" style="color:#FF3333;border-color:#FF333344;background:#0a0a0a90;">◉ THE PIT · DAY TRADING</div>
+    <div class="rwrap" id="wrap-pit" style="border-color:#FF3333;" onclick="sel('pit')">
+      <canvas id="cv-pit"></canvas>
+      <div class="pnl"><div class="pnl-inner" id="pnl-pit" style="color:#00FF00;border-color:#00FF0066;">+$3,420 TODAY (+2.1%)</div></div>
+      <div class="ticker" style="background:#050101;border-top:1px solid #FF333344;">
+        <div class="ttext" style="color:#ff6666;animation-duration:8s;animation-delay:-1s;"><span style="color:#FF3333;">TSLA ▼ -2.1%</span> &nbsp; <span style="color:#00FF00;">NVDA ▲ +4.3%</span> &nbsp; <span style="color:#FF3333;">GME ▼ -8.2%</span> &nbsp; <span style="color:#00FF00;">AMD ▲ +1.9%</span> &nbsp; <span style="color:#FF8C00;">SPY — +0.1%</span></div>
+      </div>
+      <div class="scanlines" style="background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,0,0,0.03) 2px,rgba(255,0,0,0.03) 4px);"></div>
+    </div>
+    <div class="rdesc">Black. Monitor glow only. Agents at desks always. Fast spin loading. Sharp red/green trade flash.</div>
+  </div>
+
+</div>
+<div class="footer">Click room to select · Tell me changes in terminal · Approve to proceed to implementation spec</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+<script>
+const W=280,H=250;
+
+// ── shared helpers ─────────────────────────────────────────────────────────
+function app(id,bg){
+  const cv=document.getElementById(id);
+  return new PIXI.Application({view:cv,width:W,height:H,backgroundColor:bg,antialias:false,resolution:1});
+}
+function checker(g,x,y,w,h,c1,c2,sz=12){
+  for(let tx=x;tx<x+w;tx+=sz)
+    for(let ty=y;ty<y+h;ty+=sz){
+      g.beginFill(((Math.floor((tx-x)/sz)+Math.floor((ty-y)/sz))%2===0)?c1:c2);
+      g.drawRect(tx,ty,Math.min(sz,x+w-tx),Math.min(sz,y+h-ty));
+    }
+}
+function dsk(g,x,y,w,h,fill,brd){g.beginFill(fill);g.drawRect(x,y,w,h);g.lineStyle(1,brd,0.5);g.drawRect(x,y,w,h);g.lineStyle(0);}
+function mon(g,x,y,w,h,sc,fr){g.beginFill(fr);g.drawRect(x-2,y-2,w+4,h+4);g.beginFill(sc);g.drawRect(x,y,w,h);}
+
+// ── Agent class (top-down birds-eye like Sensible Soccer) ──────────────────
+class Agent{
+  constructor(A,x,y,spd,body,head,brd,vest,deskX,deskY){
+    this.app=A; this.x=x; this.y=y; this.spd=spd;
+    this.deskX=deskX; this.deskY=deskY; // null = wander freely
+    this.tx=x; this.ty=y;
+    this.pause=Math.random()*60; this.stepF=0; this.legPh=0; this.dir=1;
+    this.tradeT=100+Math.random()*300;
+    this.spinAngle=0; this.spinning=false; this.spinT=0;
+
+    this.c=new PIXI.Container();
+    A.stage.addChild(this.c);
+
+    // shadow
+    const g=new PIXI.Graphics();
+    g.beginFill(0x000000,0.2); g.drawEllipse(7,16,6,2.5);
+    // body
+    g.beginFill(body); g.lineStyle(1.5,brd,0.9); g.drawEllipse(7,9,5,7); g.lineStyle(0);
+    // vest/shirt stripe
+    if(vest){g.beginFill(vest,0.8);g.drawRect(4,6,6,5);}
+    // head
+    g.beginFill(head); g.lineStyle(1,brd,0.85); g.drawCircle(7,3,3.5); g.lineStyle(0);
+    // eyes
+    g.beginFill(0x000000,0.8); g.drawCircle(5.5,3,0.9); g.drawCircle(8.5,3,0.9);
+    // sunglasses bar
+    g.beginFill(0x000000,0.6); g.drawRect(3.5,1.5,8,1.5);
+    this.c.addChild(g);
+
+    // legs
+    this.ll=new PIXI.Graphics(); this.rl=new PIXI.Graphics();
+    this.ll.beginFill(brd,0.65); this.ll.drawCircle(5,16,2);
+    this.rl.beginFill(brd,0.65); this.rl.drawCircle(9,16,2);
+    this.c.addChild(this.ll); this.c.addChild(this.rl);
+
+    // spinner (hidden by default)
+    this.spinner=new PIXI.Graphics();
+    this.spinner.lineStyle(1.5,0xffffff,0.85); this.spinner.arc(7,-6,4,0,Math.PI*1.4);
+    this.spinner.visible=false;
+    this.c.addChild(this.spinner);
+
+    // trade text (hidden)
+    this.tradeTxt=new PIXI.Text('',{fontFamily:'"Press Start 2P",monospace',fontSize:5,fill:0xffffff,resolution:2});
+    this.tradeTxt.anchor.set(0.5,1); this.tradeTxt.x=7; this.tradeTxt.y=-9;
+    this.tradeTxt.visible=false;
+    this.c.addChild(this.tradeTxt);
+    this.tradeTxtLife=0;
+
+    // flash overlay
+    this.flash=new PIXI.Graphics();
+    this.flash.beginFill(0xffffff,0); this.flash.drawEllipse(7,8,7,10);
+    this.c.addChild(this.flash);
+    this.flashLife=0; this.flashCol=0x00ff00;
+
+    this.c.x=x; this.c.y=y;
+    this.c.interactive=true; this.c.buttonMode=true;
+    this.c.on('pointerdown',()=>this._select());
+    this.highlighted=false;
+  }
+  _select(){
+    this.highlighted=!this.highlighted;
+    if(!this._ring){const r=new PIXI.Graphics();r.lineStyle(2,0xffffff,0.75);r.drawCircle(7,8,11);this.c.addChildAt(r,0);this._ring=r;}
+    else{this.c.removeChild(this._ring);this._ring=null;}
+  }
+  retarget(b){
+    if(this.deskX!==null){
+      // at-desk agents: small wander around their desk
+      this.tx=this.deskX+(Math.random()-0.5)*20;
+      this.ty=this.deskY+(Math.random()-0.5)*16;
+    } else {
+      this.tx=b.x0+Math.random()*(b.x1-b.x0);
+      this.ty=b.y0+Math.random()*(b.y1-b.y0);
+    }
+  }
+  showTrade(txt,col){
+    this.tradeTxt.text=txt; this.tradeTxt.style.fill=col;
+    this.tradeTxt.visible=true; this.tradeTxtLife=150; // ~5s at 30fps
+    this.flashCol=col; this.flashLife=18;
+  }
+  startSpin(){this.spinning=true; this.spinT=90; this.spinner.visible=true;}
+  stopSpin(){this.spinning=false; this.spinner.visible=false;}
+  tick(b,texts){
+    if(this.pause>0){this.pause--;return;}
+    const dx=this.tx-this.x,dy=this.ty-this.y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<2){
+      const slow=this.spd<0.5,med=this.spd<0.9;
+      const mn=slow?50:med?20:8, mx=slow?120:med?50:18;
+      this.pause=mn+Math.random()*(mx-mn);
+      this.retarget(b);
+    } else {
+      const vx=(dx/d)*this.spd,vy=(dy/d)*this.spd;
+      this.x+=vx; this.y+=vy; this.dir=vx>0?1:-1;
+      this.stepF++;
+      const rate=this.spd<0.5?10:this.spd<0.9?6:3;
+      if(this.stepF%rate===0)this.legPh=1-this.legPh;
+      this.ll.y=this.legPh===0?-1.5:1.5;
+      this.rl.y=this.legPh===0?1.5:-1.5;
+    }
+    this.c.scale.x=this.dir<0?-1:1;
+    this.c.x=this.x+(this.dir<0?14:0);
+    this.c.y=this.y;
+
+    // spinner
+    if(this.spinning){
+      this.spinAngle+=0.12*(this.spd>0.9?1.8:1);
+      this.spinner.rotation=this.spinAngle;
+      this.spinT--;
+      if(this.spinT<=0)this.stopSpin();
+    }
+    // trade text fade
+    if(this.tradeTxtLife>0){
+      this.tradeTxtLife--;
+      if(this.tradeTxtLife<30)this.tradeTxt.alpha=this.tradeTxtLife/30;
+      if(this.tradeTxtLife===0){this.tradeTxt.visible=false;this.tradeTxt.alpha=1;}
+    }
+    // flash
+    if(this.flashLife>0){
+      this.flashLife--;
+      this.flash.clear();
+      this.flash.beginFill(this.flashCol,this.flashLife/18*0.35);
+      this.flash.drawEllipse(7,8,7,10);
+    }
+    // random trade trigger
+    this.tradeT--;
+    if(this.tradeT<=0){
+      const t=texts[Math.random()*texts.length|0];
+      const up=t.includes('BUY')||t.includes('+');
+      this.showTrade(t,up?0x00ff88:0xff4444);
+      if(Math.random()>0.6)this.startSpin();
+      const slow=this.spd<0.5,med=this.spd<0.9;
+      this.tradeT=slow?350+Math.random()*450:med?150+Math.random()*200:50+Math.random()*100;
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ROOM 1: THE BLOOMBERG — Deep Teal + Blue
+// ══════════════════════════════════════════════════════
+;(()=>{
+  const A=app('cv-bloom',0x0a1a2a);
+  const TEAL=0x1A3A3A, BLUE=0x4a7eba, GOLD=0xD4AF37;
+  const SKY_H=H*0.38|0; // 38% skyline
+
+  const bg=new PIXI.Graphics();
+
+  // Sky gradient — deep blue to lighter
+  bg.beginFill(0x0a1522); bg.drawRect(0,0,W,SKY_H);
+  // subtle sky gradient bands
+  for(let i=0;i<SKY_H;i+=4){bg.beginFill(0x0a1522+(i*0x010100|0),0.3);bg.drawRect(0,i,W,4);}
+  // faint clouds
+  bg.beginFill(0x162540,0.4); bg.drawRoundedRect(20,8,55,10,5);
+  bg.beginFill(0x162540,0.3); bg.drawRoundedRect(160,5,70,9,4);
+  bg.beginFill(0x162540,0.35); bg.drawRoundedRect(100,14,40,7,3);
+
+  // City skyline — geometric, detailed buildings
+  const bld=[
+    {x:0,y:16,w:18,h:SKY_H-16},{x:20,y:8,w:24,h:SKY_H-8},{x:46,y:22,w:14,h:SKY_H-22},
+    {x:62,y:4,w:30,h:SKY_H-4},{x:94,y:18,w:20,h:SKY_H-18},{x:116,y:10,w:26,h:SKY_H-10},
+    {x:144,y:26,w:16,h:SKY_H-26},{x:162,y:6,w:28,h:SKY_H-6},{x:192,y:20,w:18,h:SKY_H-20},
+    {x:212,y:12,w:22,h:SKY_H-12},{x:236,y:2,w:26,h:SKY_H-2},{x:264,y:18,w:18,h:SKY_H-18},
+  ];
+  bld.forEach(b=>{
+    const base=0x0e2035+(Math.random()*0x060808|0);
+    bg.beginFill(base); bg.drawRect(b.x,b.y,b.w,b.h);
+    // window lights (some lit, some dark)
+    for(let wy=b.y+4;wy<b.y+b.h-4;wy+=6)
+      for(let wx=b.x+3;wx<b.x+b.w-3;wx+=5){
+        if(Math.random()>0.5){bg.beginFill(GOLD,0.22);bg.drawRect(wx,wy,2,3);}
+        else{bg.beginFill(BLUE,0.08);bg.drawRect(wx,wy,2,3);}
+      }
+  });
+
+  // Window frame / wall below skyline
+  bg.beginFill(0x0f1e2e); bg.drawRect(0,SKY_H,W,8); // wall strip
+  bg.lineStyle(1,BLUE,0.15); bg.moveTo(0,SKY_H+8); bg.lineTo(W,SKY_H+8); bg.lineStyle(0);
+
+  // Floor — blue-gray tiles
+  checker(bg,0,SKY_H+8,W,H-SKY_H-20,0x0e1e2e,0x0c1a28,14);
+
+  A.stage.addChild(bg);
+
+  // ── Furniture ──
+  const f=new PIXI.Graphics();
+
+  // Left bank: 2 long desks
+  dsk(f,12,SKY_H+16,70,24,0x1a2e1e,BLUE);
+  mon(f,17,SKY_H+19,16,13,0x060c14,0x1e3040); f.beginFill(BLUE,0.3); for(let i=0;i<3;i++)f.drawRect(19,SKY_H+21+i*3,10,1);
+  mon(f,37,SKY_H+19,16,13,0x060c14,0x1e3040); f.beginFill(BLUE,0.3); for(let i=0;i<3;i++)f.drawRect(39,SKY_H+21+i*3,10,1);
+  mon(f,58,SKY_H+19,16,13,0x060c14,0x1e3040); f.beginFill(BLUE,0.3); for(let i=0;i<3;i++)f.drawRect(60,SKY_H+21+i*3,10,1);
+
+  dsk(f,12,SKY_H+60,70,24,0x1a2e1e,BLUE);
+  mon(f,17,SKY_H+63,16,13,0x060c14,0x1e3040); f.beginFill(BLUE,0.3); for(let i=0;i<3;i++)f.drawRect(19,SKY_H+65+i*3,10,1);
+  mon(f,37,SKY_H+63,16,13,0x060c14,0x1e3040); f.beginFill(BLUE,0.3); for(let i=0;i<3;i++)f.drawRect(39,SKY_H+65+i*3,10,1);
+  mon(f,58,SKY_H+63,16,13,0x060c14,0x1e3040); f.beginFill(BLUE,0.3); for(let i=0;i<3;i++)f.drawRect(60,SKY_H+65+i*3,10,1);
+
+  // Center desk
+  dsk(f,100,SKY_H+38,60,24,0x1a2e1e,BLUE);
+  mon(f,104,SKY_H+41,18,14,0x040a12,0x1e3040); f.beginFill(BLUE,0.3); for(let i=0;i<4;i++)f.drawRect(106,SKY_H+43+i*2.5,12,1);
+  mon(f,126,SKY_H+41,18,14,0x040a12,0x1e3040); f.beginFill(BLUE,0.3); for(let i=0;i<4;i++)f.drawRect(128,SKY_H+43+i*2.5,12,1);
+
+  // Right executive desk
+  dsk(f,185,SKY_H+16,80,60,0x1a2e1e,BLUE);
+  mon(f,190,SKY_H+20,22,16,0x030810,0x1e3040); f.beginFill(BLUE,0.35); for(let i=0;i<5;i++)f.drawRect(192,SKY_H+22+i*2.5,15,1);
+  mon(f,216,SKY_H+20,22,16,0x030810,0x1e3040); f.beginFill(BLUE,0.35); for(let i=0;i<5;i++)f.drawRect(218,SKY_H+22+i*2.5,15,1);
+  mon(f,242,SKY_H+20,18,16,0x030810,0x1e3040); f.beginFill(GOLD,0.35); for(let i=0;i<5;i++)f.drawRect(244,SKY_H+22+i*2.5,11,1);
+  // papers
+  f.beginFill(0x1a2820,0.7); f.drawRect(190,SKY_H+40,24,12); f.drawRect(218,SKY_H+42,20,10);
+
+  // Plants (top-down circles)
+  [[94,SKY_H+20],[180,SKY_H+80],[8,SKY_H+104],[260,SKY_H+100]].forEach(([px,py])=>{
+    f.beginFill(0x0a1e0a); f.drawCircle(px,py,8);
+    f.beginFill(0x1a4a12); f.drawCircle(px-2,py-2,5);
+    f.beginFill(0x2a6a1a); f.drawCircle(px+1,py-3,3.5);
+    f.beginFill(0x2a2010); f.drawRect(px-4,py+5,8,5); // pot
+  });
+
+  // Filing cabinet
+  f.beginFill(0x1a2830); f.lineStyle(1,BLUE,0.3); f.drawRect(170,SKY_H+18,14,30); f.lineStyle(0);
+  f.lineStyle(1,BLUE,0.15); f.moveTo(170,SKY_H+31);f.lineTo(184,SKY_H+31); f.moveTo(170,SKY_H+40);f.lineTo(184,SKY_H+40); f.lineStyle(0);
+
+  A.stage.addChild(f);
+
+  // ── Agents — suits, deliberate & slow ──
+  const B={x0:14,y0:SKY_H+10,x1:W-14,y1:H-18};
+  const SHIRTS=[0x1a2e4a,0x1a3a2e,0x2a1e3a,0x1e2a1a,0x2e1a1a];
+  const agents=[];
+  for(let i=0;i<6;i++){
+    const sc=SHIRTS[i%SHIRTS.length];
+    const a=new Agent(A,40+i*32,SKY_H+50+i*12,0.35+Math.random()*0.1,sc,0xc8a870,BLUE,null,null,null);
+    a.retarget(B); agents.push(a);
+  }
+  const TX=['BUY 100 AAPL','BUY 50 MSFT','HOLD VOO','BUY 200 SPY','+$2,400','HOLD BRK.B','ADD AMZN'];
+  A.ticker.add(()=>agents.forEach(a=>a.tick(B,TX)));
+
+  // Monitor flicker
+  let ft=0; const fg=new PIXI.Graphics(); A.stage.addChild(fg);
+  A.ticker.add(()=>{ft++;fg.clear();if(ft%220<3){fg.beginFill(BLUE,0.08);fg.drawRect(17,SKY_H+19,16,13);}});
+})();
+
+// ══════════════════════════════════════════════════════
+// ROOM 2: THE OAK OFFICE — Charcoal + Amber
+// ══════════════════════════════════════════════════════
+;(()=>{
+  const A=app('cv-oak',0x36454F);
+  const AMBER=0xCC8833, COPPER=0xB87333;
+
+  const bg=new PIXI.Graphics();
+
+  // Ceiling (darker top band with light fixtures)
+  bg.beginFill(0x2a3840); bg.drawRect(0,0,W,14);
+  // Fluorescent lights overhead (top-down glow circles)
+  [[40,7],[120,7],[200,7]].forEach(([lx,ly])=>{
+    bg.beginFill(0xfff8e0,0.12); bg.drawEllipse(lx,ly,28,8);
+    bg.beginFill(0xfff8e0,0.2); bg.drawRect(lx-20,ly-2,40,4);
+  });
+
+  // Wood-paneled walls — left + right
+  bg.beginFill(0x2e2014); bg.drawRect(0,0,10,H);
+  bg.lineStyle(1,AMBER,0.08); for(let y=0;y<H;y+=20){bg.moveTo(0,y);bg.lineTo(10,y);} bg.lineStyle(0);
+  bg.beginFill(0x2e2014); bg.drawRect(W-10,0,10,H);
+
+  // Floor — oak planks
+  for(let y=14;y<H-14;y+=11){
+    bg.beginFill(0x2a1c0a+(((y/11|0)%3)*0x020200));
+    bg.drawRect(10,y,W-20,11);
+  }
+  bg.lineStyle(1,0x1a1008,0.8);
+  for(let y=14;y<H-14;y+=11){bg.moveTo(10,y);bg.lineTo(W-10,y);}
+  bg.lineStyle(0);
+
+  A.stage.addChild(bg);
+
+  const f=new PIXI.Graphics();
+
+  // Whiteboards on top wall (3 of them, with abstract marker lines)
+  [[14,16],[100,16],[186,16]].forEach(([wx,wy])=>{
+    f.beginFill(0x2e2e28); f.lineStyle(1,AMBER,0.25); f.drawRect(wx,wy,68,28); f.lineStyle(0);
+    // abstract scribbles
+    f.lineStyle(1.5,AMBER,0.18);
+    for(let i=0;i<4;i++){f.moveTo(wx+4+i*6,wy+8);f.lineTo(wx+4+i*6+10+Math.random()*12,wy+8+Math.random()*16);}
+    // a mini chart shape
+    const pts=[wx+4,wy+24,wx+12,wy+18,wx+20,wy+21,wx+28,wy+14,wx+36,wy+17,wx+44,wy+11,wx+52,wy+15];
+    for(let i=0;i<pts.length-2;i+=2){f.moveTo(pts[i],pts[i+1]);f.lineTo(pts[i+2],pts[i+3]);}
+    f.lineStyle(0);
+  });
+
+  // Wall charts — framed (right wall inside)
+  [[W-48,45],[W-48,110]].forEach(([cx,cy])=>{
+    f.beginFill(0x1e1c14); f.lineStyle(1,AMBER,0.3); f.drawRect(cx,cy,32,24); f.lineStyle(0);
+    f.lineStyle(1,COPPER,0.35);
+    const cp=[cx+3,cy+20,cx+8,cy+15,cx+13,cy+17,cx+18,cy+11,cx+23,cy+14,cx+29,cy+7];
+    for(let i=0;i<cp.length-2;i+=2){f.moveTo(cp[i],cp[i+1]);f.lineTo(cp[i+2],cp[i+3]);}
+    f.lineStyle(0);
+  });
+
+  // Desks — two clusters
+  dsk(f,14,60,65,26,0x2a1c0a,AMBER);
+  mon(f,19,64,16,13,0x060402,0x3a2010); f.beginFill(AMBER,0.28); for(let i=0;i<3;i++)f.drawRect(21,66+i*3,10,1);
+  mon(f,40,64,16,13,0x060402,0x3a2010); f.beginFill(AMBER,0.28); for(let i=0;i<3;i++)f.drawRect(42,66+i*3,10,1);
+  // coffee cup + notepad
+  f.beginFill(0x4a3020); f.drawCircle(72,74,3); f.beginFill(0x2a1a0a); f.drawCircle(72,74,2);
+  f.beginFill(0x282416,0.8); f.drawRect(58,78,12,8);
+
+  dsk(f,14,120,65,26,0x2a1c0a,AMBER);
+  mon(f,19,124,16,13,0x060402,0x3a2010); f.beginFill(AMBER,0.28); for(let i=0;i<3;i++)f.drawRect(21,126+i*3,10,1);
+  mon(f,40,124,16,13,0x060402,0x3a2010); f.beginFill(AMBER,0.28); for(let i=0;i<3;i++)f.drawRect(42,126+i*3,10,1);
+
+  // Center cluster
+  dsk(f,98,78,60,26,0x2a1c0a,AMBER);
+  mon(f,102,82,16,13,0x060402,0x3a2010); f.beginFill(AMBER,0.28); for(let i=0;i<3;i++)f.drawRect(104,84+i*3,10,1);
+  mon(f,124,82,16,13,0x060402,0x3a2010); f.beginFill(AMBER,0.28); for(let i=0;i<3;i++)f.drawRect(126,84+i*3,10,1);
+  mon(f,146,82,14,13,0x060402,0x3a2010); f.beginFill(AMBER,0.28); for(let i=0;i<3;i++)f.drawRect(148,84+i*3,8,1);
+
+  // Desk lamp glow (warm top-down ellipses)
+  f.beginFill(0xCC6600,0.08); f.drawEllipse(48,72,24,12);
+  f.beginFill(0xCC6600,0.06); f.drawEllipse(130,88,24,12);
+
+  // Small leather couch (top-down) — back wall
+  f.beginFill(0x1e1008); f.lineStyle(1,AMBER,0.25); f.drawRect(100,190,80,22); f.lineStyle(0);
+  f.beginFill(0x2a1810); f.drawRect(103,193,74,16);
+  // cushions
+  [[105,194],[140,194]].forEach(([cx,cy])=>{f.beginFill(0x321e0e);f.drawRoundedRect(cx,cy,30,12,3);});
+
+  A.stage.addChild(f);
+
+  const B={x0:14,y0:55,x1:W-16,y1:H-18};
+  const SHIRTS=[0x2a3a5a,0x1a3a28,0x3a2a1a,0x2a1a3a,0x1e3a2a];
+  const agents=[];
+  for(let i=0;i<6;i++){
+    const sc=SHIRTS[i%SHIRTS.length];
+    const a=new Agent(A,28+i*36,75+i*16,0.52+Math.random()*0.12,sc,0xd4b896,AMBER,null,null,null);
+    a.retarget(B); agents.push(a);
+  }
+  const TX=['BUY 200 TECH','SELL UTIL','+HEALTH','-ENERGY','ROTATE','BUY 50 XLF','+$840'];
+  A.ticker.add(()=>agents.forEach(a=>a.tick(B,TX)));
+})();
+
+// ══════════════════════════════════════════════════════
+// ROOM 3: THE PIT — Black + Red/Green
+// ══════════════════════════════════════════════════════
+;(()=>{
+  const A=app('cv-pit',0x0a0a0a);
+  const RED=0xFF3333, GREEN=0x00FF00, ORG=0xFF8C00;
+
+  const bg=new PIXI.Graphics();
+
+  // Pure black base
+  bg.beginFill(0x060606); bg.drawRect(0,0,W,H);
+
+  // Floor checkers (very subtle)
+  checker(bg,0,52,W,H-66,0x0d0505,0x090303,10);
+
+  // Scattered crumpled paper on floor
+  bg.beginFill(0x1a1010,0.5);
+  for(let i=0;i<18;i++) bg.drawEllipse(12+Math.random()*(W-24)|0,58+Math.random()*(H-78)|0,3+Math.random()*6|0,2+Math.random()*4|0);
+
+  // Trash cans (2, top-down circles)
+  [[22,H-34],[W-30,H-34]].forEach(([tx,ty])=>{
+    bg.beginFill(0x1a0808); bg.lineStyle(1,RED,0.3); bg.drawCircle(tx,ty,8); bg.lineStyle(0);
+    bg.beginFill(0x0a0404); bg.drawCircle(tx,ty,5);
+  });
+
+  A.stage.addChild(bg);
+
+  // ── Screen wall (top, 5 monitors) ──
+  const sm=new PIXI.Graphics();
+  sm.beginFill(0x080202); sm.drawRect(0,0,W,50);
+  sm.lineStyle(1,0x1a0000,0.6); sm.moveTo(0,50); sm.lineTo(W,50); sm.lineStyle(0);
+
+  const screens=[
+    {x:3,y:2,w:50,h:45,c:RED,t:'SELL -2.1%'},
+    {x:57,y:2,w:50,h:45,c:GREEN,t:'BUY +4.3%'},
+    {x:111,y:2,w:50,h:45,c:RED,t:'SELL -0.8%'},
+    {x:165,y:2,w:50,h:45,c:GREEN,t:'BUY +1.9%'},
+    {x:219,y:2,w:57,h:45,c:ORG,t:'HOLD +0.1%'},
+  ];
+  screens.forEach(s=>{
+    sm.beginFill(0x050101); sm.drawRect(s.x,s.y,s.w,s.h);
+    sm.lineStyle(1.5,s.c,0.6); sm.drawRect(s.x,s.y,s.w,s.h); sm.lineStyle(0);
+    sm.beginFill(s.c,0.03); sm.drawRect(s.x+1,s.y+1,s.w-2,s.h-2);
+    // mini bars
+    sm.beginFill(s.c,0.45);
+    [8,12,6,16,10,18,14,20,10,22].forEach((bh,i)=>{sm.drawRect(s.x+3+i*5,s.y+s.h-3-bh,4,bh);});
+    // LED dot
+    sm.beginFill(s.c,0.9); sm.drawCircle(s.x+s.w-5,s.y+5,2);
+  });
+  A.stage.addChild(sm);
+
+  // Screen labels
+  screens.forEach(s=>{
+    const t=new PIXI.Text(s.t,{fontFamily:'"Press Start 2P",monospace',fontSize:5,fill:s.c,resolution:2});
+    t.x=s.x+3; t.y=s.y+4;
+    A.stage.addChild(t);
+  });
+
+  // ── Furniture: standing desks in rows ──
+  const f=new PIXI.Graphics();
+
+  // Row 1 of 5 stations
+  [[4,52],[60,52],[116,52],[172,52],[226,52]].forEach(([sx,sy])=>{
+    f.beginFill(0x140606); f.lineStyle(1,RED,0.2); f.drawRect(sx,sy,48,18); f.lineStyle(0);
+    // monitor on desk
+    f.beginFill(0x040202); f.lineStyle(1,RED,0.3); f.drawRect(sx+2,sy+2,20,12); f.lineStyle(0);
+    // LED
+    f.beginFill(Math.random()>0.4?GREEN:RED,0.9); f.drawCircle(sx+44,sy+3,1.5);
+    // keyboard
+    f.beginFill(0x1a0808,0.6); f.drawRect(sx+24,sy+10,16,5);
+  });
+
+  // Row 2 of 4 stations (offset)
+  [[28,108],[100,108],[172,108],[232,108]].forEach(([sx,sy])=>{
+    f.beginFill(0x140606); f.lineStyle(1,RED,0.2); f.drawRect(sx,sy,44,18); f.lineStyle(0);
+    f.beginFill(0x040202); f.lineStyle(1,RED,0.25); f.drawRect(sx+2,sy+2,18,12); f.lineStyle(0);
+    f.beginFill(Math.random()>0.4?GREEN:RED,0.9); f.drawCircle(sx+40,sy+3,1.5);
+    f.beginFill(0x1a0808,0.6); f.drawRect(sx+22,sy+10,14,5);
+  });
+
+  // Row 3 of 4
+  [[14,158],[84,158],[156,158],[220,158]].forEach(([sx,sy])=>{
+    f.beginFill(0x140606); f.lineStyle(1,RED,0.18); f.drawRect(sx,sy,44,18); f.lineStyle(0);
+    f.beginFill(0x040202); f.lineStyle(1,RED,0.22); f.drawRect(sx+2,sy+2,18,12); f.lineStyle(0);
+    f.beginFill(Math.random()>0.5?GREEN:RED,0.9); f.drawCircle(sx+40,sy+3,1.5);
+  });
+
+  A.stage.addChild(f);
+
+  // ── Timer ──
+  const timerTxt=new PIXI.Text('09:24:38',{fontFamily:'"Press Start 2P",monospace',fontSize:5,fill:RED,resolution:2});
+  timerTxt.x=W-62; timerTxt.y=H-28; A.stage.addChild(timerTxt);
+  // panic button
+  const pb=new PIXI.Graphics();
+  pb.beginFill(0xff0000); pb.lineStyle(2,0x660000); pb.drawCircle(W-12,H-20,8); pb.lineStyle(0);
+  pb.beginFill(0xcc0000); pb.drawCircle(W-12,H-20,5);
+  A.stage.addChild(pb);
+
+  // ── Agents — at desks, fast, vests ──
+  // Agents placed at/near desk positions
+  const deskPos=[
+    [10,50],[66,50],[122,50],[178,50],[234,50],
+    [34,106],[106,106],[178,106],[238,106],
+    [20,156],[90,156],[162,156],[226,156],
+  ];
+  const VESTS=[0xff2222,0x2244ff,0xffcc00,0x22aa44,0xff6600,0xaa22ff];
+  const agents=[];
+  deskPos.forEach(([dx,dy],i)=>{
+    const vest=VESTS[i%VESTS.length];
+    const a=new Agent(A,dx+14,dy+4,0.9+Math.random()*0.6,0x160606,0xe0a080,RED,vest,dx,dy);
+    a.retarget({x0:dx-8,y0:dy-6,x1:dx+36,y1:dy+18}); agents.push(a);
+  });
+  const TX=['BUY 500 TSLA','SELL NVDA','BUY AMD','+$420','-$80','EXEC FILL','BUY 1K SPY','+$1.2K','DUMP GME'];
+  const ABND={x0:4,y0:48,x1:W-4,y1:H-18};
+  A.ticker.add(()=>agents.forEach(a=>a.tick(ABND,TX)));
+
+  // Screen flicker + P&L
+  let ft=0; const fg=new PIXI.Graphics(); A.stage.addChild(fg);
+  A.ticker.add(()=>{
+    ft++;fg.clear();
+    if(ft%45<2){const s=screens[Math.random()*screens.length|0];fg.beginFill(s.c,0.1);fg.drawRect(s.x,s.y,s.w,s.h);}
+    if(ft%60===0){const m=9,s2=ft%60,mn=24+(ft/60|0)%30;timerTxt.text=`${String(m).padStart(2,'0')}:${String(mn).padStart(2,'0')}:${String(s2).padStart(2,'0')}`;}
+    if(ft%80===0){
+      const up=Math.random()>0.35;
+      const el=document.getElementById('pnl-pit');
+      if(el){el.textContent=up?`+$${(2000+Math.random()*3000|0).toLocaleString()} TODAY (+${(0.8+Math.random()*3).toFixed(1)}%)`:
+        `-$${(Math.random()*500|0).toLocaleString()} TODAY (-${(Math.random()*0.3).toFixed(1)}%)`;
+        el.style.color=up?'#00FF00':'#FF3333';el.style.borderColor=up?'#00FF0066':'#FF333366';}
+    }
+  });
+})();
+
+// ── selection ──
+const RC={bloom:'#4a7eba',oak:'#CC8833',pit:'#FF3333'};
+function sel(k){
+  Object.keys(RC).forEach(r=>{const w=document.getElementById('wrap-'+r);if(w)w.style.outline='none';});
+  const w=document.getElementById('wrap-'+k);
+  if(w){w.style.outline='3px solid '+RC[k];w.style.outlineOffset='2px';}
+}
+</script>
+</body>
+</html>
