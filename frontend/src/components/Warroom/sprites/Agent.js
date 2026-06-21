@@ -113,6 +113,49 @@ export class Agent {
     this.spinner.visible = true;
   }
 
+  setConfidence(score) {
+    this._confidenceScore = score;
+    if (this._paused) return; // paused tint overrides confidence tint
+    const tint = score >= 70 ? 0xFFFFFF
+                : score >= 50 ? 0xCCCCCC
+                : score >= 35 ? 0xFFAA44
+                : 0xFF4444;
+    this.c.children.forEach((child) => { if (child.tint !== undefined) child.tint = tint; });
+
+    // Pulsing ring for <35
+    if (score < 35 && !this._warningRing) {
+      this._warningRing = new PIXI.Graphics();
+      this._warningRing.lineStyle(2, 0xFF4444, 0.8);
+      this._warningRing.drawCircle(7, 8, 13);
+      this.c.addChildAt(this._warningRing, 0);
+      this._warningRingPhase = 0;
+    } else if (score >= 35 && this._warningRing) {
+      this.c.removeChild(this._warningRing);
+      this._warningRing.destroy();
+      this._warningRing = null;
+    }
+  }
+
+  setPaused(paused) {
+    this._paused = paused;
+    if (paused) {
+      this.c.children.forEach((child) => { if (child.tint !== undefined) child.tint = 0x888888; });
+      if (!this._pauseText) {
+        this._pauseText = new PIXI.Text('⏸', { fontSize: 8, fill: 0xAAAAAA });
+        this._pauseText.anchor.set(0.5, 1);
+        this._pauseText.x = 7; this._pauseText.y = -14;
+        this.c.addChild(this._pauseText);
+      }
+    } else {
+      if (this._pauseText) {
+        this.c.removeChild(this._pauseText);
+        this._pauseText.destroy();
+        this._pauseText = null;
+      }
+      this.setConfidence(this._confidenceScore ?? 50);
+    }
+  }
+
   retarget() {
     this.tx = this.x;
     this.ty = this.y;
@@ -169,6 +212,11 @@ export class Agent {
       this.flash.clear();
       this.flash.beginFill(this.flashCol, (this.flashLife / 22) * 0.4);
       this.flash.drawEllipse(7, 8, 7, 10);
+    }
+
+    if (this._warningRing) {
+      this._warningRingPhase = (this._warningRingPhase ?? 0) + 0.08;
+      this._warningRing.alpha = 0.5 + 0.5 * Math.sin(this._warningRingPhase);
     }
 
     if (window.__LABOURIOUS_DEMO__ && tradeTexts && tradeTexts.length > 0) {

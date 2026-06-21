@@ -1,20 +1,37 @@
 import { useEffect, useRef } from 'react';
 import { agentsApi } from '../../../utils/api-client';
 import { useWebSocketStore } from '../../../stores/websocket.store';
+import useAgentsStore from '../../../stores/agents.store';
 
 export function useWarroomAgents(room, agentSprites) {
   const lastMessage = useWebSocketStore((s) => s.lastMessage);
+  const agents = useAgentsStore((s) => s.agents);
   const demoTimer = useRef(null);
   const hasRealEvent = useRef(false);
 
+  // On mount: assign IDs and apply initial confidence/paused state
   useEffect(() => {
-    agentsApi.list({ room }).then((agents) => {
-      if (!Array.isArray(agents)) return;
-      agents.forEach((agent, i) => {
-        if (agentSprites[i]) agentSprites[i].id = agent.id;
+    agentsApi.list({ room }).then((fetched) => {
+      if (!Array.isArray(fetched)) return;
+      fetched.forEach((agent, i) => {
+        const sprite = agentSprites[i];
+        if (!sprite) return;
+        sprite.id = agent.id;
+        if (sprite.setConfidence) sprite.setConfidence(agent.confidence_score ?? 50);
+        if (sprite.setPaused) sprite.setPaused(agent.status === 'paused');
       });
     }).catch(() => {});
   }, [room, agentSprites]);
+
+  // Re-sync sprites when agents store updates (polling or WS)
+  useEffect(() => {
+    agents.forEach((agent) => {
+      const sprite = agentSprites.find((s) => s && s.id === agent.id);
+      if (!sprite) return;
+      if (sprite.setConfidence) sprite.setConfidence(agent.confidence_score ?? 50);
+      if (sprite.setPaused) sprite.setPaused(agent.status === 'paused');
+    });
+  }, [agents, agentSprites]);
 
   useEffect(() => {
     demoTimer.current = setTimeout(() => {
@@ -25,26 +42,31 @@ export function useWarroomAgents(room, agentSprites) {
 
   useEffect(() => {
     if (!lastMessage) return;
+    const msg = lastMessage;
+    const key = msg.event ?? msg.type;
 
-    if (lastMessage.type === 'trade_executed' && lastMessage.agent_id) {
+    if (key === 'trade_executed' && msg.agent_id) {
       hasRealEvent.current = true;
       window.__LABOURIOUS_DEMO__ = false;
-      const sprite = agentSprites.find((s) => s && s.id === lastMessage.agent_id);
+      const sprite = agentSprites.find((s) => s && s.id === msg.agent_id);
       if (sprite) {
-        sprite.onTrade(
-          lastMessage.trade?.symbol ?? 'TRADE',
-          lastMessage.trade?.action ?? 'BUY',
-          lastMessage.trade?.pnl ?? 0
-        );
+        sprite.onTrade(msg.symbol ?? 'TRADE', msg.action ?? 'BUY', msg.pnl ?? 0);
+        if (sprite.setConfidence) sprite.setConfidence(msg.confidence_score ?? 50);
       }
     }
 
-    if (lastMessage.type === 'agent_update' && lastMessage.agent_id) {
-      if (lastMessage.data?.status === 'processing') {
-        hasRealEvent.current = true;
-        const sprite = agentSprites.find((s) => s && s.id === lastMessage.agent_id);
-        if (sprite) sprite.onProcessing();
+    if ((key === 'agent_update' || key === 'agent_paused') && msg.agent_id) {
+      hasRealEvent.current = true;
+      const sprite = agentSprites.find((s) => s && s.id === msg.agent_id);
+      if (sprite) {
+        if (msg.status === 'running' || msg.data?.status === 'processing') sprite.onProcessing();
+        if (sprite.setPaused) sprite.setPaused(msg.status === 'paused' || msg.data?.status === 'paused');
+        if (sprite.setConfidence && msg.confidence_score != null) sprite.setConfidence(msg.confidence_score);
       }
+    }
+
+    if (key === 'bodyguard_pause_all') {
+      agentSprites.forEach((sprite) => { if (sprite?.setPaused) sprite.setPaused(true); });
     }
   }, [lastMessage, agentSprites]);
 }
