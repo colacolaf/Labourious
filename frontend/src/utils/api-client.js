@@ -113,4 +113,9 @@ export const llmApi = {
     apiClient.get(`/api/llm/cost`, { params: { provider, model, check_frequency: checkFrequency } }),
 };
 
+export const notificationsApi = {
+  getPreferences: () => apiClient.get('/api/notifications/preferences'),
+  updatePreferences: (data) => apiClient.patch('/api/notifications/preferences', data),
+};
+
 export default apiClient;
