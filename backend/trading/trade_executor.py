@@ -1,14 +1,55 @@
 import asyncio
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from typing import Optional, Callable
 
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from backend.brokers.manager import get_connector
-from backend.database.models import Agent, Trade, TradeSide, TradeStatus
+from backend.database.models import Agent, Trade, TradeSide, TradeStatus, DailySnapshot
 from backend.llm.llm_router import TradeDecision
 from backend.trading.confidence_scorer import calculate_confidence_score
+
+
+def _upsert_daily_snapshot(
+    agent_id: int,
+    date_str: str,
+    pnl: float,
+    won: bool,
+    trade_count: int,
+    portfolio_value: float,
+    cash_balance: float,
+    session,
+) -> None:
+    """Insert or update today's DailySnapshot for agent."""
+    existing = session.execute(
+        select(DailySnapshot).where(
+            DailySnapshot.agent_id == agent_id,
+            DailySnapshot.date == date_str,
+        )
+    ).scalar_one_or_none()
+
+    if existing:
+        existing.total_pnl += pnl
+        existing.trade_count += trade_count
+        existing.trades_won = (existing.trades_won or 0) + (1 if won else 0)
+        existing.trades_lost = (existing.trades_lost or 0) + (0 if won else 1)
+        existing.win_rate = existing.trades_won / max(existing.trade_count, 1)
+        session.add(existing)
+    else:
+        snapshot = DailySnapshot(
+            agent_id=agent_id,
+            date=date_str,
+            total_pnl=pnl,
+            daily_return_pct=pnl / max(portfolio_value - pnl, 1.0),
+            trade_count=trade_count,
+            trades_won=1 if won else 0,
+            trades_lost=0 if won else 1,
+            win_rate=1.0 if won else 0.0,
+        )
+        session.add(snapshot)
+    session.flush()
 
 
 class TradeExecutor:
@@ -237,6 +278,20 @@ class TradeExecutor:
             )
             agent.confidence_score = new_score
             db_session.add(agent)
+            db_session.commit()
+
+            # Write to DailySnapshot after agent stats commit
+            date_str = date.today().isoformat()
+            _upsert_daily_snapshot(
+                agent_id=agent_id,
+                date_str=date_str,
+                pnl=pnl,
+                won=pnl > 0,
+                trade_count=1,
+                portfolio_value=agent.paper_trading_balance or 0.0,
+                cash_balance=agent.paper_trading_balance or 0.0,
+                session=db_session,
+            )
             db_session.commit()
         except Exception:
             # Skip stats update if db operations fail (e.g., in tests with mocks)

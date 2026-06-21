@@ -443,3 +443,31 @@ async def test_live_order_fails_preflight_if_vault_missing_key():
     assert result["status"] == "error"
     assert "broker error" in result["reason"]
 
+
+def test_daily_snapshot_upsert_after_paper_trade():
+    """After paper trade, DailySnapshot row is created or updated for agent+date."""
+    from backend.trading.trade_executor import _upsert_daily_snapshot
+    from backend.database.models import DailySnapshot
+
+    session = MagicMock()
+    session.execute.return_value.scalar_one_or_none.return_value = None  # no existing snapshot
+    session.add = MagicMock()
+    session.flush = MagicMock()
+
+    _upsert_daily_snapshot(
+        agent_id=1,
+        date_str="2026-06-21",
+        pnl=250.0,
+        won=True,
+        trade_count=1,
+        portfolio_value=100250.0,
+        cash_balance=100000.0,
+        session=session,
+    )
+
+    session.add.assert_called_once()
+    snapshot_arg = session.add.call_args[0][0]
+    assert isinstance(snapshot_arg, DailySnapshot)
+    assert snapshot_arg.total_pnl == 250.0
+    assert snapshot_arg.trades_won == 1
+
