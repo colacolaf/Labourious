@@ -118,4 +118,17 @@ export const notificationsApi = {
   updatePreferences: (data) => apiClient.patch('/api/notifications/preferences', data),
 };
 
+export const brokersApi = {
+  list: () => apiClient.get('/api/brokers'),
+  available: () => apiClient.get('/api/brokers/available'),
+  connect: (data) => apiClient.post('/api/brokers/connect', data),
+  test: (name) => apiClient.get(`/api/brokers/${name}/test`),
+};
+
+export const settingsApi = {
+  get: () => apiClient.get('/api/settings'),
+  patchAllocation: (data) => apiClient.post('/api/settings/allocation', data),
+  changePassword: (data) => apiClient.post('/api/settings/vault-password', data),
+};
+
 export default apiClient;
