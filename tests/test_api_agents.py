@@ -378,3 +378,19 @@ class TestAgentPerformance:
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 3
+
+
+class TestAgentResponseFields:
+    def test_agent_response_has_confidence_fields(self, client, agent_factory):
+        """GET /api/agents returns confidence_score, execution_mode, check_frequency, paper_trading_balance, last_heartbeat."""
+        agent_factory(name="test_confidence_agent")
+        resp = client.get("/api/agents")
+        assert resp.status_code == 200
+        agents = resp.json()
+        assert len(agents) > 0
+        a = agents[0]
+        assert "confidence_score" in a
+        assert "execution_mode" in a
+        assert "check_frequency" in a
+        assert "paper_trading_balance" in a
+        assert "last_heartbeat" in a  # may be None

@@ -44,6 +44,8 @@ class AgentUpdate(BaseModel):
     max_position_size: Optional[float] = None
     stop_loss_pct: Optional[float] = None
     take_profit_pct: Optional[float] = None
+    execution_mode: Optional[str] = None
+    check_frequency: Optional[int] = None
 
 
 class AgentResponse(BaseModel):
@@ -69,6 +71,11 @@ class AgentResponse(BaseModel):
     win_rate: float
     current_drawdown: float
     consecutive_losses: int
+    confidence_score: int
+    execution_mode: str
+    check_frequency: int
+    paper_trading_balance: float
+    last_heartbeat: Optional[datetime]
     created_at: datetime
 
 
