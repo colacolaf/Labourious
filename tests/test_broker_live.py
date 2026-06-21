@@ -54,3 +54,13 @@ async def test_kraken_paper_place_order_returns_order():
     order = await conn.place_order("BTC/USD", "buy", 500.0, "market")
     assert isinstance(order, Order)
     assert order.order_id is not None
+
+
+@pytest.mark.asyncio
+async def test_ccxt_generic_test_connection_returns_bool():
+    """CcxtConnector wraps any ccxt exchange."""
+    from backend.brokers.ccxt_generic import CcxtConnector
+    conn = CcxtConnector("binance", "key", "secret")
+    with patch.object(conn._exchange, "fetch_status", new=AsyncMock(return_value={"status": "ok"})):
+        result = await conn.test_connection()
+        assert result is True
