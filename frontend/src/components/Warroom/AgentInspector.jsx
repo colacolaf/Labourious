@@ -112,9 +112,62 @@ function PerformanceTab({ agentId }) {
   );
 }
 
+// Maps the 4 user-facing trading modes to backend field pairs
+const TRADING_MODES = [
+  {
+    id: 'paper_only',
+    label: 'Paper Trading Only',
+    desc: 'Safest — simulated trades, no real money ever',
+    is_paper_trading: true,
+    execution_mode: 'autonomous',
+  },
+  {
+    id: 'human_in_loop',
+    label: 'Human Approval Required',
+    desc: 'Live trades need your approval before executing',
+    is_paper_trading: false,
+    execution_mode: 'human_in_loop',
+  },
+  {
+    id: 'risk_based',
+    label: 'Semi-Autonomous',
+    desc: 'Small/high-confidence trades auto-execute; large/risky ones ask first',
+    is_paper_trading: false,
+    execution_mode: 'risk_based',
+  },
+  {
+    id: 'autonomous',
+    label: 'Fully Autonomous',
+    desc: 'Agent executes all trades without asking — use only when confident',
+    is_paper_trading: false,
+    execution_mode: 'autonomous',
+  },
+];
+
+function currentModeId(agent) {
+  if (agent.is_paper_trading) return 'paper_only';
+  return agent.execution_mode ?? 'human_in_loop';
+}
+
 function SettingsTab({ agent }) {
   const { updateAgent } = useAgentsStore();
   const [busy, setBusy] = useState(false);
+  const [modeId, setModeId] = useState(() => currentModeId(agent));
+
+  // Sync when agent changes (WS update or inspector opens on different agent)
+  useEffect(() => { setModeId(currentModeId(agent)); }, [agent.id, agent.is_paper_trading, agent.execution_mode]);
+
+  const saveMode = useCallback(async (id) => {
+    const mode = TRADING_MODES.find((m) => m.id === id);
+    if (!mode) return;
+    setModeId(id);
+    setBusy(true);
+    await updateAgent(agent.id, {
+      is_paper_trading: mode.is_paper_trading,
+      execution_mode: mode.execution_mode,
+    }).catch(() => {});
+    setBusy(false);
+  }, [agent.id, updateAgent]);
 
   const toggle = useCallback(async (field) => {
     setBusy(true);
@@ -122,39 +175,71 @@ function SettingsTab({ agent }) {
     setBusy(false);
   }, [agent, updateAgent]);
 
-  const style = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid var(--color-border)', fontSize: '0.8rem' };
-  const btn = (label, onClick, danger) => (
-    <button
-      onClick={onClick}
-      disabled={busy}
-      style={{
-        padding: '0.3rem 0.7rem',
-        fontFamily: 'var(--font-mono)',
-        fontSize: '0.7rem',
-        cursor: 'pointer',
-        background: 'transparent',
-        border: `1px solid ${danger ? '#ff4444' : 'var(--color-accent-primary, #00ff88)'}`,
-        color: danger ? '#ff4444' : 'var(--color-accent-primary)',
-        borderRadius: 3,
-      }}
-    >
-      {label}
-    </button>
-  );
-
   return (
     <div>
-      <div style={style}>
+      {/* Trading mode selector */}
+      <div style={{ marginBottom: '1rem' }}>
+        <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+          TRADING MODE
+        </div>
+        {TRADING_MODES.map((m) => {
+          const active = modeId === m.id;
+          const isLive = !m.is_paper_trading;
+          return (
+            <button
+              key={m.id}
+              onClick={() => saveMode(m.id)}
+              disabled={busy}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                padding: '0.55rem 0.75rem',
+                marginBottom: '0.35rem',
+                background: active ? 'var(--color-bg-tertiary)' : 'transparent',
+                border: `1px solid ${active ? (isLive ? 'var(--color-accent-primary, #00ff88)' : 'var(--color-border)') : 'var(--color-border)'}`,
+                borderRadius: 4,
+                cursor: busy ? 'not-allowed' : 'pointer',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: active ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', fontWeight: active ? 700 : 400 }}>
+                  {m.label}
+                </span>
+                {active && (
+                  <span style={{ fontSize: '0.6rem', color: 'var(--color-accent-primary, #00ff88)', letterSpacing: '0.08em' }}>
+                    ACTIVE
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: 2 }}>
+                {m.desc}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active toggle */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid var(--color-border)', fontSize: '0.8rem' }}>
         <span style={{ color: 'var(--color-text-muted)' }}>Active</span>
-        {btn(agent.is_active ? 'Disable' : 'Enable', () => toggle('is_active'), !agent.is_active)}
+        <button
+          onClick={() => toggle('is_active')}
+          disabled={busy}
+          style={{
+            padding: '0.3rem 0.7rem', fontFamily: 'var(--font-mono)', fontSize: '0.7rem',
+            cursor: 'pointer', background: 'transparent', borderRadius: 3,
+            border: `1px solid ${!agent.is_active ? 'var(--color-accent-primary, #00ff88)' : 'var(--color-danger, #ff4444)'}`,
+            color: !agent.is_active ? 'var(--color-accent-primary)' : 'var(--color-danger, #ff4444)',
+          }}
+        >
+          {agent.is_active ? 'Disable' : 'Enable'}
+        </button>
       </div>
-      <div style={style}>
-        <span style={{ color: 'var(--color-text-muted)' }}>Paper Trading</span>
-        {btn(agent.is_paper_trading ? 'Switch Live' : 'Switch Paper', () => toggle('is_paper_trading'), agent.is_paper_trading)}
-      </div>
-      <Row label="Execution Mode" value={agent.execution_mode ?? 'human_in_loop'} />
-      <Row label="Check Frequency" value={agent.check_frequency ? `${agent.check_frequency}s` : '—'} />
-      <Row label="Max Position Size" value={agent.max_position_size != null ? `$${agent.max_position_size}` : '—'} />
+
+      <Row label="Check Freq" value={agent.check_frequency ? `${agent.check_frequency}s` : '—'} />
+      <Row label="Max Position" value={agent.max_position_size != null ? `$${agent.max_position_size}` : '—'} />
       <Row label="LLM" value={agent.use_local_llm ? 'Local (Ollama)' : 'Claude'} />
     </div>
   );

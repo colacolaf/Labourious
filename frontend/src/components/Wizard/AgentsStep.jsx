@@ -9,6 +9,37 @@ const TEMPLATES = [
   { id: 'arbitrage_bot', name: 'Arbitrage Bot', strategy_type: 'arbitrage', risk_level: 'Medium', strategy_config: { strategy: 'arbitrage' } },
 ];
 
+const TRADING_MODES = [
+  {
+    id: 'paper_only',
+    label: 'Paper Trading Only',
+    desc: 'Safest — simulated trades, no real money',
+    is_paper_trading: true,
+    execution_mode: 'autonomous',
+  },
+  {
+    id: 'human_in_loop',
+    label: 'Human Approval Required',
+    desc: 'Every live trade waits for your approval',
+    is_paper_trading: false,
+    execution_mode: 'human_in_loop',
+  },
+  {
+    id: 'risk_based',
+    label: 'Semi-Autonomous',
+    desc: 'Small/confident trades auto-execute; risky ones ask',
+    is_paper_trading: false,
+    execution_mode: 'risk_based',
+  },
+  {
+    id: 'autonomous',
+    label: 'Fully Autonomous',
+    desc: 'All trades execute without asking — advanced users only',
+    is_paper_trading: false,
+    execution_mode: 'autonomous',
+  },
+];
+
 const RISK_COLORS = {
   High: 'var(--color-accent-danger)',
   Medium: 'var(--color-accent-warning)',
@@ -18,6 +49,7 @@ const RISK_COLORS = {
 export default function AgentsStep() {
   const { submitWizard } = useWizardStore((s) => ({ submitWizard: s.submitWizard }));
   const [selected, setSelected] = useState(new Set());
+  const [modeId, setModeId] = useState('paper_only'); // safe default
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,6 +64,7 @@ export default function AgentsStep() {
   async function handleHire() {
     setLoading(true);
     setError('');
+    const mode = TRADING_MODES.find((m) => m.id === modeId);
     try {
       const toHire = TEMPLATES.filter((t) => selected.has(t.id));
       await Promise.all(
@@ -41,6 +74,8 @@ export default function AgentsStep() {
             strategy_type: t.strategy_type,
             strategy_config: t.strategy_config,
             risk_config: {},
+            is_paper_trading: mode.is_paper_trading,
+            execution_mode: mode.execution_mode,
           })
         )
       );
@@ -63,10 +98,11 @@ export default function AgentsStep() {
           Hire Agents
         </h2>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-          Select prebuilt agent templates to deploy.
+          Select agents to deploy, then choose how they trade.
         </p>
       </div>
 
+      {/* Agent template picker */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
         {TEMPLATES.map((t) => {
           const isSelected = selected.has(t.id);
@@ -97,6 +133,53 @@ export default function AgentsStep() {
           );
         })}
       </div>
+
+      {/* Trading mode picker */}
+      {selected.size > 0 && (
+        <div>
+          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', marginBottom: 'var(--space-3)' }}>
+            HOW SHOULD THESE AGENTS TRADE?
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            {TRADING_MODES.map((m) => {
+              const active = modeId === m.id;
+              return (
+                <label
+                  key={m.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 'var(--space-3)',
+                    padding: 'var(--space-3) var(--space-4)',
+                    background: active ? 'var(--color-bg-elevated)' : 'var(--color-bg-card)',
+                    border: `1px solid ${active ? 'var(--color-accent-primary)' : 'var(--color-border)'}`,
+                    borderRadius: 'var(--radius-md)',
+                    cursor: 'pointer',
+                    transition: 'var(--transition-fast)',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="trading_mode"
+                    value={m.id}
+                    checked={active}
+                    onChange={() => setModeId(m.id)}
+                    style={{ marginTop: 3, accentColor: 'var(--color-accent-primary)' }}
+                  />
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontWeight: active ? 700 : 400 }}>
+                      {m.label}
+                    </div>
+                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginTop: 2 }}>
+                      {m.desc}
+                    </div>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {error && <p style={{ color: 'var(--color-accent-danger)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-mono)' }}>{error}</p>}
 
