@@ -37,11 +37,11 @@ export default function NotificationsPage() {
   }, [preferences]);
 
   const handleToggle = (key, value) => {
-    updatePreferences({ [key]: value });
+    updatePreferences({ [key]: value }).catch(() => {}); // error displayed via store.error
   };
 
   const handlePhoneSave = () => {
-    updatePreferences({ phone_number: phone });
+    updatePreferences({ phone_number: phone }).catch(() => {}); // error displayed via store.error
   };
 
   if (authError) {

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, time
 from backend.database.db import get_db_session
 from backend.database.models import User, Agent, Trade, TradeStatus
 from backend.notifications.triggers import send_daily_digest
@@ -6,8 +6,8 @@ from backend.utils.logger import logger
 
 
 def run_daily_digest(database_url: str) -> None:
-    today = date.today().isoformat()
-    logger.info(f"Running daily digest for {today}")
+    today_dt = datetime.combine(date.today(), time.min)
+    logger.info(f"Running daily digest for {today_dt.date().isoformat()}")
     try:
         with get_db_session(database_url) as db:
             from backend.notifications.models import UserNotificationPreferences
@@ -24,7 +24,7 @@ def run_daily_digest(database_url: str) -> None:
                         .filter(
                             Trade.agent_id.in_(agent_ids),
                             Trade.status == TradeStatus.CLOSED,
-                            Trade.closed_at >= f"{today}T00:00:00",
+                            Trade.closed_at >= today_dt,
                         )
                         .all()
                     ) if agent_ids else []

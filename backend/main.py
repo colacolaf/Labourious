@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from backend.config import settings
 from backend.database.db import init_db, get_session_factory
@@ -52,7 +53,6 @@ async def lifespan(app: FastAPI):
 
     # Schedule EOD snapshot job (fires at 16:05 EST = 21:05 UTC)
     try:
-        from apscheduler.schedulers.asyncio import AsyncIOScheduler
         from backend.analytics.snapshot_job import run_eod_snapshot
 
         _snapshot_scheduler = AsyncIOScheduler()
@@ -72,7 +72,6 @@ async def lifespan(app: FastAPI):
 
     # Daily digest job (fires at 22:00 UTC)
     try:
-        from apscheduler.schedulers.asyncio import AsyncIOScheduler
         from backend.notifications.digest_job import run_daily_digest as _run_digest
         _digest_scheduler = AsyncIOScheduler()
         _digest_scheduler.add_job(
