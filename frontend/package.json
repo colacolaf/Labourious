@@ -15,15 +15,17 @@
   "dependencies": {
     "axios": "^1.7.7",
     "framer-motion": "^11.9.0",
+    "pixi.js": "^7.4.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
     "socket.io-client": "^4.8.0",
-    "zustand": "^5.0.0",
-    "pixi.js": "^7.4.2"
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "concurrently": "^9.0.1",
     "electron": "^32.1.2",
     "electron-builder": "^25.1.7",
@@ -31,8 +33,16 @@
     "wait-on": "^8.0.1"
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "build": {
     "appId": "com.labourious.app",
@@ -40,7 +50,11 @@
     "directories": {
       "output": "dist"
     },
-    "files": ["build/**/*", "src/electron-main.js", "src/preload.js"],
+    "files": [
+      "build/**/*",
+      "src/electron-main.js",
+      "src/preload.js"
+    ],
     "mac": {
       "target": "dmg"
     },
