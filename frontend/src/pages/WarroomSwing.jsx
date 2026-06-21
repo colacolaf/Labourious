@@ -1,4 +1,4 @@
-import Warroom from '../components/Warroom/Warroom';
+import PixiWarroom from '../components/Warroom/PixiWarroom';
 export default function WarroomSwing() {
-  return <Warroom room="swing_trading" />;
+  return <PixiWarroom room="swing_trading" />;
 }

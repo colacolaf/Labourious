@@ -1,4 +1,4 @@
-import Warroom from '../components/Warroom/Warroom';
+import PixiWarroom from '../components/Warroom/PixiWarroom';
 export default function WarroomLongTerm() {
-  return <Warroom room="long_term" />;
+  return <PixiWarroom room="long_term" />;
 }

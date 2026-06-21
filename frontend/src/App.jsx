@@ -14,6 +14,7 @@ import WarroomLongTerm from './pages/WarroomLongTerm';
 import AnalyticsPage from './pages/AnalyticsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ContextBuilder from './components/Warroom/ContextBuilder';
+import Lobby from './pages/Lobby';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -131,6 +132,7 @@ function TopBar() {
 
 const NAV_ITEMS = [
   { label: 'Dashboard', path: '/', icon: '◈', end: true },
+  { label: 'Lobby', path: '/lobby', icon: '⬡' },
   { label: 'Day Trading', path: '/warroom/day', icon: '◉' },
   { label: 'Swing', path: '/warroom/swing', icon: '◎' },
   { label: 'Long-Term', path: '/warroom/long', icon: '◌' },
@@ -217,6 +219,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/lobby" element={<Lobby />} />
             <Route path="/warroom/day" element={<WarroomDay />} />
             <Route path="/warroom/swing" element={<WarroomSwing />} />
             <Route path="/warroom/long" element={<WarroomLongTerm />} />

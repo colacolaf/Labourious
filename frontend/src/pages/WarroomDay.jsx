@@ -1,4 +1,4 @@
-import Warroom from '../components/Warroom/Warroom';
+import PixiWarroom from '../components/Warroom/PixiWarroom';
 export default function WarroomDay() {
-  return <Warroom room="day_trading" />;
+  return <PixiWarroom room="day_trading" />;
 }
