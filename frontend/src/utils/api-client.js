@@ -11,14 +11,57 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem('auth_access_token');
+    if (token) config.headers['Authorization'] = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
 );
 
+let _isRefreshing = false;
+let _refreshQueue = [];
+
 apiClient.interceptors.response.use(
   (response) => response.data,
-  (error) => {
+  async (error) => {
+    const original = error.config;
+    if (error?.response?.status === 401 && !original._retry) {
+      original._retry = true;
+      const refreshToken = localStorage.getItem('auth_refresh_token');
+      if (!refreshToken) {
+        // ponytail: lazy import avoids circular dep at module load time
+        const { default: useAuthStore } = await import('../stores/auth.store');
+        useAuthStore.getState().logout();
+        return Promise.reject(error);
+      }
+      if (_isRefreshing) {
+        return new Promise((resolve, reject) => {
+          _refreshQueue.push({ resolve, reject });
+        }).then((token) => {
+          original.headers['Authorization'] = `Bearer ${token}`;
+          return apiClient(original);
+        });
+      }
+      _isRefreshing = true;
+      try {
+        const res = await apiClient.post('/api/auth/refresh', { refresh_token: refreshToken });
+        const newToken = res.access_token ?? res.data?.access_token ?? res;
+        localStorage.setItem('auth_access_token', typeof newToken === 'string' ? newToken : newToken.access_token);
+        _refreshQueue.forEach(({ resolve }) => resolve(typeof newToken === 'string' ? newToken : newToken.access_token));
+        _refreshQueue = [];
+        original.headers['Authorization'] = `Bearer ${typeof newToken === 'string' ? newToken : newToken.access_token}`;
+        return apiClient(original);
+      } catch (refreshErr) {
+        _refreshQueue.forEach(({ reject }) => reject(refreshErr));
+        _refreshQueue = [];
+        const { default: useAuthStore } = await import('../stores/auth.store');
+        useAuthStore.getState().logout();
+        return Promise.reject(refreshErr);
+      } finally {
+        _isRefreshing = false;
+      }
+    }
+
     const message =
       error?.response?.data?.detail ||
       error?.response?.data?.message ||
@@ -31,6 +74,13 @@ apiClient.interceptors.response.use(
     return Promise.reject(normalized);
   }
 );
+
+export const authApi = {
+  register: (data) => apiClient.post('/api/auth/register', data),
+  login: (data) => apiClient.post('/api/auth/login', data),
+  refresh: (data) => apiClient.post('/api/auth/refresh', data),
+  me: () => apiClient.get('/api/auth/me'),
+};
 
 export const healthApi = {
   check: () => apiClient.get('/api/health'),
