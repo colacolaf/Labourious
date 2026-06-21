@@ -153,6 +153,8 @@ async def test_execute_live_order(mock_vault, mock_db_session):
             connector=mock_connector,
             db_session=mock_db_session,
             decision=decision,
+            agent_config={"name": "test"},
+            broadcast_callback=None,
         )
 
         assert result["status"] == "executed"
@@ -189,6 +191,7 @@ async def test_execute_autonomous(mock_vault, mock_db_session):
                 "allocation_percent": 0.2,
                 "max_position_size": 0.05,
                 "asset": "ETH/USD",
+                "paper_trading": False,
             },
             vault=mock_vault,
             db_session=mock_db_session,
@@ -331,4 +334,82 @@ async def test_execute_live_order_skips_notify_on_exception(mock_vault, mock_db_
         # Trade should still execute despite notification failure
         assert result["status"] == "executed"
         mock_notify_trade.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_paper_trade_writes_closed_record(mock_vault):
+    """Paper path writes a CLOSED Trade with is_paper=True, no broker call."""
+    from backend.trading.trade_executor import TradeExecutor
+    from backend.llm.llm_router import TradeDecision
+    from backend.database.models import TradeStatus
+
+    executor = TradeExecutor(mock_vault, None)
+    decision = TradeDecision(action="BUY", confidence=0.7, position_size=0.1, reasoning="test")
+    agent_config = {
+        "broker": "alpaca", "paper_trading": True,
+        "allocation_percent": 0.1, "max_position_size": 0.05,
+        "asset": "AAPL", "execution_mode": "autonomous",
+        "name": "TestAgent", "user_id": None,
+    }
+    db_session = MagicMock()
+    db_session.add = MagicMock()
+    db_session.commit = MagicMock()
+
+    # Mock get_connector to return fake balance; paper path should NOT call place_order
+    mock_connector = MagicMock()
+    mock_connector.get_account_balance = AsyncMock(return_value=100_000.0)
+    mock_connector.get_market_data = AsyncMock()
+    mock_connector.get_market_data.return_value.price = 150.0
+
+    with patch("backend.trading.trade_executor.get_connector", return_value=mock_connector):
+        result = await executor.execute(
+            agent_id=1, decision=decision, agent_config=agent_config,
+            vault=mock_vault, db_session=db_session, broadcast_callback=None,
+        )
+
+    assert result["status"] == "executed"
+    assert result.get("is_paper") is True
+    mock_connector.place_order = MagicMock()
+    mock_connector.place_order.assert_not_called()
+    added_trade = db_session.add.call_args[0][0]
+    from backend.database.models import TradeStatus
+    assert added_trade.is_paper is True
+    assert added_trade.status == TradeStatus.CLOSED
+
+
+@pytest.mark.asyncio
+async def test_human_in_loop_emits_trade_approval_required(mock_vault):
+    """human_in_loop path broadcasts trade_approval_required with correct schema."""
+    from backend.trading.trade_executor import TradeExecutor
+    from backend.llm.llm_router import TradeDecision
+
+    executor = TradeExecutor(mock_vault, None)
+    decision = TradeDecision(action="BUY", confidence=0.72, position_size=0.1, reasoning="test reason")
+    agent_config = {
+        "broker": "alpaca", "paper_trading": False,
+        "allocation_percent": 0.1, "max_position_size": 0.05,
+        "asset": "AAPL", "execution_mode": "human_in_loop",
+        "name": "TestAgent", "user_id": None,
+    }
+    mock_connector = MagicMock()
+    mock_connector.get_account_balance = AsyncMock(return_value=100_000.0)
+
+    broadcast_calls = []
+    async def fake_broadcast(data):
+        broadcast_calls.append(data)
+
+    with patch("backend.trading.trade_executor.get_connector", return_value=mock_connector):
+        result = await executor.execute(
+            agent_id=1, decision=decision, agent_config=agent_config,
+            vault=mock_vault, db_session=MagicMock(), broadcast_callback=fake_broadcast,
+        )
+
+    assert result["status"] == "pending_approval"
+    assert len(broadcast_calls) == 1
+    evt = broadcast_calls[0]
+    assert evt["event"] == "trade_approval_required"
+    assert "expires_at" in evt
+    assert "reasoning" in evt
+    assert evt["agent_name"] == "TestAgent"
+    assert evt["action"] == "BUY"
 
