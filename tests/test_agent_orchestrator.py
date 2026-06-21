@@ -267,3 +267,185 @@ async def test_build_agent_config(orchestrator, sample_agent):
     assert config["asset"] == "BTC/USD"
     assert config["execution_mode"] == "auto"
     assert config["allocation_percent"] == 0.1
+
+
+@pytest.mark.asyncio
+async def test_run_agent_paused_calls_notify_when_user_id_set(orchestrator, sample_agent, mock_vault):
+    """Test that notify_agent_paused is called when agent is paused and user_id is set."""
+    sample_agent.user_id = "user_123"
+
+    with patch(
+        "backend.orchestrator.agent_orchestrator.get_connector"
+    ) as mock_get_conn, patch(
+        "backend.orchestrator.agent_orchestrator.LLMRouter"
+    ) as mock_router_class, patch(
+        "backend.orchestrator.agent_orchestrator.read_config"
+    ), patch(
+        "backend.orchestrator.agent_orchestrator.check_agent_risk"
+    ) as mock_check_risk, patch(
+        "backend.orchestrator.agent_orchestrator.manager.broadcast"
+    ) as mock_broadcast, patch(
+        "backend.notifications.triggers.notify_agent_paused"
+    ) as mock_notify_pause, patch(
+        "backend.notifications.triggers.notify_drawdown_warning"
+    ) as mock_notify_drawdown:
+
+        # Setup db factory mock
+        mock_session = MagicMock(spec=Session)
+        orchestrator.db_factory.return_value = mock_session
+
+        # Setup agent query
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+        mock_query.filter.return_value = mock_filter
+        mock_filter.first.return_value = sample_agent
+        mock_session.query.return_value = mock_query
+
+        # Setup connector mock
+        mock_connector = AsyncMock()
+        market_data_obj = MagicMock()
+        market_data_obj.price = 50000.0
+        market_data_obj.volume = 1000.0
+        market_data_obj.rsi = 55.0
+        market_data_obj.ma20 = 49000.0
+        market_data_obj.ma50 = 48000.0
+        mock_connector.get_market_data.return_value = market_data_obj
+        mock_get_conn.return_value = mock_connector
+
+        # Setup router mock
+        mock_router = AsyncMock()
+        buy_decision = TradeDecision(
+            action="BUY", confidence=0.8, position_size=0.5, reasoning="test buy"
+        )
+        mock_router.decide.return_value = buy_decision
+        mock_router_class.from_config.return_value = mock_router
+
+        # Risk check FAILS (should pause)
+        mock_check_risk.return_value = (True, "confidence too low")
+
+        await orchestrator.run_agent(1)
+
+        # Assert notify_agent_paused was called
+        mock_notify_pause.assert_called_once_with("user_123", "test_agent", "confidence too low")
+
+
+@pytest.mark.asyncio
+async def test_run_agent_paused_skips_notify_when_no_user_id(orchestrator, sample_agent, mock_vault):
+    """Test that notify_agent_paused is NOT called when user_id is None."""
+    sample_agent.user_id = None
+
+    with patch(
+        "backend.orchestrator.agent_orchestrator.get_connector"
+    ) as mock_get_conn, patch(
+        "backend.orchestrator.agent_orchestrator.LLMRouter"
+    ) as mock_router_class, patch(
+        "backend.orchestrator.agent_orchestrator.read_config"
+    ), patch(
+        "backend.orchestrator.agent_orchestrator.check_agent_risk"
+    ) as mock_check_risk, patch(
+        "backend.orchestrator.agent_orchestrator.manager.broadcast"
+    ) as mock_broadcast, patch(
+        "backend.notifications.triggers.notify_agent_paused"
+    ) as mock_notify_pause, patch(
+        "backend.notifications.triggers.notify_drawdown_warning"
+    ) as mock_notify_drawdown:
+
+        # Setup db factory mock
+        mock_session = MagicMock(spec=Session)
+        orchestrator.db_factory.return_value = mock_session
+
+        # Setup agent query
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+        mock_query.filter.return_value = mock_filter
+        mock_filter.first.return_value = sample_agent
+        mock_session.query.return_value = mock_query
+
+        # Setup connector mock
+        mock_connector = AsyncMock()
+        market_data_obj = MagicMock()
+        market_data_obj.price = 50000.0
+        market_data_obj.volume = 1000.0
+        market_data_obj.rsi = 55.0
+        market_data_obj.ma20 = 49000.0
+        market_data_obj.ma50 = 48000.0
+        mock_connector.get_market_data.return_value = market_data_obj
+        mock_get_conn.return_value = mock_connector
+
+        # Setup router mock
+        mock_router = AsyncMock()
+        buy_decision = TradeDecision(
+            action="BUY", confidence=0.8, position_size=0.5, reasoning="test buy"
+        )
+        mock_router.decide.return_value = buy_decision
+        mock_router_class.from_config.return_value = mock_router
+
+        # Risk check FAILS (should pause)
+        mock_check_risk.return_value = (True, "confidence too low")
+
+        await orchestrator.run_agent(1)
+
+        # Assert notify_agent_paused was NOT called
+        mock_notify_pause.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_run_agent_drawdown_notification(orchestrator, sample_agent, mock_vault):
+    """Test that drawdown notification is called when drawdown reason is triggered."""
+    sample_agent.user_id = "user_456"
+    sample_agent.current_drawdown = -0.15
+
+    with patch(
+        "backend.orchestrator.agent_orchestrator.get_connector"
+    ) as mock_get_conn, patch(
+        "backend.orchestrator.agent_orchestrator.LLMRouter"
+    ) as mock_router_class, patch(
+        "backend.orchestrator.agent_orchestrator.read_config"
+    ), patch(
+        "backend.orchestrator.agent_orchestrator.check_agent_risk"
+    ) as mock_check_risk, patch(
+        "backend.orchestrator.agent_orchestrator.manager.broadcast"
+    ) as mock_broadcast, patch(
+        "backend.notifications.triggers.notify_agent_paused"
+    ) as mock_notify_pause, patch(
+        "backend.notifications.triggers.notify_drawdown_warning"
+    ) as mock_notify_drawdown:
+
+        # Setup db factory mock
+        mock_session = MagicMock(spec=Session)
+        orchestrator.db_factory.return_value = mock_session
+
+        # Setup agent query
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+        mock_query.filter.return_value = mock_filter
+        mock_filter.first.return_value = sample_agent
+        mock_session.query.return_value = mock_query
+
+        # Setup connector mock
+        mock_connector = AsyncMock()
+        market_data_obj = MagicMock()
+        market_data_obj.price = 50000.0
+        market_data_obj.volume = 1000.0
+        market_data_obj.rsi = 55.0
+        market_data_obj.ma20 = 49000.0
+        market_data_obj.ma50 = 48000.0
+        mock_connector.get_market_data.return_value = market_data_obj
+        mock_get_conn.return_value = mock_connector
+
+        # Setup router mock
+        mock_router = AsyncMock()
+        buy_decision = TradeDecision(
+            action="BUY", confidence=0.8, position_size=0.5, reasoning="test buy"
+        )
+        mock_router.decide.return_value = buy_decision
+        mock_router_class.from_config.return_value = mock_router
+
+        # Risk check FAILS with drawdown reason
+        mock_check_risk.return_value = (True, "drawdown -15.0% < limit -25.0%")
+
+        await orchestrator.run_agent(1)
+
+        # Assert both notifications were called
+        mock_notify_pause.assert_called_once()
+        mock_notify_drawdown.assert_called_once_with("user_456", "test_agent", -0.15)

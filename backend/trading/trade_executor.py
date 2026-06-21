@@ -106,9 +106,10 @@ class TradeExecutor:
             connector=connector,
             db_session=db_session,
             decision=decision,
+            agent_config=agent_config,
         )
 
-    async def approve_trade(self, trade_id: str, approved: bool) -> dict:
+    async def approve_trade(self, trade_id: str, approved: bool, agent_config: dict = None) -> dict:
         """Approve or reject a pending trade."""
         if trade_id not in self.pending_approvals:
             return {"status": "error", "reason": "trade not found"}
@@ -126,6 +127,7 @@ class TradeExecutor:
             connector=data["connector"],
             db_session=data["db_session"],
             decision=data["decision"],
+            agent_config=agent_config,
         )
 
     async def _execute_live_order(
@@ -137,6 +139,7 @@ class TradeExecutor:
         connector,
         db_session: AsyncSession,
         decision: Optional[TradeDecision] = None,
+        agent_config: Optional[dict] = None,
     ) -> dict:
         """Place order via broker and persist to DB."""
         try:
@@ -161,6 +164,19 @@ class TradeExecutor:
 
         db_session.add(trade)
         await db_session.commit()
+
+        try:
+            if agent_config and agent_config.get("user_id"):
+                from backend.notifications.triggers import notify_trade_executed
+                notify_trade_executed(
+                    user_id=agent_config["user_id"],
+                    agent_name=agent_config.get("name", ""),
+                    symbol=symbol,
+                    action="BUY" if side.lower() == "buy" else "SELL",
+                    pnl=0.0,
+                )
+        except Exception:
+            pass
 
         return {
             "status": "executed",

@@ -198,3 +198,137 @@ async def test_execute_autonomous(mock_vault, mock_db_session):
         assert result["order_id"] == "order_456"
         mock_connector.place_order.assert_called_once()
 
+
+@pytest.mark.asyncio
+async def test_execute_live_order_calls_notify_when_user_id_set(mock_vault, mock_db_session):
+    """Test that notify_trade_executed is called when agent_config has user_id."""
+    executor = TradeExecutor(mock_vault, mock_db_session)
+
+    with patch("backend.trading.trade_executor.get_connector"), patch(
+        "backend.notifications.triggers.notify_trade_executed"
+    ) as mock_notify_trade:
+        mock_connector = AsyncMock()
+        mock_order = MagicMock()
+        mock_order.order_id = "order_789"
+        mock_order.filled_price = 50_000.0
+        mock_connector.place_order = AsyncMock(return_value=mock_order)
+
+        decision = TradeDecision(
+            action="BUY",
+            confidence=0.9,
+            position_size=0.1,
+            stop_loss=-0.05,
+            take_profit=0.15,
+            reasoning="test",
+        )
+
+        agent_config = {
+            "user_id": "user_789",
+            "name": "test_agent",
+        }
+
+        result = await executor._execute_live_order(
+            agent_id=1,
+            symbol="BTC/USD",
+            side="buy",
+            quantity=1000.0,
+            connector=mock_connector,
+            db_session=mock_db_session,
+            decision=decision,
+            agent_config=agent_config,
+        )
+
+        assert result["status"] == "executed"
+        mock_notify_trade.assert_called_once_with(
+            user_id="user_789",
+            agent_name="test_agent",
+            symbol="BTC/USD",
+            action="BUY",
+            pnl=0.0,
+        )
+
+
+@pytest.mark.asyncio
+async def test_execute_live_order_skips_notify_when_no_user_id(mock_vault, mock_db_session):
+    """Test that notify_trade_executed is NOT called when agent_config has no user_id."""
+    executor = TradeExecutor(mock_vault, mock_db_session)
+
+    with patch("backend.trading.trade_executor.get_connector"), patch(
+        "backend.notifications.triggers.notify_trade_executed"
+    ) as mock_notify_trade:
+        mock_connector = AsyncMock()
+        mock_order = MagicMock()
+        mock_order.order_id = "order_999"
+        mock_order.filled_price = 50_000.0
+        mock_connector.place_order = AsyncMock(return_value=mock_order)
+
+        decision = TradeDecision(
+            action="SELL",
+            confidence=0.85,
+            position_size=0.08,
+            reasoning="test",
+        )
+
+        agent_config = {
+            "name": "test_agent",
+        }
+
+        result = await executor._execute_live_order(
+            agent_id=2,
+            symbol="ETH/USD",
+            side="sell",
+            quantity=500.0,
+            connector=mock_connector,
+            db_session=mock_db_session,
+            decision=decision,
+            agent_config=agent_config,
+        )
+
+        assert result["status"] == "executed"
+        mock_notify_trade.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_execute_live_order_skips_notify_on_exception(mock_vault, mock_db_session):
+    """Test that exception in notification doesn't break trade execution."""
+    executor = TradeExecutor(mock_vault, mock_db_session)
+
+    with patch("backend.trading.trade_executor.get_connector"), patch(
+        "backend.notifications.triggers.notify_trade_executed"
+    ) as mock_notify_trade:
+        mock_connector = AsyncMock()
+        mock_order = MagicMock()
+        mock_order.order_id = "order_111"
+        mock_order.filled_price = 50_000.0
+        mock_connector.place_order = AsyncMock(return_value=mock_order)
+
+        # Mock the notification to raise an exception
+        mock_notify_trade.side_effect = Exception("Notification failed")
+
+        decision = TradeDecision(
+            action="BUY",
+            confidence=0.9,
+            position_size=0.1,
+            reasoning="test",
+        )
+
+        agent_config = {
+            "user_id": "user_fail",
+            "name": "test_agent",
+        }
+
+        result = await executor._execute_live_order(
+            agent_id=1,
+            symbol="BTC/USD",
+            side="buy",
+            quantity=1000.0,
+            connector=mock_connector,
+            db_session=mock_db_session,
+            decision=decision,
+            agent_config=agent_config,
+        )
+
+        # Trade should still execute despite notification failure
+        assert result["status"] == "executed"
+        mock_notify_trade.assert_called_once()
+

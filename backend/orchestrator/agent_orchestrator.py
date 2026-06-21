@@ -186,6 +186,15 @@ class AgentOrchestrator:
                     "agent_id": agent.id,
                     "reason": risk_reason,
                 })
+                try:
+                    if agent.user_id:
+                        from backend.notifications.triggers import notify_agent_paused
+                        notify_agent_paused(agent.user_id, agent.name, risk_reason)
+                        if "drawdown" in (risk_reason or "").lower():
+                            from backend.notifications.triggers import notify_drawdown_warning
+                            notify_drawdown_warning(agent.user_id, agent.name, agent.current_drawdown or 0.0)
+                except Exception:
+                    pass
                 return
 
             # Build agent config for trade executor
@@ -244,4 +253,6 @@ class AgentOrchestrator:
             "max_position_size": agent.max_position_size,
             "asset": agent.symbol,
             "execution_mode": agent.execution_mode,
+            "user_id": agent.user_id,
+            "name": agent.name,
         }
