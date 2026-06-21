@@ -28,6 +28,7 @@ _orchestrator = None
 async def lifespan(app: FastAPI):
     global _orchestrator
     _snapshot_scheduler = None
+    _digest_scheduler = None
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     init_db(settings.DATABASE_URL)
     logger.info("Database initialized")
@@ -69,10 +70,31 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Snapshot scheduler startup skipped: {e}")
 
+    # Daily digest job (fires at 22:00 UTC)
+    try:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from backend.notifications.digest_job import run_daily_digest as _run_digest
+        _digest_scheduler = AsyncIOScheduler()
+        _digest_scheduler.add_job(
+            _run_digest,
+            trigger="cron",
+            hour=22,
+            minute=0,
+            args=[settings.DATABASE_URL],
+            id="daily_digest",
+            replace_existing=True,
+        )
+        _digest_scheduler.start()
+        logger.info("Daily digest scheduler started (22:00 UTC daily)")
+    except Exception as e:
+        logger.warning(f"Digest scheduler startup skipped: {e}")
+
     yield
 
     if _snapshot_scheduler and _snapshot_scheduler.running:
         _snapshot_scheduler.shutdown(wait=False)
+    if _digest_scheduler and _digest_scheduler.running:
+        _digest_scheduler.shutdown(wait=False)
     if _orchestrator:
         await _orchestrator.shutdown()
         logger.info("Agent orchestrator stopped")
