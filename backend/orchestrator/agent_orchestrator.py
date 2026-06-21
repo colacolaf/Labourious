@@ -29,6 +29,17 @@ class AgentOrchestrator:
         self.scheduler = AsyncIOScheduler()
         self.executor = TradeExecutor(vault, None)
 
+        # Register approval handler so WS approve/reject messages reach executor
+        from backend.api.websocket import set_approval_handler
+        set_approval_handler(self._handle_approval)
+
+    async def _handle_approval(self, data: dict):
+        """Handle trade approval/rejection from WebSocket."""
+        trade_id = data.get("trade_id")
+        approved = data.get("type") == "approve_trade"
+        if trade_id:
+            await self.executor.approve_trade(trade_id, approved)
+
     async def initialize(self):
         """Load all active agents from DB, schedule with staggered starts, and start scheduler."""
         session = self.db_factory()
@@ -65,6 +76,12 @@ class AgentOrchestrator:
 
         self.scheduler.start()
         logger.info("Agent scheduler started")
+
+        # Schedule portfolio-level risk check every 60s
+        self.scheduler.add_job(
+            self._run_risk_agent, "interval", seconds=60,
+            id="risk_agent", replace_existing=True,
+        )
 
     async def shutdown(self):
         """Gracefully shut down scheduler."""
@@ -170,10 +187,14 @@ class AgentOrchestrator:
             logger.info(f"agent {agent_id} LLM decision: {decision.action} conf={decision.confidence:.0%}")
 
             # Check risk
+            from backend.config import settings
+            max_dd = getattr(getattr(settings, "allocation", None), "max_portfolio_drawdown", -0.25) or -0.25
             should_pause, risk_reason = check_agent_risk(
                 agent_id=agent.id,
                 confidence_score=agent.confidence_score,
                 consecutive_losses=agent.consecutive_losses,
+                drawdown=agent.current_drawdown or 0.0,
+                max_drawdown=max_dd,
             )
 
             if should_pause:
@@ -243,6 +264,12 @@ class AgentOrchestrator:
                 logger.error(f"failed to set error status for agent {agent_id}: {inner_e}")
         finally:
             session.close()
+
+    async def _run_risk_agent(self):
+        """Run portfolio-level risk check every 60s."""
+        from backend.orchestrator.risk_agent import RiskAgent
+        risk = RiskAgent(self.db_factory)
+        await risk.run()
 
     def _build_agent_config(self, agent: Agent) -> dict:
         """Extract agent configuration for trade executor."""

@@ -3,7 +3,7 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-CONFIDENCE_MIN = 30   # below this → too risky per AGENTS.md
+CONFIDENCE_MIN = 35   # below this → too risky per AGENTS.md
 MAX_CONSECUTIVE_LOSSES = 3
 
 
