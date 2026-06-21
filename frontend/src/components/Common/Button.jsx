@@ -1,4 +1,4 @@
-export function Button({ children, onClick, variant = 'primary', disabled = false, style: extraStyle = {} }) {
+export function Button({ children, onClick, variant = 'primary', disabled = false, style: extraStyle = {}, type = 'button' }) {
   const base = {
     padding: 'var(--space-2) var(--space-4)',
     border: '1px solid',
@@ -18,7 +18,7 @@ export function Button({ children, onClick, variant = 'primary', disabled = fals
   };
 
   return (
-    <button onClick={onClick} disabled={disabled} style={{ ...base, ...variants[variant], ...extraStyle }}>
+    <button type={type} onClick={onClick} disabled={disabled} style={{ ...base, ...variants[variant], ...extraStyle }}>
       {children}
     </button>
   );

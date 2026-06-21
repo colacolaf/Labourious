@@ -183,7 +183,7 @@ async def get_agent(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.put("/{agent_id}", response_model=AgentResponse)
+@router.patch("/{agent_id}", response_model=AgentResponse)
 async def update_agent(
     agent_id: int,
     agent_data: AgentUpdate,
@@ -284,6 +284,84 @@ async def resume_agent(
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{agent_id}/start", response_model=AgentResponse)
+async def start_agent(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    """Set agent status to RUNNING."""
+    try:
+        with get_db_session(settings.DATABASE_URL) as session:
+            result = session.execute(select(Agent).where(Agent.id == agent_id))
+            agent = result.scalar_one_or_none()
+            if not agent:
+                raise HTTPException(status_code=404, detail="Agent not found")
+            _check_agent_access(agent, current_user)
+            agent.status = AgentStatus.RUNNING
+            agent.updated_at = datetime.utcnow()
+            session.add(agent)
+            session.flush()
+            response = AgentResponse.model_validate(agent)
+            session.commit()
+            return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{agent_id}/stop", response_model=AgentResponse)
+async def stop_agent(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    """Set agent status to STOPPED."""
+    try:
+        with get_db_session(settings.DATABASE_URL) as session:
+            result = session.execute(select(Agent).where(Agent.id == agent_id))
+            agent = result.scalar_one_or_none()
+            if not agent:
+                raise HTTPException(status_code=404, detail="Agent not found")
+            _check_agent_access(agent, current_user)
+            agent.status = AgentStatus.STOPPED
+            agent.updated_at = datetime.utcnow()
+            session.add(agent)
+            session.flush()
+            response = AgentResponse.model_validate(agent)
+            session.commit()
+            return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{agent_id}/pause", response_model=AgentResponse)
+async def pause_agent(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    """Set agent status to PAUSED."""
+    try:
+        with get_db_session(settings.DATABASE_URL) as session:
+            result = session.execute(select(Agent).where(Agent.id == agent_id))
+            agent = result.scalar_one_or_none()
+            if not agent:
+                raise HTTPException(status_code=404, detail="Agent not found")
+            _check_agent_access(agent, current_user)
+            agent.status = AgentStatus.PAUSED
+            agent.updated_at = datetime.utcnow()
+            session.add(agent)
+            session.flush()
+            response = AgentResponse.model_validate(agent)
+            session.commit()
+            return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{agent_id}/approve")

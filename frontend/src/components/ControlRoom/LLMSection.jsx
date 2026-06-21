@@ -139,7 +139,7 @@ export default function LLMSection() {
             type="text"
             value={ollamaUrl}
             onChange={(e) => setOllamaUrl(e.target.value)}
-            onBlur={() => patchLLM({ ollama_url: ollamaUrl })}
+            onBlur={() => patchLLM({ ollama_url: ollamaUrl }).catch(() => {})}
             style={{ ...input, width: 300 }}
           />
         </div>
