@@ -52,7 +52,8 @@ class CcxtConnector(BrokerConnector):
                     ticker = await self._exchange.fetch_ticker(f"{asset}/USDT")
                     positions.append(Position(symbol=f"{asset}/USDT", quantity=qty,
                                               avg_price=float(ticker["last"]), unrealized_pnl=0.0))
-                except Exception:
+                except (ccxt.NetworkError, ccxt.ExchangeError):
+                    # Skip position if ticker fetch fails (network or exchange issue)
                     pass
         return positions
 
