@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import useDashboardStore from '../stores/dashboard.store';
 import useAgentsStore from '../stores/agents.store';
+import RecentTradesFeed from '../components/RecentTradesFeed';
+import SystemHealthPanel from '../components/SystemHealthPanel';
 
 const card = (label, value, color = 'var(--color-text-primary)') => (
   <div
@@ -29,14 +31,20 @@ function fmt(n) {
 }
 
 export default function Dashboard() {
-  const { portfolio, portfolioHistory, fetchPortfolioSummary, fetchPortfolioHistory } = useDashboardStore();
+  const {
+    portfolio, portfolioHistory, recentTrades,
+    backendStatus, dbStatus, backendVersion, backendUptime,
+    fetchPortfolioSummary, fetchPortfolioHistory, fetchRecentTrades, fetchSystemHealth,
+  } = useDashboardStore();
   const { agents, fetchAgents } = useAgentsStore();
 
   useEffect(() => {
     fetchPortfolioSummary();
     fetchPortfolioHistory();
     fetchAgents();
-  }, [fetchPortfolioSummary, fetchPortfolioHistory, fetchAgents]);
+    fetchRecentTrades(20);
+    fetchSystemHealth();
+  }, [fetchPortfolioSummary, fetchPortfolioHistory, fetchAgents, fetchRecentTrades, fetchSystemHealth]);
 
   const pnlColor = portfolio.totalPnl >= 0 ? 'var(--color-accent-primary)' : 'var(--color-accent-danger, #ff4444)';
 
@@ -91,6 +99,7 @@ export default function Dashboard() {
           border: '1px solid var(--color-border)',
           borderRadius: 6,
           padding: '1rem',
+          marginBottom: '2rem',
         }}>
           <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', letterSpacing: '0.1em', marginBottom: '1rem' }}>
             AGENT LEADERBOARD
@@ -122,6 +131,27 @@ export default function Dashboard() {
           </table>
         </div>
       )}
+
+      {/* Bottom row: leaderboard + health side-by-side, trades full width */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '1rem', marginBottom: '2rem' }}>
+        <div style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', letterSpacing: '0.1em', padding: '0.75rem 1rem 0' }}>
+            RECENT TRADES
+          </div>
+          <RecentTradesFeed trades={recentTrades} />
+        </div>
+        <div style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: 6, padding: '0.75rem 1rem' }}>
+          <div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
+            SYSTEM HEALTH
+          </div>
+          <SystemHealthPanel
+            backendStatus={backendStatus}
+            dbStatus={dbStatus}
+            backendVersion={backendVersion}
+            backendUptime={backendUptime}
+          />
+        </div>
+      </div>
     </div>
   );
 }

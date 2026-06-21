@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { performanceApi, healthApi, dashboardApi } from '../utils/api-client';
+import { performanceApi, healthApi, dashboardApi, tradesApi } from '../utils/api-client';
 
 const useDashboardStore = create(
   devtools(
@@ -23,6 +23,7 @@ const useDashboardStore = create(
       backendStatus: 'unknown',
       backendVersion: null,
       backendUptime: null,
+      dbStatus: 'unknown',
 
       loading: false,
       portfolioLoading: false,
@@ -78,6 +79,29 @@ const useDashboardStore = create(
           });
         } catch {
           set({ backendStatus: 'disconnected' });
+        }
+      },
+
+      fetchRecentTrades: async (limit = 20) => {
+        try {
+          const data = await tradesApi.list({ limit });
+          set({ recentTrades: Array.isArray(data) ? data : [] });
+        } catch (err) {
+          set({ error: err.message });
+        }
+      },
+
+      fetchSystemHealth: async () => {
+        try {
+          const [health, db] = await Promise.all([healthApi.check(), healthApi.dbCheck()]);
+          set({
+            backendStatus: health.status === 'ok' ? 'connected' : 'degraded',
+            backendVersion: health.version,
+            backendUptime: health.uptime_seconds,
+            dbStatus: db.status,
+          });
+        } catch {
+          set({ backendStatus: 'disconnected', dbStatus: 'error' });
         }
       },
 
