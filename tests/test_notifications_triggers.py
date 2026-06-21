@@ -329,6 +329,13 @@ class TestNotifyAgentPaused:
         # SMS should not be sent because phone is None
         mock_notification_service.send_sms.assert_not_called()
 
+    def test_swallows_exceptions(self):
+        with patch("backend.notifications.triggers.get_db_session", side_effect=Exception("db error")):
+            # Should not raise
+            notify_agent_paused(
+                user_id="user-1", agent_name="TestAgent", reason="some reason"
+            )
+
 
 class TestNotifyDrawdownWarning:
     def test_returns_early_when_preferences_not_found(
@@ -418,6 +425,13 @@ class TestNotifyDrawdownWarning:
         mock_notification_service.send_email.assert_called_once()
         # SMS should not be sent because phone is None
         mock_notification_service.send_sms.assert_not_called()
+
+    def test_swallows_exceptions(self):
+        with patch("backend.notifications.triggers.get_db_session", side_effect=Exception("db error")):
+            # Should not raise
+            notify_drawdown_warning(
+                user_id="user-1", agent_name="TestAgent", drawdown_pct=0.05
+            )
 
 
 class TestSendDailyDigest:
@@ -532,3 +546,14 @@ class TestSendDailyDigest:
         mock_notification_service.send_email.assert_called_once()
         # SMS should not be sent because phone is None
         mock_notification_service.send_sms.assert_not_called()
+
+    def test_swallows_exceptions(self):
+        summary = {
+            "total_pnl": 250.0,
+            "trade_count": 5,
+            "best_agent": "Agent1",
+            "worst_agent": "Agent2",
+        }
+        with patch("backend.notifications.triggers.get_db_session", side_effect=Exception("db error")):
+            # Should not raise
+            send_daily_digest(user_id="user-1", summary=summary)
