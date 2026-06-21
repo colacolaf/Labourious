@@ -191,6 +191,7 @@ async def get_agent(
 
 
 @router.patch("/{agent_id}", response_model=AgentResponse)
+@router.put("/{agent_id}", response_model=AgentResponse)
 async def update_agent(
     agent_id: int,
     agent_data: AgentUpdate,
