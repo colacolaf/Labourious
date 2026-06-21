@@ -64,3 +64,47 @@ async def test_ccxt_generic_test_connection_returns_bool():
     with patch.object(conn._exchange, "fetch_status", new=AsyncMock(return_value={"status": "ok"})):
         result = await conn.test_connection()
         assert result is True
+
+
+@pytest.mark.asyncio
+async def test_alpaca_place_order_polls_for_fill():
+    """AlpacaConnector.place_order polls status and returns filled_price when available."""
+    from backend.brokers.alpaca import AlpacaConnector
+    import httpx
+
+    conn = AlpacaConnector("key", "secret", paper=False)
+
+    order_response = {"id": "order-123", "status": "new"}
+    filled_response = {"id": "order-123", "status": "filled", "filled_avg_price": "185.42"}
+
+    call_count = 0
+
+    async def mock_get(url, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        if "order-123" in url and call_count > 2:
+            resp.json = MagicMock(return_value=filled_response)
+        else:
+            resp.json = MagicMock(return_value=order_response)
+        return resp
+
+    async def mock_post(url, **kwargs):
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.json = MagicMock(return_value=order_response)
+        return resp
+
+    with patch.object(conn, '_client') as mock_client_ctx:
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.post = AsyncMock(side_effect=mock_post)
+        mock_client.get = AsyncMock(side_effect=mock_get)
+        mock_client_ctx.return_value = mock_client
+
+        order = await conn.place_order("AAPL", "buy", 5.0, "market")
+
+    assert order.order_id == "order-123"
+    assert order.filled_price == 185.42

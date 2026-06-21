@@ -1,4 +1,5 @@
 import time
+import asyncio
 import httpx
 from backend.brokers.base import BrokerConnector, MarketData, Order, Position
 
@@ -42,8 +43,23 @@ class AlpacaConnector(BrokerConnector):
             r = await c.post(f"{self._base}/v2/orders", json=payload)
             r.raise_for_status()
             o = r.json()
-        return Order(order_id=o["id"], symbol=symbol, side=side,
-                     quantity=quantity, filled_price=None, status=o["status"])
+
+        order_id = o["id"]
+        filled_price = None
+
+        # Poll up to 5s for fill confirmation (market orders usually fill in <1s)
+        for _ in range(5):
+            await asyncio.sleep(1)
+            async with self._client() as c:
+                r = await c.get(f"{self._base}/v2/orders/{order_id}")
+                r.raise_for_status()
+                status_data = r.json()
+            if status_data.get("status") in ("filled", "partially_filled"):
+                filled_price = float(status_data["filled_avg_price"]) if status_data.get("filled_avg_price") else None
+                break
+
+        return Order(order_id=order_id, symbol=symbol, side=side,
+                     quantity=quantity, filled_price=filled_price, status=o["status"])
 
     async def set_stop_loss(self, order_id: str, percent: float) -> bool:
         # ponytail: bracket orders need order_id at create-time; patching after unsupported on Alpaca

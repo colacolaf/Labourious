@@ -42,9 +42,16 @@ async def test_place_order(connector):
             "id": "order-123", "status": "accepted"
         })
     )
+    # Mock polling GET for filled status
+    respx.get(f"{_PAPER_BASE}/v2/orders/order-123").mock(
+        return_value=httpx.Response(200, json={
+            "id": "order-123", "status": "filled", "filled_avg_price": "175.50"
+        })
+    )
     order = await connector.place_order("AAPL", "buy", 1.0)
     assert order.order_id == "order-123"
     assert order.side == "buy"
+    assert order.filled_price == 175.50
 
 
 @pytest.mark.asyncio
