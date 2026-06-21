@@ -237,7 +237,7 @@ class TradeExecutor:
             db_session.commit()
         except Exception:
             # Skip stats update if db operations fail (e.g., in tests with mocks)
-            new_score = None
+            new_score = getattr(agent, 'confidence_score', None) or 50
             pnl = 0.0
 
         if broadcast_callback:

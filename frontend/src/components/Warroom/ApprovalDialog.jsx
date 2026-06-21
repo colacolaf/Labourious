@@ -30,9 +30,7 @@ export default function ApprovalDialog({ approval, onDecide }) {
   const handleApprove = useCallback(() => onDecide(approval.trade_id, true), [approval, onDecide]);
   const handleReject = useCallback(() => onDecide(approval.trade_id, false), [approval, onDecide]);
 
-  const maxSecs = approval?.expires_at
-    ? DEFAULT_TIMEOUT
-    : DEFAULT_TIMEOUT;
+  const maxSecs = remaining > 0 ? Math.max(DEFAULT_TIMEOUT, remaining) : DEFAULT_TIMEOUT;
   const urgentColor = remaining <= 5 ? 'var(--color-danger, #ff4444)' : 'var(--color-accent-primary, #00ff88)';
 
   return (
