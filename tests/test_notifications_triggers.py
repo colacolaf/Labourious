@@ -172,6 +172,75 @@ class TestNotifyTradeExecuted:
             pnl=150.0,
         )
 
+    def test_skips_when_user_row_deleted_but_prefs_exist(
+        self, mock_notification_service, mock_get_db_session, in_memory_db, setup_user_and_prefs
+    ):
+        """Test skip when prefs row exists but User row is deleted."""
+        # First create user and prefs
+        user_id, _, _ = setup_user_and_prefs(
+            email_enabled=True, notify_on_trade=True
+        )
+        # Now delete the user row, but leave prefs (shouldn't happen in practice, but possible)
+        session = in_memory_db()
+        try:
+            user = session.query(User).filter_by(id=user_id).first()
+            if user:
+                session.delete(user)
+                session.commit()
+        finally:
+            session.close()
+
+        # Call trigger - should skip because user not found
+        notify_trade_executed(
+            user_id=user_id,
+            agent_name="TestAgent",
+            symbol="BTC/USD",
+            action="BUY",
+            pnl=150.0,
+        )
+        # No notification should be sent
+        mock_notification_service.send_email.assert_not_called()
+        mock_notification_service.send_sms.assert_not_called()
+
+    def test_skips_sms_when_sms_disabled(
+        self, mock_notification_service, mock_get_db_session, setup_user_and_prefs
+    ):
+        """Test SMS is skipped when sms_enabled=False."""
+        phone = "+1234567890"
+        user_id, _, _ = setup_user_and_prefs(
+            email_enabled=True, sms_enabled=False, phone_number=phone, notify_on_trade=True
+        )
+        notify_trade_executed(
+            user_id=user_id,
+            agent_name="TestAgent",
+            symbol="BTC/USD",
+            action="BUY",
+            pnl=150.0,
+        )
+        # Email should be sent
+        mock_notification_service.send_email.assert_called_once()
+        # SMS should not be sent
+        mock_notification_service.send_sms.assert_not_called()
+
+    def test_skips_sms_when_phone_number_none(
+        self, mock_notification_service, mock_get_db_session, setup_user_and_prefs
+    ):
+        """Test SMS is skipped when sms_enabled=True but phone_number=None."""
+        user_id, _, _ = setup_user_and_prefs(
+            email_enabled=True, sms_enabled=True, phone_number=None, notify_on_trade=True
+        )
+        notify_trade_executed(
+            user_id=user_id,
+            agent_name="TestAgent",
+            symbol="BTC/USD",
+            action="BUY",
+            pnl=150.0,
+        )
+        # Email should be sent
+        mock_notification_service.send_email.assert_called_once()
+        # SMS should not be sent because phone is None
+        mock_notification_service.send_sms.assert_not_called()
+
 
 class TestNotifyAgentPaused:
     def test_sends_sms_when_sms_enabled_and_phone_set(
@@ -209,6 +278,57 @@ class TestNotifyAgentPaused:
         mock_notification_service.send_email.assert_not_called()
         mock_notification_service.send_sms.assert_not_called()
 
+    def test_skips_when_user_row_deleted_but_prefs_exist(
+        self, mock_notification_service, mock_get_db_session, in_memory_db, setup_user_and_prefs
+    ):
+        """Test skip when prefs row exists but User row is deleted."""
+        user_id, _, _ = setup_user_and_prefs(
+            sms_enabled=True, phone_number="+1234567890", notify_on_agent_pause=True
+        )
+        # Delete the user row
+        session = in_memory_db()
+        try:
+            user = session.query(User).filter_by(id=user_id).first()
+            if user:
+                session.delete(user)
+                session.commit()
+        finally:
+            session.close()
+
+        notify_agent_paused(
+            user_id=user_id, agent_name="TestAgent", reason="Manual pause"
+        )
+        # No notification should be sent
+        mock_notification_service.send_email.assert_not_called()
+        mock_notification_service.send_sms.assert_not_called()
+
+    def test_skips_sms_when_sms_disabled(
+        self, mock_notification_service, mock_get_db_session, setup_user_and_prefs
+    ):
+        """Test SMS is skipped when sms_enabled=False."""
+        phone = "+1234567890"
+        user_id, _, _ = setup_user_and_prefs(
+            sms_enabled=False, phone_number=phone, notify_on_agent_pause=True
+        )
+        notify_agent_paused(
+            user_id=user_id, agent_name="TestAgent", reason="Manual pause"
+        )
+        # SMS should not be sent
+        mock_notification_service.send_sms.assert_not_called()
+
+    def test_skips_sms_when_phone_number_none(
+        self, mock_notification_service, mock_get_db_session, setup_user_and_prefs
+    ):
+        """Test SMS is skipped when sms_enabled=True but phone_number=None."""
+        user_id, _, _ = setup_user_and_prefs(
+            sms_enabled=True, phone_number=None, notify_on_agent_pause=True
+        )
+        notify_agent_paused(
+            user_id=user_id, agent_name="TestAgent", reason="Manual pause"
+        )
+        # SMS should not be sent because phone is None
+        mock_notification_service.send_sms.assert_not_called()
+
 
 class TestNotifyDrawdownWarning:
     def test_returns_early_when_preferences_not_found(
@@ -243,6 +363,61 @@ class TestNotifyDrawdownWarning:
             user_id=user_id, agent_name="TestAgent", drawdown_pct=0.05
         )
         mock_notification_service.send_email.assert_not_called()
+
+    def test_skips_when_user_row_deleted_but_prefs_exist(
+        self, mock_notification_service, mock_get_db_session, in_memory_db, setup_user_and_prefs
+    ):
+        """Test skip when prefs row exists but User row is deleted."""
+        user_id, _, _ = setup_user_and_prefs(
+            email_enabled=True, notify_on_drawdown=True
+        )
+        # Delete the user row
+        session = in_memory_db()
+        try:
+            user = session.query(User).filter_by(id=user_id).first()
+            if user:
+                session.delete(user)
+                session.commit()
+        finally:
+            session.close()
+
+        notify_drawdown_warning(
+            user_id=user_id, agent_name="TestAgent", drawdown_pct=0.05
+        )
+        # No notification should be sent
+        mock_notification_service.send_email.assert_not_called()
+        mock_notification_service.send_sms.assert_not_called()
+
+    def test_skips_sms_when_sms_disabled(
+        self, mock_notification_service, mock_get_db_session, setup_user_and_prefs
+    ):
+        """Test SMS is skipped when sms_enabled=False."""
+        phone = "+1234567890"
+        user_id, _, _ = setup_user_and_prefs(
+            email_enabled=True, sms_enabled=False, phone_number=phone, notify_on_drawdown=True
+        )
+        notify_drawdown_warning(
+            user_id=user_id, agent_name="TestAgent", drawdown_pct=0.05
+        )
+        # Email should be sent
+        mock_notification_service.send_email.assert_called_once()
+        # SMS should not be sent
+        mock_notification_service.send_sms.assert_not_called()
+
+    def test_skips_sms_when_phone_number_none(
+        self, mock_notification_service, mock_get_db_session, setup_user_and_prefs
+    ):
+        """Test SMS is skipped when sms_enabled=True but phone_number=None."""
+        user_id, _, _ = setup_user_and_prefs(
+            email_enabled=True, sms_enabled=True, phone_number=None, notify_on_drawdown=True
+        )
+        notify_drawdown_warning(
+            user_id=user_id, agent_name="TestAgent", drawdown_pct=0.05
+        )
+        # Email should be sent
+        mock_notification_service.send_email.assert_called_once()
+        # SMS should not be sent because phone is None
+        mock_notification_service.send_sms.assert_not_called()
 
 
 class TestSendDailyDigest:
@@ -290,3 +465,70 @@ class TestSendDailyDigest:
         }
         send_daily_digest(user_id="nonexistent-user", summary=summary)
         mock_notification_service.send_email.assert_not_called()
+
+    def test_skips_when_user_row_deleted_but_prefs_exist(
+        self, mock_notification_service, mock_get_db_session, in_memory_db, setup_user_and_prefs
+    ):
+        """Test skip when prefs row exists but User row is deleted."""
+        user_id, _, _ = setup_user_and_prefs(
+            email_enabled=True, daily_digest=True
+        )
+        # Delete the user row
+        session = in_memory_db()
+        try:
+            user = session.query(User).filter_by(id=user_id).first()
+            if user:
+                session.delete(user)
+                session.commit()
+        finally:
+            session.close()
+
+        summary = {
+            "total_pnl": 250.0,
+            "trade_count": 5,
+            "best_agent": "Agent1",
+            "worst_agent": "Agent2",
+        }
+        send_daily_digest(user_id=user_id, summary=summary)
+        # No notification should be sent
+        mock_notification_service.send_email.assert_not_called()
+        mock_notification_service.send_sms.assert_not_called()
+
+    def test_skips_sms_when_sms_disabled(
+        self, mock_notification_service, mock_get_db_session, setup_user_and_prefs
+    ):
+        """Test SMS is skipped when sms_enabled=False."""
+        phone = "+1234567890"
+        user_id, _, _ = setup_user_and_prefs(
+            email_enabled=True, sms_enabled=False, phone_number=phone, daily_digest=True
+        )
+        summary = {
+            "total_pnl": 250.0,
+            "trade_count": 5,
+            "best_agent": "Agent1",
+            "worst_agent": "Agent2",
+        }
+        send_daily_digest(user_id=user_id, summary=summary)
+        # Email should be sent
+        mock_notification_service.send_email.assert_called_once()
+        # SMS should not be sent
+        mock_notification_service.send_sms.assert_not_called()
+
+    def test_skips_sms_when_phone_number_none(
+        self, mock_notification_service, mock_get_db_session, setup_user_and_prefs
+    ):
+        """Test SMS is skipped when sms_enabled=True but phone_number=None."""
+        user_id, _, _ = setup_user_and_prefs(
+            email_enabled=True, sms_enabled=True, phone_number=None, daily_digest=True
+        )
+        summary = {
+            "total_pnl": 250.0,
+            "trade_count": 5,
+            "best_agent": "Agent1",
+            "worst_agent": "Agent2",
+        }
+        send_daily_digest(user_id=user_id, summary=summary)
+        # Email should be sent
+        mock_notification_service.send_email.assert_called_once()
+        # SMS should not be sent because phone is None
+        mock_notification_service.send_sms.assert_not_called()
