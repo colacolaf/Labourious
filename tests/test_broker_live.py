@@ -32,3 +32,25 @@ def test_get_connector_kraken_returns_kraken_connector():
 
     connector = get_connector("kraken", vault)
     assert isinstance(connector, BrokerConnector)
+
+
+@pytest.mark.asyncio
+async def test_kraken_connector_test_connection_returns_bool():
+    """KrakenConnector.test_connection() returns bool."""
+    from backend.brokers.kraken import KrakenConnector
+    with patch("krakenex.API.query_public", return_value={"result": {"XXBTZUSD": {}}}):
+        conn = KrakenConnector("key", "secret", paper=True)
+        result = await conn.test_connection()
+        assert isinstance(result, bool)
+
+
+@pytest.mark.asyncio
+async def test_kraken_paper_place_order_returns_order():
+    """KrakenConnector paper mode place_order returns Order with uuid."""
+    from backend.brokers.kraken import KrakenConnector
+    from backend.brokers.base import Order
+    conn = KrakenConnector("key", "secret", paper=True)
+    conn._paper_balance = 100_000.0
+    order = await conn.place_order("BTC/USD", "buy", 500.0, "market")
+    assert isinstance(order, Order)
+    assert order.order_id is not None
