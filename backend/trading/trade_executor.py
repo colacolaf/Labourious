@@ -164,7 +164,7 @@ class TradeExecutor:
             quantity=quantity,
             pnl=0.0,
             is_paper=True,
-            entry_reason=decision.reasoning if decision else None,
+            entry_reason=getattr(decision, 'reasoning', None) if decision else None,
             opened_at=datetime.utcnow(),
             closed_at=datetime.utcnow(),
         )
@@ -211,7 +211,6 @@ class TradeExecutor:
         broadcast_callback: Optional[Callable], agent_config: Optional[dict],
     ):
         """Update agent confidence score, trade counts, and broadcast trade_executed."""
-        from sqlalchemy import select
         from backend.database.models import Agent
 
         try:
@@ -250,9 +249,8 @@ class TradeExecutor:
                 "action": "BUY" if trade.side == TradeSide.BUY else "SELL",
                 "pnl": pnl,
                 "is_paper": trade.is_paper,
+                "confidence_score": new_score,
             }
-            if new_score is not None:
-                broadcast_data["confidence_score"] = new_score
             await broadcast_callback(broadcast_data)
 
         try:

@@ -360,6 +360,7 @@ async def test_paper_trade_writes_closed_record(mock_vault):
     mock_connector.get_account_balance = AsyncMock(return_value=100_000.0)
     mock_connector.get_market_data = AsyncMock()
     mock_connector.get_market_data.return_value.price = 150.0
+    mock_connector.place_order = MagicMock()
 
     with patch("backend.trading.trade_executor.get_connector", return_value=mock_connector):
         result = await executor.execute(
@@ -369,7 +370,6 @@ async def test_paper_trade_writes_closed_record(mock_vault):
 
     assert result["status"] == "executed"
     assert result.get("is_paper") is True
-    mock_connector.place_order = MagicMock()
     mock_connector.place_order.assert_not_called()
     added_trade = db_session.add.call_args[0][0]
     from backend.database.models import TradeStatus
