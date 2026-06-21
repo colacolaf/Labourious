@@ -192,7 +192,7 @@ async def vault_check_broker(
         has_all = all(bool(vault.get(k)) for k in required_keys)
         return {"broker": broker, "has_credentials": has_all, "required_keys": required_keys}
     except Exception as e:
-        return {"broker": broker, "has_credentials": False, "required_keys": required_keys, "error": str(e)}
+        return {"broker": broker, "has_credentials": False, "required_keys": required_keys, "error": "vault access failed"}
 
 
 @router.get("/{agent_id}", response_model=AgentResponse)

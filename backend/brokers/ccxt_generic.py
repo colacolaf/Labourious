@@ -1,5 +1,6 @@
 """Generic CCXT connector for any ccxt-compatible exchange."""
 
+import uuid
 import time
 import ccxt.async_support as ccxt
 from backend.brokers.base import BrokerConnector, MarketData, Order, Position
@@ -8,9 +9,11 @@ from backend.brokers.base import BrokerConnector, MarketData, Order, Position
 class CcxtConnector(BrokerConnector):
     """Generic ccxt connector — supports any ccxt-compatible exchange."""
 
-    def __init__(self, exchange_id: str, api_key: str, secret: str):
+    def __init__(self, exchange_id: str, api_key: str, secret: str, paper: bool = True):
         if not hasattr(ccxt, exchange_id):
             raise ValueError(f"Unknown ccxt exchange: {exchange_id}")
+        self._paper = paper
+        self._paper_balance = 100_000.0  # ponytail: calibration knob for paper mode
         self._exchange = getattr(ccxt, exchange_id)({
             "apiKey": api_key,
             "secret": secret,
@@ -18,6 +21,8 @@ class CcxtConnector(BrokerConnector):
         })
 
     async def get_account_balance(self) -> float:
+        if self._paper:
+            return self._paper_balance
         balance = await self._exchange.fetch_balance()
         return float(balance.get("USDT", {}).get("free", 0))
 
@@ -29,6 +34,10 @@ class CcxtConnector(BrokerConnector):
 
     async def place_order(self, symbol: str, side: str, quantity: float,
                           order_type: str = "market") -> Order:
+        if self._paper:
+            # ponytail: paper sim — no real order
+            return Order(order_id=str(uuid.uuid4()), symbol=symbol, side=side,
+                         quantity=quantity, filled_price=None, status="filled")
         method = (self._exchange.create_market_buy_order if side.lower() == "buy"
                   else self._exchange.create_market_sell_order)
         result = await method(symbol, quantity)

@@ -30,6 +30,7 @@ def get_connector(broker: str, vault, paper: bool = True) -> BrokerConnector:
         exchange_id=broker,
         api_key=vault.get(f"{broker}_api_key"),
         secret=vault.get(f"{broker}_secret"),
+        paper=paper,
     )
 
 

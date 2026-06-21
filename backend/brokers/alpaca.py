@@ -46,6 +46,7 @@ class AlpacaConnector(BrokerConnector):
 
         order_id = o["id"]
         filled_price = None
+        final_status = o["status"]  # Track final status from polling
 
         # Poll up to 5s for fill confirmation (market orders usually fill in <1s)
         for _ in range(5):
@@ -56,10 +57,11 @@ class AlpacaConnector(BrokerConnector):
                 status_data = r.json()
             if status_data.get("status") in ("filled", "partially_filled"):
                 filled_price = float(status_data["filled_avg_price"]) if status_data.get("filled_avg_price") else None
+                final_status = status_data["status"]  # Update final status
                 break
 
         return Order(order_id=order_id, symbol=symbol, side=side,
-                     quantity=quantity, filled_price=filled_price, status=o["status"])
+                     quantity=quantity, filled_price=filled_price, status=final_status)
 
     async def set_stop_loss(self, order_id: str, percent: float) -> bool:
         # ponytail: bracket orders need order_id at create-time; patching after unsupported on Alpaca

@@ -72,4 +72,5 @@ def test_manager_returns_correct_connector():
             exchange_id="unknown_broker",
             api_key="fake",
             secret="fake",
+            paper=True,
         )
