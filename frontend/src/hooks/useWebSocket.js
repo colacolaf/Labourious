@@ -19,17 +19,22 @@ export function useWebSocket(path = '/ws/connect') {
   // Dispatch inbound messages to the right store
   const dispatch = useCallback((msg) => {
     setLastMessage(msg);
+    const key = msg.event ?? msg.type;
 
-    switch (msg.type) {
+    switch (key) {
       case 'agent_update':
       case 'agent_paused':
         if (msg.agent_id) {
-          useAgentsStore.getState().updateAgentLocally(msg.agent_id, msg.data ?? {});
+          useAgentsStore.getState().updateAgentLocally(msg.agent_id, msg.data ?? {
+            status: msg.status,
+            confidence_score: msg.confidence_score,
+          });
         }
         break;
       case 'trade_executed':
         if (msg.trade) useTradesStore.getState().addTrade(msg.trade);
         break;
+      case 'trade_approval_required':
       case 'agent_approval_needed':
         useUIStore.getState().setPendingApproval(msg);
         break;
@@ -37,7 +42,8 @@ export function useWebSocket(path = '/ws/connect') {
         useDashboardStore.getState().updatePortfolioLocally(msg.data ?? {});
         break;
       case 'risk_alert':
-        useUIStore.getState().addToast({ type: 'error', message: msg.message ?? 'Risk alert' });
+      case 'bodyguard_pause_all':
+        useUIStore.getState().addToast({ type: 'error', message: msg.message ?? msg.reason ?? 'Risk alert' });
         break;
       default:
         break;

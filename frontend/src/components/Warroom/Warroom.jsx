@@ -15,7 +15,8 @@ export default function Warroom({ room }) {
   const { approveTrade } = useWebSocket();
 
   const [notifications, setNotifications] = useState([]); // [{id, trade, svgX, svgY}]
-  const [pendingApproval, setPendingApproval] = useState(null);
+  const [approvalQueue, setApprovalQueue] = useState([]);
+  const currentApproval = approvalQueue[0] ?? null;
 
   // Start polling on mount, stop on unmount
   useEffect(() => {
@@ -31,13 +32,13 @@ export default function Warroom({ room }) {
     if (!lastMessage) return;
     const msg = lastMessage;
 
-    if (msg.type === 'trade_executed') {
+    if (msg.event === 'trade_executed' || msg.type === 'trade_executed') {
       const agent = agents.find((a) => a.id === msg.agent_id || a.id === String(msg.agent_id));
       if (agent) {
         const { x, y } = toScreen(agent.grid_col ?? 0, agent.grid_row ?? 0);
         const notif = {
-          id: `${msg.trade?.id ?? Date.now()}`,
-          trade: msg.trade,
+          id: `${Date.now()}-${msg.agent_id}`,
+          trade: { symbol: msg.symbol, action: msg.action, pnl: msg.pnl },
           svgX: x + TILE_W / 2,
           svgY: y,
         };
@@ -45,9 +46,19 @@ export default function Warroom({ room }) {
       }
     }
 
-    if (msg.type === 'agent_approval_needed') {
+    if (msg.event === 'trade_approval_required' || msg.type === 'agent_approval_needed') {
       const agent = agents.find((a) => a.id === msg.agent_id || a.id === String(msg.agent_id));
-      setPendingApproval({ ...msg, agent_name: agent?.name });
+      const approval = { ...msg, agent_name: msg.agent_name ?? agent?.name };
+      setApprovalQueue((prev) => [...prev, approval]);
+    }
+
+    if (msg.event === 'agent_update' || msg.event === 'agent_paused' || msg.event === 'bodyguard_pause_all') {
+      if (msg.agent_id) {
+        useAgentsStore.getState().updateAgentLocally(msg.agent_id, {
+          status: msg.status,
+          confidence_score: msg.confidence_score,
+        });
+      }
     }
   }, [lastMessage, agents]);
 
@@ -57,7 +68,7 @@ export default function Warroom({ room }) {
 
   const handleDecide = useCallback((tradeId, approved) => {
     approveTrade(tradeId, approved);
-    setPendingApproval(null);
+    setApprovalQueue((prev) => prev.filter((a) => a.trade_id !== tradeId));
   }, [approveTrade]);
 
   const handleAgentClick = useCallback((agent) => {
@@ -97,7 +108,7 @@ export default function Warroom({ room }) {
       />
 
       {/* Approval dialog */}
-      <ApprovalDialog approval={pendingApproval} onDecide={handleDecide} />
+      <ApprovalDialog approval={currentApproval} onDecide={handleDecide} />
     </div>
   );
 }
