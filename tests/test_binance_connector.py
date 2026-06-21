@@ -65,5 +65,11 @@ def test_manager_returns_correct_connector():
         get_connector("alpaca", FakeVault())
         mock_alpaca.assert_called_once()
 
-    with pytest.raises(ValueError, match="Unsupported broker"):
+    # Unknown brokers now fallback to generic CCXT connector (Phase 6A.3)
+    with patch("backend.brokers.ccxt_generic.CcxtConnector") as mock_ccxt:
         get_connector("unknown_broker", FakeVault())
+        mock_ccxt.assert_called_once_with(
+            exchange_id="unknown_broker",
+            api_key="fake",
+            secret="fake",
+        )

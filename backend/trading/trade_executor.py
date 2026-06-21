@@ -44,7 +44,10 @@ class TradeExecutor:
             return {"status": "skipped", "reason": "HOLD decision"}
 
         try:
-            connector = get_connector(agent_config["broker"], vault)
+            connector = get_connector(
+                agent_config["broker"], vault,
+                paper=agent_config.get("paper_trading", True),
+            )
         except Exception as e:
             return {"status": "error", "reason": f"broker error: {e}"}
 

@@ -124,7 +124,7 @@ class AgentOrchestrator:
 
             # Get broker connector
             try:
-                connector = get_connector(agent.broker, self.vault)
+                connector = get_connector(agent.broker, self.vault, paper=agent.is_paper_trading)
             except Exception as e:
                 logger.error(f"agent {agent_id} broker error: {e}")
                 agent.status = AgentStatus.ERROR
