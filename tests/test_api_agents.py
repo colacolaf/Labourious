@@ -394,3 +394,13 @@ class TestAgentResponseFields:
         assert "check_frequency" in a
         assert "paper_trading_balance" in a
         assert "last_heartbeat" in a  # may be None
+
+
+class TestVaultCheck:
+    def test_vault_check_broker_returns_has_credentials(self, client):
+        """GET /api/agents/brokers/vault-check/alpaca returns has_credentials field."""
+        resp = client.get("/api/agents/brokers/vault-check/alpaca")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "has_credentials" in data
+        assert "broker" in data

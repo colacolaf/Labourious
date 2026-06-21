@@ -413,3 +413,33 @@ async def test_human_in_loop_emits_trade_approval_required(mock_vault):
     assert evt["agent_name"] == "TestAgent"
     assert evt["action"] == "BUY"
 
+
+@pytest.mark.asyncio
+async def test_live_order_fails_preflight_if_vault_missing_key():
+    """Live order returns error if vault key missing (vault.get raises or returns None)."""
+    from backend.trading.trade_executor import TradeExecutor
+    from backend.llm.llm_router import TradeDecision
+
+    vault = MagicMock()
+    vault.get.return_value = None  # simulate missing key
+
+    executor = TradeExecutor(vault, None)
+    decision = TradeDecision(action="BUY", confidence=0.8, position_size=0.1, reasoning="test")
+    agent_config = {
+        "broker": "alpaca", "paper_trading": False,
+        "allocation_percent": 0.1, "max_position_size": 0.05,
+        "asset": "AAPL", "execution_mode": "autonomous",
+        "name": "TestAgent", "user_id": None,
+    }
+    db_session = MagicMock()
+
+    with patch("backend.trading.trade_executor.get_connector") as mock_gc:
+        mock_gc.side_effect = Exception("vault key missing")
+        result = await executor.execute(
+            agent_id=1, decision=decision, agent_config=agent_config,
+            vault=vault, db_session=db_session, broadcast_callback=None,
+        )
+
+    assert result["status"] == "error"
+    assert "broker error" in result["reason"]
+

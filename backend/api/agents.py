@@ -3,12 +3,14 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from datetime import datetime
 from typing import Optional
+from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 
 from backend.database.models import Agent, AgentStatus, Trade, Performance, TradeSide, TradeStatus, User, UserRole
 from backend.database.db import get_db_session
 from backend.auth.dependencies import get_current_user
-from backend.config import settings
+from backend.config import settings, BASE_DIR
+from backend.vault.encrypted_vault import EncryptedVault
 
 router = APIRouter(prefix="/api/agents", tags=["agents"])
 
@@ -168,6 +170,28 @@ def _check_agent_access(agent: Agent, current_user: User) -> None:
     role_val = current_user.role.value if hasattr(current_user.role, "value") else current_user.role
     if role_val != UserRole.ADMIN.value and agent.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
+
+
+@router.get("/brokers/vault-check/{broker}")
+async def vault_check_broker(
+    broker: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Check if vault has credentials for the given broker."""
+    try:
+        vault_path = Path(BASE_DIR) / "data" / "vault.db"
+        vault = EncryptedVault(vault_path, settings.VAULT_PASSWORD)
+        broker = broker.lower()
+        key_map = {
+            "alpaca": ["alpaca_api_key", "alpaca_secret"],
+            "binance": ["binance_api_key", "binance_secret"],
+            "kraken": ["kraken_api_key", "kraken_api_secret"],
+        }
+        required_keys = key_map.get(broker, [f"{broker}_api_key", f"{broker}_secret"])
+        has_all = all(bool(vault.get(k)) for k in required_keys)
+        return {"broker": broker, "has_credentials": has_all, "required_keys": required_keys}
+    except Exception as e:
+        return {"broker": broker, "has_credentials": False, "error": str(e)}
 
 
 @router.get("/{agent_id}", response_model=AgentResponse)
