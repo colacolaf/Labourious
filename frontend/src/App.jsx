@@ -139,6 +139,7 @@ const NAV_ITEMS = [
   { label: 'Trades', path: '/trades', icon: '◇' },
   { label: 'Vault', path: '/vault', icon: '◫' },
   { label: 'Settings', path: '/settings', icon: '⊙' },
+  { label: 'Notifications', path: '/settings/notifications', icon: '◆' },
 ];
 
 function Sidebar() {
