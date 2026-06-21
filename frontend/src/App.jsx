@@ -12,6 +12,7 @@ import WarroomDay from './pages/WarroomDay';
 import WarroomSwing from './pages/WarroomSwing';
 import WarroomLongTerm from './pages/WarroomLongTerm';
 import AnalyticsPage from './pages/AnalyticsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import ContextBuilder from './components/Warroom/ContextBuilder';
 
 const pageVariants = {
@@ -231,6 +232,7 @@ export default function App() {
             <Route path="/trades" element={<PlaceholderPage title="Trades" />} />
             <Route path="/vault" element={<PlaceholderPage title="Vault" />} />
             <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+            <Route path="/settings/notifications" element={<NotificationsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>
