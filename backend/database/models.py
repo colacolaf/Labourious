@@ -55,6 +55,10 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     agents = relationship("Agent", back_populates="owner")
+    notification_preferences = relationship(
+        "UserNotificationPreferences", back_populates="user",
+        uselist=False, cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username}, role={self.role})>"
@@ -256,3 +260,7 @@ class BacktestResult(Base):
     mode = Column(String(20), nullable=False, default="basic")  # "basic" | "walk_forward"
     status = Column(String(20), nullable=False, default="running")  # "running" | "done" | "failed"
     result_json = Column(JSON, nullable=True)          # NULL until done
+
+
+# Import notification models at bottom to avoid circular imports
+from backend.notifications.models import UserNotificationPreferences  # noqa: F401, E402
