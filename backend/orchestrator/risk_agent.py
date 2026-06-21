@@ -1,12 +1,13 @@
 """Portfolio-level risk meta-agent. Monitors portfolio drawdown and pauses all agents on breach."""
-
-from sqlalchemy import select
+import logging
+from sqlalchemy.orm import Session
 from backend.database.models import Agent, AgentStatus
 from backend.api.websocket import manager
 
+logger = logging.getLogger(__name__)
+
 
 class RiskAgent:
-    """Portfolio meta-agent: monitors drawdown, pauses agents on breach."""
     MAX_PORTFOLIO_DRAWDOWN = -0.25
 
     def __init__(self, db_session_factory):
@@ -14,34 +15,34 @@ class RiskAgent:
 
     async def run(self):
         """Monitor portfolio and pause all agents if drawdown exceeds threshold."""
-        async with self.db_factory() as session:
-            result = await session.execute(select(Agent).where(Agent.is_active == True))
-            agents = result.scalars().all()
+        session = self.db_factory()
+        try:
+            agents = session.query(Agent).filter(Agent.is_active == True).all()
             stats = self._compute_stats(agents)
 
             if stats["portfolio_drawdown"] < self.MAX_PORTFOLIO_DRAWDOWN:
                 await self._pause_all_agents(
                     agents, session,
-                    f"Portfolio drawdown {stats['portfolio_drawdown']:.2%} < {self.MAX_PORTFOLIO_DRAWDOWN:.2%}"
+                    f"Portfolio drawdown {stats['portfolio_drawdown']:.2%} < {self.MAX_PORTFOLIO_DRAWDOWN:.2%}",
                 )
                 return
 
             await manager.broadcast({
-                "type": "portfolio_update",
+                "event": "portfolio_update",
                 "total_pnl": stats["total_pnl"],
                 "total_capital": stats["total_capital"],
                 "portfolio_drawdown": stats["portfolio_drawdown"],
                 "agent_count": stats["agent_count"],
                 "paused_count": stats["paused_count"],
             })
+        finally:
+            session.close()
 
     def _compute_stats(self, agents: list) -> dict:
-        """Compute portfolio drawdown and agent counts."""
-        total_pnl = sum(agent.total_pnl for agent in agents)
-        total_capital = sum(agent.paper_trading_balance for agent in agents)
+        total_pnl = sum(a.total_pnl or 0.0 for a in agents)
+        total_capital = sum(a.paper_trading_balance or 0.0 for a in agents)
         portfolio_drawdown = (total_pnl / total_capital) if total_capital > 0 else 0.0
-        paused_count = sum(1 for agent in agents if agent.status == AgentStatus.PAUSED)
-
+        paused_count = sum(1 for a in agents if a.status == AgentStatus.PAUSED)
         return {
             "total_pnl": total_pnl,
             "total_capital": total_capital,
@@ -50,20 +51,22 @@ class RiskAgent:
             "paused_count": paused_count,
         }
 
-    async def _pause_all_agents(self, agents: list, session, reason: str):
-        """Pause all agents and broadcast alerts."""
+    async def _pause_all_agents(self, agents: list, session: Session, reason: str):
         for agent in agents:
             agent.status = AgentStatus.PAUSED
-            await manager.broadcast({
-                "type": "agent_paused",
-                "agent_id": agent.id,
-                "agent_name": agent.name,
-                "reason": reason,
-            })
+        session.commit()
 
-        await session.commit()
+        try:
+            if agents[0].user_id:
+                from backend.notifications.triggers import notify_agent_paused
+                for agent in agents:
+                    notify_agent_paused(agent.user_id, agent.name, reason)
+        except Exception:
+            pass
+
         await manager.broadcast({
-            "type": "risk_alert",
-            "message": reason,
-            "paused_agents": len(agents),
+            "event": "bodyguard_pause_all",
+            "reason": reason,
+            "paused_count": len(agents),
         })
+        logger.warning(f"Bodyguard: paused {len(agents)} agents — {reason}")

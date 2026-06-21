@@ -272,7 +272,7 @@ async def resume_agent(
     agent_id: int,
     current_user: User = Depends(get_current_user),
 ):
-    """Resume agent: reset consecutive_losses and status to IDLE."""
+    """Resume agent: reset consecutive_losses, confidence to 50, status to IDLE."""
     try:
         with get_db_session(settings.DATABASE_URL) as session:
             result = session.execute(select(Agent).where(Agent.id == agent_id))
@@ -281,6 +281,7 @@ async def resume_agent(
                 raise HTTPException(status_code=404, detail="Agent not found")
             _check_agent_access(agent, current_user)
             agent.consecutive_losses = 0
+            agent.confidence_score = 50  # reset per AGENTS.md
             agent.status = AgentStatus.IDLE
             session.add(agent)
             session.flush()
@@ -290,7 +291,7 @@ async def resume_agent(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{agent_id}/start", response_model=AgentResponse)
