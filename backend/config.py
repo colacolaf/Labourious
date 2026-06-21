@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Optional
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,5 +32,14 @@ class Settings:
     EXCHANGE_TESTNET: bool = os.getenv("EXCHANGE_TESTNET", "true").lower() == "true"
 
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "change-me-in-production-32-chars-min")
+
+    # Notifications
+    SMTP_HOST: Optional[str] = os.getenv("SMTP_HOST")
+    SMTP_PORT: Optional[str] = os.getenv("SMTP_PORT", "465")
+    SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
+    SMTP_PASS: Optional[str] = os.getenv("SMTP_PASS")
+    TWILIO_ACCOUNT_SID: Optional[str] = os.getenv("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN: Optional[str] = os.getenv("TWILIO_AUTH_TOKEN")
+    TWILIO_FROM_NUMBER: Optional[str] = os.getenv("TWILIO_FROM_NUMBER")
 
 settings = Settings()
