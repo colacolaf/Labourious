@@ -15,6 +15,7 @@ const useNotificationsStore = create(devtools((set) => ({
       set({ preferences: data, loading: false });
     } catch (err) {
       set({ loading: false, error: err.message });
+      throw err;
     }
   },
 
