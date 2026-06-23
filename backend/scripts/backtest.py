@@ -65,13 +65,14 @@ def rule_signal(row: pd.Series) -> str:
 
 
 def run_simulation(df: pd.DataFrame, initial_balance: float = 100_000.0) -> dict:
-    """Paper trading simulation over df. Returns metrics dict."""
+    """Paper trading simulation over df. Returns metrics dict including equity_curve."""
     balance = initial_balance
     position = 0.0  # shares held
     entry_price = 0.0
     trades = []
+    equity_curve = []
 
-    for i, (idx, row) in enumerate(df.iterrows()):
+    for idx, row in df.iterrows():
         signal = rule_signal(row)
         price = float(row["close"])
 
@@ -93,6 +94,12 @@ def run_simulation(df: pd.DataFrame, initial_balance: float = 100_000.0) -> dict
             })
             position = 0.0
             entry_price = 0.0
+
+        # Record equity (cash + mark-to-market of open position)
+        equity_curve.append({
+            "date": str(idx.date()) if hasattr(idx, "date") else str(idx),
+            "balance": round(balance + position * price, 2),
+        })
 
     # Close any open position at end
     if position > 0:
@@ -123,6 +130,7 @@ def run_simulation(df: pd.DataFrame, initial_balance: float = 100_000.0) -> dict
         "win_rate_pct": round(win_rate * 100, 1),
         "sharpe_ratio": round(sharpe, 3),
         "max_drawdown": round(max_dd, 2),
+        "equity_curve": equity_curve,
     }
 
 
@@ -236,7 +244,8 @@ def main():
             "win_rate": round(metrics["win_rate_pct"] / 100, 6),
             "sharpe_ratio": metrics["sharpe_ratio"],
             "max_drawdown": metrics["max_drawdown"],
-            "equity_curve": [],
+            "num_trades": metrics["num_trades"],
+            "equity_curve": metrics["equity_curve"],
         }
         print(json.dumps(output))
 
