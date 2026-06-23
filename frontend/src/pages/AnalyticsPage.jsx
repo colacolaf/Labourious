@@ -7,6 +7,7 @@ import AgentLeaderboard from '../components/Analytics/AgentLeaderboard';
 import CorrelationMatrix from '../components/Analytics/CorrelationMatrix';
 import AttributionWaterfall from '../components/Analytics/AttributionWaterfall';
 import BacktestRunner from '../components/Analytics/BacktestRunner';
+import BacktestHistory from '../components/Analytics/BacktestHistory';
 
 const sectionStyle = {
   background: 'var(--color-bg-card)',
@@ -144,6 +145,7 @@ export default function AnalyticsPage() {
       <div style={sectionStyle}>
         <div style={sectionHeader}><span>BACKTEST</span></div>
         <BacktestRunner agents={agents} />
+        <BacktestHistory agentId={null} />
       </div>
     </motion.div>
   );
