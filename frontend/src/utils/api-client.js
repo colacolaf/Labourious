@@ -166,6 +166,7 @@ export const llmApi = {
 export const notificationsApi = {
   getPreferences: () => apiClient.get('/api/notifications/preferences'),
   updatePreferences: (data) => apiClient.patch('/api/notifications/preferences', data),
+  sendTest: () => apiClient.post('/api/notifications/test'),
 };
 
 export const brokersApi = {

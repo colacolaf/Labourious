@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import useNotificationsStore from '../stores/notifications.store';
+import { notificationsApi } from '../utils/api-client';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -23,6 +24,7 @@ export default function NotificationsPage() {
     useNotificationsStore();
   const [phone, setPhone] = useState('');
   const [authError, setAuthError] = useState(false);
+  const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
     fetchPreferences().catch((err) => {
@@ -42,6 +44,15 @@ export default function NotificationsPage() {
 
   const handlePhoneSave = () => {
     updatePreferences({ phone_number: phone }).catch(() => {}); // error displayed via store.error
+  };
+
+  const handleTest = async () => {
+    try {
+      const result = await notificationsApi.sendTest();
+      setTestResult(result);
+    } catch (err) {
+      setTestResult({ error: err.message });
+    }
   };
 
   if (authError) {
@@ -143,6 +154,52 @@ export default function NotificationsPage() {
               boxSizing: 'border-box',
             }}
           />
+        </div>
+
+        <div style={{ marginTop: 'var(--space-6)' }}>
+          <button
+            onClick={handleTest}
+            style={{
+              background: 'var(--color-bg-secondary)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '4px',
+              color: 'var(--color-text-secondary)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--font-size-sm)',
+              padding: 'var(--space-2) var(--space-3)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease-out',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-bg-tertiary)';
+              e.currentTarget.style.color = 'var(--color-text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'var(--color-bg-secondary)';
+              e.currentTarget.style.color = 'var(--color-text-secondary)';
+            }}
+          >
+            Send Test
+          </button>
+          {testResult && (
+            <div
+              style={{
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-mono)',
+                marginTop: 'var(--space-3)',
+                color: 'var(--color-text-secondary)',
+                background: 'var(--color-bg-tertiary)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '4px',
+                padding: 'var(--space-2) var(--space-3)',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                overflowX: 'auto',
+              }}
+            >
+              {JSON.stringify(testResult, null, 2)}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
