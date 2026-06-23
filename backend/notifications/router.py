@@ -60,3 +60,23 @@ def update_preferences(
     db.commit()
     db.refresh(prefs)
     return prefs
+
+
+@router.post("/test")
+def send_test_notification(current_user: User = Depends(get_current_user)):
+    """Send test email + SMS to verify notification config."""
+    from backend.notifications.triggers import notification_service
+
+    results = {}
+    # Test email
+    if notification_service.smtp_configured:
+        ok = notification_service.send_email(
+            to=current_user.email,
+            subject="Labourious — Test Notification",
+            body="Your notification config is working.",
+        )
+        results["email"] = "sent" if ok else "failed"
+    else:
+        results["email"] = "not_configured"
+
+    return results
