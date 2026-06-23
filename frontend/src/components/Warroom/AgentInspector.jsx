@@ -209,6 +209,7 @@ function PerformanceTab({ agentId }) {
 function SettingsTab({ agent }) {
   const { updateAgent } = useAgentsStore();
   const [busy, setBusy] = useState(false);
+  const [confirmLive, setConfirmLive] = useState(false);
   const [local, setLocal] = useState({
     execution_mode: agent.execution_mode ?? 'human_in_loop',
     check_frequency: agent.check_frequency ?? 300,
@@ -290,10 +291,49 @@ function SettingsTab({ agent }) {
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid var(--color-border)', fontSize: '0.8rem' }}>
         <span style={{ color: 'var(--color-text-muted)' }}>Paper Trading</span>
-        <button disabled={busy} onClick={() => toggle('is_paper_trading')} style={btnStyle(agent.is_paper_trading)}>
+        <button
+          disabled={busy}
+          onClick={() => {
+            if (agent.is_paper_trading) {
+              setConfirmLive(true);  // require confirmation before going live
+            } else {
+              toggle('is_paper_trading');  // switching back to paper is always safe
+            }
+          }}
+          style={btnStyle(agent.is_paper_trading)}
+        >
           {agent.is_paper_trading ? 'Switch Live' : 'Switch Paper'}
         </button>
       </div>
+
+      {/* Live mode confirmation dialog */}
+      {confirmLive && (
+        <div style={{
+          background: 'var(--color-bg-tertiary)', border: '2px solid var(--color-danger, #ff4444)',
+          borderRadius: 6, padding: '1rem', marginTop: '0.5rem',
+        }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--color-danger, #ff4444)', fontWeight: 700, marginBottom: '0.5rem' }}>
+            ⚠ SWITCHING TO LIVE TRADING
+          </div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '1rem', lineHeight: 1.5 }}>
+            This agent will execute real orders using real money. Ensure your broker credentials are set in the Vault and your position size limits are correct before proceeding.
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={async () => { setConfirmLive(false); await toggle('is_paper_trading'); }}
+              style={{ flex: 1, padding: '0.4rem', background: 'var(--color-danger, #ff4444)', color: '#fff', border: 'none', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', borderRadius: 3 }}
+            >
+              CONFIRM — GO LIVE
+            </button>
+            <button
+              onClick={() => setConfirmLive(false)}
+              style={{ flex: 1, padding: '0.4rem', background: 'transparent', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', cursor: 'pointer', borderRadius: 3 }}
+            >
+              CANCEL
+            </button>
+          </div>
+        </div>
+      )}
       <div style={{ marginTop: '1rem' }}>
         <button
           onClick={save}
