@@ -12,10 +12,13 @@ def test_notification_service_dedup_prevents_spam():
     svc._dedup_cache = {}
     svc._cooldown_seconds = 5
 
-    with patch("smtplib.SMTP_SSL") as mock_smtp:
+    with patch("smtplib.SMTP") as mock_smtp, \
+         patch("smtplib.SMTP_SSL") as mock_smtp_ssl:
         mock_server = MagicMock()
         mock_smtp.return_value.__enter__ = MagicMock(return_value=mock_server)
         mock_smtp.return_value.__exit__ = MagicMock(return_value=False)
+        mock_smtp_ssl.return_value.__enter__ = MagicMock(return_value=mock_server)
+        mock_smtp_ssl.return_value.__exit__ = MagicMock(return_value=False)
 
         first = svc.send_email("user@test.com", "Test", "body", dedup_key="key-1")
         second = svc.send_email("user@test.com", "Test", "body", dedup_key="key-1")
@@ -33,13 +36,16 @@ def test_notification_service_dedup_expires():
     svc._dedup_cache = {}
     svc._cooldown_seconds = 1
 
-    with patch("smtplib.SMTP_SSL") as mock_smtp:
+    with patch("smtplib.SMTP") as mock_smtp, \
+         patch("smtplib.SMTP_SSL") as mock_smtp_ssl:
         mock_server = MagicMock()
         mock_smtp.return_value.__enter__ = MagicMock(return_value=mock_server)
         mock_smtp.return_value.__exit__ = MagicMock(return_value=False)
+        mock_smtp_ssl.return_value.__enter__ = MagicMock(return_value=mock_server)
+        mock_smtp_ssl.return_value.__exit__ = MagicMock(return_value=False)
 
         first = svc.send_email("user@test.com", "Test", "body", dedup_key="key-2")
-        time.sleep(1.1)
+        time.sleep(2.0)
         second = svc.send_email("user@test.com", "Test", "body", dedup_key="key-2")
 
     assert first is True
