@@ -19,10 +19,11 @@ def notify_trade_executed(user_id: str, agent_name: str, symbol: str, action: st
                 return
             subject = f"Trade Executed: {action} {symbol}"
             body = f"Agent {agent_name} executed {action} on {symbol}. PnL: {pnl:.2f}"
+            dedup_key = f"trade_{user_id}_{symbol}_{action}"
             if prefs.email_enabled:
-                notification_service.send_email(user.email, subject, body)
+                notification_service.send_email(user.email, subject, body, dedup_key=dedup_key)
             if prefs.sms_enabled and prefs.phone_number:
-                notification_service.send_sms(prefs.phone_number, body)
+                notification_service.send_sms(prefs.phone_number, body, dedup_key=dedup_key)
     except Exception as e:
         logger.error(f"notify_trade_executed failed: {e}")
 
@@ -38,10 +39,11 @@ def notify_agent_paused(user_id: str, agent_name: str, reason: str) -> None:
                 return
             subject = f"Agent Paused: {agent_name}"
             body = f"Agent {agent_name} was paused. Reason: {reason}"
+            dedup_key = f"pause_{user_id}_{agent_name}"
             if prefs.email_enabled:
-                notification_service.send_email(user.email, subject, body)
+                notification_service.send_email(user.email, subject, body, dedup_key=dedup_key)
             if prefs.sms_enabled and prefs.phone_number:
-                notification_service.send_sms(prefs.phone_number, body)
+                notification_service.send_sms(prefs.phone_number, body, dedup_key=dedup_key)
     except Exception as e:
         logger.error(f"notify_agent_paused failed: {e}")
 
@@ -57,10 +59,11 @@ def notify_drawdown_warning(user_id: str, agent_name: str, drawdown_pct: float) 
                 return
             subject = f"Drawdown Warning: {agent_name}"
             body = f"Agent {agent_name} drawdown at {drawdown_pct:.1%}"
+            dedup_key = f"drawdown_{user_id}_{agent_name}"
             if prefs.email_enabled:
-                notification_service.send_email(user.email, subject, body)
+                notification_service.send_email(user.email, subject, body, dedup_key=dedup_key)
             if prefs.sms_enabled and prefs.phone_number:
-                notification_service.send_sms(prefs.phone_number, body)
+                notification_service.send_sms(prefs.phone_number, body, dedup_key=dedup_key)
     except Exception as e:
         logger.error(f"notify_drawdown_warning failed: {e}")
 
@@ -82,9 +85,10 @@ def send_daily_digest(user_id: str, summary: dict) -> None:
                 f"Best Agent: {summary.get('best_agent', 'N/A')}\n"
                 f"Worst Agent: {summary.get('worst_agent', 'N/A')}"
             )
+            dedup_key = f"digest_{user_id}"
             if prefs.email_enabled:
-                notification_service.send_email(user.email, subject, body)
+                notification_service.send_email(user.email, subject, body, dedup_key=dedup_key)
             if prefs.sms_enabled and prefs.phone_number:
-                notification_service.send_sms(prefs.phone_number, body)
+                notification_service.send_sms(prefs.phone_number, body, dedup_key=dedup_key)
     except Exception as e:
         logger.error(f"send_daily_digest failed: {e}")

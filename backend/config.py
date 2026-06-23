@@ -42,4 +42,7 @@ class Settings:
     TWILIO_AUTH_TOKEN: Optional[str] = os.getenv("TWILIO_AUTH_TOKEN")
     TWILIO_FROM_NUMBER: Optional[str] = os.getenv("TWILIO_FROM_NUMBER")
 
+    SENDGRID_API_KEY: Optional[str] = os.getenv("SENDGRID_API_KEY")
+    NOTIFICATION_COOLDOWN_MINUTES: int = int(os.getenv("NOTIFICATION_COOLDOWN_MINUTES", "5"))
+
 settings = Settings()
