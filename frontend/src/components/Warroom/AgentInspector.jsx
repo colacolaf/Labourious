@@ -76,23 +76,113 @@ function TradesTab({ agentId }) {
 }
 
 function RulesTab({ agent }) {
-  const content = agent.strategy_config?.context_content
+  const [editing, setEditing] = useState(false);
+  const [content, setContent] = useState(
+    agent.strategy_config?.context_content
     ?? agent.strategy_config?.context
     ?? agent.strategy_config?.rules
-    ?? null;
-  if (!content) return (
-    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', marginTop: '1rem' }}>
-      No context file — agent uses default LLM reasoning
-    </div>
+    ?? ''
   );
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    setBusy(true);
+    try {
+      await fetch(`/api/agents/${agent.id}/update-context`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('auth_access_token')}`,
+        },
+        body: JSON.stringify({ content }),
+      });
+      setSaved(true);
+      setEditing(false);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      // silent — user sees no change
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const TEMPLATES = [
+    { label: 'Momentum', text: 'You are a momentum trader. Buy when RSI > 60 and price above MA20. Sell when RSI < 40 or price drops below MA20 by 2%. Position size: 5% per trade.' },
+    { label: 'Mean Rev', text: 'You are a mean reversion trader. Buy when RSI < 30 (oversold). Sell when RSI > 70 (overbought) or price returns to MA50. Risk: 2% stop loss.' },
+    { label: 'Scalper', text: 'You are a scalper. Look for tight ranges. Buy on support, sell on resistance. Keep positions under 1 hour. Position size: 3% maximum.' },
+  ];
+
   return (
-    <pre style={{
-      fontSize: '0.75rem', color: 'var(--color-text-secondary)',
-      background: 'var(--color-bg-tertiary)', padding: '0.75rem',
-      borderRadius: 4, overflowX: 'auto', whiteSpace: 'pre-wrap', marginTop: '0.5rem',
-    }}>
-      {typeof content === 'string' ? content : JSON.stringify(content, null, 2)}
-    </pre>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', letterSpacing: '0.08em' }}>STRATEGY CONTEXT</span>
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          {saved && <span style={{ fontSize: '0.65rem', color: 'var(--color-accent-primary)' }}>SAVED</span>}
+          <button
+            onClick={() => setEditing((e) => !e)}
+            style={{ background: 'none', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', cursor: 'pointer', padding: '0.15rem 0.5rem', borderRadius: 2 }}
+          >
+            {editing ? 'cancel' : 'edit'}
+          </button>
+        </div>
+      </div>
+
+      {editing && (
+        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
+          {TEMPLATES.map((t) => (
+            <button
+              key={t.label}
+              onClick={() => setContent(t.text)}
+              style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', cursor: 'pointer', padding: '0.15rem 0.4rem', borderRadius: 2 }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {editing ? (
+        <>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={10}
+            style={{
+              width: '100%', background: 'var(--color-bg-tertiary)',
+              border: '1px solid var(--color-accent-primary)', color: 'var(--color-text-primary)',
+              fontFamily: 'var(--font-mono)', fontSize: '0.75rem', padding: '0.5rem',
+              resize: 'vertical', borderRadius: 3, lineHeight: 1.5,
+            }}
+          />
+          <button
+            onClick={handleSave}
+            disabled={busy}
+            style={{
+              padding: '0.4rem', background: 'var(--color-accent-primary, #00ff88)', color: '#000',
+              border: 'none', fontFamily: 'var(--font-mono)', fontWeight: 700,
+              fontSize: '0.75rem', cursor: busy ? 'not-allowed' : 'pointer', borderRadius: 3,
+            }}
+          >
+            {busy ? 'SAVING…' : 'SAVE CONTEXT'}
+          </button>
+        </>
+      ) : (
+        content ? (
+          <pre style={{
+            fontSize: '0.75rem', color: 'var(--color-text-secondary)',
+            background: 'var(--color-bg-tertiary)', padding: '0.75rem',
+            borderRadius: 4, overflowX: 'auto', whiteSpace: 'pre-wrap',
+          }}>
+            {content}
+          </pre>
+        ) : (
+          <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
+            No context — click <strong>edit</strong> to add strategy rules.
+          </div>
+        )
+      )}
+    </div>
   );
 }
 
