@@ -309,10 +309,10 @@ function SettingsTab({ agent }) {
       {/* Live mode confirmation dialog */}
       {confirmLive && (
         <div style={{
-          background: 'var(--color-bg-tertiary)', border: '2px solid var(--color-danger, #ff4444)',
+          background: 'var(--color-bg-tertiary)', border: '2px solid var(--color-accent-danger, #ff4444)',
           borderRadius: 6, padding: '1rem', marginTop: '0.5rem',
         }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--color-danger, #ff4444)', fontWeight: 700, marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--color-accent-danger, #ff4444)', fontWeight: 700, marginBottom: '0.5rem' }}>
             ⚠ SWITCHING TO LIVE TRADING
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', marginBottom: '1rem', lineHeight: 1.5 }}>
@@ -320,8 +320,8 @@ function SettingsTab({ agent }) {
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
-              onClick={async () => { setConfirmLive(false); await toggle('is_paper_trading'); }}
-              style={{ flex: 1, padding: '0.4rem', background: 'var(--color-danger, #ff4444)', color: '#fff', border: 'none', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', borderRadius: 3 }}
+              onClick={async () => { await toggle('is_paper_trading'); setConfirmLive(false); }}
+              style={{ flex: 1, padding: '0.4rem', background: 'var(--color-accent-danger, #ff4444)', color: '#fff', border: 'none', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', borderRadius: 3 }}
             >
               CONFIRM — GO LIVE
             </button>

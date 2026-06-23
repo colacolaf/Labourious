@@ -70,21 +70,21 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Snapshot scheduler startup skipped: {e}")
 
-    # Daily digest job (fires at 22:00 UTC)
+    # Daily digest job (fires at 08:00 UTC)
     try:
         from backend.notifications.digest_job import run_daily_digest as _run_digest
         _digest_scheduler = AsyncIOScheduler()
         _digest_scheduler.add_job(
             _run_digest,
             trigger="cron",
-            hour=22,
+            hour=8,
             minute=0,
             args=[settings.DATABASE_URL],
             id="daily_digest",
             replace_existing=True,
         )
         _digest_scheduler.start()
-        logger.info("Daily digest scheduler started (22:00 UTC daily)")
+        logger.info("Daily digest scheduler started (08:00 UTC daily)")
     except Exception as e:
         logger.warning(f"Digest scheduler startup skipped: {e}")
 
