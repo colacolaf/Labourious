@@ -119,6 +119,42 @@ export default function BacktestRunner({ agents = [] }) {
             ))}
           </div>
           {equityData.length > 0 && <EquityChart data={equityData} height={160} />}
+
+          {/* Walk-forward windows table */}
+          {stats?.windows?.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-4)' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-3)', letterSpacing: '0.08em' }}>
+                WALK-FORWARD WINDOWS — Efficiency: {stats.efficiency?.toFixed(1) ?? '—'}%
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-mono)', fontSize: 'var(--font-size-xs)' }}>
+                <thead>
+                  <tr style={{ color: 'var(--color-text-muted)', borderBottom: '1px solid var(--color-border)' }}>
+                    {['Window', 'Period', 'Return', 'Win Rate', 'Sharpe'].map((h) => (
+                      <th key={h} style={{ textAlign: 'left', padding: '0.3rem 0.5rem', fontWeight: 'normal' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.windows.map((w) => {
+                    const ret = w.total_return_pct ?? 0;
+                    return (
+                      <tr key={w.window} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                        <td style={{ padding: '0.35rem 0.5rem' }}>#{w.window}</td>
+                        <td style={{ padding: '0.35rem 0.5rem', color: 'var(--color-text-muted)' }}>
+                          {w.test_start} → {w.test_end}
+                        </td>
+                        <td style={{ padding: '0.35rem 0.5rem', color: ret >= 0 ? 'var(--color-pnl-positive)' : 'var(--color-pnl-negative)' }}>
+                          {ret >= 0 ? '+' : ''}{ret.toFixed(1)}%
+                        </td>
+                        <td style={{ padding: '0.35rem 0.5rem' }}>{w.win_rate_pct?.toFixed(1) ?? '—'}%</td>
+                        <td style={{ padding: '0.35rem 0.5rem', color: 'var(--color-accent-secondary)' }}>{w.sharpe_ratio?.toFixed(2) ?? '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
