@@ -248,6 +248,8 @@ class DailySnapshot(Base):
     trade_count = Column(Integer, nullable=False, default=0)
     trades_won = Column(Integer, nullable=False, default=0)
     trades_lost = Column(Integer, nullable=False, default=0)
+    portfolio_value = Column(Float, nullable=True)
+    cash_balance = Column(Float, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     agent = relationship("Agent", backref="snapshots")
