@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import useAnalyticsStore from '../stores/analytics.store';
 import useAgentsStore from '../stores/agents.store';
+import { useWebSocketStore } from '../stores/websocket.store';
 import EquityChart from '../components/Analytics/EquityChart';
 import AgentLeaderboard from '../components/Analytics/AgentLeaderboard';
 import CorrelationMatrix from '../components/Analytics/CorrelationMatrix';
@@ -58,6 +59,8 @@ export default function AnalyticsPage() {
   const { agents, fetchAgents } = useAgentsStore();
 
   const [activeDays, setActiveDays] = useState(30);
+  const [attributionDate, setAttributionDate] = useState(null);
+  const lastMessage = useWebSocketStore(s => s.lastMessage);
 
   useEffect(() => {
     fetchPortfolio();
@@ -66,7 +69,24 @@ export default function AnalyticsPage() {
     fetchCorrelation();
     fetchAttribution();
     fetchAgents();
+    const refreshId = setInterval(() => {
+      fetchPortfolio();
+      fetchEquityCurve(activeDays);
+      fetchLeaderboard(leaderboardSort);
+    }, 30_000);
+    return () => clearInterval(refreshId);
   }, [activeDays, fetchPortfolio, fetchEquityCurve, fetchLeaderboard, leaderboardSort, fetchCorrelation, fetchAttribution, fetchAgents]);
+
+  useEffect(() => {
+    if (!lastMessage) return;
+    const reactive = ['trade_executed', 'live_order_filled'];
+    if (reactive.includes(lastMessage.event ?? lastMessage.type)) {
+      fetchPortfolio();
+      fetchEquityCurve(activeDays);
+      fetchLeaderboard(leaderboardSort);
+      fetchAttribution(attributionDate);
+    }
+  }, [lastMessage]); // eslint-disable-line
 
   const handleDaysChange = (days) => {
     setActiveDays(days);
@@ -137,7 +157,24 @@ export default function AnalyticsPage() {
 
       {/* Attribution */}
       <div style={sectionStyle}>
-        <div style={sectionHeader}><span>P&L ATTRIBUTION</span></div>
+        <div style={sectionHeader}>
+          <span>P&L ATTRIBUTION</span>
+          <input
+            type="date"
+            value={attributionDate ?? new Date().toISOString().slice(0, 10)}
+            onChange={(e) => {
+              const d = e.target.value || null;
+              setAttributionDate(d);
+              fetchAttribution(d);
+            }}
+            style={{
+              background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border)',
+              color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--font-size-xs)', padding: '2px 6px', borderRadius: 3,
+              cursor: 'pointer',
+            }}
+          />
+        </div>
         <AttributionWaterfall data={attribution} />
       </div>
 
