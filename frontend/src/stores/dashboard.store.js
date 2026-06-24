@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { performanceApi, healthApi, dashboardApi, tradesApi } from '../utils/api-client';
+import { analyticsApi, healthApi, tradesApi } from '../utils/api-client';
 
 const useDashboardStore = create(
   devtools(
@@ -15,6 +15,9 @@ const useDashboardStore = create(
         activeAgents: 0,
         totalTrades: 0,
         winRate: 0,
+        sharpeRatio: null,
+        maxDrawdown: null,
+        return30d: null,
       },
       portfolioHistory: [],
       recentTrades: [],
@@ -24,6 +27,7 @@ const useDashboardStore = create(
       backendVersion: null,
       backendUptime: null,
       dbStatus: 'unknown',
+      _refreshInterval: null,
 
       loading: false,
       portfolioLoading: false,
@@ -33,24 +37,21 @@ const useDashboardStore = create(
       fetchPortfolioSummary: async () => {
         set({ portfolioLoading: true, error: null });
         try {
-          // Try dashboard/summary first (Phase 2 endpoint), fall back to performance/summary
-          let data;
-          try {
-            data = await dashboardApi.summary();
-          } catch {
-            data = await performanceApi.summary();
-          }
+          const data = await analyticsApi.portfolio();
           set({
             portfolio: {
-              totalValue: data.total_value ?? 0,
-              cashBalance: data.cash_balance ?? 0,
-              unrealizedPnl: data.unrealized_pnl ?? 0,
-              realizedPnl: data.realized_pnl ?? 0,
+              totalValue: data.total_pnl ?? 0,
+              cashBalance: 0,
+              unrealizedPnl: 0,
+              realizedPnl: data.total_pnl ?? 0,
               totalPnl: data.total_pnl ?? 0,
-              totalPnlPct: data.total_pnl_pct ?? 0,
-              activeAgents: data.active_agents ?? data.running_agents ?? 0,
+              totalPnlPct: data.return_30d_pct ?? 0,
+              activeAgents: data.agent_count ?? 0,
               totalTrades: data.total_trades ?? 0,
               winRate: data.win_rate ?? 0,
+              sharpeRatio: data.sharpe_ratio ?? null,
+              maxDrawdown: data.max_drawdown ?? null,
+              return30d: data.return_30d_pct ?? null,
             },
             portfolioLoading: false,
             lastFetched: Date.now(),
@@ -62,10 +63,28 @@ const useDashboardStore = create(
 
       fetchPortfolioHistory: async (days = 30) => {
         try {
-          const data = await dashboardApi.equityCurve(days);
+          const data = await analyticsApi.equityCurve(days);
           set({ portfolioHistory: Array.isArray(data) ? data : [] });
         } catch (err) {
           set({ error: err.message });
+        }
+      },
+
+      startAutoRefresh: (intervalMs = 30_000) => {
+        const { _refreshInterval } = get();
+        if (_refreshInterval) return;
+        const id = setInterval(() => {
+          get().fetchPortfolioSummary();
+          get().fetchPortfolioHistory();
+        }, intervalMs);
+        set({ _refreshInterval: id });
+      },
+
+      stopAutoRefresh: () => {
+        const { _refreshInterval } = get();
+        if (_refreshInterval) {
+          clearInterval(_refreshInterval);
+          set({ _refreshInterval: null });
         }
       },
 

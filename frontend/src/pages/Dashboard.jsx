@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import useDashboardStore from '../stores/dashboard.store';
 import useAgentsStore from '../stores/agents.store';
+import { useWebSocketStore } from '../stores/websocket.store';
 import RecentTradesFeed from '../components/RecentTradesFeed';
 import SystemHealthPanel from '../components/SystemHealthPanel';
 
@@ -35,8 +36,10 @@ export default function Dashboard() {
     portfolio, portfolioHistory, recentTrades,
     backendStatus, dbStatus, backendVersion, backendUptime,
     fetchPortfolioSummary, fetchPortfolioHistory, fetchRecentTrades, fetchSystemHealth,
+    startAutoRefresh, stopAutoRefresh,
   } = useDashboardStore();
   const { agents, fetchAgents } = useAgentsStore();
+  const lastMessage = useWebSocketStore(s => s.lastMessage);
 
   useEffect(() => {
     fetchPortfolioSummary();
@@ -44,7 +47,18 @@ export default function Dashboard() {
     fetchAgents();
     fetchRecentTrades(20);
     fetchSystemHealth();
-  }, [fetchPortfolioSummary, fetchPortfolioHistory, fetchAgents, fetchRecentTrades, fetchSystemHealth]);
+    startAutoRefresh(30_000);
+    return () => stopAutoRefresh();
+  }, []); // eslint-disable-line
+
+  useEffect(() => {
+    if (!lastMessage) return;
+    const reactive = ['trade_executed', 'live_order_filled', 'agent_update', 'agent_paused'];
+    if (reactive.includes(lastMessage.event ?? lastMessage.type)) {
+      fetchPortfolioSummary();
+      fetchRecentTrades(20);
+    }
+  }, [lastMessage]); // eslint-disable-line
 
   const pnlColor = portfolio.totalPnl >= 0 ? 'var(--color-accent-primary)' : 'var(--color-accent-danger, #ff4444)';
 
@@ -59,11 +73,13 @@ export default function Dashboard() {
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         {card('Total P&L', fmt(portfolio.totalPnl), pnlColor)}
         {card('Active Agents', portfolio.activeAgents)}
         {card('Total Trades', portfolio.totalTrades)}
         {card('Win Rate', portfolio.winRate != null ? `${portfolio.winRate.toFixed(1)}%` : '—')}
+        {portfolio.sharpeRatio != null && card('Sharpe', portfolio.sharpeRatio.toFixed(2), 'var(--color-accent-secondary)')}
+        {portfolio.maxDrawdown != null && card('Max DD', `${(portfolio.maxDrawdown * 100).toFixed(1)}%`, 'var(--color-accent-warning)')}
       </div>
 
       {/* Equity curve */}
