@@ -24,10 +24,11 @@ function uptimeStr(s) {
   return `${Math.round(s / 3600)}h`;
 }
 
-export default function SystemHealthPanel({ backendStatus, dbStatus, backendVersion, backendUptime, llmConfig }) {
+export default function SystemHealthPanel({ backendStatus, dbStatus, backendVersion, backendUptime, llmConfig, vaultStatus, llmStatus }) {
   const backendOk = backendStatus === 'connected';
   const dbOk = dbStatus === 'ok';
-  const llmOk = llmConfig != null;
+  const vaultOk = vaultStatus === 'ok';
+  const llmOk = llmStatus != null && llmStatus !== 'not_configured' && llmStatus !== 'unknown';
 
   return (
     <div style={{ fontFamily: 'var(--font-mono)' }}>
@@ -53,11 +54,21 @@ export default function SystemHealthPanel({ backendStatus, dbStatus, backendVers
 
       <div style={{ ...row }}>
         <span style={{ color: 'var(--color-text-secondary)' }}>
+          <span style={dot(vaultOk)} />
+          Vault
+        </span>
+        <span style={{ color: vaultOk ? 'var(--color-accent-primary)' : 'var(--color-accent-warning)', fontSize: 'var(--font-size-xs)' }}>
+          {(vaultStatus ?? 'unknown').toUpperCase()}
+        </span>
+      </div>
+
+      <div style={{ ...row }}>
+        <span style={{ color: 'var(--color-text-secondary)' }}>
           <span style={dot(llmOk)} />
           LLM
         </span>
         <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)' }}>
-          {llmConfig ? `${llmConfig.provider}/${llmConfig.model}` : 'unconfigured'}
+          {llmStatus ?? (llmConfig ? `${llmConfig.provider}/${llmConfig.model}` : 'unknown')}
         </span>
       </div>
 

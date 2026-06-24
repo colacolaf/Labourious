@@ -85,6 +85,7 @@ export const authApi = {
 export const healthApi = {
   check: () => apiClient.get('/api/health'),
   dbCheck: () => apiClient.get('/api/health/db'),
+  full: () => apiClient.get('/api/health/full'),
 };
 
 export const agentsApi = {

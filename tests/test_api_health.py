@@ -30,3 +30,13 @@ def test_db_health_endpoint(client):
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
+
+
+def test_health_full_returns_all_subsystems(client):
+    resp = client.get("/api/health/full")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "backend" in data
+    assert "db" in data
+    assert "vault" in data
+    assert "llm" in data

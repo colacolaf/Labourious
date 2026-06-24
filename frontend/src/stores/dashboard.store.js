@@ -27,6 +27,8 @@ const useDashboardStore = create(
       backendVersion: null,
       backendUptime: null,
       dbStatus: 'unknown',
+      vaultStatus: 'unknown',
+      llmStatus: 'unknown',
       _refreshInterval: null,
 
       loading: false,
@@ -112,12 +114,14 @@ const useDashboardStore = create(
 
       fetchSystemHealth: async () => {
         try {
-          const [health, db] = await Promise.all([healthApi.check(), healthApi.dbCheck()]);
+          const data = await healthApi.full();
           set({
-            backendStatus: health.status === 'ok' ? 'connected' : 'degraded',
-            backendVersion: health.version,
-            backendUptime: health.uptime_seconds,
-            dbStatus: db.status,
+            backendStatus: data.backend === 'ok' ? 'connected' : 'degraded',
+            backendVersion: data.version ?? null,
+            backendUptime: data.uptime_seconds,
+            dbStatus: data.db === 'ok' ? 'ok' : 'error',
+            vaultStatus: data.vault,
+            llmStatus: data.llm,
           });
         } catch {
           set({ backendStatus: 'disconnected', dbStatus: 'error' });
