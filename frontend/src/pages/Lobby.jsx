@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { performanceApi, agentsApi } from '../utils/api-client';
+import { analyticsApi, agentsApi } from '../utils/api-client';
 import { useWebSocketStore } from '../stores/websocket.store';
 
 const card = {
@@ -73,13 +73,26 @@ export default function Lobby() {
   const lastMessage = useWebSocketStore(s => s.lastMessage);
 
   useEffect(() => {
-    agentsApi.list().then(setAgents).catch(() => {});
-    performanceApi.summary().then(setPortfolio).catch(() => {});
+    Promise.all([
+      agentsApi.list().catch(() => []),
+      analyticsApi.portfolio().catch(() => null),
+    ]).then(([agentList, portfolioData]) => {
+      setAgents(agentList);
+      setPortfolio(portfolioData);
+    });
   }, []);
 
   useEffect(() => {
-    if (lastMessage?.type === 'trade_executed' || lastMessage?.type === 'portfolio_update') {
-      performanceApi.summary().then(setPortfolio).catch(() => {});
+    if (!lastMessage) return;
+    const reactive = ['trade_executed', 'live_order_filled', 'agent_update', 'agent_paused', 'portfolio_update'];
+    if (reactive.includes(lastMessage.event ?? lastMessage.type)) {
+      Promise.all([
+        agentsApi.list().catch(() => []),
+        analyticsApi.portfolio().catch(() => null),
+      ]).then(([agentList, portfolioData]) => {
+        setAgents(agentList);
+        setPortfolio(portfolioData);
+      });
     }
   }, [lastMessage]);
 
@@ -117,10 +130,10 @@ export default function Lobby() {
 
       <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
         {[
-          { label: 'ACTIVE AGENTS', value: portfolio?.active_agents ?? agents.filter(a => a.status === 'running').length },
+          { label: 'ACTIVE AGENTS', value: portfolio?.agent_count ?? agents.filter(a => a.status === 'running').length },
           { label: 'TOTAL TRADES',  value: portfolio?.total_trades ?? 0 },
-          { label: 'WIN RATE',      value: `${((portfolio?.win_rate ?? 0) * 100).toFixed(1)}%` },
-          { label: 'TOTAL VALUE',   value: `$${(portfolio?.total_value ?? 0).toLocaleString()}` },
+          { label: 'WIN RATE',      value: `${((portfolio?.win_rate ?? 0)).toFixed(1)}%` },
+          { label: '30D RETURN',    value: portfolio?.return_30d_pct != null ? `${portfolio.return_30d_pct >= 0 ? '+' : ''}${portfolio.return_30d_pct.toFixed(2)}%` : '—' },
         ].map(({ label, value }) => (
           <div key={label} style={{ ...card, flex: 1, minWidth: 140, textAlign: 'center' }}>
             <div style={{ color: 'var(--color-accent-primary)', fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{value}</div>
