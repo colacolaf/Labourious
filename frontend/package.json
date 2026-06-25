@@ -47,22 +47,52 @@
   "build": {
     "appId": "com.labourious.app",
     "productName": "Labourious",
+    "copyright": "Copyright © 2026",
     "directories": {
       "output": "dist"
+    },
+    "extraMetadata": {
+      "main": "src/electron-main.js"
     },
     "files": [
       "build/**/*",
       "src/electron-main.js",
-      "src/preload.js"
+      "src/preload.js",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend",
+        "to": "backend",
+        "filter": ["**/*.py", "requirements.txt"]
+      },
+      {
+        "from": "../data",
+        "to": "data"
+      }
     ],
     "mac": {
-      "target": "dmg"
+      "category": "public.app-category.finance",
+      "icon": "resources/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "resources/entitlements.mac.plist",
+      "entitlementsInherit": "resources/entitlements.mac.plist",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] }
+      ]
     },
     "win": {
-      "target": "nsis"
+      "icon": "resources/icon.ico",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
     },
     "linux": {
       "target": "AppImage"
+    },
+    "dmg": {
+      "title": "Labourious Installer"
     }
   }
 }
