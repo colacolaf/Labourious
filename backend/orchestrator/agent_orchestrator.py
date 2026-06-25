@@ -14,6 +14,8 @@ from backend.api.websocket import manager
 
 logger = logging.getLogger(__name__)
 
+CIRCUIT_BREAKER_THRESHOLD = 5  # consecutive broker errors before auto-pause
+
 
 class AgentOrchestrator:
     """Orchestrates agent lifecycle: scheduling, market data fetching, LLM decisions, trade execution."""
@@ -122,42 +124,18 @@ class AgentOrchestrator:
                 "timestamp": datetime.utcnow().isoformat(),
             })
 
-            # Get broker connector
-            try:
-                connector = get_connector(agent.broker, self.vault, paper=agent.is_paper_trading)
-            except Exception as e:
-                logger.error(f"agent {agent_id} broker error: {e}")
-                agent.status = AgentStatus.ERROR
-                session.add(agent)
-                session.commit()
-                await manager.broadcast({
-                    "event": "agent_update",
-                    "agent_id": agent.id,
-                    "status": agent.status.value,
-                })
-                return
+            # Get broker connector — re-raise so outer except handles backoff/circuit-breaker
+            connector = get_connector(agent.broker, self.vault, paper=agent.is_paper_trading)
 
-            # Fetch market data
-            try:
-                market_data_obj = await connector.get_market_data(agent.symbol)
-                market_data = {
-                    "price": market_data_obj.price,
-                    "volume": market_data_obj.volume,
-                    "rsi": market_data_obj.rsi,
-                    "ma20": market_data_obj.ma20,
-                    "ma50": market_data_obj.ma50,
-                }
-            except Exception as e:
-                logger.error(f"agent {agent_id} market data error: {e}")
-                agent.status = AgentStatus.ERROR
-                session.add(agent)
-                session.commit()
-                await manager.broadcast({
-                    "event": "agent_update",
-                    "agent_id": agent.id,
-                    "status": agent.status.value,
-                })
-                return
+            # Fetch market data — re-raise so outer except handles backoff/circuit-breaker
+            market_data_obj = await connector.get_market_data(agent.symbol)
+            market_data = {
+                "price": market_data_obj.price,
+                "volume": market_data_obj.volume,
+                "rsi": market_data_obj.rsi,
+                "ma20": market_data_obj.ma20,
+                "ma50": market_data_obj.ma50,
+            }
 
             # Load context from file if present
             context = ""
@@ -233,7 +211,8 @@ class AgentOrchestrator:
 
             logger.info(f"agent {agent_id} execution result: {exec_result}")
 
-            # Set status back to IDLE
+            # Successful cycle — reset error counter, set IDLE
+            agent.consecutive_broker_errors = 0
             agent.status = AgentStatus.IDLE
             session.add(agent)
             session.commit()
@@ -248,20 +227,63 @@ class AgentOrchestrator:
 
         except Exception as e:
             logger.exception(f"agent {agent_id} fatal error: {e}")
-            # Try to set error status
             try:
                 agent = session.query(Agent).filter(Agent.id == agent_id).first()
                 if agent:
-                    agent.status = AgentStatus.ERROR
-                    session.add(agent)
-                    session.commit()
-                    await manager.broadcast({
-                        "event": "agent_update",
-                        "agent_id": agent.id,
-                        "status": agent.status.value,
-                    })
+                    agent.consecutive_broker_errors = (agent.consecutive_broker_errors or 0) + 1
+                    errors = agent.consecutive_broker_errors
+
+                    if errors >= CIRCUIT_BREAKER_THRESHOLD:
+                        # Circuit breaker: auto-pause, stop retrying
+                        agent.status = AgentStatus.PAUSED
+                        session.add(agent)
+                        session.commit()
+                        logger.warning(
+                            f"agent {agent_id} circuit breaker tripped at {errors} consecutive errors — auto-paused"
+                        )
+                        try:
+                            self.scheduler.remove_job(f"agent_{agent_id}")
+                        except Exception:
+                            pass
+                        try:
+                            if agent.user_id:
+                                from backend.notifications.triggers import notify_agent_paused
+                                notify_agent_paused(
+                                    agent.user_id, agent.name,
+                                    f"Circuit breaker: {errors} consecutive broker failures"
+                                )
+                        except Exception:
+                            pass
+                        await manager.broadcast({
+                            "event": "agent_paused",
+                            "agent_id": agent.id,
+                            "reason": f"circuit_breaker: {errors} consecutive errors",
+                        })
+                    else:
+                        # Exponential backoff: delay next interval fire, preserve trigger
+                        # ponytail: modify_job delays next_run_time without changing trigger type
+                        agent.status = AgentStatus.ERROR
+                        session.add(agent)
+                        session.commit()
+                        backoff_seconds = min(60 * (2 ** (errors - 1)), 3600)
+                        next_run = datetime.now() + timedelta(seconds=backoff_seconds)
+                        try:
+                            self.scheduler.modify_job(f"agent_{agent_id}", next_run_time=next_run)
+                            logger.warning(
+                                f"agent {agent_id} backoff: next run in {backoff_seconds}s "
+                                f"(consecutive_errors={errors})"
+                            )
+                        except Exception as sched_e:
+                            logger.error(f"agent {agent_id} backoff reschedule failed: {sched_e}")
+                        await manager.broadcast({
+                            "event": "agent_crash_recovery",
+                            "agent_id": agent.id,
+                            "agent_name": agent.name,
+                            "retry_in_seconds": backoff_seconds,
+                            "error": str(e)[:200],
+                        })
             except Exception as inner_e:
-                logger.error(f"failed to set error status for agent {agent_id}: {inner_e}")
+                logger.error(f"failed to handle crash for agent {agent_id}: {inner_e}")
         finally:
             session.close()
 
