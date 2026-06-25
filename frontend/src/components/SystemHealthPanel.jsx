@@ -24,7 +24,7 @@ function uptimeStr(s) {
   return `${Math.round(s / 3600)}h`;
 }
 
-export default function SystemHealthPanel({ backendStatus, dbStatus, backendVersion, backendUptime, llmConfig, vaultStatus, llmStatus }) {
+export default function SystemHealthPanel({ backendStatus, dbStatus, backendVersion, backendUptime, llmConfig, vaultStatus, llmStatus, brokersStatus }) {
   const backendOk = backendStatus === 'connected';
   const dbOk = dbStatus === 'ok';
   const vaultOk = vaultStatus === 'ok';
@@ -71,6 +71,21 @@ export default function SystemHealthPanel({ backendStatus, dbStatus, backendVers
           {llmStatus ?? (llmConfig ? `${llmConfig.provider}/${llmConfig.model}` : 'unknown')}
         </span>
       </div>
+
+      {brokersStatus && Object.entries(brokersStatus).map(([broker, status]) => {
+        const ok = status === 'ok';
+        return (
+          <div key={broker} style={{ ...row }}>
+            <span style={{ color: 'var(--color-text-secondary)' }}>
+              <span style={dot(ok)} />
+              {broker}
+            </span>
+            <span style={{ color: ok ? 'var(--color-accent-primary)' : 'var(--color-accent-danger)', fontSize: 'var(--font-size-xs)' }}>
+              {status.toUpperCase()}
+            </span>
+          </div>
+        );
+      })}
 
       {backendVersion && (
         <div style={{ ...row, borderBottom: 'none' }}>

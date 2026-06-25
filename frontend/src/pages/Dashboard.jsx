@@ -34,7 +34,7 @@ function fmt(n) {
 export default function Dashboard() {
   const {
     portfolio, portfolioHistory, recentTrades,
-    backendStatus, dbStatus, backendVersion, backendUptime, vaultStatus, llmStatus,
+    backendStatus, dbStatus, backendVersion, backendUptime, vaultStatus, llmStatus, brokersStatus,
     fetchPortfolioSummary, fetchPortfolioHistory, fetchRecentTrades, fetchSystemHealth,
     startAutoRefresh, stopAutoRefresh,
   } = useDashboardStore();
@@ -167,6 +167,7 @@ export default function Dashboard() {
             backendUptime={backendUptime}
             vaultStatus={vaultStatus}
             llmStatus={llmStatus}
+            brokersStatus={brokersStatus}
           />
         </div>
       </div>

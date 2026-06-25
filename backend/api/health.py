@@ -71,4 +71,26 @@ async def full_health():
     except Exception:
         result["llm"] = "not_configured"
 
+    broker_results = {}
+    try:
+        if settings.VAULT_PASSWORD:
+            import asyncio
+            from backend.vault.encrypted_vault import EncryptedVault
+            from backend.brokers.manager import get_connector, list_brokers
+
+            vault = EncryptedVault(settings.VAULT_PASSWORD)
+            for broker_name in list_brokers():
+                try:
+                    conn = get_connector(broker_name, vault, paper=True)
+                    ok = await asyncio.wait_for(conn.test_connection(), timeout=5.0)
+                    broker_results[broker_name] = "ok" if ok else "unreachable"
+                except asyncio.TimeoutError:
+                    broker_results[broker_name] = "timeout"
+                except Exception as broker_e:
+                    broker_results[broker_name] = f"error: {str(broker_e)[:40]}"
+    except Exception:
+        broker_results = {"error": "vault unavailable"}
+
+    result["brokers"] = broker_results
+
     return result

@@ -29,6 +29,7 @@ const useDashboardStore = create(
       dbStatus: 'unknown',
       vaultStatus: 'unknown',
       llmStatus: 'unknown',
+      brokersStatus: null,
       _refreshInterval: null,
 
       loading: false,
@@ -122,6 +123,7 @@ const useDashboardStore = create(
             dbStatus: data.db === 'ok' ? 'ok' : 'error',
             vaultStatus: data.vault,
             llmStatus: data.llm,
+            brokersStatus: data.brokers ?? null,
           });
         } catch {
           set({ backendStatus: 'disconnected', dbStatus: 'error' });

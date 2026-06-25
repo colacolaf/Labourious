@@ -40,3 +40,11 @@ def test_health_full_returns_all_subsystems(client):
     assert "db" in data
     assert "vault" in data
     assert "llm" in data
+
+
+def test_health_full_includes_broker_status(client):
+    resp = client.get("/api/health/full")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "brokers" in data
+    assert isinstance(data["brokers"], dict)
