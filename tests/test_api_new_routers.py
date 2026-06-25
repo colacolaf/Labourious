@@ -32,10 +32,9 @@ def test_trades_list():
     assert isinstance(r.json(), list)
 
 
-def test_trades_export_csv():
+def test_trades_export_csv_requires_auth():
     r = client.get("/api/trades/export")
-    assert r.status_code == 200
-    assert "text/csv" in r.headers["content-type"]
+    assert r.status_code in (401, 403)
 
 
 def test_dashboard_summary():

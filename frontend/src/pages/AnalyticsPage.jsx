@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import useAnalyticsStore from '../stores/analytics.store';
 import useAgentsStore from '../stores/agents.store';
 import { useWebSocketStore } from '../stores/websocket.store';
+import { tradesApi } from '../utils/api-client';
 import EquityChart from '../components/Analytics/EquityChart';
 import AgentLeaderboard from '../components/Analytics/AgentLeaderboard';
 import CorrelationMatrix from '../components/Analytics/CorrelationMatrix';
@@ -141,6 +142,21 @@ export default function AnalyticsPage() {
       <div style={sectionStyle}>
         <div style={sectionHeader}>
           <span>AGENT LEADERBOARD</span>
+          <button
+            onClick={() => tradesApi.export()}
+            style={{
+              background: 'none',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--font-size-xs)',
+              cursor: 'pointer',
+              padding: '2px 8px',
+              borderRadius: 'var(--radius-sm)',
+            }}
+          >
+            Export CSV
+          </button>
         </div>
         <AgentLeaderboard
           rows={leaderboard}

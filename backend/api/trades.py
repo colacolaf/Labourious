@@ -1,14 +1,15 @@
 import csv
 import io
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
-from backend.database.models import Trade, TradeStatus, TradeSide
+from backend.database.models import Trade, TradeStatus, TradeSide, Agent, User
 from backend.database.db import get_db_session
+from backend.auth.dependencies import get_current_user
 from backend.config import settings
 
 router = APIRouter(prefix="/api/trades", tags=["trades"])
@@ -56,28 +57,47 @@ async def list_trades(
 
 
 @router.get("/export")
-async def export_trades_csv(agent_id: Optional[int] = Query(None)):
-    """Export trades as CSV."""
+async def export_trades_csv(
+    agent_id: Optional[int] = Query(None),
+    current_user: User = Depends(get_current_user),
+):
+    """Export trades as CSV scoped to current user's agents. Legacy agents (user_id IS NULL) included."""
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "id", "agent_id", "symbol", "side", "status", "entry_price",
+        "exit_price", "quantity", "pnl", "pnl_pct", "fees", "is_paper",
+        "entry_reason", "exit_reason", "opened_at", "closed_at",
+    ])
+
     with get_db_session(settings.DATABASE_URL) as session:
-        query = select(Trade).order_by(Trade.opened_at.desc())
+        query = (
+            select(Trade)
+            .join(Agent, Trade.agent_id == Agent.id)
+            .where(or_(Agent.user_id == current_user.id, Agent.user_id.is_(None)))
+            .order_by(Trade.opened_at.desc())
+        )
         if agent_id:
             query = query.where(Trade.agent_id == agent_id)
         result = session.execute(query)
         trades = result.scalars().all()
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["id", "agent_id", "symbol", "side", "status", "entry_price",
-                     "exit_price", "quantity", "pnl", "pnl_pct", "opened_at", "closed_at"])
-    for t in trades:
-        writer.writerow([t.id, t.agent_id, t.symbol, t.side, t.status, t.entry_price,
-                         t.exit_price, t.quantity, t.pnl, t.pnl_pct, t.opened_at, t.closed_at])
+        for t in trades:
+            writer.writerow([
+                t.id, t.agent_id, t.symbol,
+                t.side.value if hasattr(t.side, 'value') else t.side,
+                t.status.value if hasattr(t.status, 'value') else t.status,
+                t.entry_price, t.exit_price, t.quantity, t.pnl, t.pnl_pct,
+                t.fees, t.is_paper,
+                t.entry_reason or "", t.exit_reason or "",
+                t.opened_at.isoformat() if t.opened_at else "",
+                t.closed_at.isoformat() if t.closed_at else "",
+            ])
 
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=trades.csv"},
+        headers={"Content-Disposition": "attachment; filename=labourious_trades.csv"},
     )
 
 

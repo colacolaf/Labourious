@@ -104,6 +104,20 @@ export const tradesApi = {
   list: (params) => apiClient.get('/api/trades', { params }),
   get: (id) => apiClient.get(`/api/trades/${id}`),
   getByAgent: (agentId, params) => apiClient.get(`/api/agents/${agentId}/trades`, { params }),
+  export: (agentId = null) => {
+    const params = agentId ? `?agent_id=${agentId}` : '';
+    const token = localStorage.getItem('auth_access_token');
+    return fetch(`${API_BASE_URL}/api/trades/export${params}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).then((r) => r.blob()).then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'labourious_trades.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  },
 };
 
 export const performanceApi = {
