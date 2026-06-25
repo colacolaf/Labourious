@@ -65,26 +65,25 @@ export default function AgentsStep() {
     setLoading(true);
     setError('');
     const mode = TRADING_MODES.find((m) => m.id === modeId);
-    try {
-      const toHire = TEMPLATES.filter((t) => selected.has(t.id));
-      await Promise.all(
-        toHire.map((t) =>
-          agentsApi.create({
-            name: t.name,
-            strategy_type: t.strategy_type,
-            strategy_config: t.strategy_config,
-            risk_config: {},
-            is_paper_trading: mode.is_paper_trading,
-            execution_mode: mode.execution_mode,
-          })
-        )
-      );
-      submitWizard();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
+    const toHire = TEMPLATES.filter((t) => selected.has(t.id));
+    const results = await Promise.allSettled(
+      toHire.map((t) =>
+        agentsApi.create({
+          name: t.name,
+          strategy_type: t.strategy_type,
+          strategy_config: t.strategy_config,
+          risk_config: {},
+          is_paper_trading: mode.is_paper_trading,
+          execution_mode: mode.execution_mode,
+        })
+      )
+    );
+    const failed = results.filter((r) => r.status === 'rejected');
+    if (failed.length > 0) {
+      setError(`${failed.length} agent(s) failed to create — you can add them from Control Room`);
     }
+    setLoading(false);
+    submitWizard();
   }
 
   function handleSkip() {
