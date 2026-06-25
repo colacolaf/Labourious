@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import useWizardStore from '../../stores/wizard.store';
+import { settingsApi } from '../../utils/api-client';
 
 const SLIDERS = [
   { key: 'dayTrading', label: 'Day Trading' },
@@ -18,9 +19,18 @@ export default function AllocationStep() {
     setValues((prev) => ({ ...prev, [key]: Number(val) }));
   }
 
-  function handleNext() {
+  async function handleNext() {
     if (!valid) return;
     setFormData('allocation', values);
+    try {
+      await settingsApi.patchAllocation({
+        day_trading: values.dayTrading,
+        swing_trading: values.swingTrading,
+        long_term: values.longTerm,
+      });
+    } catch (e) {
+      console.warn('Allocation save failed:', e.message);
+    }
     nextStep();
   }
 
