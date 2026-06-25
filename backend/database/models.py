@@ -101,6 +101,7 @@ class Agent(Base):
     check_frequency = Column(Integer, default=300)
     paper_trading_balance = Column(Float, default=100000.0)
     consecutive_losses = Column(Integer, default=0)
+    consecutive_broker_errors = Column(Integer, default=0, nullable=False)
     grid_col = Column(Integer, default=0)
     grid_row = Column(Integer, default=0)
     use_local_llm = Column(Boolean, default=True)
