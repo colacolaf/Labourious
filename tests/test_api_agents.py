@@ -396,6 +396,26 @@ class TestAgentResponseFields:
         assert "last_heartbeat" in a  # may be None
 
 
+class TestEmergencyStop:
+    def test_emergency_stop_pauses_all_active_agents(self, client, agent_factory):
+        """POST /api/agents/emergency-stop sets all active agents to PAUSED and returns stopped count."""
+        agent_factory(name="emergency_agent_1", symbol="BTC/USD", status=AgentStatus.RUNNING, is_active=True)
+        agent_factory(name="emergency_agent_2", symbol="ETH/USD", status=AgentStatus.IDLE, is_active=True)
+        resp = client.post("/api/agents/emergency-stop")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "stopped" in data
+        assert isinstance(data["stopped"], int)
+        assert data["stopped"] == 2
+        assert data["status"] == "all_agents_paused"
+
+    def test_emergency_stop_returns_zero_when_no_agents(self, client):
+        """POST /api/agents/emergency-stop returns stopped=0 when no active agents."""
+        resp = client.post("/api/agents/emergency-stop")
+        assert resp.status_code == 200
+        assert resp.json()["stopped"] == 0
+
+
 class TestVaultCheck:
     def test_vault_check_broker_returns_has_credentials(self, client):
         """GET /api/agents/brokers/vault-check/alpaca returns has_credentials field."""

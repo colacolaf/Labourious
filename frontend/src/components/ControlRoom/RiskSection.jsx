@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../Common/Button';
 import { Spinner } from '../Common/Spinner';
 import useControlRoomStore from '../../stores/controlRoom.store';
+import { agentsApi } from '../../utils/api-client';
 
 const card = {
   background: 'var(--color-bg-card)',
@@ -23,6 +24,8 @@ export default function RiskSection() {
   const { settings, loading, saving, saveAllocation } = useControlRoomStore();
   const alloc = settings?.allocation;
 
+  const [stopping, setStopping] = useState(false);
+  const [stopResult, setStopResult] = useState(null);
   const [drawdown, setDrawdown] = useState(0.25);
   const [posSize, setPosSize] = useState(0.05);
   const [maxAgents, setMaxAgents] = useState(20);
@@ -55,6 +58,20 @@ export default function RiskSection() {
   };
 
   const pct = (v) => `${(v * 100).toFixed(0)}%`;
+
+  const handleEmergencyStop = async () => {
+    if (!window.confirm('EMERGENCY STOP: pause all agents immediately?')) return;
+    setStopping(true);
+    setStopResult(null);
+    try {
+      const result = await agentsApi.emergencyStop();
+      setStopResult(result);
+    } catch (err) {
+      setStopResult({ error: err.message });
+    } finally {
+      setStopping(false);
+    }
+  };
 
   return (
     <form onSubmit={handleSave} style={card}>
@@ -118,6 +135,28 @@ export default function RiskSection() {
       <Button type="submit" disabled={saving}>
         {saving ? 'Saving…' : 'Save Risk Settings'}
       </Button>
+
+      <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-6)', paddingTop: 'var(--space-4)' }}>
+        <button
+          type="button"
+          onClick={handleEmergencyStop}
+          disabled={stopping}
+          style={{
+            width: '100%', padding: 'var(--space-3)',
+            background: stopping ? 'var(--color-bg-tertiary)' : 'var(--color-accent-danger, #ff4444)',
+            color: '#fff', border: 'none', fontFamily: 'var(--font-mono)', fontWeight: 700,
+            fontSize: 'var(--font-size-sm)', cursor: stopping ? 'not-allowed' : 'pointer',
+            borderRadius: 'var(--radius-sm)', letterSpacing: '0.08em',
+          }}
+        >
+          {stopping ? 'STOPPING...' : 'EMERGENCY STOP ALL AGENTS'}
+        </button>
+        {stopResult && (
+          <div style={{ marginTop: 'var(--space-2)', fontFamily: 'var(--font-mono)', fontSize: 'var(--font-size-xs)', color: stopResult.error ? 'var(--color-accent-danger)' : 'var(--color-accent-primary)' }}>
+            {stopResult.error ? `Error: ${stopResult.error}` : `Stopped ${stopResult.stopped} agents.`}
+          </div>
+        )}
+      </div>
     </form>
   );
 }

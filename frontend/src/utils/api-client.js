@@ -97,6 +97,7 @@ export const agentsApi = {
   start: (id) => apiClient.post(`/api/agents/${id}/start`),
   stop: (id) => apiClient.post(`/api/agents/${id}/stop`),
   pause: (id) => apiClient.post(`/api/agents/${id}/pause`),
+  emergencyStop: () => apiClient.post('/api/agents/emergency-stop'),
 };
 
 export const tradesApi = {

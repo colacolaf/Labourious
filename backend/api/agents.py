@@ -195,6 +195,49 @@ async def vault_check_broker(
         return {"broker": broker, "has_credentials": False, "required_keys": required_keys, "error": "vault access failed"}
 
 
+@router.post("/emergency-stop")
+async def emergency_stop_all(
+    current_user: User = Depends(get_current_user),
+):
+    """Pause all running/idle agents immediately. Removes scheduler jobs."""
+    from sqlalchemy import select as sa_select
+    from backend.api.websocket import manager as ws_manager
+
+    with get_db_session(settings.DATABASE_URL) as db:
+        agents = db.execute(
+            sa_select(Agent).where(Agent.is_active == True)
+        ).scalars().all()
+
+        stopped = 0
+        for agent in agents:
+            if agent.status in (AgentStatus.RUNNING, AgentStatus.IDLE, AgentStatus.ERROR):
+                agent.status = AgentStatus.PAUSED
+                db.add(agent)
+                stopped += 1
+
+        db.commit()
+
+        # Remove APScheduler jobs if orchestrator is running
+        try:
+            from backend.main import _orchestrator
+            if _orchestrator and _orchestrator.scheduler.running:
+                for agent in agents:
+                    try:
+                        _orchestrator.scheduler.remove_job(f"agent_{agent.id}")
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        await ws_manager.broadcast({
+            "event": "emergency_stop_all",
+            "stopped_count": stopped,
+            "timestamp": datetime.utcnow().isoformat(),
+        })
+
+        return {"stopped": stopped, "status": "all_agents_paused"}
+
+
 @router.get("/{agent_id}", response_model=AgentResponse)
 async def get_agent(
     agent_id: int,
