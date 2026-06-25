@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import useWizardStore from '../../stores/wizard.store';
-import { brokersApi } from '../../utils/api-client';
+import { brokersApi, vaultApi } from '../../utils/api-client';
 
 const EXCHANGES = ['alpaca', 'binance', 'kraken', 'ibkr'];
 
@@ -20,6 +20,10 @@ export default function BrokerStep() {
     setLoading(true);
     setError('');
     try {
+      await Promise.all([
+        vaultApi.setKey({ key: `${exchange}_api_key`, value: apiKey.trim() }),
+        vaultApi.setKey({ key: `${exchange}_secret`, value: secret.trim() }),
+      ]);
       await brokersApi.connect({ exchange, api_key: apiKey, api_secret: secret, is_paper: isPaper });
       setFormData('broker', { exchange, isPaper });
       nextStep();
