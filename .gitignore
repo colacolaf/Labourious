@@ -69,3 +69,5 @@ Thumbs.db
 .claude/
 .agents/
 .worktrees/
+.aider*
+!.aider.conf.yml

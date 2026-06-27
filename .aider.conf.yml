@@ -1,0 +1,34 @@
+# ==============================================================================
+# .aider.conf.yml - QUANT TRADING AI WARROOM OPERATIONAL CONFIGURATION
+# ==============================================================================
+
+# Core Engine Target
+model: deepseek/deepseek-v4-pro
+
+# ------------------------------------------------------------------------------
+# 1. AUTOMATIC SKILL LOAD MATRIX (Read-Only Context Integration)
+# ------------------------------------------------------------------------------
+read:
+  # --- Core Custom Swarm Framework ---
+  - aider_skills/caveman.md          # Token-compression communication mode
+  - aider_skills/superpowers.md      # Permission boundaries & orchestration workflow
+  - aider_skills/rtk.md              # Token killer & output noise filter
+  - aider_skills/ponytail.md         # Lazy senior dev ladder — minimum viable code
+  - aider_skills/headroom.md         # Context window budget & token balancing
+  - aider_skills/ruflo.md            # Multi-agent orchestration bridge & loop guard
+
+  # --- Security & High-Consequence Financial Skills ---
+  - aider_skills/least_privilege.md  # IAM scoping & minimum permission enforcement
+  - aider_skills/circuit_breakers.md # Panic protocols — PnL breakers & loop guards
+  - aider_skills/secret_scrubbing.md # API key & credential leak prevention
+  - aider_skills/dry_run_safety.md   # Simulated orders default, production opt-in only
+
+# ------------------------------------------------------------------------------
+# 2. SANDBOX CONTAINMENT & CONTROL FLAGS
+# ------------------------------------------------------------------------------
+repo-map: true
+allow-commands: false
+no-auto-commits: true
+dry-run: false
+auto-test: true
+test-cmd: pytest tests/test_sandbox.py --verbose
