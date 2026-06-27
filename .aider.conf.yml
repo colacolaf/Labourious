@@ -26,9 +26,8 @@ read:
 # ------------------------------------------------------------------------------
 # 2. SANDBOX CONTAINMENT & CONTROL FLAGS
 # ------------------------------------------------------------------------------
-repo-map: true
-allow-commands: false
-no-auto-commits: true
-dry-run: false
-auto-test: true
+map-tokens: 1024          # repo map size in tokens (0 = disable)
+auto-commits: false       # never auto-commit; review before committing
+dry-run: false            # write files for real; set true to preview only
+auto-test: true           # run test-cmd after each edit
 test-cmd: pytest tests/test_sandbox.py --verbose
