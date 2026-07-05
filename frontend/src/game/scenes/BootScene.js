@@ -25,5 +25,6 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     EventBus.emit('scene-ready', this);
+    this.scene.start('WarroomScene', { map: this.registry.get('map') });
   }
 }

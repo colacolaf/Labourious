@@ -10,13 +10,13 @@ export default function WarroomPhaserGame({ room, map, onAgentClick }) {
   // isn't already tracked in the ref, and always tear it down on cleanup.
   useLayoutEffect(() => {
     if (gameRef.current === null) {
-      gameRef.current = createGame(containerId);
+      gameRef.current = createGame(containerId, map);
     }
     return () => {
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };
-  }, [containerId]);
+  }, [containerId, map]);
 
   useEffect(() => {
     if (!onAgentClick) return undefined;
