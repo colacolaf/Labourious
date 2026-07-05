@@ -356,7 +356,7 @@ git commit -m "feat(11.6): Day trading room — cubicle layout"
   - `class TradingAgent` — `id`, `sprite`, `onTrade()`, `onProcessing()`, `setPaused()`, `setConfidence()`, `showApproval()`, `destroy()`
   - `useWarroomAgents(room, tradingAgents: TradingAgent[])` — maps API agents to slots by index then id
 
-- [ ] **Step 1: Implement TradingAgent.ts**
+- [x] **Step 1: Implement TradingAgent.ts**
 
 ```typescript
 export class TradingAgent {
@@ -382,11 +382,11 @@ export class TradingAgent {
 }
 ```
 
-- [ ] **Step 2: Default appearances** — ship 7/6/13 preset LPC outfits per room in `frontend/src/data/default-agent-appearances.json` until Task 10 customization lands.
+- [x] **Step 2: Default appearances** — ship 7/6/13 preset LPC outfits per room in `frontend/src/data/default-agent-appearances.json` until Task 10 customization lands.
 
-- [ ] **Step 3: WarroomScene spawn loop** — on `scene-ready`, fetch agents, composite textures, place at `agentSlots[i]`, register click → `EventBus.emit('agent-clicked', { agentId })`.
+- [x] **Step 3: WarroomScene spawn loop** — on `scene-ready`, fetch agents, composite textures, place at `agentSlots[i]`, register click → `EventBus.emit('agent-clicked', { agentId })`.
 
-- [ ] **Step 4: Extend useWarroomAgents.js** — replace Pixi `agentSprites` array with `TradingAgent[]`; handle events:
+- [x] **Step 4: Extend useWarroomAgents.js** — replace Pixi `agentSprites` array with `TradingAgent[]`; handle events:
 
 | WS key | Action |
 |--------|--------|
@@ -395,11 +395,11 @@ export class TradingAgent {
 | `trade_approval_needed` | `showApproval(timeoutSeconds)` |
 | `bodyguard_pause_all` | `setPaused(true)` on all |
 
-- [ ] **Step 5: Wire agent-clicked** in warroom pages — open existing `AgentInspector` via `useAgentsStore.selectAgent(id)` + `useUIStore.openInspector()`.
+- [x] **Step 5: Wire agent-clicked** in warroom pages — open existing `AgentInspector` via `useAgentsStore.selectAgent(id)` + `useUIStore.openInspector()`.
 
-- [ ] **Step 6: Integration test** — with backend running, start agent trade → bubble appears above correct sprite.
+- [x] **Step 6: Integration test** — with backend running, start agent trade → bubble appears above correct sprite.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/components/Warroom/sprites/ frontend/src/components/Warroom/hooks/ frontend/src/game/scenes/WarroomScene.ts frontend/src/data/default-agent-appearances.json
