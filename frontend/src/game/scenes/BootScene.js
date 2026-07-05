@@ -11,7 +11,7 @@ export class BootScene extends Phaser.Scene {
 
   preload() {
     // office.png doesn't exist yet (added in a later task) — don't let a 404 crash the boot.
-    this.load.on('loaderror', (file) => {
+    this.load.once('loaderror', (file) => {
       if (file.key === TILESET_KEY) {
         console.warn(`[BootScene] tileset not found at ${TILESET_PATH}, continuing without it`);
       }
