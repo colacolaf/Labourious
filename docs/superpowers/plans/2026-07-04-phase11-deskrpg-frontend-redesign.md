@@ -292,17 +292,17 @@ git commit -m "feat(11.4): Investment room — DeskRPG office clone"
 - **Posters:** wall-mounted sector rotation poster objects (graphic rectangles with ticker text).
 - 6 `agentSlots`, seated micro-wander ±8px.
 
-- [ ] **Step 1: Extend WarroomScene** — accept `roomTheme: 'investment' | 'sector' | 'cubicle'` prop via EventBus; sector theme swaps floor/wall tint tables.
+- [x] **Step 1: Extend WarroomScene** — accept `roomTheme: 'investment' | 'sector' | 'cubicle'` prop via EventBus; sector theme swaps floor/wall tint tables.
 
-- [ ] **Step 2: Author `sector-room.json`** with white palette indices + object placements per spec.
+- [x] **Step 2: Author `sector-room.json`** with white palette indices + object placements per spec.
 
-- [ ] **Step 3: Add sector-only graphics** in `WarroomScene.drawSectorDecor()` — hand-drawn whiteboard lines, paper piles (Phaser Graphics).
+- [x] **Step 3: Add sector-only graphics** in `WarroomScene.drawSectorDecor()` — hand-drawn whiteboard lines, paper piles (Phaser Graphics).
 
-- [ ] **Step 4: Wire WarroomSwing.jsx** — `map="sector-room" room="swing_trading"`.
+- [x] **Step 4: Wire WarroomSwing.jsx** — `map="sector-room" room="swing_trading"`.
 
-- [ ] **Step 5: Visual QA** — room reads as bright analyst floor, not dark retro pit.
+- [x] **Step 5: Visual QA** — room reads as bright analyst floor, not dark retro pit.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/public/maps/sector-room.json frontend/src/game/scenes/palettes/ frontend/src/pages/WarroomSwing.jsx
