@@ -74,3 +74,5 @@ Thumbs.db
 
 # AI assistant artifacts
 context-snapshot.json
+state.md
+session-log.md
