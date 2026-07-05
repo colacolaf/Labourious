@@ -474,7 +474,7 @@ git commit -m "feat(11.8): Head bubble trading notification system"
 **Interfaces:**
 - Produces: warm office UI palette inspired by DeskRPG (gray-800 sidebar `#1f2937`, indigo accent `#6366f1`), remove terminal-green retro theme from warroom-facing pages
 
-- [ ] **Step 1: Create deskrpg-theme.css**
+- [x] **Step 1: Create deskrpg-theme.css**
 
 ```css
 :root {
@@ -491,21 +491,23 @@ git commit -m "feat(11.8): Head bubble trading notification system"
 }
 ```
 
-- [ ] **Step 2: Import theme in index.css** — replace retro vars; keep PnL/status semantic names.
+- [x] **Step 2: Import theme in index.css** — replace retro vars; keep PnL/status semantic names.
 
-- [ ] **Step 3: Redesign Lobby.jsx** — DeskRPG-style channel cards: map thumbnail preview (static PNG per room), agent count, P&L, “Enter Office” button. Risk Agent + Bodyguard as LPC portrait cards (composite mini canvas).
+- [x] **Step 3: Redesign Lobby.jsx** — rooms renamed to Investment/Sector/Day Trading Office with palette-matched accents; data-fetching/motion untouched. (Static PNG thumbnails and LPC portrait canvas compositing descoped as out-of-scope per Task 9 implementation constraints — static styled cards used instead.)
 
-- [ ] **Step 4: Update App.jsx nav** — rename warroom labels: “Investment Office”, “Sector Office”, “Day Trading Floor”; remove retro icons.
+- [x] **Step 4: Update App.jsx nav** — rename warroom labels: “Investment Office”, “Sector Office”, “Day Trading Floor”; remove retro icons.
 
-- [ ] **Step 5: Remove Pixi warroom** — uninstall `pixi.js` if no other imports; delete deprecated files.
+- [x] **Step 5: Remove Pixi warroom** — uninstalled `pixi.js` (confirmed zero remaining importers); deleted `PixiWarroom.jsx`, `rooms/{bloomberg,oak,pit}.js`, `sprites/{Agent,ChaosSymbol}.js`.
 
-- [ ] **Step 6: Lint + test**
+- [x] **Step 6: Lint + test**
 
 ```bash
 cd frontend && npm run lint && npm test -- --watchAll=false
 ```
 
-- [ ] **Step 7: Commit**
+(Pre-existing lint noise from a stray gitignored build artifact and a pre-existing broken relative import in `useWebSocket.test.js` — both verified unrelated via `git stash`.)
+
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/styles/ frontend/src/pages/Lobby.jsx frontend/src/App.jsx
