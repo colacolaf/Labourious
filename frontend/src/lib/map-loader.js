@@ -15,6 +15,7 @@
 // }
 import { getObjectFootprint } from './object-types';
 import { SECTOR_PALETTE } from '../game/scenes/palettes/sector-palette';
+import { CUBICLE_PALETTE } from '../game/scenes/palettes/cubicle-palette';
 
 export const TILE_SIZE = 32;
 
@@ -24,7 +25,7 @@ const TILE_KEY_BY_INDEX = { 1: 'floor', 2: 'wall', 7: 'door', 12: 'carpet' };
 const PALETTES = {
   investment: { floor: 0x8b8378, wall: 0x4a4a5e, door: 0xa39a8c, carpet: 0x7a7368 },
   sector: SECTOR_PALETTE,
-  cubicle: { floor: 0x6b7280, wall: 0x9ca3af, door: 0x3b82f6, carpet: 0x5b6370 },
+  cubicle: CUBICLE_PALETTE,
 };
 const DEFAULT_PALETTE = PALETTES.investment;
 

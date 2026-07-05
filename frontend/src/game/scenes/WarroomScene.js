@@ -2,11 +2,13 @@ import Phaser from 'phaser';
 import { EventBus } from '../EventBus';
 import { loadMapIntoScene, TILE_SIZE } from '../../lib/map-loader';
 import { SECTOR_ACCENT } from './palettes/sector-palette';
+import { CUBICLE_PALETTE, CUBICLE_ACCENT } from './palettes/cubicle-palette';
 
 const MAP_COLS = 40;
 const MAP_ROWS = 30;
 const TILESET_KEY = 'office-tiles';
 const SECTOR_TICKERS = ['XLF', 'XLE', 'XLK'];
+const MONITOR_FLICKER_FRAMES = 40; // cubicle theme only — see drawCubicleDecor
 
 // Renders one warroom's floor/walls/furniture from its static map JSON (frontend/public/maps/*.json).
 // Agent sprites are out of scope here (Task 7) — map-loaded seat/spawn data is emitted on the
@@ -18,6 +20,8 @@ export class WarroomScene extends Phaser.Scene {
 
   init(data) {
     this.mapName = data?.map || 'investment-room';
+    this.frameCount = 0; // cubicle theme only — drives monitor_wall flicker in update()
+    this.monitorGlows = [];
   }
 
   async create() {
@@ -41,11 +45,25 @@ export class WarroomScene extends Phaser.Scene {
     if (this.roomTheme === 'sector') {
       this.drawSectorDecor(mapData);
     }
+    if (this.roomTheme === 'cubicle') {
+      this.drawCubicleDecor(mapData);
+    }
 
     this.cameras.main.setZoom(2);
     this.cameras.main.setBounds(0, 0, MAP_COLS * TILE_SIZE, MAP_ROWS * TILE_SIZE);
 
     EventBus.emit('map-loaded', { spawnPoints, seatMap });
+  }
+
+  // Cubicle theme only: called every frame by Phaser. Only does work when a cubicle map
+  // actually populated monitorGlows — investment/sector rooms never touch this branch.
+  update() {
+    if (this.monitorGlows.length === 0) return;
+    this.frameCount += 1;
+    if (this.frameCount % MONITOR_FLICKER_FRAMES !== 0) return;
+    this.monitorFlickerOn = !this.monitorFlickerOn;
+    const alpha = this.monitorFlickerOn ? 0.9 : 0.35;
+    this.monitorGlows.forEach((gfx) => gfx.setAlpha(alpha));
   }
 
   // Sector theme only: hand-drawn whiteboard chart doodles + ticker labels, and paper-pile
@@ -83,5 +101,34 @@ export class WarroomScene extends Phaser.Scene {
       decal.fillStyle(0xe5e7eb, 1);
       decal.fillRect(x - 7, y - 6, 14, 6);
     });
+  }
+
+  // Cubicle theme only: shrink cubicle_wall's full-tile rect (painted by map-loader.js) down to
+  // "50% visual height" by painting over its top half with the carpet color, and add a blue
+  // glow overlay on each monitor_wall tile that update() flickers every 40 frames.
+  drawCubicleDecor(mapData) {
+    const cubicleWalls = (mapData.objects || []).filter((o) => o.type === 'cubicle_wall');
+    cubicleWalls.forEach((wallObj) => {
+      const x = wallObj.col * TILE_SIZE;
+      const y = wallObj.row * TILE_SIZE;
+      const depth = wallObj.row + 0.5; // ponytail: fractional so this never ties row+1's real-object depth band
+
+      const halfHeightCut = this.add.graphics().setDepth(depth);
+      halfHeightCut.fillStyle(CUBICLE_PALETTE.carpet, 1);
+      halfHeightCut.fillRect(x, y, TILE_SIZE, TILE_SIZE / 2);
+    });
+
+    const monitors = (mapData.objects || []).filter((o) => o.type === 'monitor_wall');
+    monitors.forEach((monitor) => {
+      const x = monitor.col * TILE_SIZE + TILE_SIZE / 2;
+      const y = monitor.row * TILE_SIZE + TILE_SIZE / 2;
+      const depth = monitor.row + 0.5; // ponytail: see cubicle_wall depth comment above
+
+      const glow = this.add.graphics().setDepth(depth);
+      glow.fillStyle(CUBICLE_ACCENT, 1);
+      glow.fillRect(x - TILE_SIZE / 2 + 3, y - TILE_SIZE / 2 + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+      this.monitorGlows.push(glow);
+    });
+    this.monitorFlickerOn = true;
   }
 }
