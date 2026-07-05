@@ -417,7 +417,7 @@ git commit -m "feat(11.7): TradingAgent LPC sprites + backend WS binding"
 **Interfaces:**
 - Produces: `HeadBubble.show(type, payload)` with queue support (max 2 stacked bubbles)
 
-- [ ] **Step 1: Implement HeadBubble.ts** — Phaser Container above sprite (`y - 52`):
+- [x] **Step 1: Implement HeadBubble.ts** — Phaser Container above sprite (`y - 52`):
 
 ```typescript
 type BubbleType = 'trade_win' | 'trade_loss' | 'approval' | 'paused' | 'confidence' | 'processing';
@@ -433,7 +433,7 @@ Visual style (NOT retro):
 - Font: `11px JetBrains Mono` (load via CSS font family in Phaser text config)
 - No scanlines, no Press Start 2P
 
-- [ ] **Step 2: Map LABOURIOUS_FRONTEND.md notifications**
+- [x] **Step 2: Map LABOURIOUS_FRONTEND.md notifications**
 
 ```typescript
 onTrade(symbol: string, action: string, pnl: number) {
@@ -445,15 +445,15 @@ onTrade(symbol: string, action: string, pnl: number) {
 }
 ```
 
-- [ ] **Step 3: Approval bubble** — sync with existing `ApprovalDialog.jsx`: when dialog open, bubble shows `⚠️ 30s` countdown; on approve/reject, clear bubble.
+- [x] **Step 3: Approval bubble** — sync with existing `ApprovalDialog.jsx`: when dialog open, bubble shows `⚠️ 30s` countdown; on approve/reject, clear bubble.
 
-- [ ] **Step 4: Paused state** — persistent `🔒 {reason}` bubble until `setPaused(false)`.
+- [x] **Step 4: Paused state** — persistent `🔒 {reason}` bubble until `setPaused(false)`.
 
-- [ ] **Step 5: Confidence flash** — `show('confidence', '${score}%', { durationMs: 1500 })` + reuse Task 5E tint thresholds on sprite.
+- [x] **Step 5: Confidence flash** — `show('confidence', '${score}%', { durationMs: 1500 })` + reuse Task 5E tint thresholds on sprite.
 
-- [ ] **Step 6: Demo mode** — when `window.__LABOURIOUS_DEMO__`, random bubbles using room symbol lists (same as old Pixi plan).
+- [x] **Step 6: Demo mode** — when `window.__LABOURIOUS_DEMO__`, random bubbles using room symbol lists (same as old Pixi plan).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add frontend/src/components/Warroom/sprites/HeadBubble.ts
