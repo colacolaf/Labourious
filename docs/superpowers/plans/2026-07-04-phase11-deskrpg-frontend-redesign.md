@@ -326,15 +326,15 @@ git commit -m "feat(11.5): Sector trading room — white office with whiteboards
 - Optional top “screen wall” strip (5 monitor objects showing live ticker placeholders — flicker every 40 frames).
 - Higher energy than investment room but **not** the old red/black Pit palette.
 
-- [ ] **Step 1: Author `day-trading-room.json`** — cubicle grid, 13 agentSlots, screen-wall objects row at top.
+- [x] **Step 1: Author `day-trading-room.json`** — cubicle grid, 13 agentSlots, screen-wall objects row at top.
 
-- [ ] **Step 2: Implement cubicle theme** in WarroomScene — cool gray carpet `#6b7280`, blue accent `#3b82f6`, cubicle walls at 50% height depth sort.
+- [x] **Step 2: Implement cubicle theme** in WarroomScene — cool gray carpet `#6b7280`, blue accent `#3b82f6`, cubicle walls at 50% height depth sort.
 
-- [ ] **Step 3: Wire WarroomDay.jsx**
+- [x] **Step 3: Wire WarroomDay.jsx**
 
-- [ ] **Step 4: Visual QA** — reads as cubicle farm, distinct from investment + sector rooms.
+- [x] **Step 4: Visual QA** — reads as cubicle farm, distinct from investment + sector rooms.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/public/maps/day-trading-room.json frontend/src/pages/WarroomDay.jsx
