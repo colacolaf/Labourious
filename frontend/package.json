@@ -16,7 +16,6 @@
     "axios": "^1.7.7",
     "framer-motion": "^11.9.0",
     "phaser": "^3.90.0",
-    "pixi.js": "^7.4.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
@@ -65,7 +64,10 @@
       {
         "from": "../backend",
         "to": "backend",
-        "filter": ["**/*.py", "requirements.txt"]
+        "filter": [
+          "**/*.py",
+          "requirements.txt"
+        ]
       },
       {
         "from": "../data",
@@ -80,13 +82,24 @@
       "entitlements": "resources/entitlements.mac.plist",
       "entitlementsInherit": "resources/entitlements.mac.plist",
       "target": [
-        { "target": "dmg", "arch": ["arm64", "x64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
       ]
     },
     "win": {
       "icon": "resources/icon.ico",
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "linux": {

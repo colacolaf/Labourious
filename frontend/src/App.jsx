@@ -138,9 +138,9 @@ function TopBar() {
 const NAV_ITEMS = [
   { label: 'Dashboard', path: '/', icon: '◈', end: true },
   { label: 'Lobby', path: '/lobby', icon: '⬡' },
-  { label: 'Day Trading', path: '/warroom/day', icon: '◉' },
-  { label: 'Swing', path: '/warroom/swing', icon: '◎' },
-  { label: 'Long-Term', path: '/warroom/long', icon: '◌' },
+  { label: 'Day Trading Floor', path: '/warroom/day' },
+  { label: 'Sector Office', path: '/warroom/swing' },
+  { label: 'Investment Office', path: '/warroom/long' },
   { label: 'Analytics', path: '/analytics', icon: '◈' },
   { label: 'New Agent', path: '/agents/new', icon: '✦' },
   { label: 'Trades', path: '/trades', icon: '◇' },
@@ -183,7 +183,7 @@ function Sidebar() {
             transition: 'all 0.12s',
           })}
         >
-          <span style={{ color: 'var(--color-accent-primary)' }}>{item.icon}</span>
+          {item.icon && <span style={{ color: 'var(--color-accent-primary)' }}>{item.icon}</span>}
           {item.label}
         </NavLink>
       ))}

@@ -1,0 +1,53 @@
+/* DeskRPG theme — clean SaaS palette (indigo/gray), replaces retro terminal green/cyan.
+   Semantic variable NAMES are shared with the rest of the app (Dashboard, Analytics,
+   Wizard, Control Room, etc.) — only values live here so every page repaints for free. */
+:root {
+  /* Core palette */
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1f2937;
+  --color-bg-tertiary: #273244;
+  --color-bg-card: #374151;
+  --color-bg-elevated: #4b5563;
+
+  --color-border: #374151;
+  --color-border-subtle: #1f2937;
+  --color-border-bright: #4b5563;
+
+  /* Accent — indigo */
+  --color-accent-primary: #6366f1;
+  --color-accent-secondary: #818cf8;
+  --color-accent-tertiary: #8b5cf6;
+  --color-accent-warning: #f59e0b;
+  --color-accent-danger: #ef4444;
+  --color-accent-success: #22c55e;
+
+  /* Text */
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #111827;
+  --color-text-accent: #818cf8;
+  --color-text-warning: #f59e0b;
+  --color-text-danger: #ef4444;
+
+  /* Agent status colors */
+  --color-agent-running: #22c55e;
+  --color-agent-idle: #9ca3af;
+  --color-agent-paused: #f59e0b;
+  --color-agent-error: #ef4444;
+  --color-agent-stopped: #6b7280;
+
+  /* PnL colors */
+  --color-pnl-positive: #22c55e;
+  --color-pnl-negative: #ef4444;
+  --color-pnl-neutral: #9ca3af;
+
+  /* Typography — keep --font-mono (data tables) defined in index.css */
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Shadows */
+  --shadow-glow-green: 0 0 20px rgba(99, 102, 241, 0.18);
+  --shadow-glow-cyan: 0 0 20px rgba(129, 140, 248, 0.18);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.25);
+  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.35);
+}

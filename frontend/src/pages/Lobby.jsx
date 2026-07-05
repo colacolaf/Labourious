@@ -12,10 +12,12 @@ const card = {
   fontFamily: 'var(--font-mono)',
 };
 
+// Accent colors match each room's in-game palette (see WarroomScene room themes):
+// investment = warm wood, sector = amber whiteboards, day trading = cubicle blue.
 const rooms = [
-  { key: 'long_term',     label: 'The Bloomberg',  path: '/warroom/long',  icon: '◈', accent: '#4a7eba' },
-  { key: 'swing_trading', label: 'The Oak Office', path: '/warroom/swing', icon: '◎', accent: '#CC8833' },
-  { key: 'day_trading',   label: 'The Pit',        path: '/warroom/day',   icon: '◉', accent: '#FF3333' },
+  { key: 'long_term',     label: 'Investment Office',    path: '/warroom/long',  icon: '\u{1F3E2}', accent: '#92400e' },
+  { key: 'swing_trading', label: 'Sector Office',        path: '/warroom/swing', icon: '\u{1F4CA}', accent: '#d97706' },
+  { key: 'day_trading',   label: 'Day Trading Floor',    path: '/warroom/day',   icon: '\u{1F4BB}', accent: '#3b82f6' },
 ];
 
 function RoomScorecard({ room, agents, onEnter }) {
@@ -107,8 +109,8 @@ export default function Lobby() {
       style={{ fontFamily: 'var(--font-mono)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 style={{ color: 'var(--color-accent-primary)', fontSize: 'var(--font-size-2xl)', letterSpacing: '0.1em' }}>
-          ⬡ TRADING WARROOM
+        <h1 style={{ color: 'var(--color-accent-primary)', fontSize: 'var(--font-size-2xl)', letterSpacing: '0.02em', fontFamily: 'var(--font-sans)' }}>
+          Trading Office
         </h1>
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: pnlColor, fontSize: 'var(--font-size-xl)', fontWeight: 700 }}>
@@ -119,13 +121,13 @@ export default function Lobby() {
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        <AgentPanel label="◈ RISK AGENT" agents={agents} accent="var(--color-accent-primary)" />
+        <AgentPanel label="RISK AGENT" agents={agents} accent="var(--color-accent-primary)" />
         <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', flex: 1 }}>
           {rooms.map(r => (
             <RoomScorecard key={r.key} room={r} agents={agents} onEnter={navigate} />
           ))}
         </div>
-        <AgentPanel label="⬡ BODYGUARD" agents={agents} accent="var(--color-accent-secondary)" />
+        <AgentPanel label="BODYGUARD" agents={agents} accent="var(--color-accent-secondary)" />
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
