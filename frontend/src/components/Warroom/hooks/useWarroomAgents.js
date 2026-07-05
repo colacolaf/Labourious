@@ -49,6 +49,10 @@ export function useWarroomAgents(room, agentSprites) {
   }, [agents, agentSprites]);
 
   useEffect(() => {
+    // `window.__LABOURIOUS_DEMO__` is a plain global, not scoped per-mount — reset it up front
+    // so a stale `true` left behind by a previously-mounted room can't leak into this one before
+    // its own 3s "no real events yet" timer has had a chance to run.
+    window.__LABOURIOUS_DEMO__ = false;
     demoTimer.current = setTimeout(() => {
       if (!hasRealEvent.current) window.__LABOURIOUS_DEMO__ = true;
     }, 3000);
@@ -58,11 +62,13 @@ export function useWarroomAgents(room, agentSprites) {
   // Demo mode: no real WS events after 3s (see above) → fake occasional trades so the room
   // isn't static during a standalone demo. Lower priority than the core HeadBubble mechanics —
   // deliberately simple (random sprite, random symbol, random win/loss) rather than any real
-  // scheduling/backend simulation.
+  // scheduling/backend simulation. Gated on `hasRealEvent.current` (not just the global flag) so
+  // a real event arriving mid-interval stops synthetic trades on its next tick even if something
+  // forgot to flip the global back off.
   useEffect(() => {
     const symbols = DEMO_SYMBOLS[room] || DEMO_SYMBOLS.long_term;
     const interval = setInterval(() => {
-      if (!window.__LABOURIOUS_DEMO__ || agentSprites.length === 0) return;
+      if (hasRealEvent.current || !window.__LABOURIOUS_DEMO__ || agentSprites.length === 0) return;
       const sprite = agentSprites[Math.floor(Math.random() * agentSprites.length)];
       if (!sprite?.onTrade) return;
       const symbol = symbols[Math.floor(Math.random() * symbols.length)];
@@ -104,6 +110,7 @@ export function useWarroomAgents(room, agentSprites) {
 
     if ((key === 'agent_update' || key === 'agent_paused') && msg.agent_id) {
       hasRealEvent.current = true;
+      window.__LABOURIOUS_DEMO__ = false;
       const sprite = agentSprites.find((s) => s && s.id === msg.agent_id);
       if (sprite) {
         if (msg.status === 'running' || msg.data?.status === 'processing') sprite.onProcessing();
@@ -117,6 +124,8 @@ export function useWarroomAgents(room, agentSprites) {
     }
 
     if (key === 'bodyguard_pause_all') {
+      hasRealEvent.current = true;
+      window.__LABOURIOUS_DEMO__ = false;
       agentSprites.forEach((sprite) => { if (sprite?.setPaused) sprite.setPaused(true, msg.reason); });
     }
   }, [lastMessage, agentSprites]);

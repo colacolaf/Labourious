@@ -64,23 +64,32 @@ export class HeadBubble {
       persistent: opts.persistent ?? style.persistent ?? false,
       spinner: !!style.spinner,
       countdownSeconds: opts.countdownSeconds ?? null,
+      lastRemaining: null, // throttles countdown redraws in tick() to once per displayed second
       elapsed: 0,
       spinRot: 0,
     };
 
-    const existingIdx = this.active.findIndex((e) => e.type === type);
-    if (existingIdx !== -1) {
-      this.active[existingIdx] = entry;
-      this._render(existingIdx);
+    const activeIdx = this.active.findIndex((e) => e.type === type);
+    if (activeIdx !== -1) {
+      this.active[activeIdx] = entry;
+      this._render(activeIdx);
+      return;
+    }
+    const queueIdx = this.queue.findIndex((e) => e.type === type);
+    if (queueIdx !== -1) {
+      this.queue[queueIdx] = entry; // still waiting — nothing visible to update yet
       return;
     }
 
+    // Anything already queued gets first claim on a free slot — a brand-new type must not cut
+    // in line ahead of what's been waiting longer.
+    this._promote();
     if (this.active.length < this.slots.length) {
       this.active.push(entry);
-      this._render(this.active.length - 1);
     } else {
       this.queue.push(entry);
     }
+    this._renderAll();
   }
 
   clear(type) {
@@ -90,8 +99,16 @@ export class HeadBubble {
       return;
     }
     this.active.splice(idx, 1);
-    if (this.queue.length > 0) this.active.push(this.queue.shift());
+    this._promote();
     this._renderAll();
+  }
+
+  // Drains as many queued entries as fit into free slots — not just one — so multiple
+  // simultaneous expirations (or a clear()) don't starve the queue down one slot at a time.
+  _promote() {
+    while (this.queue.length > 0 && this.active.length < this.slots.length) {
+      this.active.push(this.queue.shift());
+    }
   }
 
   tick(delta) {
@@ -111,8 +128,11 @@ export class HeadBubble {
 
       if (entry.countdownSeconds != null) {
         const remaining = Math.max(0, Math.ceil(entry.countdownSeconds - entry.elapsed / 1000));
-        slot.text.setText(`${entry.label} ${remaining}s`);
-        this._resize(slot, entry, baseY);
+        if (remaining !== entry.lastRemaining) {
+          entry.lastRemaining = remaining;
+          slot.text.setText(`${entry.label} ${remaining}s`);
+          this._resize(slot, entry, baseY);
+        }
         if (remaining <= 0) { entry.expired = true; anyExpired = true; }
       } else if (!entry.persistent) {
         const floatT = Math.min(1, entry.elapsed / entry.durationMs);
@@ -134,9 +154,7 @@ export class HeadBubble {
 
     if (anyExpired) {
       this.active = this.active.filter((e) => !e.expired);
-      if (this.queue.length > 0 && this.active.length < this.slots.length) {
-        this.active.push(this.queue.shift());
-      }
+      this._promote();
       this._renderAll();
     }
   }

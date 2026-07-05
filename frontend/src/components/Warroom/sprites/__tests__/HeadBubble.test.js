@@ -81,3 +81,33 @@ test('persistent non-countdown bubbles (paused) never auto-expire', () => {
   bubble.clear('paused');
   expect(bubble.active).toHaveLength(0);
 });
+
+test('show() called twice for a type already sitting in queue updates it in place, no duplicate', () => {
+  const bubble = new HeadBubble(makeFakeScene(), { x: 0, y: 0 });
+  bubble.show('trade_win', 'A'); // fills slot 0
+  bubble.show('processing', ''); // fills slot 1
+  bubble.show('confidence', '50%'); // slots full -> queued
+  bubble.show('confidence', '90%'); // same type, still queued -> must update, not push a 2nd copy
+
+  expect(bubble.queue).toHaveLength(1);
+  expect(bubble.queue[0].label).toBe('90%');
+
+  bubble.clear('trade_win'); // frees a slot -> promotes the (single, updated) queued entry
+  expect(bubble.active.filter((e) => e.type === 'confidence')).toHaveLength(1);
+  expect(bubble.queue).toHaveLength(0);
+});
+
+test('multiple active entries expiring on the same tick() promote all waiting queue entries, not just one', () => {
+  const bubble = new HeadBubble(makeFakeScene(), { x: 0, y: 0 });
+  bubble.show('trade_win', 'A', { durationMs: 1000 });
+  bubble.show('trade_loss', 'B', { durationMs: 1000 }); // both slots full, both expire together
+  bubble.show('confidence', 'C'); // queued
+  bubble.show('paused', 'D'); // also queued
+
+  expect(bubble.queue).toHaveLength(2);
+
+  bubble.tick(1100); // both active entries cross their 1000ms durationMs in the same tick
+
+  expect(bubble.active.map((e) => e.type)).toEqual(['confidence', 'paused']);
+  expect(bubble.queue).toHaveLength(0);
+});
