@@ -68,6 +68,9 @@ export class WarroomScene extends Phaser.Scene {
       const agentList = Array.isArray(fetchedAgents) ? fetchedAgents : [];
       const slots = mapData.agentSlots || [];
       const count = Math.min(slots.length, agentList.length);
+      if (agentList.length > slots.length) {
+        console.warn(`[WarroomScene] room "${this.roomKey}" has ${agentList.length} agents but only ${slots.length} agentSlots — ${agentList.length - slots.length} agent(s) will not be shown`);
+      }
       for (let i = 0; i < count; i++) {
         const slot = slots[i];
         const agent = agentList[i];

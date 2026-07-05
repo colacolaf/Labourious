@@ -40,6 +40,10 @@ export class TradingAgent {
     const texture = this.scene.textures.addCanvas(key, canvas);
     texture.add(0, 0, 0, DOWN_ROW * FRAME_SIZE, FRAME_SIZE, FRAME_SIZE);
     this.sprite.setTexture(key, 0);
+    // setTexture swaps in the real 64x64 LPC frame but doesn't recompute scale — the initial
+    // setDisplaySize(48,48) baked scale against the 1x1 fallback-char placeholder, so it must
+    // be re-applied here or the sprite renders 64x too large.
+    this.sprite.setDisplaySize(48, 48);
   }
 
   // Minimal trade feedback for now — Task 8 adds the real floating trade-result bubble.

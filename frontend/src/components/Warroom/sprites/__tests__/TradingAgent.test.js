@@ -2,6 +2,10 @@
 // thresholds (ported from AgentInspector.jsx's confColor) and the paused/trade/processing
 // branches. Uses a hand-rolled fake Phaser scene so this stays free of Phaser's jsdom import
 // issues (same reasoning as lib/__tests__/map-loader.test.js).
+jest.mock('../../../../lib/sprite-compositor', () => ({
+  compositeCharacter: jest.fn(() => Promise.resolve()),
+}));
+
 import { TradingAgent } from '../TradingAgent';
 
 function makeFakeScene() {
@@ -50,4 +54,16 @@ test('setPaused toggles alpha; onTrade/onProcessing/destroy do not throw', () =>
 
   agent.destroy();
   expect(agent.sprite.destroy).toHaveBeenCalled();
+});
+
+test('applyAppearance re-applies displaySize after the real texture swap (regression: 1x1 fallback-char bakes a 48x scale)', async () => {
+  const agent = new TradingAgent(makeFakeScene(), 0, 0, 'fallback-char');
+  agent.sprite.setDisplaySize.mockClear();
+
+  await agent.applyAppearance({ bodyType: 'male', layers: {} });
+
+  expect(agent.sprite.setTexture).toHaveBeenCalledWith(expect.stringContaining('agent-appearance-'), 0);
+  // setTexture swaps in the real 64x64 composited frame, which recomputes scale against the
+  // stale 48/1 factor unless setDisplaySize is called again — assert it is.
+  expect(agent.sprite.setDisplaySize).toHaveBeenLastCalledWith(48, 48);
 });

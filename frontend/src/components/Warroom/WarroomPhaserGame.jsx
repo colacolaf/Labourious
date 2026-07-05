@@ -19,6 +19,7 @@ export default function WarroomPhaserGame({ room, map, onAgentClick }) {
     return () => {
       gameRef.current?.destroy(true);
       gameRef.current = null;
+      setAgentSprites([]); // drop refs to now-destroyed TradingAgent instances
     };
   }, [containerId, map, room]);
 
