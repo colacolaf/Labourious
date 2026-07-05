@@ -55,7 +55,7 @@ export class WarroomScene extends Phaser.Scene {
     whiteboards.forEach((wb, i) => {
       const x = wb.col * TILE_SIZE + TILE_SIZE / 2;
       const y = wb.row * TILE_SIZE + TILE_SIZE / 2;
-      const depth = wb.row + 1;
+      const depth = wb.row + 0.5; // ponytail: fractional so this never ties row+1's real-object depth band
 
       const chart = this.add.graphics().setDepth(depth);
       chart.lineStyle(1, SECTOR_ACCENT, 1);
@@ -77,7 +77,7 @@ export class WarroomScene extends Phaser.Scene {
     paperStacks.forEach((ps) => {
       const x = ps.col * TILE_SIZE + TILE_SIZE / 2;
       const y = ps.row * TILE_SIZE + TILE_SIZE / 2;
-      const decal = this.add.graphics().setDepth(ps.row + 1);
+      const decal = this.add.graphics().setDepth(ps.row + 0.5); // ponytail: see whiteboard depth comment above
       decal.fillStyle(0xd1d5db, 1);
       decal.fillRect(x - 9, y - 1, 18, 7);
       decal.fillStyle(0xe5e7eb, 1);
