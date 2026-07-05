@@ -66,6 +66,9 @@ function paintTileLayer(scene, tiles, palette, hasTileset, tilesetKey, depthForR
     (rowTiles || []).forEach((index, col) => {
       if (!index) return; // 0 = EMPTY, nothing to paint
       const key = TILE_KEY_BY_INDEX[index];
+      if (!key) {
+        console.warn(`[map-loader] unrecognized tile index ${index} at col ${col}, row ${row} — falling back to floor color`);
+      }
       const color = palette[key] ?? palette.floor;
       paintTile(scene, col, row, color, hasTileset, tilesetKey, depthForRow(row));
     });

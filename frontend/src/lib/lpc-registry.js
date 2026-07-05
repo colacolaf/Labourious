@@ -31,15 +31,22 @@ const SPRITE_BASE = `${process.env.PUBLIC_URL || ''}/assets/lpc/spritesheets`;
 
 let registryPromise = null;
 
-/** Fetches and caches the LPC registry JSON. Safe to call repeatedly. */
+/** Fetches and caches the LPC registry JSON. Safe to call repeatedly; retries on failure. */
 export function loadRegistry() {
   if (!registryPromise) {
-    registryPromise = fetch(REGISTRY_URL).then((res) => {
-      if (!res.ok) {
-        throw new Error(`Failed to load LPC registry: ${res.status}`);
-      }
-      return res.json();
-    });
+    registryPromise = fetch(REGISTRY_URL)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to load LPC registry: ${res.status}`);
+        }
+        return res.json();
+      })
+      .catch((err) => {
+        // Don't poison the cache with a permanently-rejected promise — clear it so the
+        // next caller gets a fresh fetch attempt instead of a stuck failure for the page's life.
+        registryPromise = null;
+        throw err;
+      });
   }
   return registryPromise;
 }
