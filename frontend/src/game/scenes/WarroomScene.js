@@ -20,7 +20,16 @@ export class WarroomScene extends Phaser.Scene {
 
   async create() {
     const basePath = process.env.PUBLIC_URL || '';
-    const mapData = await fetch(`${basePath}/maps/${this.mapName}.json`).then((res) => res.json());
+    const url = `${basePath}/maps/${this.mapName}.json`;
+    let mapData;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      mapData = await res.json();
+    } catch (err) {
+      console.error(`[WarroomScene] failed to load map "${this.mapName}" from ${url}: ${err.message}`);
+      return; // no map-loaded event — nothing rendered, but failure is visible instead of silent
+    }
 
     const { spawnPoints, seatMap } = loadMapIntoScene(this, mapData, TILESET_KEY);
 
