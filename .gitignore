@@ -71,3 +71,6 @@ Thumbs.db
 .worktrees/
 .aider*
 !.aider.conf.yml
+
+# AI assistant artifacts
+context-snapshot.json
