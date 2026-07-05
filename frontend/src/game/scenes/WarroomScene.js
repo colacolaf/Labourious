@@ -14,9 +14,9 @@ const SECTOR_TICKERS = ['XLF', 'XLE', 'XLK'];
 const MONITOR_FLICKER_FRAMES = 40; // cubicle theme only — see drawCubicleDecor
 
 // Renders one warroom's floor/walls/furniture from its static map JSON (frontend/public/maps/*.json),
-// then spawns one TradingAgent per matched (agentSlot, fetched-agent) pair (Task 7). HeadBubble
-// visuals (trade/processing/approval feedback) are Task 8 — TradingAgent's own methods are
-// minimal stand-ins for now.
+// then spawns one TradingAgent per matched (agentSlot, fetched-agent) pair (Task 7). Each
+// TradingAgent owns a HeadBubble (Task 8) for trade/processing/approval/paused/confidence
+// feedback, ticked every frame from update() below.
 export class WarroomScene extends Phaser.Scene {
   constructor() {
     super('WarroomScene');
@@ -97,9 +97,11 @@ export class WarroomScene extends Phaser.Scene {
     EventBus.emit('agents-spawned', tradingAgents);
   }
 
-  // Cubicle theme only: called every frame by Phaser. Only does work when a cubicle map
-  // actually populated monitorGlows — investment/sector rooms never touch this branch.
-  update() {
+  // Called every frame by Phaser. Ticks each TradingAgent's HeadBubble (Task 8) in all rooms,
+  // then — cubicle theme only — drives the existing monitor_wall flicker below, untouched.
+  update(time, delta) {
+    (this.tradingAgents || []).forEach((agent) => agent.tick(delta));
+
     if (this.roomTheme !== 'cubicle') return;
     if (this.monitorGlows.length === 0) return;
     this.frameCount += 1;

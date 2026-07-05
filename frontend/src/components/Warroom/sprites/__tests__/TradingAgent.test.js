@@ -8,8 +8,27 @@ jest.mock('../../../../lib/sprite-compositor', () => ({
 
 import { TradingAgent } from '../TradingAgent';
 
+// Chainable fake for Phaser Graphics/Text/Container — just enough surface for HeadBubble (see
+// ../HeadBubble.js) to construct and run its show/tick/clear logic without throwing.
+function makeFakeGraphics() {
+  const gfx = {};
+  ['clear', 'setPosition', 'setAlpha', 'setVisible', 'fillStyle', 'fillRoundedRect',
+    'lineStyle', 'strokeRoundedRect', 'setY', 'beginPath', 'strokePath', 'arc']
+    .forEach((m) => { gfx[m] = jest.fn().mockReturnValue(gfx); });
+  return gfx;
+}
+
+function makeFakeText() {
+  const text = { width: 40 };
+  ['setOrigin', 'setVisible', 'setPosition', 'setAlpha', 'setColor', 'setText', 'setY']
+    .forEach((m) => { text[m] = jest.fn().mockReturnValue(text); });
+  return text;
+}
+
 function makeFakeScene() {
   const sprite = {
+    x: 0,
+    y: 0,
     setOrigin: jest.fn().mockReturnThis(),
     setDisplaySize: jest.fn().mockReturnThis(),
     setInteractive: jest.fn().mockReturnThis(),
@@ -21,7 +40,17 @@ function makeFakeScene() {
     scene: {},
   };
   const scene = {
-    add: { sprite: jest.fn(() => sprite) },
+    add: {
+      sprite: jest.fn(() => sprite),
+      container: jest.fn(() => ({
+        setDepth: jest.fn().mockReturnThis(),
+        setPosition: jest.fn(),
+        add: jest.fn(),
+        destroy: jest.fn(),
+      })),
+      graphics: jest.fn(() => makeFakeGraphics()),
+      text: jest.fn(() => makeFakeText()),
+    },
     time: { delayedCall: jest.fn() },
     textures: { addCanvas: jest.fn(() => ({ add: jest.fn() })) },
   };
