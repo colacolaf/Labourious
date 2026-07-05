@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import useAgentsStore from '../../stores/agents.store';
@@ -267,6 +268,15 @@ function SettingsTab({ agent }) {
 
   return (
     <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0', borderBottom: '1px solid var(--color-border)', fontSize: '0.8rem' }}>
+        <span style={{ color: 'var(--color-text-muted)' }}>Appearance</span>
+        <Link
+          to={`/editor/character/${agent.id}`}
+          style={{ color: 'var(--color-accent-primary)', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', textDecoration: 'none' }}
+        >
+          Edit Character
+        </Link>
+      </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0', borderBottom: '1px solid var(--color-border)', fontSize: '0.8rem' }}>
         <span style={{ color: 'var(--color-text-muted)' }}>Execution Mode</span>
         <select

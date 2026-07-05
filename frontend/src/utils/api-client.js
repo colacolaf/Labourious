@@ -192,6 +192,19 @@ export const brokersApi = {
   test: (name) => apiClient.get(`/api/brokers/${name}/test`),
 };
 
+export const roomLayoutsApi = {
+  get: (roomKey) => apiClient.get(`/api/room-layouts/${roomKey}`),
+  save: (roomKey, mapData) => apiClient.put(`/api/room-layouts/${roomKey}`, { map_json: mapData }),
+  reset: (roomKey) => apiClient.delete(`/api/room-layouts/${roomKey}`),
+};
+
+export const agentAppearanceApi = {
+  get: (agentId) => apiClient.get(`/api/agents/${agentId}/appearance`),
+  save: (agentId, appearance) => apiClient.put(`/api/agents/${agentId}/appearance`, { appearance }),
+  getUserAvatar: () => apiClient.get('/api/user/avatar-appearance'),
+  saveUserAvatar: (appearance) => apiClient.put('/api/user/avatar-appearance', { appearance }),
+};
+
 export const settingsApi = {
   get: () => apiClient.get('/api/settings'),
   patchAllocation: (data) => apiClient.post('/api/settings/allocation', data),

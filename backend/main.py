@@ -17,6 +17,8 @@ from backend.api.settings_api import router as settings_router
 from backend.api.analytics import router as analytics_router
 from backend.api.backtest_ui import router as backtest_ui_router
 from backend.api.llm_config import router as llm_config_router
+from backend.api.room_layouts import router as room_layouts_router
+from backend.api.agent_appearance import router as agent_appearance_router
 from backend.auth.router import router as auth_router
 from backend.notifications.router import router as notifications_router
 
@@ -135,6 +137,8 @@ app.include_router(settings_router)
 app.include_router(analytics_router)
 app.include_router(backtest_ui_router)
 app.include_router(llm_config_router)
+app.include_router(room_layouts_router)
+app.include_router(agent_appearance_router)
 app.include_router(auth_router)
 app.include_router(notifications_router)
 

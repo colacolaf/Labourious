@@ -79,6 +79,9 @@ class AgentResponse(BaseModel):
     paper_trading_balance: float
     last_heartbeat: Optional[datetime]
     created_at: datetime
+    # alias reads the ORM's `appearance_json` column while keying the JSON payload as
+    # `appearance` — matches what WarroomScene.js already expects (Task 10), no endpoint changes.
+    appearance: Optional[dict] = Field(default=None, validation_alias="appearance_json")
 
 
 class TradeResponse(BaseModel):

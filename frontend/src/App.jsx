@@ -20,6 +20,8 @@ import NotificationsPage from './pages/NotificationsPage';
 import ContextBuilder from './components/Warroom/ContextBuilder';
 import Lobby from './pages/Lobby';
 import Login from './pages/Login';
+import OfficeEditor from './pages/OfficeEditor';
+import CharacterCustomizer from './pages/CharacterCustomizer';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -250,6 +252,9 @@ export default function App() {
                     <Route path="/warroom/day" element={<WarroomDay />} />
                     <Route path="/warroom/swing" element={<WarroomSwing />} />
                     <Route path="/warroom/long" element={<WarroomLongTerm />} />
+                    <Route path="/editor/room/:roomKey" element={<OfficeEditor />} />
+                    <Route path="/editor/character" element={<CharacterCustomizer />} />
+                    <Route path="/editor/character/:agentId" element={<CharacterCustomizer />} />
                     <Route path="/analytics" element={
                       <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
                         <AnalyticsPage />

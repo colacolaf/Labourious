@@ -4,7 +4,7 @@ import { loadMapIntoScene, TILE_SIZE } from '../../lib/map-loader';
 import { SECTOR_ACCENT } from './palettes/sector-palette';
 import { CUBICLE_PALETTE, CUBICLE_ACCENT } from './palettes/cubicle-palette';
 import { TradingAgent } from '../../components/Warroom/sprites/TradingAgent';
-import { agentsApi } from '../../utils/api-client';
+import { agentsApi, roomLayoutsApi } from '../../utils/api-client';
 import DEFAULT_APPEARANCES from '../../data/default-agent-appearances.json';
 
 const MAP_COLS = 40;
@@ -30,16 +30,27 @@ export class WarroomScene extends Phaser.Scene {
   }
 
   async create() {
-    const basePath = process.env.PUBLIC_URL || '';
-    const url = `${basePath}/maps/${this.mapName}.json`;
     let mapData;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      mapData = await res.json();
-    } catch (err) {
-      console.error(`[WarroomScene] failed to load map "${this.mapName}" from ${url}: ${err.message}`);
-      return; // no map-loaded event — nothing rendered, but failure is visible instead of silent
+    if (this.roomKey) {
+      try {
+        const saved = await roomLayoutsApi.get(this.roomKey);
+        if (saved?.custom) mapData = saved.map_json;
+      } catch (err) {
+        console.warn(`[WarroomScene] failed to fetch custom layout for room "${this.roomKey}": ${err.message}`);
+      }
+    }
+
+    if (!mapData) {
+      const basePath = process.env.PUBLIC_URL || '';
+      const url = `${basePath}/maps/${this.mapName}.json`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        mapData = await res.json();
+      } catch (err) {
+        console.error(`[WarroomScene] failed to load map "${this.mapName}" from ${url}: ${err.message}`);
+        return; // no map-loaded event — nothing rendered, but failure is visible instead of silent
+      }
     }
 
     const { spawnPoints, seatMap } = loadMapIntoScene(this, mapData, TILESET_KEY);
@@ -81,8 +92,8 @@ export class WarroomScene extends Phaser.Scene {
         tradingAgent.id = agent.id;
         tradingAgent.sprite.on('pointerdown', () => EventBus.emit('agent-clicked', { agentId: tradingAgent.id }));
 
-        // agent.appearance doesn't exist yet (Task 10 adds per-agent customization) — cycle
-        // through the shipped presets so agents in a room don't all look identical.
+        // Prefer the agent's own saved appearance (Task 10); fall back to a shipped preset
+        // (cycled by slot index) so agents without a custom appearance don't all look identical.
         const appearance = agent.appearance || DEFAULT_APPEARANCES[i % DEFAULT_APPEARANCES.length];
         tradingAgent.applyAppearance(appearance).catch((err) => {
           console.warn(`[WarroomScene] failed to composite appearance for agent ${tradingAgent.id}: ${err.message}`);

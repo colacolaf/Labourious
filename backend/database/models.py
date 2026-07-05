@@ -52,6 +52,7 @@ class User(Base):
     email = Column(String(100), nullable=False, unique=True, index=True)
     hashed_password = Column(String(255), nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.TRADER)
+    avatar_appearance_json = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     agents = relationship("Agent", back_populates="owner")
@@ -105,6 +106,7 @@ class Agent(Base):
     grid_col = Column(Integer, default=0)
     grid_row = Column(Integer, default=0)
     use_local_llm = Column(Boolean, default=True)
+    appearance_json = Column(JSON, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -200,6 +202,14 @@ class Performance(Base):
 
     def __repr__(self) -> str:
         return f"<Performance(id={self.id}, agent_id={self.agent_id}, period={self.period})>"
+
+
+class RoomLayout(Base):
+    __tablename__ = "room_layouts"
+
+    room_key = Column(String, primary_key=True)  # long_term | swing_trading | day_trading
+    map_json = Column(JSON, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
 
 class BrokerConfig(Base):
