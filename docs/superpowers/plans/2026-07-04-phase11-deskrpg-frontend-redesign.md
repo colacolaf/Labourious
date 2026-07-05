@@ -200,13 +200,13 @@ git commit -m "feat(11.2): Phaser/React bridge + BootScene"
   - `CharacterAppearance`, `normalizeAppearance()`, `OBJECT_TYPES`, `MapData`
   - `loadMapIntoScene(scene, mapData, tilesetKey): { spawnPoints: {x,y}[], seatMap: Record<agentSlot,{x,y}> }`
 
-- [ ] **Step 1: Port lpc-registry.ts** — point imports at `frontend/public/assets/lpc-registry.json`.
+- [x] **Step 1: Port lpc-registry.ts** — point imports at `frontend/public/assets/lpc-registry.json`.
 
-- [ ] **Step 2: Port sprite-compositor.ts** — verify one test appearance composites to 576×256 walk sheet.
+- [x] **Step 2: Port sprite-compositor.ts** — verify one test appearance composites to 576×256 walk sheet.
 
-- [ ] **Step 3: Port object-types.ts** — include `whiteboard`, `cubicle_wall`, `computer`, `desk`, `chair`, `plant`.
+- [x] **Step 3: Port object-types.ts** — include `whiteboard`, `cubicle_wall`, `computer`, `desk`, `chair`, `plant`.
 
-- [ ] **Step 4: Implement map-loader.ts** — render floor layer, wall layer, place objects with y-sort; return agent anchor positions from map metadata block:
+- [x] **Step 4: Implement map-loader.ts** — render floor layer, wall layer, place objects with y-sort; return agent anchor positions from map metadata block:
 
 ```json
 "agentSlots": [
@@ -214,7 +214,7 @@ git commit -m "feat(11.2): Phaser/React bridge + BootScene"
 ]
 ```
 
-- [ ] **Step 5: Unit test map-loader**
+- [x] **Step 5: Unit test map-loader**
 
 ```javascript
 // frontend/src/lib/__tests__/map-loader.test.js
@@ -225,7 +225,7 @@ test('desk occupies tile', () => {
 });
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/lib/
