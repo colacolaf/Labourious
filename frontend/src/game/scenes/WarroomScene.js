@@ -58,6 +58,7 @@ export class WarroomScene extends Phaser.Scene {
   // Cubicle theme only: called every frame by Phaser. Only does work when a cubicle map
   // actually populated monitorGlows — investment/sector rooms never touch this branch.
   update() {
+    if (this.roomTheme !== 'cubicle') return;
     if (this.monitorGlows.length === 0) return;
     this.frameCount += 1;
     if (this.frameCount % MONITOR_FLICKER_FRAMES !== 0) return;
