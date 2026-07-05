@@ -3,6 +3,9 @@ import { EventBus } from '../EventBus';
 import { loadMapIntoScene, TILE_SIZE } from '../../lib/map-loader';
 import { SECTOR_ACCENT } from './palettes/sector-palette';
 import { CUBICLE_PALETTE, CUBICLE_ACCENT } from './palettes/cubicle-palette';
+import { TradingAgent } from '../../components/Warroom/sprites/TradingAgent';
+import { agentsApi } from '../../utils/api-client';
+import DEFAULT_APPEARANCES from '../../data/default-agent-appearances.json';
 
 const MAP_COLS = 40;
 const MAP_ROWS = 30;
@@ -10,9 +13,10 @@ const TILESET_KEY = 'office-tiles';
 const SECTOR_TICKERS = ['XLF', 'XLE', 'XLK'];
 const MONITOR_FLICKER_FRAMES = 40; // cubicle theme only — see drawCubicleDecor
 
-// Renders one warroom's floor/walls/furniture from its static map JSON (frontend/public/maps/*.json).
-// Agent sprites are out of scope here (Task 7) — map-loaded seat/spawn data is emitted on the
-// EventBus so that later work can hook agent placement without this scene knowing about agents.
+// Renders one warroom's floor/walls/furniture from its static map JSON (frontend/public/maps/*.json),
+// then spawns one TradingAgent per matched (agentSlot, fetched-agent) pair (Task 7). HeadBubble
+// visuals (trade/processing/approval feedback) are Task 8 — TradingAgent's own methods are
+// minimal stand-ins for now.
 export class WarroomScene extends Phaser.Scene {
   constructor() {
     super('WarroomScene');
@@ -20,6 +24,7 @@ export class WarroomScene extends Phaser.Scene {
 
   init(data) {
     this.mapName = data?.map || 'investment-room';
+    this.roomKey = data?.room || null; // which backend `room` to fetch agents for (Task 7)
     this.frameCount = 0; // cubicle theme only — drives monitor_wall flicker in update()
     this.monitorGlows = [];
   }
@@ -53,6 +58,40 @@ export class WarroomScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, MAP_COLS * TILE_SIZE, MAP_ROWS * TILE_SIZE);
 
     EventBus.emit('map-loaded', { spawnPoints, seatMap });
+
+    // Agent spawn (Task 7): zip agentSlots with this room's fetched agents by index — the
+    // same simple index-matching useWarroomAgents.js already does when it re-syncs ids. Any
+    // slots beyond the fetched agent count stay empty rather than showing idle placeholder NPCs.
+    const tradingAgents = [];
+    try {
+      const fetchedAgents = await agentsApi.list({ room: this.roomKey });
+      const agentList = Array.isArray(fetchedAgents) ? fetchedAgents : [];
+      const slots = mapData.agentSlots || [];
+      const count = Math.min(slots.length, agentList.length);
+      for (let i = 0; i < count; i++) {
+        const slot = slots[i];
+        const agent = agentList[i];
+        const pos = seatMap[slot.id];
+        if (!pos) continue;
+
+        const tradingAgent = new TradingAgent(this, pos.x, pos.y, 'fallback-char');
+        tradingAgent.id = agent.id;
+        tradingAgent.sprite.on('pointerdown', () => EventBus.emit('agent-clicked', { agentId: tradingAgent.id }));
+
+        // agent.appearance doesn't exist yet (Task 10 adds per-agent customization) — cycle
+        // through the shipped presets so agents in a room don't all look identical.
+        const appearance = agent.appearance || DEFAULT_APPEARANCES[i % DEFAULT_APPEARANCES.length];
+        tradingAgent.applyAppearance(appearance).catch((err) => {
+          console.warn(`[WarroomScene] failed to composite appearance for agent ${tradingAgent.id}: ${err.message}`);
+        });
+
+        tradingAgents.push(tradingAgent);
+      }
+    } catch (err) {
+      console.error(`[WarroomScene] failed to fetch agents for room "${this.roomKey}": ${err.message}`);
+    }
+    this.tradingAgents = tradingAgents;
+    EventBus.emit('agents-spawned', tradingAgents);
   }
 
   // Cubicle theme only: called every frame by Phaser. Only does work when a cubicle map

@@ -3,6 +3,12 @@ import { agentsApi } from '../../../utils/api-client';
 import { useWebSocketStore } from '../../../stores/websocket.store';
 import useAgentsStore from '../../../stores/agents.store';
 
+// `agentSprites` is a plain array of TradingAgent instances (see ../sprites/TradingAgent.js),
+// owned by WarroomScene and handed up to React via the 'agents-spawned' EventBus event
+// (see WarroomPhaserGame.jsx). It starts empty — Phaser scene creation is async — and gets
+// replaced with the populated array once, which re-triggers the effects below via the
+// [room, agentSprites] / [agents, agentSprites] deps. No changes needed here for that: the
+// effects already re-run whenever the `agentSprites` array reference changes.
 export function useWarroomAgents(room, agentSprites) {
   const lastMessage = useWebSocketStore((s) => s.lastMessage);
   const agents = useAgentsStore((s) => s.agents);
