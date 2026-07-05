@@ -12,12 +12,15 @@ const card = {
   fontFamily: 'var(--font-mono)',
 };
 
-// Accent colors match each room's in-game palette (see WarroomScene room themes):
-// investment = warm wood, sector = amber whiteboards, day trading = cubicle blue.
+// Accent colors echo each room's in-game palette (see WarroomScene room themes) but
+// lightened to clear WCAG AA (>=4.5:1) as text on --color-bg-card (#374151):
+//   investment #a5b4fc (indigo-300) -> 5.17:1   (in-game #92400e only hit 1.46:1)
+//   sector     #f59e0b (amber-500, same as --color-accent-warning) -> 4.80:1   (was #d97706, 3.24:1)
+//   cubicle    #93c5fd (blue-300) -> 5.72:1   (in-game #3b82f6 only hit 2.82:1)
 const rooms = [
-  { key: 'long_term',     label: 'Investment Office',    path: '/warroom/long',  icon: '\u{1F3E2}', accent: '#92400e' },
-  { key: 'swing_trading', label: 'Sector Office',        path: '/warroom/swing', icon: '\u{1F4CA}', accent: '#d97706' },
-  { key: 'day_trading',   label: 'Day Trading Floor',    path: '/warroom/day',   icon: '\u{1F4BB}', accent: '#3b82f6' },
+  { key: 'long_term',     label: 'Investment Office',    path: '/warroom/long',  icon: '\u{1F3E2}', accent: '#a5b4fc' },
+  { key: 'swing_trading', label: 'Sector Office',        path: '/warroom/swing', icon: '\u{1F4CA}', accent: '#f59e0b' },
+  { key: 'day_trading',   label: 'Day Trading Floor',    path: '/warroom/day',   icon: '\u{1F4BB}', accent: '#93c5fd' },
 ];
 
 function RoomScorecard({ room, agents, onEnter }) {
@@ -121,13 +124,13 @@ export default function Lobby() {
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        <AgentPanel label="RISK AGENT" agents={agents} accent="var(--color-accent-primary)" />
+        <AgentPanel label="RISK AGENT" agents={agents} accent="var(--color-text-accent)" />
         <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', flex: 1 }}>
           {rooms.map(r => (
             <RoomScorecard key={r.key} room={r} agents={agents} onEnter={navigate} />
           ))}
         </div>
-        <AgentPanel label="BODYGUARD" agents={agents} accent="var(--color-accent-secondary)" />
+        <AgentPanel label="BODYGUARD" agents={agents} accent="var(--color-text-accent)" />
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
@@ -138,7 +141,7 @@ export default function Lobby() {
           { label: '30D RETURN',    value: portfolio?.return_30d_pct != null ? `${portfolio.return_30d_pct >= 0 ? '+' : ''}${portfolio.return_30d_pct.toFixed(2)}%` : '—' },
         ].map(({ label, value }) => (
           <div key={label} style={{ ...card, flex: 1, minWidth: 140, textAlign: 'center' }}>
-            <div style={{ color: 'var(--color-accent-primary)', fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{value}</div>
+            <div style={{ color: 'var(--color-text-accent)', fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{value}</div>
             <div style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-xs)', marginTop: 'var(--space-1)' }}>{label}</div>
           </div>
         ))}

@@ -24,9 +24,12 @@
   /* Text */
   --color-text-primary: #f9fafb;
   --color-text-secondary: #9ca3af;
-  --color-text-muted: #6b7280;
+  /* gray-400, not gray-500 (#6b7280): #6b7280 on --color-bg-card only hit ~2.15:1 */
+  --color-text-muted: #9ca3af;
   --color-text-inverse: #111827;
-  --color-text-accent: #818cf8;
+  /* indigo-300, not indigo-400 (#818cf8): #818cf8 as small text only hit ~3.46:1 on
+     --color-bg-card — indigo-300 clears 4.5:1 AA on card and both dark backgrounds */
+  --color-text-accent: #a5b4fc;
   --color-text-warning: #f59e0b;
   --color-text-danger: #ef4444;
 

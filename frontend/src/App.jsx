@@ -85,7 +85,7 @@ function TopBar() {
   const { backendStatus, backendVersion } = useDashboardStore();
 
   const statusColor = {
-    connected: 'var(--color-accent-primary)',
+    connected: 'var(--color-text-accent)',
     disconnected: 'var(--color-accent-danger, #ff4444)',
     degraded: 'var(--color-accent-warning, #ffb020)',
     unknown: 'var(--color-text-muted)',
@@ -183,7 +183,7 @@ function Sidebar() {
             transition: 'all 0.12s',
           })}
         >
-          {item.icon && <span style={{ color: 'var(--color-accent-primary)' }}>{item.icon}</span>}
+          {item.icon && <span style={{ color: 'var(--color-text-accent)' }}>{item.icon}</span>}
           {item.label}
         </NavLink>
       ))}
