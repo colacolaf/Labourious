@@ -249,11 +249,11 @@ git commit -m "feat(11.3): Port LPC compositor, object types, map loader"
 - Almost exactly DeskRPG default office — same tileset, same object types, same camera zoom (2×), same character scale (48×48 display).
 - Agents walk between desks or sit at assigned slots (A* optional; idle wander within floor bounds acceptable for v1).
 
-- [ ] **Step 1: Author `investment-room.json`** — 40×30 grid, floor=wood, walls=perimeter, objects: reception_desk @ entrance, 2× meeting_table, 8× desk+chair+computer pairs, 4× plant, 1× coffee, 1× water_cooler. Include 7 `agentSlots`.
+- [x] **Step 1: Author `investment-room.json`** — 40×30 grid, floor=wood, walls=perimeter, objects: reception_desk @ entrance, 2× meeting_table, 8× desk+chair+computer pairs, 4× plant, 1× coffee, 1× water_cooler. Include 7 `agentSlots`.
 
-- [ ] **Step 2: Implement WarroomScene.ts** — load map by key prop; camera `setBounds`; `MAIN_CAMERA_ZOOM = 2`; depth sort by y.
+- [x] **Step 2: Implement WarroomScene.ts** — load map by key prop; camera `setBounds`; `MAIN_CAMERA_ZOOM = 2`; depth sort by y.
 
-- [ ] **Step 3: Wire WarroomLongTerm.jsx**
+- [x] **Step 3: Wire WarroomLongTerm.jsx**
 
 ```jsx
 import WarroomPhaserGame from '../components/Warroom/WarroomPhaserGame';
@@ -262,9 +262,9 @@ export default function WarroomLongTerm() {
 }
 ```
 
-- [ ] **Step 4: Visual QA** — side-by-side screenshot vs DeskRPG home screenshot; desk count, reception, plants must match.
+- [x] **Step 4: Visual QA** — side-by-side screenshot vs DeskRPG home screenshot; desk count, reception, plants must match.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/public/maps/investment-room.json frontend/src/game/scenes/WarroomScene.ts frontend/src/pages/WarroomLongTerm.jsx
