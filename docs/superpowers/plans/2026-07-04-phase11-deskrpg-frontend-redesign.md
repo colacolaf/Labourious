@@ -98,9 +98,9 @@
 - Produces: frozen room palettes, `MapData` JSON schema, LPC asset paths documented
 - Produces: `import Phaser from 'phaser'` resolves in frontend build
 
-- [ ] **Step 1: Write design spec** — document the three room layouts with ASCII floor plans, tile/object lists, spawn points per room, and screenshot targets referencing DeskRPG README images.
+- [x] **Step 1: Write design spec** — document the three room layouts with ASCII floor plans, tile/object lists, spawn points per room, and screenshot targets referencing DeskRPG README images.
 
-- [ ] **Step 2: Add Phaser dependency**
+- [x] **Step 2: Add Phaser dependency**
 
 ```json
 "phaser": "^3.90.0"
@@ -108,7 +108,7 @@
 
 Run: `cd frontend && npm install`
 
-- [ ] **Step 3: Copy DeskRPG LPC assets**
+- [x] **Step 3: Copy DeskRPG LPC assets**
 
 ```bash
 # From a temp clone of deskrpg
@@ -117,7 +117,7 @@ cp -R deskrpg/public/assets/lpc frontend/public/assets/
 cp deskrpg/public/assets/tilesets/*.png frontend/public/assets/tilesets/
 ```
 
-- [ ] **Step 4: Verify Phaser import**
+- [x] **Step 4: Verify Phaser import**
 
 ```bash
 cd frontend && node -e "require('phaser'); console.log('ok')"
@@ -125,7 +125,7 @@ cd frontend && node -e "require('phaser'); console.log('ok')"
 
 Expected: `ok`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-07-04-deskrpg-redesign-design.md frontend/package.json frontend/package-lock.json frontend/public/assets/
