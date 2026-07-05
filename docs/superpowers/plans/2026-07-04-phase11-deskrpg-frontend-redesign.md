@@ -149,11 +149,11 @@ git commit -m "feat(11.1): DeskRPG design spec + Phaser/LPC asset foundation"
   - `createGame(containerId: string): Phaser.Game`
   - `<WarroomPhaserGame room="" map="" onAgentClick={(agentId) => void} />` — mounts canvas, emits `scene-ready`
 
-- [ ] **Step 1: Port EventBus** (from `deskrpg/src/game/EventBus.ts`) — events: `scene-ready`, `spritesheet-ready`, `agent-clicked`, `map-loaded`.
+- [x] **Step 1: Port EventBus** (from `deskrpg/src/game/EventBus.ts`) — events: `scene-ready`, `spritesheet-ready`, `agent-clicked`, `map-loaded`.
 
-- [ ] **Step 2: Create BootScene** — preload `office` tileset, `fallback-char` 1×1 pixel, LPC body placeholder.
+- [x] **Step 2: Create BootScene** — preload `office` tileset, `fallback-char` 1×1 pixel, LPC body placeholder.
 
-- [ ] **Step 3: Create main.ts**
+- [x] **Step 3: Create main.ts**
 
 ```typescript
 import Phaser from 'phaser';
@@ -173,11 +173,11 @@ export function createGame(parent: string) {
 }
 ```
 
-- [ ] **Step 4: Create WarroomPhaserGame.jsx** — mirror DeskRPG `PhaserGame.tsx` lifecycle: dynamic import, StrictMode guard, destroy on unmount, `useLayoutEffect` for container sizing.
+- [x] **Step 4: Create WarroomPhaserGame.jsx** — mirror DeskRPG `PhaserGame.tsx` lifecycle: dynamic import, StrictMode guard, destroy on unmount, `useLayoutEffect` for container sizing.
 
-- [ ] **Step 5: Smoke test** — render `<WarroomPhaserGame room="long_term" map="investment-room" />` on a dev-only route; expect gray canvas + BootScene loaded log via `EventBus`.
+- [x] **Step 5: Smoke test** — render `<WarroomPhaserGame room="long_term" map="investment-room" />` on a dev-only route; expect gray canvas + BootScene loaded log via `EventBus`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/game/ frontend/src/components/Warroom/WarroomPhaserGame.jsx
