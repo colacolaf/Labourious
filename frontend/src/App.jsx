@@ -22,6 +22,9 @@ import Lobby from './pages/Lobby';
 import Login from './pages/Login';
 import OfficeEditor from './pages/OfficeEditor';
 import CharacterCustomizer from './pages/CharacterCustomizer';
+import Trades from './pages/Trades';
+import VaultSettings from './pages/VaultSettings';
+import Settings from './pages/Settings';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -29,32 +32,6 @@ const pageVariants = {
   exit: { opacity: 0, y: -8 },
 };
 const pageTransition = { duration: 0.18, ease: 'easeOut' };
-
-function PlaceholderPage({ title }) {
-  return (
-    <motion.div
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={pageTransition}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        gap: '1rem',
-        color: 'var(--color-text-secondary)',
-        fontFamily: 'var(--font-mono)',
-      }}
-    >
-      <span style={{ fontSize: '2rem', color: 'var(--color-accent-primary)' }}>⬡</span>
-      <h2 style={{ color: 'var(--color-text-primary)', fontSize: '1.25rem' }}>{title}</h2>
-      <p style={{ fontSize: '0.75rem' }}>Phase 3 implementation pending</p>
-    </motion.div>
-  );
-}
 
 function AppShell({ children }) {
   return (
@@ -265,12 +242,21 @@ export default function App() {
                         <ContextBuilder />
                       </motion.div>
                     } />
-                    {/* TODO: implement Trades page (Phase 5) */}
-                    <Route path="/trades" element={<PlaceholderPage title="Trades" />} />
-                    {/* TODO: implement Vault page (Phase 5) */}
-                    <Route path="/vault" element={<PlaceholderPage title="Vault" />} />
-                    {/* TODO: implement Settings page (Phase 5) */}
-                    <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+                    <Route path="/trades" element={
+                      <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                        <Trades />
+                      </motion.div>
+                    } />
+                    <Route path="/vault" element={
+                      <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                        <VaultSettings />
+                      </motion.div>
+                    } />
+                    <Route path="/settings" element={
+                      <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+                        <Settings />
+                      </motion.div>
+                    } />
                     <Route path="/settings/notifications" element={<NotificationsPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
