@@ -47,7 +47,7 @@ const RISK_COLORS = {
 };
 
 export default function AgentsStep() {
-  const { submitWizard } = useWizardStore((s) => ({ submitWizard: s.submitWizard }));
+  const submitWizard = useWizardStore((s) => s.submitWizard);
   const [selected, setSelected] = useState(new Set());
   const [modeId, setModeId] = useState('paper_only'); // safe default
   const [loading, setLoading] = useState(false);

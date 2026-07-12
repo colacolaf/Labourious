@@ -12,10 +12,8 @@ const MODELS = {
 const VAULT_KEY = { claude: 'anthropic_api_key', openai: 'openai_api_key' };
 
 export default function LLMStep() {
-  const { setFormData, nextStep } = useWizardStore((s) => ({
-    setFormData: s.setFormData,
-    nextStep: s.nextStep,
-  }));
+  const setFormData = useWizardStore((s) => s.setFormData);
+  const nextStep = useWizardStore((s) => s.nextStep);
   const [provider, setProvider] = useState('ollama');
   const [model, setModel] = useState(MODELS.ollama[0]);
   const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');

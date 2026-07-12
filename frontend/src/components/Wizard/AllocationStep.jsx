@@ -9,7 +9,8 @@ const SLIDERS = [
 ];
 
 export default function AllocationStep() {
-  const { setFormData, nextStep } = useWizardStore((s) => ({ setFormData: s.setFormData, nextStep: s.nextStep }));
+  const setFormData = useWizardStore((s) => s.setFormData);
+  const nextStep = useWizardStore((s) => s.nextStep);
   const [values, setValues] = useState({ dayTrading: 33, swingTrading: 34, longTerm: 33 });
 
   const total = Object.values(values).reduce((a, b) => a + b, 0);

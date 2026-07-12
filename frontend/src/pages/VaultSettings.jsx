@@ -128,11 +128,20 @@ export default function VaultSettings() {
 
       {/* Stored keys */}
       <div style={{ ...card, marginBottom: 'var(--space-4)' }}>
-        <h2 style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)', letterSpacing: '0.08em', marginBottom: 'var(--space-3)' }}>
-          STORED CREDENTIALS
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+          <h2 style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)', letterSpacing: '0.08em', margin: 0 }}>
+            STORED CREDENTIALS
+          </h2>
+          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>
+            {[...storedExchanges].length} connected exchange{[...storedExchanges].length !== 1 ? 's' : ''}
+          </span>
+        </div>
         {loading ? (
-          <div style={{ color: 'var(--color-text-muted)' }}>Loading...</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {[1,2,3].map(i => (
+              <div key={i} style={{ height: 28, background: 'var(--color-bg-tertiary)', borderRadius: 'var(--radius-sm)', opacity: 0.4, animation: 'pulse 1.5s infinite' }} />
+            ))}
+          </div>
         ) : storedExchanges.size === 0 ? (
           <div style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>No credentials stored.</div>
         ) : (

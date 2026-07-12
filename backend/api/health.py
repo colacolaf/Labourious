@@ -55,8 +55,10 @@ async def full_health():
 
     try:
         if settings.VAULT_PASSWORD:
+            from pathlib import Path
             from backend.vault.encrypted_vault import EncryptedVault
-            vault = EncryptedVault(settings.VAULT_PASSWORD)
+            vault_path = Path(settings.VAULT_PATH)
+            vault = EncryptedVault(vault_path, settings.VAULT_PASSWORD)
             vault.list_keys()
             result["vault"] = "ok"
         else:
@@ -78,7 +80,8 @@ async def full_health():
             from backend.vault.encrypted_vault import EncryptedVault
             from backend.brokers.manager import get_connector, list_brokers
 
-            vault = EncryptedVault(settings.VAULT_PASSWORD)
+            vault_path = Path(settings.VAULT_PATH)
+            vault = EncryptedVault(vault_path, settings.VAULT_PASSWORD)
             for broker_name in list_brokers():
                 try:
                     conn = get_connector(broker_name, vault, paper=True)

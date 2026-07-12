@@ -1,36 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import Wizard from './components/Wizard/WizardShell';
 import useDashboardStore from './stores/dashboard.store';
-import useAgentsStore from './stores/agents.store';
-import useWizardStore from './stores/wizard.store';
-import { useWebSocket } from './hooks/useWebSocket';
-import { POLL_INTERVALS } from './utils/constants';
-import WizardShell from './components/Wizard/WizardShell';
 
 // Pages
+import Lobby from './pages/Lobby';
 import Dashboard from './pages/Dashboard';
+import ControlRoom from './pages/ControlRoom';
+import Trades from './pages/Trades';
+import AnalyticsPage from './pages/AnalyticsPage';
+import VaultSettings from './pages/VaultSettings';
+import Settings from './pages/Settings';
+import Login from './pages/Login';
+import NotFound from './pages/NotFound';
+import NotificationsPage from './pages/NotificationsPage';
+import CharacterCustomizer from './pages/CharacterCustomizer';
+import OfficeEditor from './pages/OfficeEditor';
 import WarroomDay from './pages/WarroomDay';
 import WarroomSwing from './pages/WarroomSwing';
 import WarroomLongTerm from './pages/WarroomLongTerm';
-import AnalyticsPage from './pages/AnalyticsPage';
-import NotificationsPage from './pages/NotificationsPage';
-import ContextBuilder from './components/Warroom/ContextBuilder';
-import Lobby from './pages/Lobby';
-import OfficeEditor from './pages/OfficeEditor';
-import CharacterCustomizer from './pages/CharacterCustomizer';
-import Trades from './pages/Trades';
-import VaultSettings from './pages/VaultSettings';
-import Settings from './pages/Settings';
 
-const pageVariants = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
-};
-const pageTransition = { duration: 0.18, ease: 'easeOut' };
+/* ── Sidebar link config ─────────────────── */
+const NAV_LINKS = [
+  { to: '/lobby', label: 'Lobby', end: false },
+  { to: '/control-room', label: 'Control Room' },
+  { to: '/warroom/day', label: 'Day Room' },
+  { to: '/warroom/swing', label: 'Swing Room' },
+  { to: '/warroom/long-term', label: 'Long-Term Room' },
+  { to: '/trades', label: 'Trades' },
+  { to: '/analytics', label: 'Analytics' },
+  { to: '/character', label: 'Character' },
+  { to: '/office-editor', label: 'Office Editor' },
+  { to: '/vault', label: 'Vault' },
+  { to: '/settings', label: 'Settings' },
+];
 
+/* ── AppShell ─────────────────────────────── */
 function AppShell({ children }) {
+  const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <div
       style={{
@@ -38,221 +49,144 @@ function AppShell({ children }) {
         gridTemplateColumns: 'var(--sidebar-width, 200px) 1fr',
         gridTemplateRows: 'var(--topbar-height, 48px) 1fr',
         height: '100vh',
-        background: 'var(--color-bg-primary)',
+        background: 'var(--bg-primary)',
       }}
     >
-      <TopBar />
-      <Sidebar />
-      <main
+      {/* Top bar */}
+      <header
         style={{
-          gridColumn: 2,
-          gridRow: 2,
-          overflow: 'auto',
-          padding: 'var(--space-6, 1.5rem)',
+          gridColumn: '1 / -1',
+          gridRow: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1.5rem',
+          borderBottom: '1px solid var(--border-primary)',
+          background: 'var(--bg-secondary)',
         }}
       >
-        {children}
+        <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '14px' }}>
+          LABOURIOUS
+        </span>
+        <button
+          onClick={toggleTheme}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          style={{
+            background: 'none',
+            border: '1px solid var(--border-primary)',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+            padding: '4px 10px',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '12px',
+            fontFamily: 'var(--font-mono)',
+          }}
+        >
+          {theme === 'dark' ? '☀' : '☾'}
+        </button>
+      </header>
+
+      {/* Sidebar */}
+      <nav
+        style={{
+          gridColumn: 1,
+          gridRow: 2,
+          borderRight: '1px solid var(--border-primary)',
+          background: 'var(--bg-secondary)',
+          padding: '0.75rem 0',
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto',
+        }}
+      >
+        {NAV_LINKS.map(({ to, label, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            style={({ isActive }) => ({
+              padding: '0.6rem 1.5rem',
+              color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+              textDecoration: 'none',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '12px',
+              borderLeft: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
+              transition: 'color 0.15s, border-color 0.15s',
+            })}
+          >
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Main content */}
+      <main style={{ gridColumn: 2, gridRow: 2, overflow: 'auto', padding: '1.5rem', position: 'relative' }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );
 }
 
-function TopBar() {
-  const { backendStatus, backendVersion } = useDashboardStore();
-
-  const statusColor = {
-    connected: 'var(--color-text-accent)',
-    disconnected: 'var(--color-accent-danger, #ff4444)',
-    degraded: 'var(--color-accent-warning, #ffb020)',
-    unknown: 'var(--color-text-muted)',
-  }[backendStatus] ?? 'var(--color-text-muted)';
-
-  return (
-    <header
-      style={{
-        gridColumn: '1 / -1',
-        gridRow: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 var(--space-6, 1.5rem)',
-        borderBottom: '1px solid var(--color-border)',
-        background: 'var(--color-bg-secondary)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3, 0.75rem)' }}>
-        <span style={{ color: 'var(--color-accent-primary)', fontSize: '1.25rem' }}>⬡</span>
-        <span
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontWeight: 700,
-            color: 'var(--color-text-primary)',
-            letterSpacing: '0.1em',
-          }}
-        >
-          LABOURIOUS
-        </span>
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-2, 0.5rem)',
-          fontFamily: 'var(--font-mono)',
-          fontSize: 'var(--font-size-xs, 0.7rem)',
-          color: 'var(--color-text-muted)',
-        }}
-      >
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, display: 'inline-block' }} />
-        <span style={{ color: statusColor }}>{backendStatus.toUpperCase()}</span>
-        {backendVersion && <span>v{backendVersion}</span>}
-      </div>
-    </header>
-  );
-}
-
-const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/', icon: '◈', end: true },
-  { label: 'Lobby', path: '/lobby', icon: '⬡' },
-  { label: 'Day Trading Floor', path: '/warroom/day' },
-  { label: 'Sector Office', path: '/warroom/swing' },
-  { label: 'Investment Office', path: '/warroom/long' },
-  { label: 'Analytics', path: '/analytics', icon: '◈' },
-  { label: 'New Agent', path: '/agents/new', icon: '✦' },
-  { label: 'Trades', path: '/trades', icon: '◇' },
-  { label: 'Vault', path: '/vault', icon: '◫' },
-  { label: 'Settings', path: '/settings', icon: '⊙' },
-  { label: 'Notifications', path: '/settings/notifications', icon: '◆' },
-];
-
-function Sidebar() {
-  return (
-    <nav
-      style={{
-        gridColumn: 1,
-        gridRow: 2,
-        borderRight: '1px solid var(--color-border)',
-        background: 'var(--color-bg-secondary)',
-        padding: 'var(--space-4, 1rem) 0',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--space-1, 0.25rem)',
-        overflowY: 'auto',
-      }}
-    >
-      {NAV_ITEMS.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          end={item.end}
-          style={({ isActive }) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-3, 0.75rem)',
-            padding: 'var(--space-3, 0.75rem) var(--space-6, 1.5rem)',
-            fontFamily: 'var(--font-mono)',
-            fontSize: 'var(--font-size-sm, 0.8rem)',
-            color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-            textDecoration: 'none',
-            background: isActive ? 'var(--color-bg-tertiary)' : 'transparent',
-            borderLeft: isActive ? '2px solid var(--color-accent-primary)' : '2px solid transparent',
-            transition: 'all 0.12s',
-          })}
-        >
-          {item.icon && <span style={{ color: 'var(--color-text-accent)' }}>{item.icon}</span>}
-          {item.label}
-        </NavLink>
-      ))}
-    </nav>
-  );
-}
-
-// Initialise WS at app level (singleton)
-function WSInitialiser() {
-  useWebSocket();
-  return null;
-}
-
-export default function App() {
-  const { checkBackendHealth, fetchPortfolioSummary } = useDashboardStore();
-  const { fetchAgents } = useAgentsStore();
-  const isComplete = useWizardStore((s) => s.isComplete);
-  const [showWizard, setShowWizard] = useState(() => !localStorage.getItem('wizard_complete'));
-
-  useEffect(() => {
-    if (isComplete) {
-      localStorage.setItem('wizard_complete', '1');
-      setShowWizard(false);
-    }
-  }, [isComplete]);
+/* ── App ──────────────────────────────────── */
+function AppRoutes() {
+  const checkBackendHealth = useDashboardStore((s) => s.checkBackendHealth);
 
   useEffect(() => {
     checkBackendHealth();
-    fetchPortfolioSummary();
-    fetchAgents();
-
-    const healthInterval = setInterval(checkBackendHealth, POLL_INTERVALS.HEALTH);
-    const portfolioInterval = setInterval(fetchPortfolioSummary, POLL_INTERVALS.PORTFOLIO);
-    const agentsInterval = setInterval(fetchAgents, POLL_INTERVALS.AGENTS);
-
-    return () => {
-      clearInterval(healthInterval);
-      clearInterval(portfolioInterval);
-      clearInterval(agentsInterval);
-    };
-  }, [checkBackendHealth, fetchPortfolioSummary, fetchAgents]);
+  }, [checkBackendHealth]);
 
   return (
-    <BrowserRouter>
-      <WSInitialiser />
-      <Routes>
-        <Route path="*" element={
-          <>
-            {showWizard && <WizardShell />}
-            <AppShell>
-              <AnimatePresence mode="wait">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/lobby" element={<Lobby />} />
-                  <Route path="/warroom/day" element={<WarroomDay />} />
-                  <Route path="/warroom/swing" element={<WarroomSwing />} />
-                  <Route path="/warroom/long" element={<WarroomLongTerm />} />
-                  <Route path="/editor/room/:roomKey" element={<OfficeEditor />} />
-                  <Route path="/editor/character" element={<CharacterCustomizer />} />
-                  <Route path="/editor/character/:agentId" element={<CharacterCustomizer />} />
-                  <Route path="/analytics" element={
-                    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
-                      <AnalyticsPage />
-                    </motion.div>
-                  } />
-                  <Route path="/agents/new" element={
-                    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
-                      <ContextBuilder />
-                    </motion.div>
-                  } />
-                  <Route path="/trades" element={
-                    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
-                      <Trades />
-                    </motion.div>
-                  } />
-                  <Route path="/vault" element={
-                    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
-                      <VaultSettings />
-                    </motion.div>
-                  } />
-                  <Route path="/settings" element={
-                    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
-                      <Settings />
-                    </motion.div>
-                  } />
-                  <Route path="/settings/notifications" element={<NotificationsPage />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </AnimatePresence>
-            </AppShell>
-          </>
-        } />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      {/* Lobby as main landing */}
+      <Route path="/" element={<Lobby />} />
+      <Route path="/lobby" element={<Lobby />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/control-room" element={<ControlRoom />} />
+      <Route path="/warroom/day" element={<WarroomDay />} />
+      <Route path="/warroom/swing" element={<WarroomSwing />} />
+      <Route path="/warroom/long-term" element={<WarroomLongTerm />} />
+      <Route path="/trades" element={<Trades />} />
+      <Route path="/analytics" element={<AnalyticsPage />} />
+      <Route path="/vault" element={<VaultSettings />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/character" element={<CharacterCustomizer />} />
+      <Route path="/office-editor" element={<OfficeEditor />} />
+      <Route path="/notifications" element={<NotificationsPage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/setup" element={<Wizard />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Wizard is standalone — no AppShell chrome */}
+          <Route path="/setup" element={<Wizard />} />
+          {/* Everything else wrapped in AppShell */}
+          <Route
+            path="*"
+            element={
+              <AppShell>
+                <AppRoutes />
+              </AppShell>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

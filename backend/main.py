@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from pathlib import Path
 from backend.config import settings
 from backend.database.db import init_db, get_session_factory
 from backend.utils.logger import setup_logger
@@ -45,7 +46,8 @@ async def lifespan(app: FastAPI):
             from backend.vault.encrypted_vault import EncryptedVault
             from backend.orchestrator.agent_orchestrator import AgentOrchestrator
 
-            vault = EncryptedVault(settings.VAULT_PASSWORD)
+            vault_path = Path(settings.VAULT_PATH)
+            vault = EncryptedVault(vault_path, settings.VAULT_PASSWORD)
             session_factory = get_session_factory(settings.DATABASE_URL)
             _orchestrator = AgentOrchestrator(vault, session_factory)
             await _orchestrator.initialize()

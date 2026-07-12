@@ -18,9 +18,9 @@ const card = {
 //   sector     #f59e0b (amber-500, same as --color-accent-warning) -> 4.80:1   (was #d97706, 3.24:1)
 //   cubicle    #93c5fd (blue-300) -> 5.72:1   (in-game #3b82f6 only hit 2.82:1)
 const rooms = [
-  { key: 'long_term',     label: 'Investment Office',    path: '/warroom/long',  icon: '\u{1F3E2}', accent: '#a5b4fc' },
-  { key: 'swing_trading', label: 'Sector Office',        path: '/warroom/swing', icon: '\u{1F4CA}', accent: '#f59e0b' },
-  { key: 'day_trading',   label: 'Day Trading Floor',    path: '/warroom/day',   icon: '\u{1F4BB}', accent: '#93c5fd' },
+  { key: 'long_term',     label: 'Investment Office',    path: '/warroom/long-term', icon: '\u{1F3E2}', accent: '#a5b4fc' },
+  { key: 'swing_trading', label: 'Sector Office',        path: '/warroom/swing',     icon: '\u{1F4CA}', accent: '#f59e0b' },
+  { key: 'day_trading',   label: 'Day Trading Floor',    path: '/warroom/day',       icon: '\u{1F4BB}', accent: '#93c5fd' },
 ];
 
 function RoomScorecard({ room, agents, onEnter }) {

@@ -17,6 +17,7 @@ class Settings:
 
     DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/data/labourious.db")
 
+    VAULT_PATH: str = os.getenv("VAULT_PATH", str(BASE_DIR / "data" / "vault.db"))
     VAULT_PASSWORD: str = os.getenv("VAULT_PASSWORD", "")
     VAULT_SALT: str = os.getenv("VAULT_SALT", "labourious-salt-v1")
 

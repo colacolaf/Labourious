@@ -5,10 +5,8 @@ import { brokersApi, vaultApi } from '../../utils/api-client';
 const EXCHANGES = ['alpaca', 'binance', 'kraken', 'ibkr'];
 
 export default function BrokerStep() {
-  const { setFormData, nextStep } = useWizardStore((s) => ({
-    setFormData: s.setFormData,
-    nextStep: s.nextStep,
-  }));
+  const setFormData = useWizardStore((s) => s.setFormData);
+  const nextStep = useWizardStore((s) => s.nextStep);
   const [exchange, setExchange] = useState('alpaca');
   const [apiKey, setApiKey] = useState('');
   const [secret, setSecret] = useState('');

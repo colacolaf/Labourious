@@ -14,7 +14,8 @@ function strength(pwd) {
 const LABELS = ['12+ chars', 'Uppercase', 'Lowercase', 'Digit', 'Special'];
 
 export default function WelcomeStep() {
-  const { setFormData, nextStep } = useWizardStore((s) => ({ setFormData: s.setFormData, nextStep: s.nextStep }));
+  const setFormData = useWizardStore((s) => s.setFormData);
+  const nextStep = useWizardStore((s) => s.nextStep);
   const [pwd, setPwd] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
