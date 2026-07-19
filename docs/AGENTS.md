@@ -47,7 +47,7 @@ Every subagent has:
 
 ---
 
-## Room Taxonomy (16 Rooms, 30-40 Agents)
+## Room Taxonomy (16 Rooms, 50+ Agents)
 
 ### Room 1: Research (3-5 agents)
 Deep web research, SEC filings, news, academic papers, alternative data gathering.

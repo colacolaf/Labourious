@@ -2,7 +2,7 @@
 
 **The ultimate AI portfolio manager. So detailed it won't miss.**
 
-Labourious is a local-first, GitHub-installable Electron desktop app. You connect your own API model, chat with a calm, collected Portfolio Manager, and it orchestrates 30-40 highly sophisticated AI subagents across 16 specialized rooms to give you insights most AI misses entirely.
+Labourious is a local-first, GitHub-installable Electron desktop app. You connect your own API model, chat with a calm, collected Portfolio Manager, and it orchestrates 50+ highly sophisticated AI subagents across 16 specialized rooms to give you insights most AI misses entirely.
 
 ---
 
@@ -18,7 +18,7 @@ The Portfolio Manager then synthesizes EVERYTHING into one unified report: a det
 
 | Typical AI | Labourious |
 |---|---|
-| One model, one response | One orchestrator, 30-40 specialized agents all contributing |
+| One model, one response | One orchestrator, 50+ specialized agents all contributing |
 | Surface-level analysis | Multi-room deep research — quant, fundamental, macro, sentiment, alternative data, and more |
 | No memory between sessions | Vector DB + knowledge graph that learns from every decision |
 | Generic | You write the rules, mandates, and constraints; PM always follows them |
@@ -64,7 +64,7 @@ Each room has 1-5 agents. Agents can overlap — Quant and Risk might both analy
 ## Quick Links
 
 - [Architecture](LABOURIOUS_ARCHITECTURE.md) — How the Portfolio Manager and subagent system works
-- [Agents](AGENTS.md) — Complete 16-room agent taxonomy
+- [Agents](AGENTS.md) — Complete 16-room, 50+ agent taxonomy
 - [Setup](LABOURIOUS_SETUP.md) — Install from GitHub and connect your API model
 - [Features](FEATURES.md) — Full feature set
 - [Security](SECURITY.md) — Local-first security model

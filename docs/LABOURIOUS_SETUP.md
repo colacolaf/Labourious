@@ -1,5 +1,7 @@
 # Labourious Setup Guide
 
+> **⚠️ Aspirational document.** This guide describes the planned setup process. The source code (backend/, frontend/, tests/) has not yet been rebuilt for the new architecture. Paths referenced below may not exist yet.
+
 ## Overview
 
 Labourious is a local-first Electron desktop app you install from GitHub. You bring your own LLM API keys (or local Ollama). The app runs entirely on your machine.

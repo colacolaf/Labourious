@@ -2,7 +2,7 @@
 
 ## Feature Overview
 
-Labourious is the ultimate AI portfolio manager — a single orchestrator (the Portfolio Manager) that coordinates 30-40 specialized subagents across 16 rooms to produce insights most AI misses.
+Labourious is the ultimate AI portfolio manager — a single orchestrator (the Portfolio Manager) that coordinates 50+ specialized subagents across 16 rooms to produce insights most AI misses.
 
 ---
 
@@ -25,7 +25,7 @@ Labourious is the ultimate AI portfolio manager — a single orchestrator (the P
 - Checked against every recommendation
 
 ### Subagent System
-- **30-40 highly sophisticated agents** across 16 specialized rooms
+- **50+ highly sophisticated agents** across 16 specialized rooms
 - **Multi-page system prompts** per agent — personality, expertise, tools, citation rules, formatting
 - **1-10 minute research cycles** depending on agent and complexity
 - **Fresh source citation** — must use recent data, no stale information
