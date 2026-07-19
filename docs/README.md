@@ -1,255 +1,90 @@
-# LABOURIOUS: Complete Documentation Package
+# Labourious
 
-**Version:** 1.0 MVP  
-**Status:** Ready for Implementation  
-**Last Updated:** June 2026
+**The ultimate AI portfolio manager. So detailed it won't miss.**
 
-## Overview
-
-Labourious is an open-source, locally-hosted AI trading warroom that brings institutional-grade multi-strategy trading to your desktop. This package contains complete documentation for building, deploying, and using Labourious.
-
-## Documentation Files Included
-
-### Core Documentation
-
-1. **README.md** - Project overview, vision, features, and quick start
-2. **SETUP.md** - Installation guide with three deployment methods
-3. **AGENT_CREATION.md** - Guide to writing trading rules and agents
-4. **ARCHITECTURE.md** - Technical deep-dive into system design
-5. **PROJECT_STRUCTURE.md** - Complete codebase organization
-6. **FRONTEND.md** - Frontend architecture and design specifications
-7. **PHASE1_COMPLETE_DOCS.md** - Contributing, testing, deployment, glossary, performance tuning
-
-### Reference Documentation
-
-8. **AGENTS.md** - Complete agent system taxonomy and examples
-9. **FEATURES.md** - Full feature set for MVP and future phases
-10. **API_REFERENCE.md** - REST API and WebSocket endpoints
-11. **CONTEXT_FILES.md** - Context file syntax and variables
-12. **BROKERS.md** - Broker-specific integration guides
-13. **SECURITY.md** - Encryption model and best practices
-14. **TROUBLESHOOTING.md** - Common issues and solutions
-
-### Implementation Files
-
-15. **SKELETON_CODE.md** - Copy-paste ready Phase 1 foundation code
-16. **PROJECT_INSTRUCTIONS.md** - Complete project requirements
-
-## Quick Navigation
-
-### For Users
-- Start with: **README.md** → **SETUP.md** → **AGENT_CREATION.md**
-- Reference: **TROUBLESHOOTING.md**, **BROKERS.md**, **CONTEXT_FILES.md**
-
-### For Developers
-- Start with: **PROJECT_INSTRUCTIONS.md** → **ARCHITECTURE.md** → **PROJECT_STRUCTURE.md**
-- Implementation: **SKELETON_CODE.md**, **FRONTEND.md**
-- Contribute: See Contributing.md in PHASE1_COMPLETE_DOCS.md
-
-### For Deployment
-- Single Machine: **SETUP.md** (Option A)
-- Docker: **SETUP.md** (Option B)
-- Advanced: See Deployment.md in PHASE1_COMPLETE_DOCS.md
-
-## File Structure
-
-```
-labourious-docs/
-├── README.md (this file)
-├── 01-README.md
-├── 02-SETUP.md
-├── 03-AGENT_CREATION.md
-├── 04-ARCHITECTURE.md
-├── 05-PROJECT_STRUCTURE.md
-├── 06-FRONTEND.md
-├── 07-AGENTS.md
-├── 08-FEATURES.md
-├── 09-API_REFERENCE.md
-├── 10-CONTEXT_FILES.md
-├── 11-BROKERS.md
-├── 12-SECURITY.md
-├── 13-TROUBLESHOOTING.md
-├── 14-SKELETON_CODE.md
-├── 15-PHASE1_COMPLETE_DOCS.md
-└── 16-PROJECT_INSTRUCTIONS.md
-```
-
-## Key Features
-
-✅ **Locally Hosted** - No cloud dependency, full user control  
-✅ **Encrypted Credentials** - AES-256 encryption, PBKDF2 key derivation  
-✅ **Multi-Strategy Support** - Day trading, swing trading, long-term investing  
-✅ **AI-Powered Agents** - Local Ollama or cloud LLM (Claude, GPT)  
-✅ **Context-Driven Rules** - Plain English or JSON trading rules  
-✅ **Real-Time Monitoring** - Retro warroom UI with live updates  
-✅ **Multiple Execution Modes** - Autonomous, human-in-loop, risk-based  
-✅ **Paper Trading** - Test strategies risk-free before going live  
-✅ **Open Source** - MIT License, community-driven development
-
-## Installation Quick Start
-
-### Native (Python + npm)
-```bash
-git clone https://github.com/yourusername/labourious.git
-cd labourious
-python setup.py
-```
-
-### Docker
-```bash
-docker build -t labourious:latest .
-docker run -p 3000:3000 -p 8000:8000 -v ~/.labourious-keys:/app/keys labourious:latest
-```
-
-### Standalone
-- Download .exe (Windows) or .app (macOS) from releases
-- Double-click to run
-- Setup wizard launches automatically
-
-See **SETUP.md** for detailed instructions.
-
-## Project Structure Overview
-
-```
-labourious/
-├── frontend/          # React + Electron UI
-│   ├── src/          # Component source
-│   └── package.json
-├── backend/          # Python FastAPI
-│   ├── agents/       # Agent orchestration
-│   ├── brokers/      # Broker integrations
-│   ├── llm/          # LLM routing
-│   ├── vault/        # Encryption
-│   └── main.py       # API server
-├── docs/             # This documentation
-├── examples/         # Example agents and contexts
-├── tests/            # Test suite
-└── docker/           # Docker setup
-```
-
-See **PROJECT_STRUCTURE.md** for complete breakdown.
-
-## Technology Stack
-
-### Frontend
-- Electron (desktop)
-- React 18+ (UI)
-- Zustand (state)
-- Framer Motion (animations)
-- Recharts (charting)
-- Tailwind CSS (styling)
-
-### Backend
-- Python 3.9+
-- FastAPI (REST API)
-- SQLAlchemy (ORM)
-- APScheduler (task scheduling)
-- Cryptography (encryption)
-- httpx (async HTTP)
-
-### External Integrations
-- Ollama (local LLM)
-- Claude API (optional)
-- GPT API (optional)
-- Interactive Brokers (stocks)
-- Kraken (crypto)
-- Coinbase (crypto)
-
-## Development Roadmap
-
-**Phase 1 (MVP - Weeks 1-4):**
-- Core infrastructure
-- 3 trading rooms
-- Broker integrations
-- Encryption vault
-- Basic warroom UI
-
-**Phase 2 (Weeks 5-6):**
-- Context file UI builder
-- Backtesting engine
-- Dashboard with charts
-- Mobile remote access
-
-**Phase 3 (Weeks 7+):**
-- Cloud LLM support
-- Multi-user support
-- Agent marketplace
-- Advanced analytics
-
-## Support & Community
-
-- **GitHub Issues:** Bug reports and feature requests
-- **GitHub Discussions:** Questions and ideas
-- **Discord:** Real-time community chat (TBD)
-- **Email:** security@labourious.dev (security issues only)
-
-## Security & Disclaimer
-
-⚠️ **Trading Disclaimer:**
-- Labourious is a tool, not financial advice
-- Past performance does not guarantee future results
-- Trading involves risk; you may lose money
-- Use at your own risk and never risk money you can't afford to lose
-
-🔐 **Security:**
-- All API keys encrypted locally with AES-256
-- Keys never leave your machine
-- No cloud sync or backup (user-controlled)
-- Open-source code for community audit
-- See **SECURITY.md** for full details
-
-## License
-
-MIT License - Use Labourious freely for personal or commercial projects
-
-## Contributing
-
-Labourious welcomes contributions from developers, traders, and community members. See **Contributing Guide** in PHASE1_COMPLETE_DOCS.md for:
-- Code contribution process
-- Adding new brokers
-- Submitting trading rules
-- Documentation improvements
-- Community support
-
-## Next Steps
-
-1. **Read README.md** - Understand the vision
-2. **Follow SETUP.md** - Install Labourious
-3. **Follow AGENT_CREATION.md** - Write your first agent
-4. **Join the community** - Share your agents, ask questions
-5. **Contribute** - Help improve Labourious for everyone
-
-## Documentation Quality
-
-- ✅ Complete and comprehensive
-- ✅ Copy-paste ready code examples
-- ✅ Step-by-step walkthroughs
-- ✅ Troubleshooting guides
-- ✅ Security best practices
-- ✅ Architecture deep-dives
-- ✅ API reference
-- ✅ Contributing guidelines
-
-## Version History
-
-| Version | Date | Status | Notes |
-|---------|------|--------|-------|
-| 1.0 | June 2026 | Ready | MVP documentation complete |
-
-## Acknowledgments
-
-This documentation package represents months of research, design, and feedback from:
-- Trading community members
-- Security researchers
-- Open-source developers
-- Beta users and testers
-
-Thank you for your interest in Labourious!
+Labourious is a local-first, GitHub-installable Electron desktop app. You connect your own API model, chat with a calm, collected Portfolio Manager, and it orchestrates 30-40 highly sophisticated AI subagents across 16 specialized rooms to give you insights most AI misses entirely.
 
 ---
 
-**Ready to get started? Begin with README.md or SETUP.md**
+## What It Is
 
-For questions, feedback, or contributions, visit the GitHub repository or start a discussion in the community.
+A single Portfolio Manager agent that you talk to directly. When you ask something — "analyze my tech holdings," "should I rotate into bonds given the macro environment?", "find me undervalued mid-cap healthcare stocks with strong moats" — the Portfolio Manager automatically calls the right subagents alive. Each subagent wakes up with its own multi-page system prompt, does deep research in its domain (1-10 minutes), cites fresh sources, and returns its findings.
 
-**Happy trading! 🚀**
+The Portfolio Manager then synthesizes EVERYTHING into one unified report: a detailed deep-dive, a summary, and a set of clear options for what to do next.
+
+---
+
+## How It's Different
+
+| Typical AI | Labourious |
+|---|---|
+| One model, one response | One orchestrator, 30-40 specialized agents all contributing |
+| Surface-level analysis | Multi-room deep research — quant, fundamental, macro, sentiment, alternative data, and more |
+| No memory between sessions | Vector DB + knowledge graph that learns from every decision |
+| Generic | You write the rules, mandates, and constraints; PM always follows them |
+| Cloud-dependent | Runs locally. Your keys, your data, your machine |
+
+---
+
+## The 16 Rooms
+
+| # | Room | Purpose |
+|---|------|---------|
+| 1 | **Research** | Deep web research, SEC filings, news, academic papers, alternative data |
+| 2 | **Risk** | Portfolio stress testing, VaR, drawdown, correlation matrices, black swan detection |
+| 3 | **Macro** | Central bank policy, GDP, inflation, geopolitics, currency flows, sovereign debt |
+| 4 | **Quant** | Factor analysis, statistical arbitrage, momentum models, mean reversion, options pricing |
+| 5 | **Fundamental** | DCF models, competitive moat analysis, management quality, forensic accounting |
+| 6 | **Technical** | Chart patterns, volume profile, market microstructure, order flow, liquidity |
+| 7 | **Sentiment** | News sentiment, social media, analyst reports, insider trading, options flow, dark pool |
+| 8 | **Strategy** | Portfolio construction, asset allocation, tactical overlays, hedging, tax-loss harvesting |
+| 9 | **Execution** | Order routing, slippage, TWAP/VWAP, broker selection, timing optimization, conflict resolution |
+| 10 | **Memory/Knowledge** | Long-term memory, learns from past decisions, builds knowledge graph |
+| 11 | **Critique** | Devil's advocate — challenges every recommendation, finds blind spots |
+| 12 | **Compliance & Tax** | Wash sale rules, PDT, cross-border tax, concentration limits, regulatory changes |
+| 13 | **Alternative Data** | Satellite imagery, credit card data, supply chain tracking, shipping, weather/crop data |
+| 14 | **Crypto/Digital Assets** | On-chain analytics, DeFi, tokenomics, protocol risk, custody |
+| 15 | **Control** | Meta-agents that manage other agents, quality control, agent health |
+| 16 | **Tasks/Automation** | Idle-mode research, daily briefings, periodic insight surfacing |
+
+Each room has 1-5 agents. Agents can overlap — Quant and Risk might both analyze the same data from different angles. Some agents have lightweight "intern" sub-agents for when the main agent is overwhelmed.
+
+---
+
+## Tech Stack
+
+- **Desktop shell:** Electron
+- **LLM:** User's own API model — Ollama (local), Claude, GPT, Gemini (any or all)
+- **Memory:** Vector DB + knowledge graph
+- **License:** MIT — open source
+- **Philosophy:** Local-first. Your keys, your machine, your data.
+
+---
+
+## Quick Links
+
+- [Architecture](LABOURIOUS_ARCHITECTURE.md) — How the Portfolio Manager and subagent system works
+- [Agents](AGENTS.md) — Complete 16-room agent taxonomy
+- [Setup](LABOURIOUS_SETUP.md) — Install from GitHub and connect your API model
+- [Features](FEATURES.md) — Full feature set
+- [Security](SECURITY.md) — Local-first security model
+
+---
+
+## The Portfolio Manager
+
+The Portfolio Manager is the only agent the user talks to. It is calm, collected, and deliberate. Its system prompt (2-5 pages) contains sections on every subagent and exactly when to call them. It automatically decides which agents to wake up based on the user's request, calls them in parallel or sequentially, and synthesizes their outputs.
+
+Users can set persistent rules/mandates: "Never invest in fossil fuels," "Keep 20% cash minimum," "Only trade during NYSE hours." The PM always follows them.
+
+If agents disagree, the Execution Room's conflict resolution agent makes the final call — or presents both arguments to the user.
+
+---
+
+## Status
+
+**Phase: Documentation & Design** — architecture defined, agent taxonomy in progress. Implementation begins after frontend design is finalized.
+
+---
+
+*Labourious. The AI portfolio manager that goes deeper.*
