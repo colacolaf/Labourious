@@ -28,7 +28,7 @@ The Portfolio Manager is the ONLY agent the user directly chats with. It has a c
 - "No single position over 5% of portfolio"
 - "Prioritize dividend yield > 2%"
 
-**Conflict Resolution:** When agents disagree (e.g., Quant says BUY, Critique says SELL), the Execution Room's dedicated conflict resolution agent makes the final call or presents both arguments to the user.
+**Conflict Resolution:** When agents disagree (e.g., Quant says BUY, Critique says SELL), the Critique Room's Conflict Resolution Agent resolves the dispute or presents both arguments to the user.
 
 ---
 
