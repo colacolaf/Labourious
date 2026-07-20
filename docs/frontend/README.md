@@ -1,43 +1,30 @@
 # Frontend — Labourious HQ
 
-## Building Layout
-
-```
-═════════════════════════════════════════
-🏢 PENTHOUSE — Portfolio Manager + PM Bodyguard
-═════════════════════════════════════════
-📊 FLOOR 4 — COMMAND
-   Strategy (8) • Execution (9) • Memory (10)
-   Control (15) • Tasks/Automation (16)
-═════════════════════════════════════════
-⚖️ FLOOR 3 — JUDGMENT
-   Risk (2) • Critique (11) • Compliance & Tax (12)
-═════════════════════════════════════════
-🔬 FLOOR 2 — ANALYSIS
-   Macro (3) • Quant (4) • Fundamental (5)
-   Technical (6) • Crypto (14)
-═════════════════════════════════════════
-🌐 GROUND FLOOR — INTAKE
-   Entrance Bodyguard • Research (1) • Sentiment (7)
-   Alternative Data (13)
-═════════════════════════════════════════
-```
+Five floors. One elevator. The Portfolio Manager at the top.
 
 ## Elevator Teleport
 
-- No realistic waiting. Walk to elevator shaft, click floor button, doors close → brief flicker/hum → open on new floor (~1 second).
-- Floor indicator ticks during transition.
-- Wall panel beside elevator shows live heat map of which agents are active on each floor.
+Walk to the elevator shaft, click a floor button, doors close — brief flicker/hum — doors open on the new floor. Takes roughly one second. Wall panel beside the elevator shows which agents are active on each floor.
+
+## Floors
+
+| Floor | Name | Rooms |
+|-------|------|-------|
+| Ground | Intake | Entrance Bodyguard, Research (1), Sentiment (7), Alternative Data (13) |
+| Floor 2 | Analysis | Macro (3), Quant (4), Fundamental (5), Technical (6), Crypto (14) |
+| Floor 3 | Judgment | Risk (2), Critique (11), Compliance & Tax (12) |
+| Floor 4 | Command | Strategy (8), Execution (9), Memory (10), Control (15), Tasks (16) |
+| Penthouse | The Top | Portfolio Manager, PM Bodyguard |
 
 ## Floor Files
 
-| Floor | File | Rooms |
-|-------|------|-------|
-| Ground | [`floor-ground.md`](./floor-ground.md) | Entrance Bodyguard, Research (1), Sentiment (7), Alternative Data (13) |
-| Floor 2 | [`floor-2.md`](./floor-2.md) | Macro (3), Quant (4), Fundamental (5), Technical (6), Crypto (14) |
-| Floor 3 | [`floor-3.md`](./floor-3.md) | Risk (2), Critique (11), Compliance & Tax (12) |
-| Floor 4 | [`floor-4.md`](./floor-4.md) | Strategy (8), Execution (9), Memory (10), Control (15), Tasks (16) |
-| Penthouse | [`floor-penthouse.md`](./floor-penthouse.md) | Portfolio Manager, PM Bodyguard |
+| Floor | File |
+|-------|------|
+| Ground | [`floor-ground.md`](./floor-ground.md) |
+| Floor 2 | [`floor-2.md`](./floor-2.md) |
+| Floor 3 | [`floor-3.md`](./floor-3.md) |
+| Floor 4 | [`floor-4.md`](./floor-4.md) |
+| Penthouse | [`floor-penthouse.md`](./floor-penthouse.md) |
 
 ## Agent Location Index
 
@@ -113,4 +100,3 @@
 | Opportunity Scout Agent | 4 | Tasks (16) |
 | Portfolio Manager | Penthouse | — |
 | PM Bodyguard | Penthouse | — |
-
