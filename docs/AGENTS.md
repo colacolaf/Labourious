@@ -218,6 +218,19 @@ Idle-mode research, daily briefings, periodic insight surfacing. **Opt-in only**
 
 ---
 
+## Perimeter Security (2 agents)
+
+Beyond the 16 rooms. These agents don't do analysis — they exist for protection and dramatic effect. They are always on.
+
+| Agent | Post | Role |
+|-------|------|------|
+| **Entrance Bodyguard** | By the main door | Vets every incoming request before it reaches the PM. Filters noise, blocks nonsense, flags suspicious prompts. First line of defense. Stoic, silent, unmovable. |
+| **PM Bodyguard** | Standing beside the Portfolio Manager | The last line. Watches the PM's final output — if the PM is about to make a catastrophic error, the bodyguard speaks up. Loyal, protective, speaks only when it matters. |
+
+Neither bodyguard has a lead, interns, or tools. They just stand there. And they never sleep.
+
+---
+
 ## Room Lead Agents
 
 Every room has a **Lead Agent** (except rooms with 1-2 agents: Memory, Control, Tasks). The lead acts as a mini-orchestrator for its room.
