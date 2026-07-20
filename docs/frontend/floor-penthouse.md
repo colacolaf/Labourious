@@ -36,6 +36,3 @@
 - The PM Bodyguard is visible but silent. Only interrupts for critical warnings.
 - From here, the user can see a dashboard of all active rooms and agents below.
 
----
-
-*Stub file. Chat interface design, PM dashboard, and PM Bodyguard warning system to be added during frontend development.*

@@ -40,6 +40,3 @@
 | **Control (15)** | Quality Control, Agent Health Monitor | No lead (reports to PM) |
 | **Tasks (16)** | Daily Briefing, Opportunity Scout | No lead (reports to PM, opt-in only) |
 
----
-
-*Stub file. Visual design, agent desk layouts, and interaction patterns to be added during frontend development.*

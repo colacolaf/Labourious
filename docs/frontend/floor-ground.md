@@ -45,6 +45,3 @@
 |-------|------|
 | **Entrance Bodyguard** | Main door. Stoic, silent, unmovable. Vets every incoming request. |
 
----
-
-*Stub file. Visual design, agent desk layouts, and interaction patterns to be added during frontend development.*

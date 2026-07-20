@@ -114,6 +114,3 @@
 | Portfolio Manager | Penthouse | — |
 | PM Bodyguard | Penthouse | — |
 
----
-
-*Floor layout files are stubs. Each will be filled in with room descriptions, visual layout, and agent interaction details during frontend development.*

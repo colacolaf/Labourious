@@ -38,6 +38,3 @@
 | **Critique (11)** | Devil's Advocate (+ Bear Case Intern), Blind Spot Detector (+ Historical Analog Intern), Assumption Challenger, Conflict Resolution | Lead Critique |
 | **Compliance & Tax (12)** | Regulatory Compliance, Cross-Border Tax, Trading Restriction | Lead Compliance |
 
----
-
-*Stub file. Visual design, agent desk layouts, and interaction patterns to be added during frontend development.*

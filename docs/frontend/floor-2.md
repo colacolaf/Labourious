@@ -45,6 +45,3 @@
 | **Technical (6)** | Chart & Pattern, Volume & Order Flow, Market Microstructure, Technical Signal Engine | Lead Technical |
 | **Crypto (14)** | On-Chain Analytics, DeFi & Yield, Tokenomics, Protocol Risk | Lead Crypto |
 
----
-
-*Stub file. Visual design, agent desk layouts, and interaction patterns to be added during frontend development.*
