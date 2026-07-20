@@ -2,33 +2,7 @@
 
 > Where recommendations go to get tested. Risk stress-tests the numbers. Critique argues against everything. Compliance makes sure nothing illegal slips through.
 
-## Layout
-
-```
-┌──────────────────────────────────────┐
-│             RISK (2)                 │
-│                                      │
-│ VaR & Stress  │ Correlation/Conc     │
-│ Black Swan    │ Drawdown Monitor     │
-│ Liquidity Risk│ Factor Risk          │
-└──────────────────────────────────────┘
-         [Elevator]
-┌──────────────────────────────────────┐
-│          CRITIQUE (11)               │
-│                                      │
-│ Devil's Advocate  │ Blind Spot Det   │
-│ Assumption Chall  │ Conflict Res     │
-│ (+ Bear Case Intern)                 │
-│ (+ Historical Analog Intern)         │
-└──────────────────────────────────────┘
-┌──────────────────────────────────────┐
-│       COMPLIANCE & TAX (12)          │
-│                                      │
-│ Regulatory Compliance                │
-│ Cross-Border Tax                     │
-│ Trading Restriction                  │
-└──────────────────────────────────────┘
-```
+The floor where every decision gets put through hell before it reaches Command.
 
 ## Rooms
 

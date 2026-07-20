@@ -2,33 +2,7 @@
 
 > Where decisions become actions. Strategy builds the plan. Execution carries it out. Memory learns from it. Control watches everything. Tasks run autonomously when enabled.
 
-## Layout
-
-```
-┌──────────────────────────────────────┐
-│           STRATEGY (8)               │
-│                                      │
-│ Asset Allocation │ Hedging/Protect   │
-│ Tax Optimization │ Portfolio Constr  │
-│ (+ Tactical Overlay Intern)          │
-│ (+ Position Sizing Intern)           │
-└──────────────────────────────────────┘
-         [Elevator]
-┌──────────────────────────────────────┐
-│          EXECUTION (9)               │
-│                                      │
-│ Order Routing    │ Execution Algo    │
-│ Timing/Slippage  │ Pre-Flight Check  │
-└──────────────────────────────────────┘
-┌──────────────┐ ┌──────────────┐ ┌──────────────────┐
-│ MEMORY (10)  │ │ CONTROL (15) │ │  TASKS (16)      │
-│              │ │              │ │  (Opt-in only)   │
-│ Knowledge    │ │ Quality      │ │                  │
-│ Graph        │ │ Control      │ │ Daily Briefing   │
-│ Learning &   │ │ Agent Health │ │ Opportunity Scout│
-│ Reflection   │ │ Monitor      │ │                  │
-└──────────────┘ └──────────────┘ └──────────────────┘
-```
+Five rooms. Strategy plans, Execution acts, Memory remembers, Control watches, Tasks quietly scouts in the background when enabled.
 
 ## Rooms
 

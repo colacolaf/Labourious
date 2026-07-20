@@ -2,26 +2,6 @@
 
 > Calm. Quiet. The Portfolio Manager sits at the center. The PM Bodyguard stands by the window, watching. This is where everything comes together.
 
-## Layout
-
-```
-╔═══════════════════════════════════════╗
-║              PENTHOUSE                ║
-║                                       ║
-║        [PM Bodyguard]                 ║
-║                                       ║
-║    ╔═══════════════════════╗          ║
-║    ║  PORTFOLIO MANAGER    ║          ║
-║    ║                      ║          ║
-║    ║  Calm. Collected.     ║          ║
-║    ║  Never rushed.        ║          ║
-║    ║  Always thorough.     ║          ║
-║    ╚═══════════════════════╝          ║
-║                                       ║
-║          [Elevator to floor 4]         ║
-╚═══════════════════════════════════════╝
-```
-
 ## Occupants
 
 | Agent | Role |

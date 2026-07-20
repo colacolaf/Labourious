@@ -2,38 +2,7 @@
 
 > The engine room. Five rooms of analysts running models, crunching numbers, and finding signals.
 
-## Layout
-
-```
-┌─────────────────┐  ┌──────────────────┐
-│   MACRO (3)     │  │    QUANT (4)     │
-│                 │  │                  │
-│ Central Bank    │  │ Factor Analysis  │
-│ Geopolitical    │  │ Statistical Arb  │
-│ Currency/Debt   │  │ Options & Vol    │
-│ Global Growth   │  │ Momentum & Trend │
-│                 │  │ Machine Learning │
-│                 │  │ Regime Detection │
-│                 │  │ Risk Budgeting   │
-└─────────────────┘  └──────────────────┘
-         [Elevator]
-┌─────────────────┐  ┌──────────────────┐
-│FUNDAMENTAL (5)  │  │  TECHNICAL (6)   │
-│                 │  │                  │
-│ DCF & Valuation │  │ Chart & Pattern  │
-│ Moat & Comp     │  │ Volume/OrderFlow │
-│ Mgmt Quality    │  │ Market Micro     │
-│ Forensic Acct   │  │ Tech Signal Eng  │
-│ Catalyst/Event  │  │                  │
-│ Industry Struct │  │                  │
-└─────────────────┘  └──────────────────┘
-┌──────────────────────────────────────┐
-│            CRYPTO (14)               │
-│                                      │
-│ On-Chain  │ DeFi & Yield │ Tokenomics│
-│ Protocol Risk                        │
-└──────────────────────────────────────┘
-```
+The biggest floor. Macro watches the global stage. Quant builds the models. Fundamental reads the companies. Technical studies the charts. Crypto covers the digital frontier.
 
 ## Rooms
 

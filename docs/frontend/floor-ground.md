@@ -2,34 +2,7 @@
 
 > The first thing you see when you walk in. The Entrance Bodyguard nods. Beyond the lobby: Research, Sentiment, and Alternative Data — the eyes and ears of the operation.
 
-## Layout
-
-```
-╔═══════════════════════════════════════╗
-║           ENTRANCE LOBBY              ║
-║         [Entrance Bodyguard]          ║
-║              [Elevator]               ║
-╚═══════════════════════════════════════╝
-         │                   │
-┌────────┴────────┐  ┌───────┴──────────┐
-│  RESEARCH (1)   │  │  SENTIMENT (7)   │
-│                 │  │                  │
-│ Web Research    │  │ News Sentiment   │
-│ SEC/Regulatory  │  │ Social Media     │
-│ Academic        │  │ Insider/Inst     │
-│ News Agg        │  │ Options Flow     │
-│ Data Scout      │  │ Analyst Revisions│
-└─────────────────┘  └──────────────────┘
-                    ┌──────────────────┐
-                    │ ALT DATA (13)    │
-                    │                  │
-                    │ Satellite/Geo    │
-                    │ Supply Chain     │
-                    │ Consumer Spend   │
-                    │ Weather/Commod   │
-                    │ Web & App Traffic│
-                    └──────────────────┘
-```
+Three rooms radiate from the entrance lobby. Research digs for facts. Sentiment reads the mood. Alternative Data finds signals nobody else is looking at.
 
 ## Rooms
 
