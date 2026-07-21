@@ -9,6 +9,7 @@ Fundamental reads the companies. Valuation, moats, management, forensic accounti
 
 | Agent | File |
 |-------|------|
+| **Warren Buffett** — Lead Fundamental | [`warren-buffett/`](warren-buffett/) |
 | DCF & Valuation Agent | [`dcf-valuation/`](dcf-valuation/) |
 | Moat & Competitive Analysis Agent | [`moat-competitive-analysis/`](moat-competitive-analysis/) |
 | Management Quality Agent | [`management-quality/`](management-quality/) |

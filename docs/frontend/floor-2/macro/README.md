@@ -9,6 +9,7 @@ Macro watches the global stage. Central banks, geopolitics, currencies, sovereig
 
 | Agent | File |
 |-------|------|
+| **Larry Fink** — Lead Macro | [`larry-fink/`](larry-fink/) |
 | Central Bank & Liquidity Agent | [`central-bank-liquidity/`](central-bank-liquidity/) |
 | **Ian Bremmer** — Geopolitical Risk Agent | [`geopolitical-risk/`](geopolitical-risk/) |
 | Currency & Sovereign Debt Agent | [`currency-sovereign-debt/`](currency-sovereign-debt/) |

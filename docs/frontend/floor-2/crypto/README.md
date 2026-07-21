@@ -9,6 +9,7 @@ Crypto covers the digital frontier. On-chain analytics, DeFi yields, tokenomics 
 
 | Agent | File |
 |-------|------|
+| **Vitalik Buterin** — Lead Crypto | [`vitalik-buterin/`](vitalik-buterin/) |
 | **Alex Svanevik** — On-Chain Analytics Agent | [`on-chain-analytics/`](on-chain-analytics/) |
 | DeFi & Yield Agent | [`defi-yield/`](defi-yield/) |
 | Tokenomics Agent | [`tokenomics/`](tokenomics/) |

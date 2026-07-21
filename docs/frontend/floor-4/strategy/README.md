@@ -9,6 +9,7 @@ Strategy builds the plan. Asset allocation, hedging, tax optimization, and portf
 
 | Agent | File |
 |-------|------|
+| **Ray Dalio** — Lead Strategy | [`ray-dalio/`](ray-dalio/) |
 | **David Swensen** — Asset Allocation Agent | [`asset-allocation/`](asset-allocation/) |
 | Tactical Overlay Intern | [`tactical-overlay-intern/`](tactical-overlay-intern/) |
 | Hedging & Protection Agent | [`hedging-protection/`](hedging-protection/) |

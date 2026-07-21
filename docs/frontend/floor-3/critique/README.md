@@ -9,6 +9,7 @@ Critique argues against everything. Devil's advocacy, blind spot detection, assu
 
 | Agent | File |
 |-------|------|
+| **Charlie Munger** — Lead Critique | [`charlie-munger/`](charlie-munger/) |
 | **Meredith Whitney** — Devil's Advocate Agent | [`devils-advocate/`](devils-advocate/) |
 | Bear Case Intern | [`bear-case-intern/`](bear-case-intern/) |
 | Blind Spot Detector Agent | [`blind-spot-detector/`](blind-spot-detector/) |

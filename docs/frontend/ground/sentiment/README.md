@@ -9,6 +9,7 @@ Sentiment reads the mood. Options flow, social media, insider moves, analyst rev
 
 | Agent | File |
 |-------|------|
+| **Cathie Wood** — Lead Sentiment | [`cathie-wood/`](cathie-wood/) |
 | News Sentiment Agent | [`news-sentiment/`](news-sentiment/) |
 | Social Media & Retail Agent | [`social-media-retail/`](social-media-retail/) |
 | Insider & Institutional Agent | [`insider-institutional/`](insider-institutional/) |

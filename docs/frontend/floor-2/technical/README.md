@@ -9,6 +9,7 @@ Technical studies the charts. Pattern recognition, volume analysis, market micro
 
 | Agent | File |
 |-------|------|
+| **Mark Minervini** — Lead Technical | [`mark-minervini/`](mark-minervini/) |
 | Chart & Pattern Agent | [`chart-pattern/`](chart-pattern/) |
 | Volume & Order Flow Agent | [`volume-order-flow/`](volume-order-flow/) |
 | Market Microstructure Agent | [`market-microstructure/`](market-microstructure/) |

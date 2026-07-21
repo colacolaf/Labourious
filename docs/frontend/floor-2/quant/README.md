@@ -9,6 +9,7 @@ Quant builds the models. Factor analysis, statistical arbitrage, volatility, mom
 
 | Agent | File |
 |-------|------|
+| **Jim Simons** — Lead Quant | [`jim-simons/`](jim-simons/) |
 | Factor Analysis Agent | [`factor-analysis/`](factor-analysis/) |
 | **Ed Thorp** — Statistical Arbitrage Agent | [`statistical-arbitrage/`](statistical-arbitrage/) |
 | Options & Volatility Agent | [`options-volatility/`](options-volatility/) |

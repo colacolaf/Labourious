@@ -9,6 +9,7 @@ Execution carries out the plan. Order routing, algorithms, timing optimization, 
 
 | Agent | File |
 |-------|------|
+| **Vlad Tenev** — Lead Execution | [`vlad-tenev/`](vlad-tenev/) |
 | Order Routing Agent | [`order-routing/`](order-routing/) |
 | Execution Algorithm Agent | [`execution-algorithm/`](execution-algorithm/) |
 | Timing & Slippage Agent | [`timing-slippage/`](timing-slippage/) |

@@ -9,6 +9,7 @@ Risk stress-tests the numbers. VaR models, correlation matrices, black swan dete
 
 | Agent | File |
 |-------|------|
+| **Nassim Taleb** — Lead Risk | [`nassim-taleb/`](nassim-taleb/) |
 | VaR & Stress Test Agent | [`var-stress-test/`](var-stress-test/) |
 | Correlation & Concentration Agent | [`correlation-concentration/`](correlation-concentration/) |
 | **Didier Sornette** — Black Swan Detection Agent | [`black-swan-detection/`](black-swan-detection/) |

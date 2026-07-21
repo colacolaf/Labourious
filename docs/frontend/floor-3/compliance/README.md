@@ -9,6 +9,7 @@ Compliance makes sure nothing illegal slips through. Regulatory requirements, cr
 
 | Agent | File |
 |-------|------|
+| **Preet Bharara** — Lead Compliance | [`preet-bharara/`](preet-bharara/) |
 | Regulatory Compliance Agent | [`regulatory-compliance/`](regulatory-compliance/) |
 | **H. David Rosenbloom** — Cross-Border Tax Agent | [`cross-border-tax/`](cross-border-tax/) |
 | Trading Restriction Agent | [`trading-restriction/`](trading-restriction/) |

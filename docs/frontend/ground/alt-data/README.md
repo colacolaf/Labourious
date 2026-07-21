@@ -9,6 +9,7 @@ Alternative Data finds signals nobody else is looking at. Satellites, supply cha
 
 | Agent | File |
 |-------|------|
+| **Matthew Granade** — Lead Alt Data | [`matthew-granade/`](matthew-granade/) |
 | **James Crawford** — Satellite & Geospatial Agent | [`satellite-geospatial/`](satellite-geospatial/) |
 | Supply Chain Agent | [`supply-chain/`](supply-chain/) |
 | Consumer Spending Agent | [`consumer-spending/`](consumer-spending/) |
