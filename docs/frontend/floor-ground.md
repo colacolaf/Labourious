@@ -12,9 +12,9 @@ Four rooms radiate from the entrance lobby. Research digs for facts. Sentiment r
 
 | Room | Agents | Lead |
 |------|--------|------|
-| **Research (1)** | Web Research, SEC/Regulatory (+ Hedge Fund & Political Filings Intern), Academic Research, News Aggregation, Data Scout | Lead Researcher |
-| **Sentiment (7)** | News Sentiment, Social Media & Retail, Insider & Institutional, Options Flow & Dark Pool, Analyst & Earnings Revision | Lead Sentiment |
-| **Alternative Data (13)** | Satellite & Geospatial, Supply Chain, Consumer Spending, Weather & Commodity, Web & App Traffic | Lead Alt Data |
+| **Research (1)** | Web Research, SEC/Regulatory (+ Hedge Fund & Political Filings Intern), Academic Research, News Aggregation, Data Scout | Michael Burry |
+| **Sentiment (7)** | News Sentiment, Social Media & Retail, Insider & Institutional, Options Flow & Dark Pool, Analyst & Earnings Revision | Cathie Wood |
+| **Alternative Data (13)** | Satellite & Geospatial, Supply Chain, Consumer Spending, Weather & Commodity, Web & App Traffic | Matthew Granade |
 | **Storage (14)** | TBD | TBD |
 
 ## Perimeter

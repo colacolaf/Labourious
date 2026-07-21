@@ -8,9 +8,9 @@ The biggest floor. Macro watches the global stage. Quant builds the models. Fund
 
 | Room | Agents | Lead |
 |------|--------|------|
-| **Macro (3)** | Central Bank & Liquidity Analyst, Geopolitical Risk Agent, Currency & Sovereign Debt Agent, Global Growth Tracker | Lead Macro |
-| **Quant (4)** | Factor Analysis, Statistical Arbitrage, Options & Volatility, Momentum & Trend, Machine Learning, Regime Detection, Risk Budgeting & Allocation | Lead Quant |
-| **Fundamental (5)** | DCF & Valuation, Moat & Competitive Analysis, Management Quality, Forensic Accounting, Catalyst & Event, Industry Structure | Lead Fundamental |
-| **Technical (6)** | Chart & Pattern, Volume & Order Flow, Market Microstructure, Technical Signal Engine | Lead Technical |
-| **Crypto (14)** | On-Chain Analytics, DeFi & Yield, Tokenomics, Protocol Risk | Lead Crypto |
+| **Macro (3)** | Central Bank & Liquidity Analyst, Geopolitical Risk Agent, Currency & Sovereign Debt Agent, Global Growth Tracker | Larry Fink |
+| **Quant (4)** | Factor Analysis, Statistical Arbitrage, Options & Volatility, Momentum & Trend, Machine Learning, Regime Detection, Risk Budgeting & Allocation | Jim Simons |
+| **Fundamental (5)** | DCF & Valuation, Moat & Competitive Analysis, Management Quality, Forensic Accounting, Catalyst & Event, Industry Structure | Warren Buffett |
+| **Technical (6)** | Chart & Pattern, Volume & Order Flow, Market Microstructure, Technical Signal Engine | Mark Minervini |
+| **Crypto (14)** | On-Chain Analytics, DeFi & Yield, Tokenomics, Protocol Risk | Vitalik Buterin |
 

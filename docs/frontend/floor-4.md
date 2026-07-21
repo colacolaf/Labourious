@@ -8,8 +8,8 @@ Five rooms. Strategy plans, Execution acts, Memory remembers, Control watches, T
 
 | Room | Agents | Lead |
 |------|--------|------|
-| **Strategy (8)** | Asset Allocation (+ Tactical Overlay Intern), Hedging & Protection, Tax Optimization, Portfolio Construction (+ Position Sizing Intern) | Lead Strategy |
-| **Execution (9)** | Order Routing, Execution Algorithm, Timing & Slippage, Pre-Flight Check | Lead Execution |
+| **Strategy (8)** | Asset Allocation (+ Tactical Overlay Intern), Hedging & Protection, Tax Optimization, Portfolio Construction (+ Position Sizing Intern) | Ray Dalio |
+| **Execution (9)** | Order Routing, Execution Algorithm, Timing & Slippage, Pre-Flight Check | Vlad Tenev |
 | **Memory (10)** | Knowledge Graph, Learning & Reflection | No lead (reports to PM) |
 | **Control (15)** | Quality Control, Agent Health Monitor | No lead (reports to PM) |
 | **Tasks (16)** | Daily Briefing, Opportunity Scout | No lead (reports to PM, opt-in only) |
