@@ -9,10 +9,10 @@ Quant builds the models. Factor analysis, statistical arbitrage, volatility, mom
 
 | Agent | File |
 |-------|------|
-| Factor Analysis | [`factor-analysis.md`](factor-analysis.md) |
-| **Ed Thorp** — Statistical Arbitrage | [`statistical-arbitrage.md`](statistical-arbitrage.md) |
-| Options & Volatility | [`options-volatility.md`](options-volatility.md) |
-| Momentum & Trend | [`momentum-trend.md`](momentum-trend.md) |
-| Machine Learning | [`machine-learning.md`](machine-learning.md) |
-| Regime Detection | [`regime-detection.md`](regime-detection.md) |
-| Risk Budgeting & Allocation | [`risk-budgeting-allocation.md`](risk-budgeting-allocation.md) |
+| Factor Analysis Agent | [`factor-analysis.md`](factor-analysis.md) |
+| **Ed Thorp** — Statistical Arbitrage Agent | [`statistical-arbitrage.md`](statistical-arbitrage.md) |
+| Options & Volatility Agent | [`options-volatility.md`](options-volatility.md) |
+| Momentum & Trend Agent | [`momentum-trend.md`](momentum-trend.md) |
+| Machine Learning Agent | [`machine-learning.md`](machine-learning.md) |
+| Regime Detection Agent | [`regime-detection.md`](regime-detection.md) |
+| Risk Budgeting & Allocation Agent | [`risk-budgeting-allocation.md`](risk-budgeting-allocation.md) |

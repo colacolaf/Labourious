@@ -9,9 +9,9 @@ Strategy builds the plan. Asset allocation, hedging, tax optimization, and portf
 
 | Agent | File |
 |-------|------|
-| **David Swensen** — Asset Allocation | [`asset-allocation.md`](asset-allocation.md) |
+| **David Swensen** — Asset Allocation Agent | [`asset-allocation.md`](asset-allocation.md) |
 | Tactical Overlay Intern | [`tactical-overlay-intern.md`](tactical-overlay-intern.md) |
-| Hedging & Protection | [`hedging-protection.md`](hedging-protection.md) |
-| Tax Optimization | [`tax-optimization.md`](tax-optimization.md) |
-| Portfolio Construction | [`portfolio-construction.md`](portfolio-construction.md) |
+| Hedging & Protection Agent | [`hedging-protection.md`](hedging-protection.md) |
+| Tax Optimization Agent | [`tax-optimization.md`](tax-optimization.md) |
+| Portfolio Construction Agent | [`portfolio-construction.md`](portfolio-construction.md) |
 | Position Sizing Intern | [`position-sizing-intern.md`](position-sizing-intern.md) |

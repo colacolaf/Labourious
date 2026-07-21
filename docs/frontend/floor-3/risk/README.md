@@ -9,9 +9,9 @@ Risk stress-tests the numbers. VaR models, correlation matrices, black swan dete
 
 | Agent | File |
 |-------|------|
-| VaR & Stress Test | [`var-stress-test.md`](var-stress-test.md) |
-| Correlation & Concentration | [`correlation-concentration.md`](correlation-concentration.md) |
-| **Didier Sornette** — Black Swan Detection | [`black-swan-detection.md`](black-swan-detection.md) |
-| Drawdown Monitor | [`drawdown-monitor.md`](drawdown-monitor.md) |
-| Liquidity Risk | [`liquidity-risk.md`](liquidity-risk.md) |
-| Factor Risk | [`factor-risk.md`](factor-risk.md) |
+| VaR & Stress Test Agent | [`var-stress-test.md`](var-stress-test.md) |
+| Correlation & Concentration Agent | [`correlation-concentration.md`](correlation-concentration.md) |
+| **Didier Sornette** — Black Swan Detection Agent | [`black-swan-detection.md`](black-swan-detection.md) |
+| Drawdown Monitor Agent | [`drawdown-monitor.md`](drawdown-monitor.md) |
+| Liquidity Risk Agent | [`liquidity-risk.md`](liquidity-risk.md) |
+| Factor Risk Agent | [`factor-risk.md`](factor-risk.md) |

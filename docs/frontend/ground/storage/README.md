@@ -9,4 +9,4 @@ Storage keeps everything organized. Data persistence, caching, and archival for 
 
 | Agent | File |
 |-------|------|
-| Storage | [`storage.md`](storage.md) |
+| Storage Agent | [`storage.md`](storage.md) |

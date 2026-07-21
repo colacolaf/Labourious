@@ -9,6 +9,6 @@ Compliance makes sure nothing illegal slips through. Regulatory requirements, cr
 
 | Agent | File |
 |-------|------|
-| Regulatory Compliance | [`regulatory-compliance.md`](regulatory-compliance.md) |
-| **H. David Rosenbloom** — Cross-Border Tax | [`cross-border-tax.md`](cross-border-tax.md) |
-| Trading Restriction | [`trading-restriction.md`](trading-restriction.md) |
+| Regulatory Compliance Agent | [`regulatory-compliance.md`](regulatory-compliance.md) |
+| **H. David Rosenbloom** — Cross-Border Tax Agent | [`cross-border-tax.md`](cross-border-tax.md) |
+| Trading Restriction Agent | [`trading-restriction.md`](trading-restriction.md) |

@@ -9,9 +9,9 @@ Critique argues against everything. Devil's advocacy, blind spot detection, assu
 
 | Agent | File |
 |-------|------|
-| **Meredith Whitney** — Devil's Advocate | [`devils-advocate.md`](devils-advocate.md) |
+| **Meredith Whitney** — Devil's Advocate Agent | [`devils-advocate.md`](devils-advocate.md) |
 | Bear Case Intern | [`bear-case-intern.md`](bear-case-intern.md) |
-| Blind Spot Detector | [`blind-spot-detector.md`](blind-spot-detector.md) |
+| Blind Spot Detector Agent | [`blind-spot-detector.md`](blind-spot-detector.md) |
 | Historical Analog Intern | [`historical-analog-intern.md`](historical-analog-intern.md) |
-| Assumption Challenger | [`assumption-challenger.md`](assumption-challenger.md) |
-| Conflict Resolution | [`conflict-resolution.md`](conflict-resolution.md) |
+| Assumption Challenger Agent | [`assumption-challenger.md`](assumption-challenger.md) |
+| Conflict Resolution Agent | [`conflict-resolution.md`](conflict-resolution.md) |

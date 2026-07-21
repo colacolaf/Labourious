@@ -9,5 +9,5 @@ Control watches everything. Quality Control audits agent outputs for accuracy. A
 
 | Agent | File |
 |-------|------|
-| Quality Control | [`quality-control.md`](quality-control.md) |
+| Quality Control Agent | [`quality-control.md`](quality-control.md) |
 | Agent Health Monitor | [`agent-health-monitor.md`](agent-health-monitor.md) |
