@@ -59,8 +59,9 @@ How this fits into the broader portfolio. Sector exposure, concentration limits.
 Any recent trades or changes relevant to this question.]
 
 WHAT I'M ASKING EVERYONE:
-[Full list of rooms being briefed and what each is tasked with. This lets
-leads see the full picture — they might spot gaps or overlaps I missed.]
+[Full list of rooms being briefed and what each is tasked with. Context only —
+so you can see the full picture, not tasks for you. This lets leads
+spot gaps or overlaps I might have missed.]
 
 RELEVANT HISTORY:
 [What the Knowledge Graph says about past analysis on this ticker/sector.
@@ -68,9 +69,10 @@ Any prior decisions, what happened, what we learned. Precedent matters.]
 
 YOUR SPECIFIC TASK:
 [Precise ask for THIS lead. What specific questions need answering.
-What format the output should take. What timeline.]
+What format the output should take — narrative synthesis, structured report,
+bullet list, table. What timeline.]
 
-URGENCY: [Routine / Elevated / Immediate]
+URGENCY: [Routine (no deadline) / Elevated (within 1-2 minutes) / Immediate (drop everything, I need this now)]
 ```
 
 Example — briefing Buffett on NVDA:
