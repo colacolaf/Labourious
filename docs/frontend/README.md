@@ -19,9 +19,9 @@ Walk to the elevator shaft, click a floor button, doors close — brief flicker/
 ## Architecture
 
 Each floor directory contains:
-- `README.md` — floor overview, rooms table, and layout notes
+- `README/` — floor overview, rooms table, and layout notes
 - Room directories — individual agent profiles with persona, background, role, system prompt, and tool stubs
-- `ui.md` — UI showcase and visual design (stub)
+- `ui/` — UI showcase and visual design (stub)
 
 Plus the shared:
 - [`lobby-template.md`](./lobby-template.md) — grid-based lobby layout reference
@@ -31,95 +31,95 @@ Plus the shared:
 ### Ground Floor
 | Agent | Room | File |
 |-------|------|------|
-| Entrance Bodyguard Agent | Perimeter | [`ground/perimeter/entrance-bodyguard.md`](./ground/perimeter/entrance-bodyguard.md) |
-| Web Research Agent | Research (1) | [`ground/research/web-research.md`](./ground/research/web-research.md) |
-| **John Hempton** — SEC/Regulatory | Research (1) | [`ground/research/sec-regulatory.md`](./ground/research/sec-regulatory.md) |
-| Hedge Fund & Political Filings Intern | Research (1) | [`ground/research/hedge-fund-political-filings-intern.md`](./ground/research/hedge-fund-political-filings-intern.md) |
-| Academic Research Agent | Research (1) | [`ground/research/academic-research.md`](./ground/research/academic-research.md) |
-| News Aggregation Agent | Research (1) | [`ground/research/news-aggregation.md`](./ground/research/news-aggregation.md) |
-| Data Scout Agent | Research (1) | [`ground/research/data-scout.md`](./ground/research/data-scout.md) |
-| News Sentiment Agent | Sentiment (7) | [`ground/sentiment/news-sentiment.md`](./ground/sentiment/news-sentiment.md) |
-| Social Media & Retail Agent | Sentiment (7) | [`ground/sentiment/social-media-retail.md`](./ground/sentiment/social-media-retail.md) |
-| Insider & Institutional Agent | Sentiment (7) | [`ground/sentiment/insider-institutional.md`](./ground/sentiment/insider-institutional.md) |
-| **Jon Najarian** — Options Flow & Dark Pool | Sentiment (7) | [`ground/sentiment/options-flow-dark-pool.md`](./ground/sentiment/options-flow-dark-pool.md) |
-| Analyst & Earnings Revision Agent | Sentiment (7) | [`ground/sentiment/analyst-earnings-revision.md`](./ground/sentiment/analyst-earnings-revision.md) |
-| **James Crawford** — Satellite & Geospatial | Alt Data (13) | [`ground/alt-data/satellite-geospatial.md`](./ground/alt-data/satellite-geospatial.md) |
-| Supply Chain Agent | Alt Data (13) | [`ground/alt-data/supply-chain.md`](./ground/alt-data/supply-chain.md) |
-| Consumer Spending Agent | Alt Data (13) | [`ground/alt-data/consumer-spending.md`](./ground/alt-data/consumer-spending.md) |
-| Weather & Commodity Agent | Alt Data (13) | [`ground/alt-data/weather-commodity.md`](./ground/alt-data/weather-commodity.md) |
-| Web & App Traffic Agent | Alt Data (13) | [`ground/alt-data/web-app-traffic.md`](./ground/alt-data/web-app-traffic.md) |
-| Storage Agent | Storage (0) | [`ground/storage/storage.md`](./ground/storage/storage.md) |
+| Entrance Bodyguard Agent | Perimeter | [`ground/perimeter/entrance-bodyguard/`](./ground/perimeter/entrance-bodyguard/) |
+| Web Research Agent | Research (1) | [`ground/research/web-research/`](./ground/research/web-research/) |
+| **John Hempton** — SEC/Regulatory | Research (1) | [`ground/research/sec-regulatory/`](./ground/research/sec-regulatory/) |
+| Hedge Fund & Political Filings Intern | Research (1) | [`ground/research/hedge-fund-political-filings-intern/`](./ground/research/hedge-fund-political-filings-intern/) |
+| Academic Research Agent | Research (1) | [`ground/research/academic-research/`](./ground/research/academic-research/) |
+| News Aggregation Agent | Research (1) | [`ground/research/news-aggregation/`](./ground/research/news-aggregation/) |
+| Data Scout Agent | Research (1) | [`ground/research/data-scout/`](./ground/research/data-scout/) |
+| News Sentiment Agent | Sentiment (7) | [`ground/sentiment/news-sentiment/`](./ground/sentiment/news-sentiment/) |
+| Social Media & Retail Agent | Sentiment (7) | [`ground/sentiment/social-media-retail/`](./ground/sentiment/social-media-retail/) |
+| Insider & Institutional Agent | Sentiment (7) | [`ground/sentiment/insider-institutional/`](./ground/sentiment/insider-institutional/) |
+| **Jon Najarian** — Options Flow & Dark Pool | Sentiment (7) | [`ground/sentiment/options-flow-dark-pool/`](./ground/sentiment/options-flow-dark-pool/) |
+| Analyst & Earnings Revision Agent | Sentiment (7) | [`ground/sentiment/analyst-earnings-revision/`](./ground/sentiment/analyst-earnings-revision/) |
+| **James Crawford** — Satellite & Geospatial | Alt Data (13) | [`ground/alt-data/satellite-geospatial/`](./ground/alt-data/satellite-geospatial/) |
+| Supply Chain Agent | Alt Data (13) | [`ground/alt-data/supply-chain/`](./ground/alt-data/supply-chain/) |
+| Consumer Spending Agent | Alt Data (13) | [`ground/alt-data/consumer-spending/`](./ground/alt-data/consumer-spending/) |
+| Weather & Commodity Agent | Alt Data (13) | [`ground/alt-data/weather-commodity/`](./ground/alt-data/weather-commodity/) |
+| Web & App Traffic Agent | Alt Data (13) | [`ground/alt-data/web-app-traffic/`](./ground/alt-data/web-app-traffic/) |
+| Storage Agent | Storage (0) | [`ground/storage/storage/`](./ground/storage/storage/) |
 
 ### Floor 2
 | Agent | Room | File |
 |-------|------|------|
-| Central Bank & Liquidity Agent | Macro (3) | [`floor-2/macro/central-bank-liquidity.md`](./floor-2/macro/central-bank-liquidity.md) |
-| **Ian Bremmer** — Geopolitical Risk | Macro (3) | [`floor-2/macro/geopolitical-risk.md`](./floor-2/macro/geopolitical-risk.md) |
-| Currency & Sovereign Debt Agent | Macro (3) | [`floor-2/macro/currency-sovereign-debt.md`](./floor-2/macro/currency-sovereign-debt.md) |
-| Global Growth Tracker Agent | Macro (3) | [`floor-2/macro/global-growth-tracker.md`](./floor-2/macro/global-growth-tracker.md) |
-| Factor Analysis Agent | Quant (4) | [`floor-2/quant/factor-analysis.md`](./floor-2/quant/factor-analysis.md) |
-| **Ed Thorp** — Statistical Arbitrage | Quant (4) | [`floor-2/quant/statistical-arbitrage.md`](./floor-2/quant/statistical-arbitrage.md) |
-| Options & Volatility Agent | Quant (4) | [`floor-2/quant/options-volatility.md`](./floor-2/quant/options-volatility.md) |
-| Momentum & Trend Agent | Quant (4) | [`floor-2/quant/momentum-trend.md`](./floor-2/quant/momentum-trend.md) |
-| Machine Learning Agent | Quant (4) | [`floor-2/quant/machine-learning.md`](./floor-2/quant/machine-learning.md) |
-| Regime Detection Agent | Quant (4) | [`floor-2/quant/regime-detection.md`](./floor-2/quant/regime-detection.md) |
-| Risk Budgeting & Allocation Agent | Quant (4) | [`floor-2/quant/risk-budgeting-allocation.md`](./floor-2/quant/risk-budgeting-allocation.md) |
-| DCF & Valuation Agent | Fundamental (5) | [`floor-2/fundamental/dcf-valuation.md`](./floor-2/fundamental/dcf-valuation.md) |
-| Moat & Competitive Analysis Agent | Fundamental (5) | [`floor-2/fundamental/moat-competitive-analysis.md`](./floor-2/fundamental/moat-competitive-analysis.md) |
-| Management Quality Agent | Fundamental (5) | [`floor-2/fundamental/management-quality.md`](./floor-2/fundamental/management-quality.md) |
-| **Harry Markopolos** — Forensic Accounting | Fundamental (5) | [`floor-2/fundamental/forensic-accounting.md`](./floor-2/fundamental/forensic-accounting.md) |
-| Catalyst & Event Agent | Fundamental (5) | [`floor-2/fundamental/catalyst-event.md`](./floor-2/fundamental/catalyst-event.md) |
-| Industry Structure Agent | Fundamental (5) | [`floor-2/fundamental/industry-structure.md`](./floor-2/fundamental/industry-structure.md) |
-| Chart & Pattern Agent | Technical (6) | [`floor-2/technical/chart-pattern.md`](./floor-2/technical/chart-pattern.md) |
-| Volume & Order Flow Agent | Technical (6) | [`floor-2/technical/volume-order-flow.md`](./floor-2/technical/volume-order-flow.md) |
-| Market Microstructure Agent | Technical (6) | [`floor-2/technical/market-microstructure.md`](./floor-2/technical/market-microstructure.md) |
-| Technical Signal Engine Agent | Technical (6) | [`floor-2/technical/technical-signal-engine.md`](./floor-2/technical/technical-signal-engine.md) |
-| **Alex Svanevik** — On-Chain Analytics | Crypto (14) | [`floor-2/crypto/on-chain-analytics.md`](./floor-2/crypto/on-chain-analytics.md) |
-| DeFi & Yield Agent | Crypto (14) | [`floor-2/crypto/defi-yield.md`](./floor-2/crypto/defi-yield.md) |
-| Tokenomics Agent | Crypto (14) | [`floor-2/crypto/tokenomics.md`](./floor-2/crypto/tokenomics.md) |
-| Protocol Risk Agent | Crypto (14) | [`floor-2/crypto/protocol-risk.md`](./floor-2/crypto/protocol-risk.md) |
+| Central Bank & Liquidity Agent | Macro (3) | [`floor-2/macro/central-bank-liquidity/`](./floor-2/macro/central-bank-liquidity/) |
+| **Ian Bremmer** — Geopolitical Risk | Macro (3) | [`floor-2/macro/geopolitical-risk/`](./floor-2/macro/geopolitical-risk/) |
+| Currency & Sovereign Debt Agent | Macro (3) | [`floor-2/macro/currency-sovereign-debt/`](./floor-2/macro/currency-sovereign-debt/) |
+| Global Growth Tracker Agent | Macro (3) | [`floor-2/macro/global-growth-tracker/`](./floor-2/macro/global-growth-tracker/) |
+| Factor Analysis Agent | Quant (4) | [`floor-2/quant/factor-analysis/`](./floor-2/quant/factor-analysis/) |
+| **Ed Thorp** — Statistical Arbitrage | Quant (4) | [`floor-2/quant/statistical-arbitrage/`](./floor-2/quant/statistical-arbitrage/) |
+| Options & Volatility Agent | Quant (4) | [`floor-2/quant/options-volatility/`](./floor-2/quant/options-volatility/) |
+| Momentum & Trend Agent | Quant (4) | [`floor-2/quant/momentum-trend/`](./floor-2/quant/momentum-trend/) |
+| Machine Learning Agent | Quant (4) | [`floor-2/quant/machine-learning/`](./floor-2/quant/machine-learning/) |
+| Regime Detection Agent | Quant (4) | [`floor-2/quant/regime-detection/`](./floor-2/quant/regime-detection/) |
+| Risk Budgeting & Allocation Agent | Quant (4) | [`floor-2/quant/risk-budgeting-allocation/`](./floor-2/quant/risk-budgeting-allocation/) |
+| DCF & Valuation Agent | Fundamental (5) | [`floor-2/fundamental/dcf-valuation/`](./floor-2/fundamental/dcf-valuation/) |
+| Moat & Competitive Analysis Agent | Fundamental (5) | [`floor-2/fundamental/moat-competitive-analysis/`](./floor-2/fundamental/moat-competitive-analysis/) |
+| Management Quality Agent | Fundamental (5) | [`floor-2/fundamental/management-quality/`](./floor-2/fundamental/management-quality/) |
+| **Harry Markopolos** — Forensic Accounting | Fundamental (5) | [`floor-2/fundamental/forensic-accounting/`](./floor-2/fundamental/forensic-accounting/) |
+| Catalyst & Event Agent | Fundamental (5) | [`floor-2/fundamental/catalyst-event/`](./floor-2/fundamental/catalyst-event/) |
+| Industry Structure Agent | Fundamental (5) | [`floor-2/fundamental/industry-structure/`](./floor-2/fundamental/industry-structure/) |
+| Chart & Pattern Agent | Technical (6) | [`floor-2/technical/chart-pattern/`](./floor-2/technical/chart-pattern/) |
+| Volume & Order Flow Agent | Technical (6) | [`floor-2/technical/volume-order-flow/`](./floor-2/technical/volume-order-flow/) |
+| Market Microstructure Agent | Technical (6) | [`floor-2/technical/market-microstructure/`](./floor-2/technical/market-microstructure/) |
+| Technical Signal Engine Agent | Technical (6) | [`floor-2/technical/technical-signal-engine/`](./floor-2/technical/technical-signal-engine/) |
+| **Alex Svanevik** — On-Chain Analytics | Crypto (14) | [`floor-2/crypto/on-chain-analytics/`](./floor-2/crypto/on-chain-analytics/) |
+| DeFi & Yield Agent | Crypto (14) | [`floor-2/crypto/defi-yield/`](./floor-2/crypto/defi-yield/) |
+| Tokenomics Agent | Crypto (14) | [`floor-2/crypto/tokenomics/`](./floor-2/crypto/tokenomics/) |
+| Protocol Risk Agent | Crypto (14) | [`floor-2/crypto/protocol-risk/`](./floor-2/crypto/protocol-risk/) |
 
 ### Floor 3
 | Agent | Room | File |
 |-------|------|------|
-| VaR & Stress Test Agent | Risk (2) | [`floor-3/risk/var-stress-test.md`](./floor-3/risk/var-stress-test.md) |
-| Correlation & Concentration Agent | Risk (2) | [`floor-3/risk/correlation-concentration.md`](./floor-3/risk/correlation-concentration.md) |
-| **Didier Sornette** — Black Swan Detection | Risk (2) | [`floor-3/risk/black-swan-detection.md`](./floor-3/risk/black-swan-detection.md) |
-| Drawdown Monitor Agent | Risk (2) | [`floor-3/risk/drawdown-monitor.md`](./floor-3/risk/drawdown-monitor.md) |
-| Liquidity Risk Agent | Risk (2) | [`floor-3/risk/liquidity-risk.md`](./floor-3/risk/liquidity-risk.md) |
-| Factor Risk Agent | Risk (2) | [`floor-3/risk/factor-risk.md`](./floor-3/risk/factor-risk.md) |
-| **Meredith Whitney** — Devil's Advocate | Critique (11) | [`floor-3/critique/devils-advocate.md`](./floor-3/critique/devils-advocate.md) |
-| Bear Case Intern | Critique (11) | [`floor-3/critique/bear-case-intern.md`](./floor-3/critique/bear-case-intern.md) |
-| Blind Spot Detector Agent | Critique (11) | [`floor-3/critique/blind-spot-detector.md`](./floor-3/critique/blind-spot-detector.md) |
-| Historical Analog Intern | Critique (11) | [`floor-3/critique/historical-analog-intern.md`](./floor-3/critique/historical-analog-intern.md) |
-| Assumption Challenger Agent | Critique (11) | [`floor-3/critique/assumption-challenger.md`](./floor-3/critique/assumption-challenger.md) |
-| Conflict Resolution Agent | Critique (11) | [`floor-3/critique/conflict-resolution.md`](./floor-3/critique/conflict-resolution.md) |
-| Regulatory Compliance Agent | Compliance (12) | [`floor-3/compliance/regulatory-compliance.md`](./floor-3/compliance/regulatory-compliance.md) |
-| **H. David Rosenbloom** — Cross-Border Tax | Compliance (12) | [`floor-3/compliance/cross-border-tax.md`](./floor-3/compliance/cross-border-tax.md) |
-| Trading Restriction Agent | Compliance (12) | [`floor-3/compliance/trading-restriction.md`](./floor-3/compliance/trading-restriction.md) |
+| VaR & Stress Test Agent | Risk (2) | [`floor-3/risk/var-stress-test/`](./floor-3/risk/var-stress-test/) |
+| Correlation & Concentration Agent | Risk (2) | [`floor-3/risk/correlation-concentration/`](./floor-3/risk/correlation-concentration/) |
+| **Didier Sornette** — Black Swan Detection | Risk (2) | [`floor-3/risk/black-swan-detection/`](./floor-3/risk/black-swan-detection/) |
+| Drawdown Monitor Agent | Risk (2) | [`floor-3/risk/drawdown-monitor/`](./floor-3/risk/drawdown-monitor/) |
+| Liquidity Risk Agent | Risk (2) | [`floor-3/risk/liquidity-risk/`](./floor-3/risk/liquidity-risk/) |
+| Factor Risk Agent | Risk (2) | [`floor-3/risk/factor-risk/`](./floor-3/risk/factor-risk/) |
+| **Meredith Whitney** — Devil's Advocate | Critique (11) | [`floor-3/critique/devils-advocate/`](./floor-3/critique/devils-advocate/) |
+| Bear Case Intern | Critique (11) | [`floor-3/critique/bear-case-intern/`](./floor-3/critique/bear-case-intern/) |
+| Blind Spot Detector Agent | Critique (11) | [`floor-3/critique/blind-spot-detector/`](./floor-3/critique/blind-spot-detector/) |
+| Historical Analog Intern | Critique (11) | [`floor-3/critique/historical-analog-intern/`](./floor-3/critique/historical-analog-intern/) |
+| Assumption Challenger Agent | Critique (11) | [`floor-3/critique/assumption-challenger/`](./floor-3/critique/assumption-challenger/) |
+| Conflict Resolution Agent | Critique (11) | [`floor-3/critique/conflict-resolution/`](./floor-3/critique/conflict-resolution/) |
+| Regulatory Compliance Agent | Compliance (12) | [`floor-3/compliance/regulatory-compliance/`](./floor-3/compliance/regulatory-compliance/) |
+| **H. David Rosenbloom** — Cross-Border Tax | Compliance (12) | [`floor-3/compliance/cross-border-tax/`](./floor-3/compliance/cross-border-tax/) |
+| Trading Restriction Agent | Compliance (12) | [`floor-3/compliance/trading-restriction/`](./floor-3/compliance/trading-restriction/) |
 
 ### Floor 4
 | Agent | Room | File |
 |-------|------|------|
-| **David Swensen** — Asset Allocation | Strategy (8) | [`floor-4/strategy/asset-allocation.md`](./floor-4/strategy/asset-allocation.md) |
-| Tactical Overlay Intern | Strategy (8) | [`floor-4/strategy/tactical-overlay-intern.md`](./floor-4/strategy/tactical-overlay-intern.md) |
-| Hedging & Protection Agent | Strategy (8) | [`floor-4/strategy/hedging-protection.md`](./floor-4/strategy/hedging-protection.md) |
-| Tax Optimization Agent | Strategy (8) | [`floor-4/strategy/tax-optimization.md`](./floor-4/strategy/tax-optimization.md) |
-| Portfolio Construction Agent | Strategy (8) | [`floor-4/strategy/portfolio-construction.md`](./floor-4/strategy/portfolio-construction.md) |
-| Position Sizing Intern | Strategy (8) | [`floor-4/strategy/position-sizing-intern.md`](./floor-4/strategy/position-sizing-intern.md) |
-| Order Routing Agent | Execution (9) | [`floor-4/execution/order-routing.md`](./floor-4/execution/order-routing.md) |
-| Execution Algorithm Agent | Execution (9) | [`floor-4/execution/execution-algorithm.md`](./floor-4/execution/execution-algorithm.md) |
-| Timing & Slippage Agent | Execution (9) | [`floor-4/execution/timing-slippage.md`](./floor-4/execution/timing-slippage.md) |
-| Pre-Flight Check Agent | Execution (9) | [`floor-4/execution/pre-flight-check.md`](./floor-4/execution/pre-flight-check.md) |
-| Knowledge Graph Agent | Memory (10) | [`floor-4/memory/knowledge-graph.md`](./floor-4/memory/knowledge-graph.md) |
-| Learning & Reflection Agent | Memory (10) | [`floor-4/memory/learning-reflection.md`](./floor-4/memory/learning-reflection.md) |
-| Quality Control Agent | Control (15) | [`floor-4/control/quality-control.md`](./floor-4/control/quality-control.md) |
-| Agent Health Monitor | Control (15) | [`floor-4/control/agent-health-monitor.md`](./floor-4/control/agent-health-monitor.md) |
-| Daily Briefing Agent | Tasks (16) | [`floor-4/tasks/daily-briefing.md`](./floor-4/tasks/daily-briefing.md) |
-| Opportunity Scout Agent | Tasks (16) | [`floor-4/tasks/opportunity-scout.md`](./floor-4/tasks/opportunity-scout.md) |
+| **David Swensen** — Asset Allocation | Strategy (8) | [`floor-4/strategy/asset-allocation/`](./floor-4/strategy/asset-allocation/) |
+| Tactical Overlay Intern | Strategy (8) | [`floor-4/strategy/tactical-overlay-intern/`](./floor-4/strategy/tactical-overlay-intern/) |
+| Hedging & Protection Agent | Strategy (8) | [`floor-4/strategy/hedging-protection/`](./floor-4/strategy/hedging-protection/) |
+| Tax Optimization Agent | Strategy (8) | [`floor-4/strategy/tax-optimization/`](./floor-4/strategy/tax-optimization/) |
+| Portfolio Construction Agent | Strategy (8) | [`floor-4/strategy/portfolio-construction/`](./floor-4/strategy/portfolio-construction/) |
+| Position Sizing Intern | Strategy (8) | [`floor-4/strategy/position-sizing-intern/`](./floor-4/strategy/position-sizing-intern/) |
+| Order Routing Agent | Execution (9) | [`floor-4/execution/order-routing/`](./floor-4/execution/order-routing/) |
+| Execution Algorithm Agent | Execution (9) | [`floor-4/execution/execution-algorithm/`](./floor-4/execution/execution-algorithm/) |
+| Timing & Slippage Agent | Execution (9) | [`floor-4/execution/timing-slippage/`](./floor-4/execution/timing-slippage/) |
+| Pre-Flight Check Agent | Execution (9) | [`floor-4/execution/pre-flight-check/`](./floor-4/execution/pre-flight-check/) |
+| Knowledge Graph Agent | Memory (10) | [`floor-4/memory/knowledge-graph/`](./floor-4/memory/knowledge-graph/) |
+| Learning & Reflection Agent | Memory (10) | [`floor-4/memory/learning-reflection/`](./floor-4/memory/learning-reflection/) |
+| Quality Control Agent | Control (15) | [`floor-4/control/quality-control/`](./floor-4/control/quality-control/) |
+| Agent Health Monitor | Control (15) | [`floor-4/control/agent-health-monitor/`](./floor-4/control/agent-health-monitor/) |
+| Daily Briefing Agent | Tasks (16) | [`floor-4/tasks/daily-briefing/`](./floor-4/tasks/daily-briefing/) |
+| Opportunity Scout Agent | Tasks (16) | [`floor-4/tasks/opportunity-scout/`](./floor-4/tasks/opportunity-scout/) |
 
 ### Penthouse
 | Agent | File |
 |-------|------|
-| Portfolio Manager | [`penthouse/agents/portfolio-manager.md`](./penthouse/agents/portfolio-manager.md) |
-| PM Bodyguard | [`penthouse/agents/pm-bodyguard.md`](./penthouse/agents/pm-bodyguard.md) |
+| Portfolio Manager | [`penthouse/agents/portfolio-manager/`](./penthouse/agents/portfolio-manager/) |
+| PM Bodyguard | [`penthouse/agents/pm-bodyguard/`](./penthouse/agents/pm-bodyguard/) |

@@ -9,5 +9,5 @@ Memory learns from everything. The knowledge graph connects all research, decisi
 
 | Agent | File |
 |-------|------|
-| Knowledge Graph Agent | [`knowledge-graph.md`](knowledge-graph.md) |
-| Learning & Reflection Agent | [`learning-reflection.md`](learning-reflection.md) |
+| Knowledge Graph Agent | [`knowledge-graph/`](knowledge-graph/) |
+| Learning & Reflection Agent | [`learning-reflection/`](learning-reflection/) |

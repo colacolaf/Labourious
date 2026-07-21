@@ -8,4 +8,4 @@ The first line. The Entrance Bodyguard vets every incoming request before anythi
 
 | Agent | File |
 |-------|------|
-| Entrance Bodyguard Agent | [`entrance-bodyguard.md`](entrance-bodyguard.md) |
+| Entrance Bodyguard Agent | [`entrance-bodyguard/`](entrance-bodyguard/) |

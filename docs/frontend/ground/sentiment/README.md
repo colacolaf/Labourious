@@ -9,8 +9,8 @@ Sentiment reads the mood. Options flow, social media, insider moves, analyst rev
 
 | Agent | File |
 |-------|------|
-| News Sentiment Agent | [`news-sentiment.md`](news-sentiment.md) |
-| Social Media & Retail Agent | [`social-media-retail.md`](social-media-retail.md) |
-| Insider & Institutional Agent | [`insider-institutional.md`](insider-institutional.md) |
-| **Jon Najarian** — Options Flow & Dark Pool Agent | [`options-flow-dark-pool.md`](options-flow-dark-pool.md) |
-| Analyst & Earnings Revision Agent | [`analyst-earnings-revision.md`](analyst-earnings-revision.md) |
+| News Sentiment Agent | [`news-sentiment/`](news-sentiment/) |
+| Social Media & Retail Agent | [`social-media-retail/`](social-media-retail/) |
+| Insider & Institutional Agent | [`insider-institutional/`](insider-institutional/) |
+| **Jon Najarian** — Options Flow & Dark Pool Agent | [`options-flow-dark-pool/`](options-flow-dark-pool/) |
+| Analyst & Earnings Revision Agent | [`analyst-earnings-revision/`](analyst-earnings-revision/) |

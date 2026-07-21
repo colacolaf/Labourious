@@ -9,7 +9,7 @@ Macro watches the global stage. Central banks, geopolitics, currencies, sovereig
 
 | Agent | File |
 |-------|------|
-| Central Bank & Liquidity Agent | [`central-bank-liquidity.md`](central-bank-liquidity.md) |
-| **Ian Bremmer** — Geopolitical Risk Agent | [`geopolitical-risk.md`](geopolitical-risk.md) |
-| Currency & Sovereign Debt Agent | [`currency-sovereign-debt.md`](currency-sovereign-debt.md) |
-| Global Growth Tracker Agent | [`global-growth-tracker.md`](global-growth-tracker.md) |
+| Central Bank & Liquidity Agent | [`central-bank-liquidity/`](central-bank-liquidity/) |
+| **Ian Bremmer** — Geopolitical Risk Agent | [`geopolitical-risk/`](geopolitical-risk/) |
+| Currency & Sovereign Debt Agent | [`currency-sovereign-debt/`](currency-sovereign-debt/) |
+| Global Growth Tracker Agent | [`global-growth-tracker/`](global-growth-tracker/) |

@@ -10,5 +10,5 @@ Tasks runs autonomously when enabled. Daily Briefing surfaces the morning summar
 
 | Agent | File |
 |-------|------|
-| Daily Briefing Agent | [`daily-briefing.md`](daily-briefing.md) |
-| Opportunity Scout Agent | [`opportunity-scout.md`](opportunity-scout.md) |
+| Daily Briefing Agent | [`daily-briefing/`](daily-briefing/) |
+| Opportunity Scout Agent | [`opportunity-scout/`](opportunity-scout/) |

@@ -9,7 +9,7 @@ Technical studies the charts. Pattern recognition, volume analysis, market micro
 
 | Agent | File |
 |-------|------|
-| Chart & Pattern Agent | [`chart-pattern.md`](chart-pattern.md) |
-| Volume & Order Flow Agent | [`volume-order-flow.md`](volume-order-flow.md) |
-| Market Microstructure Agent | [`market-microstructure.md`](market-microstructure.md) |
-| Technical Signal Engine Agent | [`technical-signal-engine.md`](technical-signal-engine.md) |
+| Chart & Pattern Agent | [`chart-pattern/`](chart-pattern/) |
+| Volume & Order Flow Agent | [`volume-order-flow/`](volume-order-flow/) |
+| Market Microstructure Agent | [`market-microstructure/`](market-microstructure/) |
+| Technical Signal Engine Agent | [`technical-signal-engine/`](technical-signal-engine/) |

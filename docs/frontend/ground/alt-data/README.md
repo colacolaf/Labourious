@@ -9,8 +9,8 @@ Alternative Data finds signals nobody else is looking at. Satellites, supply cha
 
 | Agent | File |
 |-------|------|
-| **James Crawford** — Satellite & Geospatial Agent | [`satellite-geospatial.md`](satellite-geospatial.md) |
-| Supply Chain Agent | [`supply-chain.md`](supply-chain.md) |
-| Consumer Spending Agent | [`consumer-spending.md`](consumer-spending.md) |
-| Weather & Commodity Agent | [`weather-commodity.md`](weather-commodity.md) |
-| Web & App Traffic Agent | [`web-app-traffic.md`](web-app-traffic.md) |
+| **James Crawford** — Satellite & Geospatial Agent | [`satellite-geospatial/`](satellite-geospatial/) |
+| Supply Chain Agent | [`supply-chain/`](supply-chain/) |
+| Consumer Spending Agent | [`consumer-spending/`](consumer-spending/) |
+| Weather & Commodity Agent | [`weather-commodity/`](weather-commodity/) |
+| Web & App Traffic Agent | [`web-app-traffic/`](web-app-traffic/) |
