@@ -14,9 +14,6 @@ Five rooms. Strategy plans, Execution acts, Memory remembers, Control watches, T
 | **Control (15)** | Quality Control, Agent Health Monitor | No lead (reports to PM) |
 | **Tasks (16)** | Daily Briefing, Opportunity Scout | No lead (reports to PM, opt-in only) |
 
-## Named Agents
+## Agent Files
 
-| Agent | Name | Background | Role |
-|-------|------|------------|------|
-| **Asset Allocation** | David Swensen | Yale Endowment CIO for 36 years. Pioneered the endowment model — heavy alternatives, real assets, true diversification. Every institutional allocation framework traces back to him. | Builds portfolios designed to survive any economic regime, using the endowment model as his blueprint. |
-
+See [`agents/`](agents/) for individual agent profiles with system prompt and tool configuration stubs.

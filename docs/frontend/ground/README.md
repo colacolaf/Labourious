@@ -15,15 +15,7 @@ Four rooms radiate from the entrance lobby. Research digs for facts. Sentiment r
 | **Research (1)** | Web Research, SEC/Regulatory (+ Hedge Fund & Political Filings Intern), Academic Research, News Aggregation, Data Scout | Michael Burry |
 | **Sentiment (7)** | News Sentiment, Social Media & Retail, Insider & Institutional, Options Flow & Dark Pool, Analyst & Earnings Revision | Cathie Wood |
 | **Alternative Data (13)** | Satellite & Geospatial, Supply Chain, Consumer Spending, Weather & Commodity, Web & App Traffic | Matthew Granade |
-| **Storage (14)** | TBD | TBD |
-
-## Named Agents
-
-| Agent | Name | Background | Role |
-|-------|------|------------|------|
-| **SEC/Regulatory** | John Hempton | Bronte Capital founder who uncovered frauds buried in SEC filings everyone else skimmed. | Reads every filing footnote. Flags buried abnormalities before they become headlines. |
-| **Options Flow & Dark Pool** | Jon Najarian | Co-founder of TradeMonster. "Dr. J." Pioneered unusual options activity detection and made it a category. | Tracks whale movements in dark pools and option chains. Surfaces what the smart money is actually doing. |
-| **Satellite & Geospatial** | James Crawford | Founder of Orbital Insight. Pioneered satellite imagery analysis for hedge funds — counting cars, tracking tankers, measuring crops from space. | Finds signals in pixels. Counts cars in parking lots, tracks oil tankers, measures crop yields before the earnings call. |
+| **Storage (0)** | TBD | TBD |
 
 ## Perimeter
 
@@ -38,3 +30,7 @@ Four rooms radiate from the entrance lobby. Research digs for facts. Sentiment r
 - **Reception**: Central desk for greeting and routing visitors.
 - **Waiting Area**: Center of lobby with seating clusters on left and right.
 - **Entrance**: Bottom center with Bodyguard posted to the right.
+
+## Agent Files
+
+See [`agents/`](agents/) for individual agent profiles with system prompt and tool configuration stubs.

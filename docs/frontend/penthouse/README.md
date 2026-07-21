@@ -16,3 +16,6 @@
 - The PM Bodyguard is visible but silent. Only interrupts for critical warnings.
 - From here, the user can see a dashboard of all active rooms and agents below.
 
+## Agent Files
+
+See [`agents/`](agents/) for individual agent profiles with system prompt and tool configuration stubs.
