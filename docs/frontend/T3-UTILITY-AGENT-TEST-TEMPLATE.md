@@ -50,7 +50,7 @@ Include at least:
 - [ ] **Signal/noise filtering:** Agent correctly separated relevant signal from noise in the raw data
 - [ ] **Ambiguity handled:** Agent flagged the ambiguous data point rather than forcing a false conclusion
 - [ ] **Format compliance:** Output matches the requested format exactly
-- [ ] **No analysis creep:** Agent did NOT add interpretation, opinion, or recommendations beyond their scope
+- [ ] **No scope creep:** Agent did not add commentary or recommendations beyond their functional scope. Interpretation within their domain is expected (e.g., sentiment scoring, regime classification). Portfolio advice or trade recommendations are not.
 - [ ] **Tool usage:** Agent used the tools/data sources specified in their Tool Access section
 - [ ] **Completeness:** Agent didn't skip any part of the task
 - [ ] **No hedging:** Utility agents deliver results, not opinions. The output is factual and direct.

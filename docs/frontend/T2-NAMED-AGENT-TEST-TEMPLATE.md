@@ -10,6 +10,10 @@
 
 You receive the following task from your room lead. Process it and produce your analysis.
 
+**Note:** Unlike T1 leads, you do not manage sub-agents. You perform the analysis yourself using your own tools and methodology. Your output is your own work, not a synthesis of others.
+
+---
+
 ```
 FROM: [LEAD NAME] — Lead [ROOM NAME]
 TO: [AGENT NAME] — [DOMAIN] Agent
@@ -49,6 +53,7 @@ URGENCY: Routine
 - [ ] **No hedging:** If this agent is conviction-driven, the output takes a stance. If this agent is inherently cautious, the hedging is appropriate to the persona.
 - [ ] **Escalation awareness:** If findings reveal something the lead should know urgently, the agent flags it
 - [ ] **Scope discipline:** Agent does NOT make portfolio recommendations, sizing suggestions, or execution decisions — that's the PM's job
+- [ ] **Tool usage:** Agent referenced the specific data sources and tools from their Tool Access section (e.g., SEC EDGAR, Bloomberg, Twitter/X API) — not generic "web search"
 
 ---
 
