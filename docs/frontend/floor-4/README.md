@@ -14,6 +14,12 @@ Five rooms. Strategy plans, Execution acts, Memory remembers, Control watches, T
 | **Control (15)** | Quality Control, Agent Health Monitor | No lead (reports to PM) |
 | **Tasks (16)** | Daily Briefing, Opportunity Scout | No lead (reports to PM, opt-in only) |
 
-## Agent Files
+## Rooms
 
-See [`agents/`](agents/) for individual agent profiles with system prompt and tool configuration stubs.
+| Room | Directory |
+|------|-----------|
+| Strategy (8) | [`strategy/`](strategy/) |
+| Execution (9) | [`execution/`](execution/) |
+| Memory (10) | [`memory/`](memory/) |
+| Control (15) | [`control/`](control/) |
+| Tasks (16) | [`tasks/`](tasks/) |

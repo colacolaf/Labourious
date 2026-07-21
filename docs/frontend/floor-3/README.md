@@ -12,6 +12,10 @@ The floor where every decision gets put through hell before it reaches Command.
 | **Critique (11)** | Devil's Advocate (+ Bear Case Intern), Blind Spot Detector (+ Historical Analog Intern), Assumption Challenger, Conflict Resolution | Charlie Munger |
 | **Compliance & Tax (12)** | Regulatory Compliance, Cross-Border Tax, Trading Restriction | Preet Bharara |
 
-## Agent Files
+## Rooms
 
-See [`agents/`](agents/) for individual agent profiles with system prompt and tool configuration stubs.
+| Room | Directory |
+|------|-----------|
+| Risk (2) | [`risk/`](risk/) |
+| Critique (11) | [`critique/`](critique/) |
+| Compliance & Tax (12) | [`compliance/`](compliance/) |

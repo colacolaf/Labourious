@@ -14,6 +14,12 @@ The biggest floor. Macro watches the global stage. Quant builds the models. Fund
 | **Technical (6)** | Chart & Pattern, Volume & Order Flow, Market Microstructure, Technical Signal Engine | Mark Minervini |
 | **Crypto (14)** | On-Chain Analytics, DeFi & Yield, Tokenomics, Protocol Risk | Vitalik Buterin |
 
-## Agent Files
+## Rooms
 
-See [`agents/`](agents/) for individual agent profiles with system prompt and tool configuration stubs.
+| Room | Directory |
+|------|-----------|
+| Macro (3) | [`macro/`](macro/) |
+| Quant (4) | [`quant/`](quant/) |
+| Fundamental (5) | [`fundamental/`](fundamental/) |
+| Technical (6) | [`technical/`](technical/) |
+| Crypto (14) | [`crypto/`](crypto/) |

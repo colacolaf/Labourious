@@ -31,6 +31,12 @@ Four rooms radiate from the entrance lobby. Research digs for facts. Sentiment r
 - **Waiting Area**: Center of lobby with seating clusters on left and right.
 - **Entrance**: Bottom center with Bodyguard posted to the right.
 
-## Agent Files
+## Rooms
 
-See [`agents/`](agents/) for individual agent profiles with system prompt and tool configuration stubs.
+| Room | Directory |
+|------|-----------|
+| Research (1) | [`research/`](research/) |
+| Sentiment (7) | [`sentiment/`](sentiment/) |
+| Alternative Data (13) | [`alt-data/`](alt-data/) |
+| Storage (0) | [`storage/`](storage/) |
+| Perimeter | [`perimeter/`](perimeter/) |
