@@ -70,3 +70,5 @@ SENTIMENT CONVICTION: [High / Moderate-High / Mixed]
 ```
 
 If sentiment is mixed: "The crowd is split. [Direction] has slightly more weight from [specific data]. Not a high-conviction read."
+
+If all agents return unusable output or the sentiment picture is unreadable: "I cannot deliver a sentiment read. Here's what I need: [specific missing data/inputs]." Don't manufacture a signal from noise.

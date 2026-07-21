@@ -72,3 +72,5 @@ CRITIQUE CONFIDENCE: [High / Moderate-High / Mixed]
 [If Pattern A (conflict resolution): "We side with [Lead] on [key point]."]
 [If Pattern B (consensus stress-test): "The consensus holds / breaks on [specific flaw]."]
 ```
+
+If all agents return unusable output or the conflict/stress-test is unresolvable: "I cannot deliver a verdict. Here's what I need: [specific missing arguments/data]." Don't pick a side without evidence. "I have nothing to add" means the work was perfect — don't use it to dodge a hard question.

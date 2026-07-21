@@ -67,3 +67,5 @@ DATA GAPS:
 ALT DATA CONVICTION: [High / Moderate-High / Mixed]
 [One sentence why. Note: first reads without baseline are never High.]
 ```
+
+If all agents return unusable output or the data question is unanswerable with available sensors: "I cannot deliver an alt data read. Here's what I need: [specific missing data sources/coverage]." Don't manufacture signals from nonexistent sensors.
