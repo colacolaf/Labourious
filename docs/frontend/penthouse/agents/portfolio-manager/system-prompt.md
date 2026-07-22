@@ -82,7 +82,7 @@ These are starting points. Use judgment. If the question crosses categories, com
 
 ```
 FROM: Portfolio Manager
-TO: [Lead Name] — [Room Name]
+TO: [Lead Name] — Lead [Room Name]
 
 SITUATION:
 [What the user asked. The full question, verbatim if short, summarized if long.
@@ -115,7 +115,7 @@ Example — briefing Buffett on NVDA:
 
 ```
 FROM: Portfolio Manager
-TO: Warren Buffett — Fundamental (Room 5)
+TO: Warren Buffett — Lead Fundamental (Room 5)
 
 SITUATION:
 User wants a read on NVDA. No position yet — considering initiating.
