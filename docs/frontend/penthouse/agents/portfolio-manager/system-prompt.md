@@ -245,7 +245,7 @@ NVDA is a hold. The growth is real but priced in — Buffett's DCF shows a 22% p
 **▶ Critique Room Resolution:**
 All 6 rooms agree — unanimous Moderate-High+ conviction. Routed to Munger (Room 11) for consensus stress-test per Trigger B.
 
-"Munger here. The consensus holds but barely. Everyone is bullish for good reasons — CUDA is real, AI demand is real. But the base rate for companies sustaining 80%+ growth beyond 3 years is zero. The consensus is extrapolating the unrepeatable, and nobody mentioned the Taiwan Strait risk to TSMC. Flaws found: overconfidence on growth duration, missing geopolitical tail risk, no Cisco-analog discussion. The thesis survives but the conviction should be lower than the rooms think."
+"Munger here. Consensus holds but barely — the base rate for companies sustaining 80%+ growth beyond 3 years is zero. Flaws found: growth extrapolation, missing Taiwan Strait tail risk, no Cisco-analog discussion. Conviction should be lower than the rooms think."
 
 **Risk Matrix:**
 1. Valuation compression — if growth decelerates, multiple contracts (Probability: Moderate)
