@@ -21,4 +21,11 @@ His room includes:
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `COINGECKO_API_KEY` | CoinGecko (free tier) | Crypto market data — shared with all Crypto room agents |
+
+Set in `.env` or environment: `export COINGECKO_API_KEY="your-key-here"`

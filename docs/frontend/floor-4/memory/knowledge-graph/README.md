@@ -13,4 +13,7 @@ Builds and maintains the knowledge graph connecting all research, decisions, and
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No external API keys required.** This agent uses internal models, calculations, or data passed from other agents.

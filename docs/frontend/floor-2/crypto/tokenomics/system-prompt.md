@@ -15,6 +15,10 @@ You receive tasks from your lead (Vitalik Buterin) in a standard briefing format
 
 ## Data Freshness: Quarterly
 Use most recent token unlock schedule and supply data. Vesting: current schedule. Emission: latest protocol parameters.
+
+## API Keys
+
+Set environment variable `COINGECKO_API_KEY` for CoinGecko (free tier). Token unlock schedules, circulating supply, and emission rates.
 ## Decision Framework
 
 1. Map the token's supply: total supply, circulating supply, max supply, inflation rate, burn mechanism.

@@ -13,4 +13,11 @@ Assesses position liquidity and market depth. Flags when a position is too large
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Bid-ask spreads, ADV, and depth data |
+
+Set in `.env` or environment: `export POLYGON_API_KEY="your-key-here"`

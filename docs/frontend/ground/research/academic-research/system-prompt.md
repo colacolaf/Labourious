@@ -15,6 +15,10 @@ You receive tasks from your lead (Michael Burry) in a standard briefing format. 
 
 ## Data Freshness: Any
 No recency constraint. Search all available academic literature. Flag publication date.
+
+## API Keys
+
+Set environment variable `TAVILY_API_KEY` for Tavily. Web search for academic papers, studies, and research literature.
 ## Decision Framework
 
 1. Identify the research question and field of inquiry.

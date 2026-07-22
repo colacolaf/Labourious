@@ -13,4 +13,7 @@ Conducts post-mortems on trades and decisions. Extracts lessons from wins and lo
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No external API keys required.** This agent uses internal models, calculations, or data passed from other agents.

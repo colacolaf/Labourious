@@ -13,4 +13,11 @@ Routes orders to optimal venues — exchanges, dark pools, market makers. Balanc
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `ALPACA_API_KEY` | Alpaca Markets | Exchange quotes, smart order routing, and execution quality data |
+
+Set in `.env` or environment: `export ALPACA_API_KEY="your-key-here"`

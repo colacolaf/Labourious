@@ -13,4 +13,11 @@ Searches for new and unconventional data sources. The explorer — finds dataset
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `FINANCIAL_DATASETS_API_KEY` | Financial Datasets | Structured financial data extraction — income statements, balance sheets, cash flows |
+
+Set in `.env` or environment: `export FINANCIAL_DATASETS_API_KEY="your-key-here"`

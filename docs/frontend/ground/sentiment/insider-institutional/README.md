@@ -13,4 +13,7 @@ Tracks insider buying/selling, institutional 13F movements, and large block trad
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No API key required.** 13F filings and Form 4 insider transactions. No API key required — EDGAR is public. Optional: WHALEWISDOM_API_KEY for pre-processed 13F data.

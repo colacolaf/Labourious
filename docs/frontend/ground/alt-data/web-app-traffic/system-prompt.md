@@ -15,6 +15,10 @@ You receive tasks from your lead (Matthew Granade) in a standard briefing format
 
 ## Data Freshness: Weekly
 Use last 30 days of traffic data. Compare to prior 30 days and year-ago period.
+
+## API Keys
+
+Set environment variable `SIMILARWEB_API_KEY` for SimilarWeb. Website and app traffic estimates, engagement metrics, and referral sources.
 ## Decision Framework
 
 1. Collect traffic and engagement data for the specified company/platform and timeframe.

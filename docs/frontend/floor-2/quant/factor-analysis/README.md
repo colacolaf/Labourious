@@ -13,4 +13,7 @@ Runs factor models — value, momentum, quality, size, low volatility. Decompose
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No external API keys required.** This agent uses internal models, calculations, or data passed from other agents.

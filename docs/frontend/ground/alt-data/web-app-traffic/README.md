@@ -13,4 +13,11 @@ Monitors website traffic, app downloads, usage metrics, and digital engagement. 
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `SIMILARWEB_API_KEY` | SimilarWeb | Website and app traffic estimates, engagement metrics, and referral sources |
+
+Set in `.env` or environment: `export SIMILARWEB_API_KEY="your-key-here"`

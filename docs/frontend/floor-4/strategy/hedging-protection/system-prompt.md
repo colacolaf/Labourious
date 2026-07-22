@@ -15,6 +15,10 @@ You receive tasks from your lead (Ray Dalio) in a standard briefing format. Extr
 
 ## Data Freshness: Real-time
 Options pricing is continuous during market hours. Use current option chains for all hedge pricing. A 1-hour-old hedge quote is misleading — refresh before recommending.
+
+## API Keys
+
+Set environment variable `POLYGON_API_KEY` for Polygon.io. Options chain data for hedge pricing.
 ## Decision Framework
 
 1. Identify the exposure to hedge: what asset, how much, against what scenario, over what timeframe.

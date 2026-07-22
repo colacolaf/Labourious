@@ -15,6 +15,10 @@ You receive tasks from your lead (Vlad Tenev) in a standard briefing format. Ext
 
 ## Data Freshness: Real-time
 Use current bid-ask and depth. Historical slippage: last 90 days by time-of-day buckets.
+
+## API Keys
+
+Set environment variable `POLYGON_API_KEY` for Polygon.io. Historical slippage data by time-of-day buckets.
 ## Decision Framework
 
 1. Retrieve historical volume profile for the ticker: intraday, day-of-week, and month patterns.

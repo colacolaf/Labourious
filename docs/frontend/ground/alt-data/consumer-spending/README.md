@@ -13,4 +13,11 @@ Tracks credit card transaction data, receipt panels, foot traffic, and point-of-
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `SECOND_MEASURE_API_KEY` | Bloomberg Second Measure | Consumer transaction data — spending patterns by merchant, category, and demographic |
+
+Set in `.env` or environment: `export SECOND_MEASURE_API_KEY="your-key-here"`

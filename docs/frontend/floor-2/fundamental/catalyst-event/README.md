@@ -13,4 +13,7 @@ Identifies upcoming catalysts — earnings, FDA decisions, regulatory rulings, s
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No external API keys required.** This agent uses internal models, calculations, or data passed from other agents.

@@ -13,4 +13,11 @@ Tracks supplier networks, shipping data, logistics bottlenecks, and trade flows.
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `PANJIVA_API_KEY` | Panjiva / S&P Global | Trade data — bills of lading, import/export volumes, supplier relationships |
+
+Set in `.env` or environment: `export PANJIVA_API_KEY="your-key-here"`

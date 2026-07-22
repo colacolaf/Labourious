@@ -13,4 +13,11 @@ Surfaces relevant academic papers, working papers, and university research. Brid
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `TAVILY_API_KEY` | Tavily | Web search for academic papers, studies, and research literature |
+
+Set in `.env` or environment: `export TAVILY_API_KEY="your-key-here"`

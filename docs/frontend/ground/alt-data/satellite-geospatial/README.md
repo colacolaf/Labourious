@@ -16,4 +16,11 @@ Finds signals in pixels. Counts cars in parking lots, tracks oil tankers via sat
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `PLANET_API_KEY` | Planet Labs | Satellite imagery for parking lot counts, tanker tracking, and crop yield estimation |
+
+Set in `.env` or environment: `export PLANET_API_KEY="your-key-here"`

@@ -13,4 +13,11 @@ Runs execution algorithms — VWAP, TWAP, implementation shortfall, adaptive alg
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `ALPACA_API_KEY` | Alpaca Markets | Real-time market data for algorithmic execution parameters |
+
+Set in `.env` or environment: `export ALPACA_API_KEY="your-key-here"`

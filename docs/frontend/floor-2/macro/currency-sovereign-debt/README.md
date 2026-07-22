@@ -13,4 +13,11 @@ Tracks FX markets, sovereign bond spreads, credit default swaps, and country-lev
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `FRED_API_KEY` | FRED (Federal Reserve) | Exchange rates, yield spreads, and sovereign CDS data |
+
+Set in `.env` or environment: `export FRED_API_KEY="your-key-here"`

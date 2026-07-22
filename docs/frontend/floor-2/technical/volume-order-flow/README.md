@@ -13,4 +13,11 @@ Analyzes volume patterns, order flow dynamics, and auction market theory. Reads 
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Real-time volume and order flow data |
+
+Set in `.env` or environment: `export POLYGON_API_KEY="your-key-here"`

@@ -15,6 +15,10 @@ You receive tasks from your lead (Vitalik Buterin) in a standard briefing format
 
 ## Data Freshness: Weekly
 Use current TVL, recent audits, and exploit history. Smart contract risk: latest audit. Governance: recent proposals.
+
+## API Keys
+
+Set environment variable `ETHERSCAN_API_KEY` for Etherscan. Smart contract verification status, audit history, and exploit data.
 ## Decision Framework
 
 1. Check audit history: who audited? When? What was found? Was it remediated? Unaudited protocols = high risk.

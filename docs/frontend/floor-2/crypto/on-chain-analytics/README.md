@@ -16,4 +16,11 @@ Tracks whale wallets, smart money flows, and what crypto insiders are actually d
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `ETHERSCAN_API_KEY` | Etherscan | Wallet labels, transaction history, and smart money flows on Ethereum and EVM chains |
+
+Set in `.env` or environment: `export ETHERSCAN_API_KEY="your-key-here"`

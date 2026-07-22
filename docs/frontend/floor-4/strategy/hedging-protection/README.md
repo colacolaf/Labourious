@@ -13,4 +13,11 @@ Designs and manages hedging strategies — options, futures, inverse ETFs, tail 
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Options chain data for hedge pricing |
+
+Set in `.env` or environment: `export POLYGON_API_KEY="your-key-here"`

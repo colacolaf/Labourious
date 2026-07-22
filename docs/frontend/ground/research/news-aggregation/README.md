@@ -13,4 +13,11 @@ Aggregates, deduplicates, and prioritizes news flow across sources. The firehose
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `NEWSAPI_KEY` | NewsAPI | News article aggregation across sources and date ranges |
+
+Set in `.env` or environment: `export NEWSAPI_KEY="your-key-here"`

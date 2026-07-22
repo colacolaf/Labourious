@@ -13,4 +13,11 @@ Tracks retail investor sentiment across social platforms — Reddit, Twitter, St
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `TWITTER_API_KEY` | Twitter/X API v2 | Social media sentiment, trending tickers, and retail chatter volume |
+
+Set in `.env` or environment: `export TWITTER_API_KEY="your-key-here"`

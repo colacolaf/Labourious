@@ -15,6 +15,10 @@ You receive tasks from your lead (Larry Fink) in a standard briefing format. Ext
 
 ## Data Freshness: Weekly
 Use most recent PMI releases and trade data. GDP: most recent quarterly print.
+
+## API Keys
+
+Set environment variable `FRED_API_KEY` for FRED (Federal Reserve). PMI composites, GDP growth, and trade volume data.
 ## Decision Framework
 
 1. Collect the latest economic data releases across major economies.

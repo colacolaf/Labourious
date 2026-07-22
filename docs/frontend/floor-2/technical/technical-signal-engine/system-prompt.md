@@ -15,6 +15,10 @@ You receive tasks from your lead (Mark Minervini) in a standard briefing format.
 
 ## Data Freshness: Intraday
 Use current session's price data. Signal calculations: last 200 periods. Update on each new bar.
+
+## API Keys
+
+Set environment variable `POLYGON_API_KEY` for Polygon.io. Price and indicator data for signal generation.
 ## Decision Framework
 
 1. Define the universe and the technical factors to screen: trend, momentum, mean reversion, volatility, volume.

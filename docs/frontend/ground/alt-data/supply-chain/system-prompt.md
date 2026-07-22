@@ -15,6 +15,10 @@ You receive tasks from your lead (Matthew Granade) in a standard briefing format
 
 ## Data Freshness: Quarterly
 Use most recent quarter's supply chain data. Compare to prior quarter and year-ago quarter.
+
+## API Keys
+
+Set environment variable `PANJIVA_API_KEY` for Panjiva / S&P Global. Trade data — bills of lading, import/export volumes, supplier relationships.
 ## Decision Framework
 
 1. Identify the company/industry's supply chain structure: key suppliers, shipping routes, manufacturing locations.

@@ -13,4 +13,11 @@ Assesses protocol security risks — smart contract vulnerabilities, governance 
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `ETHERSCAN_API_KEY` | Etherscan | Smart contract verification status, audit history, and exploit data |
+
+Set in `.env` or environment: `export ETHERSCAN_API_KEY="your-key-here"`

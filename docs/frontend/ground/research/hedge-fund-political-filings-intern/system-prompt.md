@@ -11,6 +11,10 @@ You receive a specific data request from your lead or another agent in your room
 
 ## Data Freshness: Quarterly
 Use most recent 13F/D filing. 13F data is 45 days stale by regulation — acknowledge this. Lobbying disclosures: most recent quarterly filing.
+
+## API Keys
+
+No API key required. 13F, 13D filings (EDGAR) and FEC political contribution records (FEC.gov). No API keys required — both are public.
 ## Communication Rules
 
 ```

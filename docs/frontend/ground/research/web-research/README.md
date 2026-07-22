@@ -13,4 +13,11 @@ Scours the open web for facts, data, and primary sources. The first pass on any 
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `TAVILY_API_KEY` | Tavily | Web search API for current information and primary sources |
+
+Set in `.env` or environment: `export TAVILY_API_KEY="your-key-here"`

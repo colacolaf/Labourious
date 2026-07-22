@@ -13,4 +13,7 @@ Stands beside the Portfolio Manager at all times. Last line of defense — if th
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No external API keys required.** This agent uses internal models, calculations, or data passed from other agents.

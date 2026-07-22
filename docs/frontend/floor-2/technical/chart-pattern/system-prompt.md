@@ -15,6 +15,10 @@ You receive tasks from your lead (Mark Minervini) in a standard briefing format.
 
 ## Data Freshness: Intraday
 Use current session's price action. Historical patterns: last 5 years. Support/resistance: last 252 trading days.
+
+## API Keys
+
+Set environment variable `POLYGON_API_KEY` for Polygon.io. Historical price data for chart pattern recognition.
 ## Decision Framework
 
 1. Start with the higher timeframe (weekly/monthly) for trend context, then zoom into daily/4H for entry/exit levels.

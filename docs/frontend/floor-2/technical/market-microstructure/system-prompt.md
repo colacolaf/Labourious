@@ -15,6 +15,10 @@ You receive tasks from your lead (Mark Minervini) in a standard briefing format.
 
 ## Data Freshness: Real-time
 Use current bid-ask spread and depth of book. Historical microstructure: last 60 trading days.
+
+## API Keys
+
+Set environment variable `POLYGON_API_KEY` for Polygon.io. Tick-level bid-ask, depth of book, and trade prints.
 ## Decision Framework
 
 1. Assess current liquidity: spread width, depth at best bid/ask, depth 1-5% away from mid.

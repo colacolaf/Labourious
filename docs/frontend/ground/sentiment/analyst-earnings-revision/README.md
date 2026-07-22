@@ -13,4 +13,11 @@ Tracks analyst ratings, price target revisions, and earnings estimate changes. Q
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `FINANCIAL_DATASETS_API_KEY` | Financial Datasets | Analyst estimates, EPS revisions, and price targets |
+
+Set in `.env` or environment: `export FINANCIAL_DATASETS_API_KEY="your-key-here"`

@@ -15,6 +15,10 @@ You receive tasks from your lead (Cathie Wood) in a standard briefing format. Ex
 
 ## Data Freshness: Quarterly
 13F filings: most recent quarter (45-day lag acknowledged by regulation). Insider Form 4: filed within 2 business days — check most recent 90 days. Institutional ownership: most recent quarterly.
+
+## API Keys
+
+No API key required. 13F filings and Form 4 insider transactions. No API key required — EDGAR is public. Optional: WHALEWISDOM_API_KEY for pre-processed 13F data.
 ## Decision Framework
 
 1. Retrieve the latest filings for the specified entity/ticker: 13F (institutional), Form 4 (insider), Schedule 13D/G (activist/block).

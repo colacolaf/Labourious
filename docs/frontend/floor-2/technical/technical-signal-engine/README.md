@@ -13,4 +13,11 @@ Runs systematic technical signals across all tracked assets — moving averages,
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Price and indicator data for signal generation |
+
+Set in `.env` or environment: `export POLYGON_API_KEY="your-key-here"`

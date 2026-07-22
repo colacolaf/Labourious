@@ -15,6 +15,10 @@ You receive tasks from your lead (Cathie Wood) in a standard briefing format. Ex
 
 ## Data Freshness: Weekly
 Use revisions from the last 90 days. Prioritize post-earnings revision clusters.
+
+## API Keys
+
+Set environment variable `FINANCIAL_DATASETS_API_KEY` for Financial Datasets. Analyst estimates, EPS revisions, and price targets.
 ## Decision Framework
 
 1. Collect current analyst ratings and price targets for the specified ticker.

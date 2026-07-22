@@ -15,6 +15,10 @@ You receive tasks from your lead (Mark Minervini) in a standard briefing format.
 
 ## Data Freshness: Real-time
 Use current session's volume and order book. Historical volume profile: last 20 trading days.
+
+## API Keys
+
+Set environment variable `POLYGON_API_KEY` for Polygon.io. Real-time volume and order flow data.
 ## Decision Framework
 
 1. Compare volume on up days vs down days: higher volume on up days = accumulation. Higher volume on down days = distribution.

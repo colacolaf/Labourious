@@ -13,4 +13,11 @@ Runs a final checklist before any trade executes — position limits, compliance
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `ALPACA_API_KEY` | Alpaca Markets | Current positions, buying power, and compliance status |
+
+Set in `.env` or environment: `export ALPACA_API_KEY="your-key-here"`

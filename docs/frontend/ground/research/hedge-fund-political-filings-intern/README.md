@@ -14,4 +14,7 @@ Tracks 13F filings, hedge fund letters, political disclosures, and lobbying reco
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No API key required.** 13F, 13D filings (EDGAR) and FEC political contribution records (FEC.gov). No API keys required — both are public.

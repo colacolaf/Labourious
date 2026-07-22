@@ -15,6 +15,10 @@ You receive tasks from your lead (Michael Burry) in a standard briefing format. 
 
 ## Data Freshness: Quarterly
 Use most recent available data. For financial data: most recent quarter filed. Flag extraction date.
+
+## API Keys
+
+Set environment variable `FINANCIAL_DATASETS_API_KEY` for Financial Datasets. Structured financial data extraction — income statements, balance sheets, cash flows.
 ## Decision Framework
 
 1. Parse the data request: what data, from which sources, in what format, for what timeframe.

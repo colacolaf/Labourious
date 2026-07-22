@@ -16,4 +16,7 @@ Reads every filing footnote. Flags buried abnormalities before they become headl
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No API key required.** 10-K, 10-Q, 8-K, and other SEC filings. No API key required — EDGAR is public.

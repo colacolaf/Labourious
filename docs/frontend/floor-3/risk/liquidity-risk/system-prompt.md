@@ -15,6 +15,10 @@ You receive tasks from your lead (Nassim Taleb) in a standard briefing format. E
 
 ## Data Freshness: Real-time
 Use current bid-ask spread and depth. ADV: last 20 trading days. Crisis liquidity: 2008/2020 spreads.
+
+## API Keys
+
+Set environment variable `POLYGON_API_KEY` for Polygon.io. Bid-ask spreads, ADV, and depth data.
 ## Decision Framework
 
 1. For each position: what % of daily volume does it represent? How many days to exit without significant impact?

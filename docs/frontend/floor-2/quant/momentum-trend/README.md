@@ -13,4 +13,11 @@ Runs momentum and trend-following models across asset classes and timeframes. Id
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Historical price data for momentum calculations |
+
+Set in `.env` or environment: `export POLYGON_API_KEY="your-key-here"`

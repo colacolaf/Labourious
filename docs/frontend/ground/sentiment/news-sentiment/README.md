@@ -13,4 +13,11 @@ Analyzes tone, sentiment, and narrative shifts in financial news coverage. Quant
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `NEWSAPI_KEY` | NewsAPI | News articles for sentiment analysis and narrative tracking |
+
+Set in `.env` or environment: `export NEWSAPI_KEY="your-key-here"`

@@ -16,4 +16,11 @@ Tracks whale movements in dark pools and option chains. Surfaces what the smart 
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Options flow data — unusual volume, dark pool prints, put/call skew |
+
+Set in `.env` or environment: `export POLYGON_API_KEY="your-key-here"`

@@ -13,4 +13,7 @@ Analyzes competitive moats — brand, switching costs, network effects, scale, r
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No external API keys required.** This agent uses internal models, calculations, or data passed from other agents.

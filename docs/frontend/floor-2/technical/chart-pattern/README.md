@@ -13,4 +13,11 @@ Identifies chart patterns, support/resistance levels, and technical setups. Read
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Historical price data for chart pattern recognition |
+
+Set in `.env` or environment: `export POLYGON_API_KEY="your-key-here"`

@@ -13,4 +13,11 @@ Monitors weather patterns, natural disasters, crop conditions, and commodity sup
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `OPENWEATHER_API_KEY` | OpenWeatherMap | Current weather, forecasts, and historical weather patterns. Commodity prices via exchange APIs. |
+
+Set in `.env` or environment: `export OPENWEATHER_API_KEY="your-key-here"`

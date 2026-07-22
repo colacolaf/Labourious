@@ -21,4 +21,11 @@ His room includes:
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `ALPACA_API_KEY` | Alpaca Markets | Order execution and market data — shared with all Execution room agents |
+
+Set in `.env` or environment: `export ALPACA_API_KEY="your-key-here"`

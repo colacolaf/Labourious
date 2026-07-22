@@ -13,4 +13,11 @@ Analyzes DeFi protocols, yield opportunities, liquidity pools, and lending marke
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `COINGECKO_API_KEY` | CoinGecko (free tier) | Current APY/APR across DeFi protocols, TVL data, and token prices |
+
+Set in `.env` or environment: `export COINGECKO_API_KEY="your-key-here"`

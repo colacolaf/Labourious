@@ -13,4 +13,7 @@ Identifies and stress-tests every assumption underlying an investment thesis. As
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+**No external API keys required.** This agent uses internal models, calculations, or data passed from other agents.

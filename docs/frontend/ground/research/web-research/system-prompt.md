@@ -15,6 +15,10 @@ You receive tasks from your lead (Michael Burry) in a standard briefing format. 
 
 ## Data Freshness: Daily
 Use results from the last 30 days unless the lead specifies a different timeframe.
+
+## API Keys
+
+Set environment variable `TAVILY_API_KEY` for Tavily. Web search API for current information and primary sources.
 ## Decision Framework
 
 1. Parse the search parameters: sources, timeframe, specific data points requested.

@@ -13,4 +13,11 @@ Analyzes token economics — supply schedules, inflation, staking mechanics, gov
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `COINGECKO_API_KEY` | CoinGecko (free tier) | Token unlock schedules, circulating supply, and emission rates |
+
+Set in `.env` or environment: `export COINGECKO_API_KEY="your-key-here"`

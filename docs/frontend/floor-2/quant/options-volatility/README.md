@@ -13,4 +13,11 @@ Models options pricing, volatility surfaces, skew, and term structure. Identifie
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Options chain, volatility surface, and Greeks data |
+
+Set in `.env` or environment: `export POLYGON_API_KEY="your-key-here"`

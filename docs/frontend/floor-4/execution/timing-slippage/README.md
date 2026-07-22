@@ -13,4 +13,11 @@ Analyzes optimal trade timing to minimize slippage. Monitors intraday liquidity 
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Historical slippage data by time-of-day buckets |
+
+Set in `.env` or environment: `export POLYGON_API_KEY="your-key-here"`

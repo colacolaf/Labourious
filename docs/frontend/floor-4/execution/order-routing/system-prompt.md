@@ -15,6 +15,10 @@ You receive tasks from your lead (Vlad Tenev) in a standard briefing format. Ext
 
 ## Data Freshness: Real-time
 Use current exchange quotes and dark pool indications. Historical routing performance: last 90 days.
+
+## API Keys
+
+Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Exchange quotes, smart order routing, and execution quality data.
 ## Decision Framework
 
 1. Analyze the order: ticker, size, urgency, direction (buy/sell), market cap, typical spread.

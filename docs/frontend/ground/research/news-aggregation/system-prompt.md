@@ -15,6 +15,10 @@ You receive tasks from your lead (Michael Burry) in a standard briefing format. 
 
 ## Data Freshness: Daily
 Use news from the last 7 days for headlines, last 90 days for 13F filings.
+
+## API Keys
+
+Set environment variable `NEWSAPI_KEY` for NewsAPI. News article aggregation across sources and date ranges.
 ## Decision Framework
 
 1. Collect news from specified sources and timeframe.

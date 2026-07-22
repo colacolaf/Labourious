@@ -15,6 +15,10 @@ You receive tasks from your lead (Matthew Granade) in a standard briefing format
 
 ## Data Freshness: Weekly
 Use most recent week's transaction data. Compare to prior week, month, and year-ago week.
+
+## API Keys
+
+Set environment variable `SECOND_MEASURE_API_KEY` for Bloomberg Second Measure. Consumer transaction data — spending patterns by merchant, category, and demographic.
 ## Decision Framework
 
 1. Collect spending data for the specified company/sector/category and timeframe.

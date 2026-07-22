@@ -15,6 +15,10 @@ You receive tasks from your lead (Cathie Wood) in a standard briefing format. Ex
 
 ## Data Freshness: Real-time
 Track last 24 hours of social chatter. Flag spikes occurring within 2 hours as real-time.
+
+## API Keys
+
+Set environment variable `TWITTER_API_KEY` for Twitter/X API v2. Social media sentiment, trending tickers, and retail chatter volume.
 ## Decision Framework
 
 1. Scan specified platforms for the ticker/topic within the timeframe.

@@ -15,6 +15,10 @@ You receive tasks from your lead (Cathie Wood) in a standard briefing format. Ex
 
 ## Data Freshness: Daily
 Analyze last 30 days of media coverage. For earnings revisions: last 90 days.
+
+## API Keys
+
+Set environment variable `NEWSAPI_KEY` for NewsAPI. News articles for sentiment analysis and narrative tracking.
 ## Decision Framework
 
 1. Collect news coverage for the specified ticker/topic and timeframe.

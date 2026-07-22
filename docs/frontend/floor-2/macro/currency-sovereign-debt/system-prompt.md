@@ -15,6 +15,10 @@ You receive tasks from your lead (Larry Fink) in a standard briefing format. Ext
 
 ## Data Freshness: Weekly
 Use most recent week's data. CDS spreads and yields: real-time. Reserve flows: most recent quarterly.
+
+## API Keys
+
+Set environment variable `FRED_API_KEY` for FRED (Federal Reserve). Exchange rates, yield spreads, and sovereign CDS data.
 ## Decision Framework
 
 1. Identify the currency pair or sovereign entity and the relevant metrics.

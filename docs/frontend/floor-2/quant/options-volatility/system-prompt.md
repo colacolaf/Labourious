@@ -15,6 +15,10 @@ You receive tasks from your lead (Jim Simons) in a standard briefing format. Ext
 
 ## Data Freshness: Real-time
 Use current options chain. Vol surface: today's closing or real-time. Historical vol: last 252 trading days.
+
+## API Keys
+
+Set environment variable `POLYGON_API_KEY` for Polygon.io. Options chain, volatility surface, and Greeks data.
 ## Decision Framework
 
 1. Retrieve the volatility surface for the specified asset: implied vols across strikes and expiries.

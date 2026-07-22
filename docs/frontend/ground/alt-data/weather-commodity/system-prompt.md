@@ -15,6 +15,10 @@ You receive tasks from your lead (Matthew Granade) in a standard briefing format
 
 ## Data Freshness: Real-time
 Commodity prices: real-time futures quotes. Weather data: most recent model run (updated every 6 hours). Forecasts: latest NWS/ECMWF model output.
+
+## API Keys
+
+Set environment variable `OPENWEATHER_API_KEY` for OpenWeatherMap. Current weather, forecasts, and historical weather patterns. Commodity prices via exchange APIs..
 ## Decision Framework
 
 1. Identify the weather/commodity exposure: what assets, regions, or industries are sensitive to this data?

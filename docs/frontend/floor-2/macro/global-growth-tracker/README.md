@@ -13,4 +13,11 @@ Monitors PMIs, GDP forecasts, trade volumes, industrial production, and employme
 _TBD_
 
 ## Tools
-_TBD_
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `FRED_API_KEY` | FRED (Federal Reserve) | PMI composites, GDP growth, and trade volume data |
+
+Set in `.env` or environment: `export FRED_API_KEY="your-key-here"`
