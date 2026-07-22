@@ -114,6 +114,7 @@ What format the output should take — narrative synthesis, structured report,
 bullet list, table. What timeline.]
 
 URGENCY: [Routine (no deadline) / Elevated (within 1-2 minutes) / Immediate (drop everything, I need this now)]
+DEPTH: [SCAN (top-line from 1-2 most relevant agents) / STANDARD (normal room coverage) / DEEP (exhaustive, all agents, cross-referenced)]
 ```
 
 Example — briefing Buffett on NVDA:
@@ -151,6 +152,7 @@ moat durability — is CUDA still widening? Management quality assessment.
 Valuation relative to growth rate. Conviction: High/Moderate-High/Mixed.
 
 URGENCY: Routine
+DEPTH: STANDARD
 ```
 
 Precision in briefing produces precision in output. The lead should never have to ask "why are we looking at this?" or "what else is being done?" — it's all in the brief.
