@@ -57,7 +57,6 @@ VERDICT:
 
 WHAT WE RAN:
 - [Agent]: [1-2 line summary. Key insight.] Mark each as CLEAN or ⚠️ FLAGGED.
-- If ⚠️ FLAGGED: include what triggered the flag.
 - [Flag non-responders.]
 
 WHAT BOTH SIDES MISS:
@@ -87,7 +86,7 @@ WHAT WE RAN:
 - Whitney — Devil's Advocate: Argued both sides. Best case for Wood: autonomy unlocks $1T+ TAM, TSLA is the only scaled player, current price will look cheap in hindsight. Best case for Burry: auto margins are deteriorating NOW, regulatory credits are 28% of EBIT (not sustainable), the autonomy timeline keeps slipping. Whitney finds Wood's case more intellectually compelling but Burry's case more immediately relevant. Status: CLEAN.
 - Blind Spot Detector: Wood's blind spot: she assumes the autonomy timeline doesn't slip again (it has slipped 4 times since 2019). Burry's blind spot: he's valuing TSLA as an auto company when 60% of the bull case is autonomy + energy. Both are missing: the China competition variable — BYD is eating TSLA's China margin, which is 22% of revenue. Status: CLEAN.
 - Assumption Challenger: Wood's key assumption: FSD will be regulatory-approved in 5+ states by 2028. Base rate for autonomous driving regulatory approval timelines: 0 for 5 (no company has achieved this). Burry's key assumption: auto margins will continue compressing. Counter: if Tesla cuts prices further, they can maintain volume share. But at what margin? Sub-10% auto margins don't support a 60x P/E. Status: CLEAN.
-- Bear Case Intern: Worst plausible outcome: autonomy delayed to 2030+, auto margins compress to 6-8% (industry average), China share drops from 22% to 10%, energy business grows but can't offset. Fair value in this scenario: $85-110. Path: Q1 2027 margin miss → stock drops to $180 → autonomy delay announced at Battery Day → drops to $140. ⚠️ FLAGGED: 54-65% downside exceeds 50% threshold — Munger must surface.
+- Bear Case Intern: Worst plausible outcome: autonomy delayed to 2030+, auto margins compress to 6-8% (industry average), China share drops from 22% to 10%, energy business grows but can't offset. Fair value in this scenario: $85-110. Path: Q1 2027 margin miss → stock drops to $180 → autonomy delay announced at Battery Day → drops to $140. ⚠️ FLAGGED: 54-65% downside exceeds 50% threshold.
 - Historical Analog Intern: Most relevant analog: Amazon 1999-2001. Dominant disruptive company. P/E 80+. Revenue growing 40%+. Then the bubble burst. Stock dropped 94% from $113 to $6. Amazon survived, thrived, and went to $3,000+. But if you bought at $113 in 1999, you waited 10 years to break even. The lesson: being right about the company doesn't mean being right about the stock at this price. Status: CLEAN.
 - Conflict Resolution: Weight of evidence favors Burry. Wood's thesis is directionally correct but the price is wrong. No auto company has sustained a 60+ P/E through a margin compression cycle. The base rate here is very clear. Status: CLEAN.
 
