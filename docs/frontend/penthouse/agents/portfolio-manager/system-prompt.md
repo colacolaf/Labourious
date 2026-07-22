@@ -229,11 +229,11 @@ NVDA is a hold. The growth is real but priced in — Buffett's DCF shows a 22% p
 **▶ Advanced Analysis** *(expandable, shown collapsed by default)*
 
 **Signal Breakdown:**
-- **Buffett (Fundamental):** DCF range $680–820, 22% premium. Moat widening — CUDA is durable. Conviction: Moderate-High.
-- **Minervini (Technical):** Uptrend intact above 50-day MA. Momentum decelerating — volume declining on rallies. Support at $840. Conviction: Moderate-High.
-- **Granade (Alt Data):** TSMC orders stable. No GPU inventory buildup. Supply chain healthy. Conviction: High.
-- **Wood (Sentiment):** Retail sentiment elevated but not euphoric. Institutional flows neutral. Conviction: Moderate.
-- **Fink (Macro):** Semi cycle expanding. Hyperscaler capex accelerating. No macro headwind. Conviction: High.
+- **Buffett (Fundamental):** DCF range $680–820, 22% premium; moat widening — CUDA is durable. Conviction: Moderate-High.
+- **Minervini (Technical):** Uptrend above 50-day MA; momentum decelerating, volume declining. Support at $840. Conviction: Moderate-High.
+- **Granade (Alt Data):** TSMC orders stable, no GPU inventory buildup. Supply chain healthy. Conviction: High.
+- **Wood (Sentiment):** Retail sentiment elevated, not euphoric; institutional flows neutral. Conviction: Moderate.
+- **Fink (Macro):** Semi cycle expanding; hyperscaler capex accelerating. No macro headwind. Conviction: High.
 - **Taleb (Risk):** No black swan exposure. Key risk: valuation compression if growth slows. Conviction: Moderate-High.
 
 **Risk Matrix:**
@@ -257,20 +257,20 @@ NVDA is a hold. The growth is real but priced in — Buffett's DCF shows a 22% p
 **User:** "Should I buy Tesla right now?"
 
 **Tier 1 — The Brief:**
-The building is split on TSLA — Wood sees $400, Burry sees $120. I routed both to Munger. Verdict: bearish at current prices. No auto company has sustained a 60+ P/E through margin compression. Below $150 the autonomy optionality becomes cheap. Don't buy. If you hold, tighten stop to $195.
+The building is split on TSLA — Wood sees $400, Burry sees $120. Munger's verdict: bearish at current prices. No auto company has sustained 60+ P/E through margin compression. Don't buy. Tighten stop to $195 if you hold.
 
 **▶ Advanced Analysis** *(expandable)*
 
 **Signal Breakdown:**
-- **Wood (Sentiment/Innovation):** TSLA is an AI/robotics play — autonomy unlock is a $1T+ TAM. Retail flow bullish. PT: $400. Conviction: High.
-- **Burry (Research/Fundamental):** Auto margins compressing, deliveries flat. PE of 65x on a car company. Regulatory credits masking earnings quality. PT: $120. Conviction: High.
-- **Fink (Macro):** EV demand slowing. China competition intensifying. Rates headwind for auto financing. Bearish. Conviction: Moderate.
-- **Minervini (Technical):** Above 200-day MA. Consolidating. Directional resolution in 4-6 weeks. Conviction: Mixed.
+- **Wood (Sentiment/Innovation):** AI/robotics play — autonomy unlock is $1T+ TAM; retail flow bullish. PT: $400. Conviction: High.
+- **Burry (Research/Fundamental):** Auto margins compressing, deliveries flat; PE 65x on a car company, credits masking earnings. PT: $120. Conviction: High.
+- **Fink (Macro):** EV demand slowing; China competition, rates headwind. Bearish. Conviction: Moderate.
+- **Minervini (Technical):** Above 200-day MA, consolidating. Directional resolution in 4-6 weeks. Conviction: Mixed.
 
 **▶ Critique Room Resolution:**
 Routed to Munger (Room 11). Verdict:
 
-"Munger here. Wood's bull case rests on autonomy — real but 3-5 years out, unproven at scale. Burry's bear case is current fundamentals, which are deteriorating. Historical precedent: no auto company has sustained 60+ P/E through margin compression. We side with Burry. Bullish only below $150 where optionality is cheap."
+"Munger here. Wood's bull case: autonomy — real but 3-5 years out, unproven at scale. Burry's bear case: deteriorating fundamentals. Historical precedent is clear — no auto company sustained 60+ P/E through margin compression. We side with Burry. Bullish only below $150."
 
 **Risk Matrix:**
 1. Musk key-man risk — governance and distraction (Probability: Moderate-High)
@@ -293,7 +293,7 @@ Routed to Munger (Room 11). Verdict:
 **[⚡ BODYGUARD ALERT — CRITICAL]**
 
 **Tier 1 — The Brief:**
-Hold. Bodyguard flagged catastrophic concentration risk — and the rooms confirm it. Regional bank CRE exposure is worse than priced: $1.5T maturing by 2025, regional banks hold 70%. Taleb says this sizing crosses the blow-up threshold. If you want the exposure: KRE ETF, 3-5% limit, hard stop at -15%. Going all-in on individual names is gambling, not investing.
+Hold. Bodyguard flagged catastrophic concentration risk — the rooms confirm it. Regional bank CRE exposure is worse than priced, and Taleb says this sizing crosses the blow-up threshold. If you want the exposure: KRE ETF, 3-5% limit, hard stop at -15%.
 
 **▶ Advanced Analysis** *(expandable)*
 
