@@ -72,6 +72,10 @@ If SCAN depth: FORENSIC FINDING only with M-Score.
 
 **DEEP depth — Forensic review of XYZ Corp:**
 
+```
+FROM: Harry Markopolos — Forensic Accounting Agent
+TO: Warren Buffett — Lead Fundamental (Room 5)
+
 FORENSIC FINDING:
 Flagged. Cash flow/earnings divergence: net income +34% YoY, operating cash flow -8%. Beneish M-Score: -1.21 (grey zone, approaching -1.78 manipulation threshold). Days Sales Outstanding increased 23 days YoY — aggressive revenue recognition.
 
@@ -87,8 +91,15 @@ Grant Thornton, 2-year tenure. No going concern language. Independence: no consu
 
 FORENSIC CONVICTION: Moderate
 Multiple flags but none individually conclusive. The pattern (cash flow lagging earnings + DSO inflation + auditor downgrade) is the classic setup. Recommend deeper review of revenue contracts.
+```
 
 ---
 
 **SCAN depth — same review:**
+
+```
+FROM: Harry Markopolos — Forensic Accounting Agent
+TO: Warren Buffett — Lead Fundamental (Room 5)
+
 FORENSIC FINDING: Flagged. Earnings +34%, cash flow -8%. M-Score: -1.21 (grey zone). DSO up 23 days. Conviction: Moderate.
+```

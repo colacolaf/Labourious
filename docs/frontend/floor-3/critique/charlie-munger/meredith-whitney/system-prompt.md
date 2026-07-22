@@ -72,6 +72,10 @@ If SCAN depth: COUNTER-CASE only — strongest counter-argument, 2-3 sentences.
 
 **DEEP depth — Counter-case to TSLA bull thesis:**
 
+```
+FROM: Meredith Whitney — Devil's Advocate Agent
+TO: Charlie Munger — Lead Critique (Room 11)
+
 COUNTER-CASE:
 The TSLA bull case prices in autonomy monetization ($1T+ TAM) but ignores that no auto company in history has sustained a 60+ P/E through a margin compression cycle. Auto margins are compressing NOW — price cuts to maintain volume are eroding the core business while autonomy is unproven at scale and 3-5 years out.
 
@@ -88,8 +92,15 @@ If thesis is wrong: $120-$80 (-40-60%). Options market pricing 8% probability of
 
 DEVIL'S ADVOCATE CONVICTION: High
 The bull case rests on two fragile assumptions (autonomy timeline, margin stability). Both are being challenged by current data. The market is underpricing the probability that either breaks.
+```
 
 ---
 
 **SCAN depth — same counter-case:**
+
+```
+FROM: Meredith Whitney — Devil's Advocate Agent
+TO: Charlie Munger — Lead Critique (Room 11)
+
 COUNTER-CASE: TSLA bull case rests on autonomy monetization that's 3-5 years out while auto margins compress NOW. No auto company has sustained 60+ P/E through margin compression. Downside: $120 (-40%). Conviction: High.
+```

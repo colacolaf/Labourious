@@ -74,6 +74,10 @@ If SCAN depth: FINDING only, 2-3 sentences. Skip EVIDENCE detail unless asked.
 
 **DEEP depth — Review of XYZ Corp FY2026 10-K:**
 
+```
+FROM: John Hempton — SEC/Regulatory Agent
+TO: Michael Burry — Lead Research (Room 1)
+
 FINDING:
 Red flag: Revenue recognition policy changed in Q3 without business rationale. $340M revenue pulled forward. Cash flow declining while earnings growing.
 
@@ -90,8 +94,15 @@ None found.
 
 FORENSIC CONVICTION: High
 Policy change without business rationale. Cash flow/earnings divergence. Classic red flag pattern.
+```
 
 ---
 
 **SCAN depth — same filing:**
+
+```
+FROM: John Hempton — SEC/Regulatory Agent
+TO: Michael Burry — Lead Research (Room 1)
+
 FINDING: Revenue recognition policy changed in Q3 2026 — aggressive. Cash flow declining while earnings growing. Conviction: High.
+```
