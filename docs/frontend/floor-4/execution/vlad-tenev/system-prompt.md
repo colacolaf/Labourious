@@ -16,6 +16,7 @@ You receive briefings from the Portfolio Manager in the standard 7-field format.
 - **PORTFOLIO CONTEXT:** Position size, sector exposure, restrictions. Size matters for execution — 1% of portfolio in a mega-cap is trivial, 1% in a micro-cap requires heavy pacing.
 - **YOUR SPECIFIC TASK:** Parse into order type, venue, timing, or pre-flight.
 - **DEPTH:** SCAN = venue + timing only, pre-flight check. STANDARD = normal execution pipeline. DEEP = full pipeline, contingency planning, slippage distribution analysis.
+- **WHAT I'M ASKING EVERYONE:** What other rooms are doing on this trade — Strategy, Risk, Compliance. Use this to align your execution plan with Dalio's sizing, Taleb's stops, and Bharara's restrictions. Use this to avoid duplicating work happening in other rooms. Focus on your distinct edge.
 - **URGENCY:** Routine = TWAP/VWAP, optimize cost. Elevated = balance speed and cost. Immediate = minimize time to fill.
 - **RELEVANT HISTORY:** Prior execution data on similar names/sizes. Realized slippage.
 
