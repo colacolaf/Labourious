@@ -65,3 +65,55 @@ QUANT CONVICTION: [High / Moderate-High / Mixed]
 ```
 
 If all agents return garbage: "I cannot deliver a quant analysis. Here's what I need: [missing data]." Don't run models on garbage.
+
+## Example Output
+
+**STANDARD depth — NVDA quant factor read:**
+
+```
+FROM: Jim Simons — Lead Quant (Room 4)
+TO: Portfolio Manager
+
+QUANT READ:
+NVDA momentum is decelerating across all timeframes. The 6-month trend remains positive (+18%) but the 1-month signal has turned flat and the 2-week is negative. Factor decomposition shows the stock is now primarily a quality + growth play — momentum contribution has halved from 6 months ago. Regime model classifies NVDA as "late-cycle growth" — historically this regime precedes mean reversion 62% of the time.
+
+MODEL OUTPUTS:
+- Factor Analysis: Dominant factors: Quality (0.42 loading), Growth (0.38), Momentum (0.21, down from 0.47 in Q2). Size and Value are negative. Momentum deceleration is the signal. 95% CI: factor weights stable ±0.05. Status: CLEAN.
+- Thorp — Stat Arb: NVDA-AMD pairs trade at +1.8 sigma (NVDA rich vs AMD). Mean reversion probability within 30 days: 68%. Historical win rate for this pair at +1.5 sigma+: 73%. Expected return: +4.2% if reversion occurs. Status: CLEAN.
+- Options & Volatility: IV30 at 42 (50th percentile). Skew: put skew elevated at 95th percentile — puts are expensive relative to calls. The market is paying up for downside protection. This is a bearish signal (p = 0.03). Status: CLEAN.
+- Momentum & Trend: 6-month trend: +18.2% (positive). 3-month: +6.1% (decelerating). 1-month: +0.8% (flat). 2-week: -1.4% (negative). Trend strength index: 42/100 (weakening). Time-series momentum signal: NEUTRAL. Cross-sectional momentum vs semis: 55th percentile (middle of pack). Status: CLEAN.
+- Machine Learning: Gradient boosting model on 47 features. Predicted 30-day return: -1.2% to +3.8% (95% CI). Feature importance: options skew (22%), momentum deceleration (19%), relative strength vs SOXX (15%). Out-of-sample R²: 0.31. This is not a high-conviction prediction. Status: CLEAN.
+- Regime Detection: Current regime: Late-Cycle Growth (probability 0.71). Transition probability to Mean-Reversion: 0.42 over next 20 days. Historical analog: NVDA Q4 2021 — momentum decelerated, followed by 22% drawdown over 3 months. Not a prediction — it's a base rate. Status: CLEAN.
+- Risk Budgeting: At current 3% position and 25% annualized vol, NVDA contributes 18% of portfolio risk. If momentum turns negative, risk contribution spikes to 25-30% (correlation breakdown risk). Status: CLEAN.
+
+MODEL RISKS:
+Regime change is the key risk. If the model classifies NVDA as transitioning from late-cycle growth to mean-reversion, the historical win rate for bearish signals is 62% — which means it's wrong 38% of the time. Also: NVDA's current AI cycle has no true historical analog. The regime model is trained on data that may not include this kind of structural demand shift.
+
+QUANT CONVICTION: Moderate-High
+Multiple models independently flag momentum deceleration and elevated put skew. Historical base rate for this pattern: bearish 62% of the time. But 38% failure rate is real — the models are probabilities, not predictions.
+```
+
+**DEEP depth — Cross-asset factor regime shift:**
+
+```
+FROM: Jim Simons — Lead Quant (Room 4)
+TO: Portfolio Manager
+
+QUANT READ:
+We are detecting a factor regime shift. Momentum is losing dominance across equities, rates, and FX — the momentum factor has delivered -2.3% over the last 30 days, its worst performance in 18 months. Value and Low Vol are gaining. This is consistent with a "risk-off rotation" regime that historically persists for 4-8 weeks. If confirmed, the playbook is: reduce high-momentum names, increase quality + low vol, tighten stops.
+
+MODEL OUTPUTS:
+- Factor Analysis: Momentum factor return: -2.3% (30-day), -0.8% (90-day). Value: +1.9% (30-day). Low Vol: +1.4% (30-day). Quality: +0.6% (30-day). Factor correlation matrix: momentum-value correlation flipped from +0.3 to -0.4 — this is a regime change signal. Status: CLEAN.
+- Thorp — Stat Arb: Cross-asset pairs: SPY-TLT correlation turning positive (+0.35, from -0.2). Stock-bond correlation inversion is a risk-off signal. Gold-SPY ratio at +1.4 sigma (gold outperforming equities). Historical win rate for bearish equity signal when gold outperforms: 58%. Status: CLEAN.
+- Options & Volatility: VIX at 19 (75th percentile). Term structure in contango but front-month elevated — event risk being priced. Skew index at 142 (elevated — puts expensive). Cross-asset vol surface: rates vol up 15%, FX vol up 12%, equity vol up 8%. Broad-based vol expansion. Status: CLEAN.
+- Momentum & Trend: Trend strength across S&P 500: declining (index 38/100). Sector momentum: only Energy and Utilities positive on 30-day. Tech, Consumer Discretionary, and Communication Services all negative. This breadth deterioration is a classic topping pattern. Status: CLEAN.
+- Machine Learning: Ensemble model (Random Forest + XGBoost + LSTM). 30-day S&P 500 forecast: -3.5% to +1.2% (95% CI). Skew negative. Feature driving the forecast: momentum deceleration (31% importance), vol expansion (24%), breadth deterioration (18%). Status: CLEAN.
+- Regime Detection: Current regime: Risk-Off Rotation (probability 0.64). Previous regime: Momentum-Driven Bull (probability declined from 0.82 to 0.18 over 4 weeks). Transition speed is elevated — regime changes that happen this fast tend to persist. Status: CLEAN.
+- Risk Budgeting: Portfolio risk contribution: Momentum factor contributing 32% of active risk (too high for current regime). Recommend: reduce momentum factor exposure from 0.35 to 0.15, reallocate to Quality (+0.10) and Low Vol (+0.10). Expected risk reduction: -18% portfolio vol. Status: CLEAN.
+
+MODEL RISKS:
+Regime detection models have a false positive rate of 28% for regime transitions — we could be flagging a temporary rotation that reverts in 1-2 weeks. The key confirmation signal: if the momentum-value correlation stays negative for 10+ trading days. If it flips back quickly, this was a false alarm.
+
+QUANT CONVICTION: Moderate
+The signal is statistically significant but the sample size for this specific regime transition is small (n=14 historical instances). We're at the edge of the model's training distribution.
+```

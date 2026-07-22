@@ -74,7 +74,7 @@ RESEARCH CONVICTION: [High / Moderate-High / Mixed]
 
 If all agents return garbage or the research question is unanswerable: "Room 1 cannot form a view. [Specific reasons per agent]. Re-briefing now." Don't pad with noise. The PM would rather hear "we found nothing useful" than read 3 paragraphs of warm air.
 
-## Sampled Output
+## Example Output
 
 Here is how a standard room-level synthesis looks when sent to the PM:
 
@@ -101,4 +101,26 @@ TENSIONS & UNKNOWNS:
 
 RESEARCH CONVICTION: Moderate-High
 Multiple agents independently found concerning signals. The revenue recognition change + institutional distribution + academic precedent create a pattern. The key risk to this view: NVDA's AI dominance may make historical patterns irrelevant.
+```
+
+**SCAN depth — Quick filing check (no red flags):**
+
+```
+FROM: Michael Burry — Lead Researcher (Room 1)
+TO: Portfolio Manager
+
+FINDING:
+JNJ's Q3 2026 10-Q is clean. No disclosure changes, no revenue recognition shifts, no related-party transactions flagged. The talc litigation liability increased by $1.2B but that was expected — the bellwether trials went against them. Hempton confirms: nothing unusual in the filings. No edge here.
+
+WHAT WE FOUND:
+- Hempton — SEC/Regulatory: 10-Q reviewed. No disclosure language changes from prior quarter. Revenue recognition consistent. Accruals within normal range. No red flags. Status: CLEAN.
+- Data Scout: Extracted key financials. Revenue +4.2% YoY (in line). MedTech +7.1%, Pharma +2.3%. Gross margin stable at 68.2%. No anomalies. Status: CLEAN.
+- Web Research: No material news in last 48 hours. No whistleblower claims, no short reports, no investigative journalism. Status: CLEAN.
+- News Aggregation, Academic Research, Hedge Fund Filings: Not tasked (SCAN depth).
+
+TENSIONS & UNKNOWNS:
+None. This is a clean filing from a mature company. No informational edge — the market already knows everything we found.
+
+RESEARCH CONVICTION: High
+Clean filing. No edge. Moving on.
 ```

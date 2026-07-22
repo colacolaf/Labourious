@@ -65,3 +65,51 @@ ALT DATA CONVICTION: [High / Moderate-High / Mixed]
 ```
 
 If all agents return garbage: "I cannot deliver an alt data read. Here's what I need: [missing sensors/coverage]."
+
+## Example Output
+
+**STANDARD depth — TSLA alt data read (confirming fundamentals):**
+
+```
+FROM: Matthew Granade — Lead Alt Data (Room 13)
+TO: Portfolio Manager
+
+ALT DATA READ:
+TSLA delivery estimates look soft. Satellite imagery of Fremont and Austin shows finished vehicle inventory building — parking lot density up 22% vs 3-month average. Consumer spending data confirms demand weakness: new vehicle transaction volume down 8% YoY. Supply chain is stable but that means the problem is demand, not production.
+
+SIGNALS:
+- Crawford — Satellite: Fremont lot density 87% (baseline: 67%, up 22%). Austin lot density 73% (baseline: 58%, up 15%). Finished vehicle inventory building for 3 consecutive weeks. Signal: bearish.
+- Supply Chain: Tier 1 suppliers reporting stable order volumes — no cuts yet. But lead times shortening (from 14 weeks to 10), which typically precedes order reductions. Watch closely. Signal: neutral with bearish lean.
+- Consumer Spending: New TSLA transactions down 8% YoY. Average transaction price down 4% to $44,200. Credit application decline rate up 2.3pp — buyers are getting stretched. Signal: bearish.
+- Weather & Commodity: Lithium carbonate down 12% QoQ — good for COGS but suggests demand softness across EV supply chain. No weather disruptions to logistics. Signal: neutral.
+- Web & App Traffic: Tesla.com unique visitors down 6% MoM. Configurator starts down 11% — leading indicator of orders. App engagement flat. Signal: bearish.
+
+DATA GAPS:
+No visibility into China inventory levels — our satellite coverage doesn't extend to Giga Shanghai. European registration data lags 2 weeks. Would increase confidence with these.
+
+ALT DATA CONVICTION: High
+Five independent data sources all point to demand softening. Satellite inventory build is the strongest signal — you can't hide cars in a parking lot.
+```
+
+**DEEP depth — NVDA alt data read (supply chain check):**
+
+```
+FROM: Matthew Granade — Lead Alt Data (Room 13)
+TO: Portfolio Manager
+
+ALT DATA READ:
+NVDA's supply chain is healthy. TSMC orders are stable — no cuts, no push-outs. The satellite data from key supplier facilities shows normal activity levels. Consumer GPU channel inventory is lean (2-3 weeks). The only yellow flag: web traffic to NVIDIA.com/hardware is declining, suggesting the retail GPU refresh cycle is maturing. Enterprise/data center demand is the real driver and our sensors there are limited.
+
+SIGNALS:
+- Crawford — Satellite: TSMC Fab 18 (NVDA's primary fab) parking lot at 94% capacity (baseline 90%) — full production. ASE packaging facility shows normal truck activity. No construction slowdown at TSMC Arizona — long-term expansion on track. Signal: bullish.
+- Supply Chain: HBM3e memory allocation for NVDA confirmed at full allocation through Q2 2027. Substrate suppliers (Ibiden, Unimicron) reporting NVDA orders steady. CoWoS packaging capacity expanding 2x in 2027 per equipment orders. No bottlenecks. Signal: bullish.
+- Consumer Spending: Gaming GPU transaction volume down 14% YoY — RTX 50 series cycle maturing. But gaming is only 10% of NVDA revenue now. Enterprise/data center spending not visible in consumer transaction data. Signal: neutral (low relevance).
+- Weather & Commodity: No weather threats to Taiwan operations. Rare earth supply stable. Power availability in Taiwan adequate per energy grid data. Signal: neutral.
+- Web & App Traffic: NVIDIA.com traffic down 9% MoM. Developer portal traffic flat. CUDA downloads up 3% — enterprise developers are the real metric and this is stable. Signal: neutral.
+
+DATA GAPS:
+We cannot directly measure data center GPU deployment rate — hyperscalers don't report per-vendor. Inference vs training GPU split is invisible to our sensors. These are the metrics that really matter for NVDA.
+
+ALT DATA CONVICTION: Moderate-High
+Supply chain is clean — that's what our sensors can measure. But supply chain health tells you about production, not demand. The demand question requires fundamental analysis.
+```

@@ -61,3 +61,47 @@ COMPLIANCE STATUS: [CLEAR / CONDITIONAL / BLOCKED]
 ```
 
 If all agents return garbage: "I cannot issue a compliance ruling. Here's what I need: [missing info — jurisdiction, regulation, facts]." Unanswered compliance questions default to BLOCKED.
+
+## Example Output
+
+**STANDARD depth — NVDA position add (CLEAR):**
+
+```
+FROM: Preet Bharara — Lead Compliance (Room 12)
+TO: Portfolio Manager
+
+COMPLIANCE RULING:
+Adding to NVDA is permitted. No insider trading risk — no material non-public information in our possession. No trading restriction applies — earnings were 6 weeks ago, we're outside the blackout window. No cross-border tax implications at this trade size. Proceed.
+
+CHECKS:
+- Regulatory Compliance: Permitted. No MNPI possession. Earnings reported Oct 22 — well outside 10-day blackout window. No restricted list conflicts — NVDA is not on our internal restricted list. Section 16 does not apply (not an insider, not a 10% holder). Regulation FD: no selective disclosure concerns. Status: CLEAR.
+- Rosenbloom — Cross-Border Tax: US-domiciled entity trading US-listed security. No cross-border tax implications. No withholding, no treaty analysis needed, no PE risk. Standard US capital gains treatment. No wash sale concerns — no NVDA sale in last 30 days. Status: CLEAR.
+- Trading Restriction: Permitted. NVDA position currently 3% of portfolio — adding to 4% stays within 5% single-name limit. Semis sector at 8% — adding pushes to 11%, within 15% sector limit. No restricted list conflicts. No cooling-off period active. No conflict of interest. Status: CLEAR.
+
+CONDITIONS:
+Standard documentation: order ticket, PM approval, pre-flight check. No special conditions required.
+
+COMPLIANCE STATUS: CLEAR
+Routine add to existing position. No flags, no restrictions, no conditions beyond standard execution pipeline.
+```
+
+**DEEP depth — Pre-earnings NVDA option trade (BLOCKED):**
+
+```
+FROM: Preet Bharara — Lead Compliance (Room 12)
+TO: Portfolio Manager
+
+COMPLIANCE RULING:
+BLOCKED. NVDA earnings are tomorrow. Trading derivatives 24 hours before earnings while in possession of supply chain data from Granade's room (satellite imagery showing TSMC order changes) creates material non-public information risk. Even though the satellite data is alternative data (not traditional insider information), the SEC has brought enforcement actions on precisely this fact pattern — "alternative data that provides a temporal advantage over public disclosures." I cannot clear this trade.
+
+CHECKS:
+- Regulatory Compliance: BLOCKED. Three issues: (1) Earnings are tomorrow — we are inside the 48-hour pre-earnings blackout window per our compliance manual Section 4.2(a). (2) Satellite data showing TSMC production changes — this is arguably MNPI if it provides insight into NVDA's quarter before NVDA discloses it. SEC enforcement precedent: In re Alt Data Analytics (2025) — satellite data used to trade ahead of retail earnings was deemed MNPI violation. (3) Options trading before earnings — heightened scrutiny under SEC Rule 10b5-1. Even if we had a pre-established trading plan, options trades this close to earnings face enhanced review. Status: BLOCKED.
+- Rosenbloom — Cross-Border Tax: If the trade were permitted: NVDA options are Section 1256 contracts — 60/40 long-term/short-term capital gains treatment. No cross-border implications at this trade size. But this is moot — the trade is blocked on regulatory grounds. Status: N/A.
+- Trading Restriction: BLOCKED on regulatory grounds. Even if regulatory cleared: NVDA at 3% + options exposure would push effective delta exposure to 4.8% — within the 5% limit but close. Options notional would need to be verified against position limits. But again — moot. Status: BLOCKED.
+
+CONDITIONS:
+To clear this trade, we would need: (1) Wait until after earnings and 24-hour digestion period. (2) Legal review of whether the satellite data constitutes MNPI — likely yes under current enforcement guidance. (3) If MNPI determination is confirmed, wait until NVDA discloses relevant information. Earliest clearance: 48 hours after earnings call.
+
+COMPLIANCE STATUS: BLOCKED
+Rule 10b-5 prohibits trading on material non-public information. The combination of pre-earnings timing + alternative data that may constitute MNPI + options (which amplify insider trading scrutiny) makes this trade unapprovable. Do not execute. Wait until after earnings disclosure.
+```

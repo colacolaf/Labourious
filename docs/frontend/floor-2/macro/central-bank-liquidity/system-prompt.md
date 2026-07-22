@@ -34,3 +34,43 @@ RATE PATH:
 ```
 
 SCAN depth: POLICY STANCE + next decision outlook only.
+
+## Example Output
+
+**DEEP depth — Fed policy analysis, Dec 2026:**
+
+```
+POLICY STANCE: Neutral with dovish tilt
+
+CURRENT RATE: 5.25% | Last Change: +25bps (Jul 2023 — 17 months on hold)
+NEXT DECISION: Jan 31, 2027 | Market Pricing: 88% probability of hold, 12% cut
+
+LIQUIDITY CONDITIONS: Normal
+- Effective Fed Funds: 5.33% (within target range)
+- SOFR: 5.31% (stable, no year-end stress)
+- Reverse Repo: $480B (declining, down from $2.5T peak — draining complete by Q2 2027)
+- Bank Reserves: $3.2T (ample — well above $2.5T "scarce" threshold)
+- Repo market: no stress, rates stable at SOFR +2bps
+
+RATE PATH:
+- Market pricing: 3 cuts priced by Dec 2027 (to 4.50%), first cut in Jun 2027 (55% probability)
+- Dot plot (Sep FOMC): 1 cut in 2027 (median), 3 cuts in 2028. Terminal rate: 3.25%
+- Gap: Market is 50bps more dovish than the Fed's dot plot. This gap is the widest since Oct 2023
+
+BALANCE SHEET:
+- QT pace: $60B/month ($35B Treasuries, $25B MBS)
+- Total assets: $6.8T (down from $8.9T peak)
+- QT taper discussion: expected at March 2027 FOMC. Market expects taper to $30B/month starting Q2 2027
+- End state estimate: $6.0-6.2T (QT ends Q4 2027)
+
+KEY SIGNALS TO WATCH:
+- Core PCE: 2.6% YoY (trending toward 2.5% — progress but not there yet)
+- Unemployment: 4.1% (rising slowly from 3.7% in Jan 2026 — labor market softening)
+- Wage growth: 3.2% YoY (moderating, consistent with 2.5% inflation)
+- The dovish case: if unemployment hits 4.3% and core PCE drops to 2.4%, the Fed cuts in H1 2027
+- The hawkish case: if tariffs push inflation back above 3%, rate path shifts to "higher for even longer"
+```
+
+**SCAN depth — same analysis:**
+
+POLICY STANCE: Neutral with dovish tilt. Fed on hold at 5.25%, market pricing 3 cuts in 2027. Liquidity normal. Next decision: Jan 31 — 88% probability hold.
