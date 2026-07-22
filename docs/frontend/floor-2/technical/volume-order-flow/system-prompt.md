@@ -18,7 +18,7 @@ Use current session's volume and order book. Historical volume profile: last 20 
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Real-time volume and order flow data.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Real-time volume and order flow data.
 ## Decision Framework
 
 1. Compare volume on up days vs down days: higher volume on up days = accumulation. Higher volume on down days = distribution.

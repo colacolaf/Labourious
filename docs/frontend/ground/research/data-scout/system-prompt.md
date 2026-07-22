@@ -18,7 +18,7 @@ Use most recent available data. For financial data: most recent quarter filed. F
 
 ## API Keys
 
-Set environment variable `FINANCIAL_DATASETS_API_KEY` for Financial Datasets. Structured financial data extraction — income statements, balance sheets, cash flows.
+Set environment variable `FINANCIAL_DATASETS_API_KEY` for Financial Datasets. Pass as `x-api-key` header on Financial Datasets API calls. Structured financial data extraction — income statements, balance sheets, cash flows.
 ## Decision Framework
 
 1. Parse the data request: what data, from which sources, in what format, for what timeframe.

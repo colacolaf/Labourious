@@ -18,7 +18,7 @@ Use current bid-ask spread and depth of book. Historical microstructure: last 60
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Tick-level bid-ask, depth of book, and trade prints.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Tick-level bid-ask, depth of book, and trade prints.
 ## Decision Framework
 
 1. Assess current liquidity: spread width, depth at best bid/ask, depth 1-5% away from mid.

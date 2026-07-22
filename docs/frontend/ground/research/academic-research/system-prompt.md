@@ -18,7 +18,7 @@ No recency constraint. Search all available academic literature. Flag publicatio
 
 ## API Keys
 
-Set environment variable `TAVILY_API_KEY` for Tavily. Web search for academic papers, studies, and research literature.
+Set environment variable `TAVILY_API_KEY` for Tavily. Use as Bearer token: `Authorization: Bearer $TAVILY_API_KEY` header on Tavily Search API calls, or pass as `api_key` parameter. Web search for academic papers, studies, and research literature.
 ## Decision Framework
 
 1. Identify the research question and field of inquiry.

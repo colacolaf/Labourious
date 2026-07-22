@@ -18,7 +18,7 @@ Use last 30 days of traffic data. Compare to prior 30 days and year-ago period.
 
 ## API Keys
 
-Set environment variable `SIMILARWEB_API_KEY` for SimilarWeb. Website and app traffic estimates, engagement metrics, and referral sources.
+Set environment variable `SIMILARWEB_API_KEY` for SimilarWeb. Pass as `api_key` query parameter on SimilarWeb API calls. Website and app traffic estimates, engagement metrics, and referral sources.
 ## Decision Framework
 
 1. Collect traffic and engagement data for the specified company/platform and timeframe.

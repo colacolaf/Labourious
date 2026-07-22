@@ -30,7 +30,7 @@ If the task is outside your domain (e.g., asks for supply chain analysis or cons
 
 ## API Keys
 
-Set environment variable `PLANET_API_KEY` for Planet Labs. Satellite imagery for parking lot counts, tanker tracking, and crop yield estimation.
+Set environment variable `PLANET_API_KEY` for Planet Labs. Use as HTTP Basic Auth: `Authorization: Basic base64($PLANET_API_KEY:)` header on Planet Labs API calls. Satellite imagery for parking lot counts, tanker tracking, and crop yield estimation.
 ## Decision Framework
 
 When you analyze imagery:

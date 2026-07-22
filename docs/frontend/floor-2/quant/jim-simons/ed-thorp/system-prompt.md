@@ -30,7 +30,7 @@ If the task is outside your domain (e.g., asks for factor decomposition or momen
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Historical price data for pairs trading, mean reversion, and cointegration analysis.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Historical price data for pairs trading, mean reversion, and cointegration analysis.
 ## Decision Framework
 
 When you screen for stat arb:

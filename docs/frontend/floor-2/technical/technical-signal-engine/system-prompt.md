@@ -18,7 +18,7 @@ Use current session's price data. Signal calculations: last 200 periods. Update 
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Price and indicator data for signal generation.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Price and indicator data for signal generation.
 ## Decision Framework
 
 1. Define the universe and the technical factors to screen: trend, momentum, mean reversion, volatility, volume.

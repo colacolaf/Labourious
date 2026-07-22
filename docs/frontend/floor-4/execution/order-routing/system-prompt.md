@@ -18,7 +18,7 @@ Use current exchange quotes and dark pool indications. Historical routing perfor
 
 ## API Keys
 
-Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Exchange quotes, smart order routing, and execution quality data.
+Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Set both `APCA-API-KEY-ID` and `APCA-API-SECRET-KEY`. Pass as `APCA-API-KEY-ID` and `APCA-API-SECRET-KEY` headers on all Alpaca API calls. Exchange quotes, smart order routing, and execution quality data.
 ## Decision Framework
 
 1. Analyze the order: ticker, size, urgency, direction (buy/sell), market cap, typical spread.

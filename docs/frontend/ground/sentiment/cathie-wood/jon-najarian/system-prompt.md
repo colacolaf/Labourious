@@ -30,7 +30,7 @@ If the task is outside your domain (e.g., asks for news sentiment or fundamental
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Options flow data — unusual volume, dark pool prints, put/call skew.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Options flow data — unusual volume, dark pool prints, put/call skew.
 ## Decision Framework
 
 When you analyze flow:

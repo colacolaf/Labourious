@@ -18,7 +18,7 @@ Use current TVL, recent audits, and exploit history. Smart contract risk: latest
 
 ## API Keys
 
-Set environment variable `ETHERSCAN_API_KEY` for Etherscan. Smart contract verification status, audit history, and exploit data.
+Set environment variable `ETHERSCAN_API_KEY` for Etherscan. Pass as `apikey` query parameter on all Etherscan API calls. Smart contract verification status, audit history, and exploit data.
 ## Decision Framework
 
 1. Check audit history: who audited? When? What was found? Was it remediated? Unaudited protocols = high risk.

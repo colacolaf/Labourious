@@ -30,7 +30,7 @@ If the task is outside your domain (e.g., asks for tokenomics modeling or protoc
 
 ## API Keys
 
-Set environment variable `ETHERSCAN_API_KEY` for Etherscan. Wallet labels, transaction history, and smart money flows on Ethereum and EVM chains.
+Set environment variable `ETHERSCAN_API_KEY` for Etherscan. Pass as `apikey` query parameter on all Etherscan API calls. Wallet labels, transaction history, and smart money flows on Ethereum and EVM chains.
 ## Decision Framework
 
 When you analyze on-chain data:

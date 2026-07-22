@@ -18,7 +18,7 @@ Use current session's price action. Historical patterns: last 5 years. Support/r
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Historical price data for chart pattern recognition.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Historical price data for chart pattern recognition.
 ## Decision Framework
 
 1. Start with the higher timeframe (weekly/monthly) for trend context, then zoom into daily/4H for entry/exit levels.

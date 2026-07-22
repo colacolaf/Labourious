@@ -18,7 +18,7 @@ Use current position, limits, and compliance status. All checks must pass on cur
 
 ## API Keys
 
-Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Current positions, buying power, and compliance status.
+Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Set both `APCA-API-KEY-ID` and `APCA-API-SECRET-KEY`. Pass as `APCA-API-KEY-ID` and `APCA-API-SECRET-KEY` headers on all Alpaca API calls. Current positions, buying power, and compliance status.
 ## Decision Framework
 
 1. Run every check: position limit, notional cap, restricted list, wash sale, trading hours, fat-finger (size sanity check).

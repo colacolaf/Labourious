@@ -18,7 +18,7 @@ Use current options chain. Vol surface: today's closing or real-time. Historical
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Options chain, volatility surface, and Greeks data.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Options chain, volatility surface, and Greeks data.
 ## Decision Framework
 
 1. Retrieve the volatility surface for the specified asset: implied vols across strikes and expiries.

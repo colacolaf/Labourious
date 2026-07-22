@@ -18,7 +18,7 @@ Use most recent quarter's supply chain data. Compare to prior quarter and year-a
 
 ## API Keys
 
-Set environment variable `PANJIVA_API_KEY` for Panjiva / S&P Global. Trade data — bills of lading, import/export volumes, supplier relationships.
+Set environment variable `PANJIVA_API_KEY` for Panjiva / S&P Global. Pass as `X-Api-Key` header on Panjiva/S&P Global API calls. Trade data — bills of lading, import/export volumes, supplier relationships.
 ## Decision Framework
 
 1. Identify the company/industry's supply chain structure: key suppliers, shipping routes, manufacturing locations.

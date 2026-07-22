@@ -18,7 +18,7 @@ Use current market data. Algo parameters: most recent calibration. Slippage esti
 
 ## API Keys
 
-Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Real-time market data for algorithmic execution parameters.
+Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Set both `APCA-API-KEY-ID` and `APCA-API-SECRET-KEY`. Pass as `APCA-API-KEY-ID` and `APCA-API-SECRET-KEY` headers on all Alpaca API calls. Real-time market data for algorithmic execution parameters.
 ## Decision Framework
 
 1. Analyze the order: ticker, size, ADV%, urgency, spread, volatility.

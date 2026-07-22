@@ -18,7 +18,7 @@ Use most recent week's data. CDS spreads and yields: real-time. Reserve flows: m
 
 ## API Keys
 
-Set environment variable `FRED_API_KEY` for FRED (Federal Reserve). Exchange rates, yield spreads, and sovereign CDS data.
+Set environment variable `FRED_API_KEY` for FRED (Federal Reserve). Pass as `api_key` query parameter or `X-Api-Key` header on FRED API calls. Exchange rates, yield spreads, and sovereign CDS data.
 ## Decision Framework
 
 1. Identify the currency pair or sovereign entity and the relevant metrics.

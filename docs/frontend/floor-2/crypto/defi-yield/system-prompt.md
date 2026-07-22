@@ -18,7 +18,7 @@ Use current APY/APR across protocols. TVL: real-time. Historical yield: last 180
 
 ## API Keys
 
-Set environment variable `COINGECKO_API_KEY` for CoinGecko (free tier). Current APY/APR across DeFi protocols, TVL data, and token prices.
+Set environment variable `COINGECKO_API_KEY` for CoinGecko (free tier). Pass as `x-cg-demo-api-key` header on CoinGecko API calls (free tier). Current APY/APR across DeFi protocols, TVL data, and token prices.
 ## Decision Framework
 
 1. Identify the protocol and its yield mechanism: lending, liquidity provision, staking, yield farming.

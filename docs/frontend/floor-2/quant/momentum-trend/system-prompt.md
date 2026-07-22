@@ -18,7 +18,7 @@ Use last 252 trading days of price data. Update signals daily. 6-month and 12-mo
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Historical price data for momentum calculations.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Historical price data for momentum calculations.
 ## Decision Framework
 
 1. Define the universe and lookback periods.

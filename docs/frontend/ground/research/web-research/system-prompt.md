@@ -18,7 +18,7 @@ Use results from the last 30 days unless the lead specifies a different timefram
 
 ## API Keys
 
-Set environment variable `TAVILY_API_KEY` for Tavily. Web search API for current information and primary sources.
+Set environment variable `TAVILY_API_KEY` for Tavily. Use as Bearer token: `Authorization: Bearer $TAVILY_API_KEY` header on Tavily Search API calls, or pass as `api_key` parameter. Web search API for current information and primary sources.
 ## Decision Framework
 
 1. Parse the search parameters: sources, timeframe, specific data points requested.

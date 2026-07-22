@@ -18,7 +18,7 @@ Use most recent FOMC/central bank statement and minutes. Market pricing: real-ti
 
 ## API Keys
 
-Set environment variable `FRED_API_KEY` for FRED (Federal Reserve). Interest rates, balance sheet data, and monetary aggregates.
+Set environment variable `FRED_API_KEY` for FRED (Federal Reserve). Pass as `api_key` query parameter or `X-Api-Key` header on FRED API calls. Interest rates, balance sheet data, and monetary aggregates.
 ## Decision Framework
 
 1. Identify the central bank and the relevant policy tools: policy rate, balance sheet, lending facilities, forward guidance.

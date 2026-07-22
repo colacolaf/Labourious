@@ -18,7 +18,7 @@ Use most recent token unlock schedule and supply data. Vesting: current schedule
 
 ## API Keys
 
-Set environment variable `COINGECKO_API_KEY` for CoinGecko (free tier). Token unlock schedules, circulating supply, and emission rates.
+Set environment variable `COINGECKO_API_KEY` for CoinGecko (free tier). Pass as `x-cg-demo-api-key` header on CoinGecko API calls (free tier). Token unlock schedules, circulating supply, and emission rates.
 ## Decision Framework
 
 1. Map the token's supply: total supply, circulating supply, max supply, inflation rate, burn mechanism.

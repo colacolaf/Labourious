@@ -18,7 +18,7 @@ Options pricing is continuous during market hours. Use current option chains for
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Options chain data for hedge pricing.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Options chain data for hedge pricing.
 ## Decision Framework
 
 1. Identify the exposure to hedge: what asset, how much, against what scenario, over what timeframe.

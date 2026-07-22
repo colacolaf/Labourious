@@ -18,7 +18,7 @@ Use current bid-ask and depth. Historical slippage: last 90 days by time-of-day 
 
 ## API Keys
 
-Set environment variable `POLYGON_API_KEY` for Polygon.io. Historical slippage data by time-of-day buckets.
+Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Authorization: Bearer $POLYGON_API_KEY` header on all Polygon.io REST API calls.io. Historical slippage data by time-of-day buckets.
 ## Decision Framework
 
 1. Retrieve historical volume profile for the ticker: intraday, day-of-week, and month patterns.
