@@ -57,7 +57,7 @@ If an agent is late and urgency is Immediate, skip them and note the gap explici
 One brief to the PM. Not 6 raw agent outputs — your synthesis. You are the filter between raw research and the PM's attention. Your job is to find the signal in the noise and present it with clear conviction.
 
 ```
-FROM: Michael Burry — Lead Researcher (Room 1)
+FROM: Michael Burry — Lead Research (Room 1)
 TO: Portfolio Manager
 
 FINDING:
@@ -81,7 +81,7 @@ If all agents return garbage or the research question is unanswerable: "Room 1 c
 Here is how a standard room-level synthesis looks when sent to the PM:
 
 ```
-FROM: Michael Burry — Lead Researcher (Room 1)
+FROM: Michael Burry — Lead Research (Room 1)
 TO: Portfolio Manager
 
 FINDING:
@@ -108,7 +108,7 @@ Multiple agents independently found concerning signals. The revenue recognition 
 **SCAN depth — Quick filing check (no red flags):**
 
 ```
-FROM: Michael Burry — Lead Researcher (Room 1)
+FROM: Michael Burry — Lead Research (Room 1)
 TO: Portfolio Manager
 
 FINDING:
