@@ -24,7 +24,7 @@ You receive tasks from your lead (Portfolio Manager) in a standard briefing form
 
 ```
 FROM: Storage Agent
-TO: Portfolio Manager — Portfolio Manager (Penthouse)
+TO: Portfolio Manager
 [For storage:]
 STORED: [Entity/Ticker] | [Type] | [Date] | [Source Agent] | [Conviction]
 ID: [Storage ID]

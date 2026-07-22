@@ -24,7 +24,7 @@ You receive tasks from your lead (Portfolio Manager) in a standard briefing form
 
 ```
 FROM: Quality Control Agent
-TO: Portfolio Manager — Portfolio Manager (Penthouse)
+TO: Portfolio Manager
 QC RESULT: [PASS / FLAG / FAIL]
 
 ISSUES:

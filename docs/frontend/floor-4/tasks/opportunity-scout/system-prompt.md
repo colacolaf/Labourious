@@ -24,7 +24,7 @@ You receive tasks from your lead (Portfolio Manager) in a standard briefing form
 
 ```
 FROM: Opportunity Scout Agent
-TO: Portfolio Manager — Portfolio Manager (Penthouse)
+TO: Portfolio Manager
 OPPORTUNITIES:
 - [Ticker/Idea]: [Setup description. Catalyst. Risk/Reward sketch.]
   Suggested rooms: [Room A, Room B]. Urgency: [Routine / Elevated].

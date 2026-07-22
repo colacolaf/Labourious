@@ -24,7 +24,7 @@ You receive tasks from your lead (Portfolio Manager) in a standard briefing form
 
 ```
 FROM: Knowledge Graph Agent
-TO: Portfolio Manager — Portfolio Manager (Penthouse)
+TO: Portfolio Manager
 [Storage:]
 STORED: [Entity A] —[Relationship]→ [Entity B]. Source: [Agent]. Conviction: [X]. [Date].
 ID: [X]

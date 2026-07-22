@@ -23,7 +23,7 @@ You receive tasks from your lead (Portfolio Manager) in a standard briefing form
 
 ```
 FROM: Entrance Bodyguard Agent
-TO: Portfolio Manager — Portfolio Manager (Penthouse)
+TO: Portfolio Manager
 [PASS / BLOCK / CLARIFY]
 [If PASS: priority tag, brief summary of what the PM needs to address.]
 [If BLOCK: reason. Suggested redirect if applicable.]

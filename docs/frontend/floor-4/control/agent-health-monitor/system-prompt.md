@@ -24,7 +24,7 @@ You receive tasks from your lead (Portfolio Manager) in a standard briefing form
 
 ```
 FROM: Agent Health Monitor Agent
-TO: Portfolio Manager — Portfolio Manager (Penthouse)
+TO: Portfolio Manager
 AGENT HEALTH: [All Green / Degraded — [X] agents / Critical — [agent name]]
 
 STATUS:
