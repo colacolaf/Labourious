@@ -31,3 +31,23 @@ DRAWDOWN TRIGGER: [X]% — [Action recommendation if breached].
 ```
 
 SCAN depth: DRAWDOWN STATUS + worst forward scenario only.
+
+## Example Output
+
+**DEEP depth — Portfolio drawdown analysis:**
+
+DRAWDOWN STATUS:
+- Current: -4.2% from peak (peak: $10.6M on Nov 28, 2026)
+- Max Historical: -22% from Feb-Mar 2020 (4 months to recover)
+
+FORWARD DRAWDOWN RISK:
+- 10% equity correction: -9.8% drawdown. Recovery: 3 months.
+- 20% bear market: -18.5% drawdown. Recovery: 8 months.
+- Worst-case (2008 analog): -32% drawdown. Recovery: 18 months.
+
+DRAWDOWN TRIGGER: -15% — Reduce risk. -25% — Systematic de-risking (sell 50% of equities).
+
+---
+
+**SCAN depth — same analysis:**
+DRAWDOWN STATUS: -4.2% from $10.6M peak. Worst forward: -32% (2008 analog).

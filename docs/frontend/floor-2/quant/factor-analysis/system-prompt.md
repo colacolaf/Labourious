@@ -32,3 +32,24 @@ CROWDING CHECK:
 ```
 
 SCAN depth: factor loadings table only.
+
+## Example Output
+
+**DEEP depth — Portfolio factor decomposition vs S&P 500:**
+
+FACTOR EXPOSURES:
+- Market: β=0.94 | Size: β=-0.12 | Value: β=0.08 | Momentum: β=0.22 | Quality: β=0.18 | Low Vol: β=-0.15
+- R²: 82% | Alpha: 2.1% annualized
+
+ACTIVE BETS:
+- Overweight: Momentum (+0.22σ vs benchmark). Quality (+0.18σ). Intentional — PM bias toward quality momentum.
+- Underweight: Low Vol (-0.15σ). Intentional — portfolio tilts toward growth over defensives.
+- Size: (-0.12σ). Slight large-cap tilt — consistent with benchmark-adjacent positioning.
+
+CROWDING CHECK:
+Momentum factor at 82nd percentile historically — elevated but not extreme. Quality at 65th percentile — normal. No crowding red flags. Momentum crowding historically unwinds at 95th+ percentile.
+
+---
+
+**SCAN depth — same analysis:**
+FACTOR EXPOSURES: Market 0.94 | Size -0.12 | Value 0.08 | Momentum 0.22 | Quality 0.18 | Low Vol -0.15. R² 82%, Alpha 2.1%.

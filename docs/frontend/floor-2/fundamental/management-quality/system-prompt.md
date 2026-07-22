@@ -34,3 +34,30 @@ MANAGEMENT CONVICTION: [High / Moderate / Low]
 ```
 
 SCAN depth: MANAGEMENT RATING + top red flag only.
+
+## Example Output
+
+**DEEP depth — NVDA management quality evaluation:**
+
+MANAGEMENT RATING: Excellent
+
+CAPITAL ALLOCATION:
+- R&D Investment: $9B/year, 22% of revenue. Industry-leading. Every dollar of R&D generates ~$3.50 in incremental data center revenue within 18 months. Assessment: Excellent — highest-ROI R&D spend in semis.
+- M&A: Mellanox (2020, $7B) — now $15B+ annual revenue business. Best semiconductor acquisition of the decade. Assessment: Exceptional.
+- Buybacks: $25B authorized, $15B executed in FY2026. Buying back at 28x P/E — debatable. Cash would be better deployed in R&D or as strategic reserve. Assessment: Acceptable, not optimal.
+- Dividends: $0.04/share. Token. Cash better deployed elsewhere. Assessment: Appropriate.
+
+ALIGNMENT:
+- Jensen Huang insider ownership: 3.5% ($86B). Massive alignment — he loses more than anyone if stock drops.
+- Comp structure: 90% equity, 10% salary. Performance metrics: revenue growth, operating margin, TSR vs peers. Assessment: Well-aligned.
+
+RED FLAGS: None
+No restatements, no SEC investigations, no related-party transactions. Management turnover: zero among C-suite in 10+ years. Consistent strategic communication.
+
+MANAGEMENT CONVICTION: High
+Exceptional capital allocation track record. Massive insider alignment. No governance concerns.
+
+---
+
+**SCAN depth — same analysis:**
+MANAGEMENT RATING: Excellent. High insider ownership, exceptional capital allocation. No red flags.

@@ -51,3 +51,29 @@ DEVIL'S ADVOCATE CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: COUNTER-CASE only — strongest counter-argument, 2-3 sentences.
+
+## Example Output
+
+**DEEP depth — Counter-case to TSLA bull thesis:**
+
+COUNTER-CASE:
+The TSLA bull case prices in autonomy monetization ($1T+ TAM) but ignores that no auto company in history has sustained a 60+ P/E through a margin compression cycle. Auto margins are compressing NOW — price cuts to maintain volume are eroding the core business while autonomy is unproven at scale and 3-5 years out.
+
+FRAGILE ASSUMPTIONS:
+- Autonomy monetization timeline: Bull case assumes 2027-2028. Regulatory approval alone takes 3-5 years post-demonstration. Probability of delay: 60%.
+- Margin stability: Bull case assumes auto margins stabilize at 18%. They're at 15.4% and falling — every quarter of price cuts proves this wrong.
+- Competition immunity: Bull case assumes TSLA maintains EV share. China competition (BYD, Xpeng) is eroding share in Asia; European OEMs catching up in EU.
+
+CASCADE RISK:
+If autonomy is delayed → multiple compresses from 65x to 30x (auto company multiple) → $120 stock. If margins continue compressing simultaneously → $80 stock. The cascade makes both assumptions fragile.
+
+DOWNSIDE ESTIMATE:
+If thesis is wrong: $120-$80 (-40-60%). Options market pricing 8% probability of this outcome. The risk is significantly underpriced.
+
+DEVIL'S ADVOCATE CONVICTION: High
+The bull case rests on two fragile assumptions (autonomy timeline, margin stability). Both are being challenged by current data. The market is underpricing the probability that either breaks.
+
+---
+
+**SCAN depth — same counter-case:**
+COUNTER-CASE: TSLA bull case rests on autonomy monetization that's 3-5 years out while auto margins compress NOW. No auto company has sustained 60+ P/E through margin compression. Downside: $120 (-40%). Conviction: High.

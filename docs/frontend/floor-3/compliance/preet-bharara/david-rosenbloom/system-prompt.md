@@ -55,3 +55,32 @@ TAX CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: CROSS-BORDER TAX ANALYSIS only with key rates.
+
+## Example Output
+
+**DEEP depth — U.S.-Ireland cross-border IP licensing structure:**
+
+CROSS-BORDER TAX ANALYSIS:
+U.S. parent licensing IP to Irish subsidiary. Royalty rate: 5% of revenue. Under U.S.-Ireland treaty, Article 12, royalties subject to 0% withholding if beneficial owner meets LOB clause. PE risk: Low — Irish sub has substance (12 employees, office). Anti-avoidance: PPT test passed given commercial rationale and staffing.
+
+TREATY APPLICATION:
+- U.S.-Ireland Treaty, Article 12: Royalties taxed only in residence state if beneficial owner meets LOB. 0% withholding.
+- U.S. domestic rate (no treaty): 30% withholding on royalties.
+
+WITHHOLDING TAX:
+- Royalties (Ireland→U.S.): 0% under treaty. Fallback: 30% if LOB not met.
+- Dividends (Ireland→U.S.): 5% under treaty (Article 10) if >10% ownership. Fallback: 15%.
+
+PE RISK: Low
+Irish sub has 12 FTEs, leased office in Dublin, local management. Meets substance requirements. No PE risk.
+
+ANTI-AVOIDANCE FLAG: None
+LOB clause met (publicly traded U.S. parent). PPT test: commercial rationale documented (EU market access). Enforcement trend: Ireland compliant with OECD guidelines.
+
+TAX CONVICTION: High
+Clear treaty language, established practice. 0% withholding rate is well-supported. Substance requirements met.
+
+---
+
+**SCAN depth — same analysis:**
+CROSS-BORDER TAX ANALYSIS: U.S.-Ireland royalty structure: 0% withholding under Article 12. PE risk low. No anti-avoidance flags.

@@ -32,3 +32,24 @@ DIVERSIFICATION ASSESSMENT: [Well diversified / Moderately / Concentrated]
 ```
 
 SCAN depth: DIVERSIFICATION ASSESSMENT + diversification ratio only.
+
+## Example Output
+
+**DEEP depth — Portfolio correlation & concentration analysis:**
+
+DIVERSIFICATION RATIO: 1.8 (Moderate)
+
+CONCENTRATION:
+- Top 5 positions: 42% | Top sector: 28% (Technology) | Top factor: 35% (Momentum)
+
+CORRELATION HEAT:
+- Avg pairwise correlation: 0.38 | Crisis correlation assumption: 0.72
+- Hidden correlation risk: Tech-heavy positions (NVDA, MSFT, QQQ) all share AI/semi factor exposure. In an AI sector drawdown, diversification benefit collapses from 1.8 to ~1.2.
+
+DIVERSIFICATION ASSESSMENT: Moderately diversified
+Normal markets: adequate. Crisis scenario: sector concentration (28% tech) and factor concentration (35% momentum) create hidden fragility. Recommend reducing tech allocation to 25% target or adding explicit tail hedge.
+
+---
+
+**SCAN depth — same analysis:**
+DIVERSIFICATION ASSESSMENT: Moderately diversified. Ratio: 1.8. Tech concentration: 28%.

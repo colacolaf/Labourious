@@ -32,3 +32,26 @@ SUPPLIER NOTE:
 ```
 
 SCAN depth: STATUS + top 2 metrics only.
+
+## Example Output
+
+**DEEP depth — NVDA supply chain assessment:**
+
+SUPPLY CHAIN STATUS: Normal
+
+KEY METRICS:
+- TSMC CoWoS Packaging Capacity: 35K wpm vs 28K baseline (+25%). Expanding — TSMC announced $8B new fab investment.
+- HBM3e Memory Lead Times: 16 weeks vs 12 weeks baseline. Tight but stable. SK Hynix adding capacity Q1 2027.
+- GPU Component Lead Times: 8 weeks vs 10 weeks Q2. Improving as supply chain normalizes.
+- Freight Rates (Asia→US): $3,200/container vs $3,800 avg. Declining. Capacity adequate.
+
+DISRUPTION FLAGS: None
+Taiwan Strait risk remains on watchlist but no current disruption. TSMC Arizona fab provides partial geographic diversification (online 2028).
+
+SUPPLIER NOTE:
+TSMC: Sole source for advanced packaging — concentration risk. SK Hynix: HBM3e sole source with Samsung qualification pending. Both suppliers investing in capacity. No near-term bottleneck.
+
+---
+
+**SCAN depth — same assessment:**
+STATUS: Normal. CoWoS +25%, HBM lead times 16 weeks (tight), component lead times improving.

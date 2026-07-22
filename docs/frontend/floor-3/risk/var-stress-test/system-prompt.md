@@ -31,3 +31,24 @@ REVERSE STRESS: [Max acceptable loss of $X] requires [scenario]. Plausibility: [
 ```
 
 SCAN depth: VaR 99% + worst stress scenario only.
+
+## Example Output
+
+**DEEP depth — Portfolio VaR and stress testing:**
+
+VaR (1d, 95%): $128K | VaR (1d, 99%): $242K | CVaR: $310K
+
+STRESS TESTS:
+- 2008 Analog: -32% ($3.2M loss). Driven by equity correlation spike and credit spread blowout.
+- COVID Analog: -18% ($1.8M loss). Sharp but short-lived. Bond hedge partially effective.
+- Rate Shock (+200bps): -22% ($2.2M loss). Tech/growth heavy portfolio hit by duration + equity sell-off.
+- Custom Scenario (AI earnings miss cascade): -28% ($2.8M loss). NVDA -40%, semi sector -35%.
+
+WORST HISTORICAL: -22% on Mar 16, 2020. COVID crash. Recovery: 4 months.
+
+REVERSE STRESS: $1M max acceptable loss requires a 13% portfolio drawdown. Scenarios producing >$1M loss: 2008 analog, rate shock, AI earnings miss. All three are plausible (Probability: 5-15% each over next 12 months).
+
+---
+
+**SCAN depth — same analysis:**
+VaR 99%: $242K. Worst stress: 2008 analog (-32%, $3.2M loss).

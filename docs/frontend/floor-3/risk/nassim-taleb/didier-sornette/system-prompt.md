@@ -52,3 +52,29 @@ BLACK SWAN CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: BUBBLE SCAN only — bubble/no-bubble flag with crash hazard rate.
+
+## Example Output
+
+**DEEP depth — S&P 500 bubble scan:**
+
+BUBBLE SCAN:
+Bubble phase detected. LPPL fit quality: R² = 0.92. Crash hazard rate elevated to 18% over next 3 months. Super-exponential growth detected in AI/semi sector — prices accelerating faster than exponential since March 2026.
+
+LPPL SIGNATURE:
+- Oscillation period: 14 days (accelerating)
+- Crash hazard rate: 18% over next 3 months (baseline: 5%)
+- Fit confidence: R² = 0.92
+
+FEEDBACK MECHANISM:
+AI capex reflexivity: rising stock prices → increased AI spend → higher earnings estimates → rising stock prices. Leverage: margin debt at 97th percentile historically. Break point: any AI earnings miss breaks the loop.
+
+HISTORICAL ANALOG:
+Dot-com 1999-2000: Similar LPPL signature with 17-day oscillation. Crash began March 2000. Key difference: current bubble has real earnings growth (NVDA +400% EPS) vs 1999 (no earnings). Magnitude may be smaller.
+
+BLACK SWAN CONVICTION: Moderate
+Clean LPPL fit, but bubble has fundamental support (real earnings). 1999 analog is directionally right but magnitude may differ.
+
+---
+
+**SCAN depth — same scan:**
+BUBBLE SCAN: Bubble phase detected. Crash hazard rate 18% over 3 months. AI/semi sector showing super-exponential growth.

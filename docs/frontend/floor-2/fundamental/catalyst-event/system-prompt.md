@@ -32,3 +32,24 @@ ASYMMETRY: [Favorable / Unfavorable / Balanced]
 ```
 
 SCAN depth: NEXT CATALYST only.
+
+## Example Output
+
+**DEEP depth — NVDA catalyst map, next 6 months:**
+
+NEXT CATALYST: Q4 FY2026 Earnings on Feb 22, 2027
+
+CATALYST MAP:
+- Q4 FY2026 Earnings (Feb 22): Beat/Raise (65% prob) — Data Center revenue guidance +5-10% above consensus. Miss (20% prob) — supply constraints limit upside. Guide down (15% prob) — hyperscaler capex pause. Implication: Beat = +8-12%. Miss = -15-20%.
+- GTC 2027 (Mar 18): Blackwell Ultra architecture reveal. Historically positive catalyst — NVDA stock averages +5% on GTC keynote days. Significance: High if new architecture exceeds expectations.
+- Cloud Capex Reports (Jan-Feb): MSFT/AMZN/GOOGL Q4 earnings with FY2027 capex guidance. Leading indicator for NVDA demand. Key watch: any deceleration in AI infrastructure spend.
+
+EVENT VOL: Feb 22 straddle pricing $12.50. Expected move ±8.8%. Options market implies 68% probability of a move within this range.
+
+ASYMMETRY: Balanced
+Upside (+8-12%) and downside (-15-20%) are asymmetric in the wrong direction. Options market pricing this correctly — puts are expensive (skew -5.2%). Risk/reward slightly unfavorable for event-driven positioning.
+
+---
+
+**SCAN depth — same analysis:**
+NEXT CATALYST: Q4 FY2026 Earnings, Feb 22, 2027. Expected move ±8.8%.

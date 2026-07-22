@@ -35,3 +35,31 @@ WORST-CASE: [Max loss scenario. Insurance? Circuit breaker?]
 ```
 
 SCAN depth: PROTOCOL RISK + audit status only.
+
+## Example Output
+
+**DEEP depth — Aave v4 protocol risk assessment:**
+
+PROTOCOL RISK: Low
+
+AUDIT STATUS:
+- Trail of Bits: Dec 2025. Findings: 0 critical, 2 high, 8 medium. All remediated.
+- OpenZeppelin: Jan 2026. Findings: 0 critical, 1 high, 5 medium. All remediated.
+- Code4rena contest: Feb 2026. $500K bounty. 3 medium findings, all fixed.
+
+ATTACK SURFACES:
+- Flash loan exploitation: Low. Aave v4 flash loan fee prevents manipulation. No historical exploits on Aave since v2 (2020).
+- Oracle manipulation: Moderate. Chainlink oracles on major assets (safe). Isolated markets on low-liquidity assets use fallback oracles — higher risk.
+- Governance attack: Low. Aave DAO requires 2-day timelock + 15% quorum. AAVE token distribution is broad — capture cost > $2B.
+
+ORACLE DEPENDENCY: Chainlink (primary). Fallback oracles for isolated markets. Chainlink manipulation risk: Low (10-year track record, zero exploits on major feeds).
+
+GOVERNANCE RISK: Low
+Aave DAO is one of the most decentralized in DeFi. Multisig (Guardian) can pause protocol in emergency but can't steal funds. Timelock prevents flash governance attacks.
+
+WORST-CASE: Smart contract exploit causing bad debt accumulation. Estimated max loss: 3-5% of TVL ($300-500M). Safety Module covers up to $200M via staked AAVE backstop. Circuit breaker: Guardian can pause within 2 minutes.
+
+---
+
+**SCAN depth — same analysis:**
+PROTOCOL RISK: Low. Dual-audited (Trail of Bits, OpenZeppelin). No critical findings. $10B+ TVL stress-tested.

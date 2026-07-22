@@ -54,3 +54,37 @@ ALLOCATION CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: STRATEGIC ALLOCATION only — key mix and expected return.
+
+## Example Output
+
+**DEEP depth — Endowment-model strategic allocation review:**
+
+STRATEGIC ALLOCATION:
+Recommended mix: 30% public equity / 25% private equity / 20% real assets / 15% absolute return / 10% fixed income. Expected return 7.2% over 10-year horizon. Correlation to 60/40: 0.65. Key diversification comes from private equity (different return drivers) and real assets (inflation hedge).
+
+ASSET CLASS ANALYSIS:
+- Public Equity: 30%. Expected return: 6.5%. Liquidity: Daily. Role: Growth engine.
+- Private Equity: 25%. Expected return: 10.2%. Liquidity: 5yr+ lockup. Role: Enhanced return via illiquidity premium.
+- Real Assets: 20%. Expected return: 6.8%. Liquidity: Quarterly. Role: Inflation hedge + diversification.
+- Absolute Return: 15%. Expected return: 5.5%. Liquidity: Quarterly. Role: Uncorrelated return stream.
+- Fixed Income: 10%. Expected return: 3.8%. Liquidity: Daily. Role: Deflation hedge + dry powder.
+
+CORRELATION MATRIX:
+- Public/Private Equity: 0.72 — higher than historical due to public-company comparable exposure.
+- Real Assets/Equity: 0.45 — genuine diversification, commodity/real estate drivers differ.
+- Absolute Return/Equity: 0.30 — hedge fund beta is real but low.
+
+LIQUIDITY PROFILE:
+- 1 month: 40% | 1 quarter: 55% | 1 year: 75% | 5+ years: 25%
+Annual liquidity need: 3-5% (spending policy). Profile adequate. No forced-selling risk.
+
+RISK TO THE MODEL:
+Private equity marks lag public markets by 1-2 quarters. In a sharp public market drawdown, reported PE values will be overstated — the "denominator effect" can force overallocation. Mitigation: maintain 5% cash buffer for rebalancing.
+
+ALLOCATION CONVICTION: High
+Yale-model diversification benefit is robust across 20+ years of data. PE illiquidity premium compensated (300-400bps historically). Inflation hedge via real assets is structurally sound.
+
+---
+
+**SCAN depth — same review:**
+STRATEGIC ALLOCATION: 30/25/20/15/10 public/private/real/absolute/fixed. Expected return 7.2% over 10 years. Diversification ratio: 0.65 correlation to 60/40.

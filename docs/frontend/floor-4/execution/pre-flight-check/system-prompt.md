@@ -34,3 +34,24 @@ CHECKS:
 ```
 
 SCAN depth: STATUS + failed checks only.
+
+## Example Output
+
+**DEEP depth — NVDA buy order pre-flight:**
+
+PRE-FLIGHT STATUS: CLEARED
+
+CHECKS:
+- Position Limit: PASS — Tech limit 30%. Current: 28%. After trade: 29.2%.
+- Notional Cap: PASS — Single-order cap $5M. Order: $2.1M.
+- Restricted List: PASS — NVDA not on any list.
+- Wash Sale: PASS — No NVDA sales in past 30 days.
+- Trading Hours: PASS — Market open. Regular session.
+- Fat-Finger: PASS — 15,000 shares vs typical 5K-50K range. 0.3σ from mean. Normal.
+
+Order validated. Proceed.
+
+---
+
+**SCAN depth — same check:**
+PRE-FLIGHT STATUS: CLEARED.

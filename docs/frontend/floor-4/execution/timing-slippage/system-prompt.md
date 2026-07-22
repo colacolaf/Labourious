@@ -33,3 +33,24 @@ CATALYST NOTE: [Upcoming events in execution window. Risk assessment.]
 ```
 
 SCAN depth: OPTIMAL WINDOW + expected slippage only.
+
+## Example Output
+
+**DEEP depth — NVDA execution timing, Dec 16, 2026:**
+
+OPTIMAL WINDOW: 10:00–13:00 EST. Rationale: Peak liquidity (25% of daily volume), post-opening volatility decayed, pre-close volume not yet arrived.
+
+SLIPPAGE ESTIMATE:
+- Expected: 8 bps | 95th Percentile: 18 bps
+- Distribution: Normal (slightly fat-tailed). Key driver: liquidity — NVDA trades $8B/day, 15K shares is negligible impact.
+
+VOLUME PROFILE:
+- Peak liquidity: 10:00-11:30 (28% of daily volume) and 15:00-16:00 (22%)
+- Avoid: 9:30-9:45 (opening volatility, spreads 2x normal). Also avoid 14:00 (Fed minutes release — event risk).
+
+CATALYST NOTE: Fed minutes at 14:00 EST. Can move rates, semis secondarily sensitive. Avoid executing 13:45-14:15.
+
+---
+
+**SCAN depth — same analysis:**
+OPTIMAL WINDOW: 10:00-13:00. Expected slippage: 8 bps. Avoid 14:00 (Fed minutes).

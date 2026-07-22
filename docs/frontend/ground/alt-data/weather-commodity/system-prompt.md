@@ -32,3 +32,28 @@ FORWARD PROJECTION:
 ```
 
 SCAN depth: IMPACT assessment + top 2 indicators only.
+
+## Example Output
+
+**DEEP depth — Midwest drought impact on corn/soybean:**
+
+WEATHER/COMMODITY IMPACT: High
+
+CURRENT CONDITIONS:
+- Precipitation (Midwest, 30d): 1.2" vs 3.8" seasonal norm. -68% deficit. Severe drought classification.
+- Soil Moisture: 22nd percentile — driest since 2012 analog.
+- Corn Spot: $5.82/bu (+18% in 30 days). Soybean Spot: $14.20/bu (+12%).
+
+IMPACT ASSESSMENT:
+- Corn Futures (Mar 2027): +22% expected crop loss. $6.50-7.00/bu if drought persists through pollination.
+- Soybean Futures: +8% expected. Soybeans more drought-tolerant during vegetation stage.
+- Fertilizer equities (MOS, NTR): Positive — higher crop prices → increased farmer spending.
+- Ethanol producers: Margin compression from higher corn input costs.
+
+FORWARD PROJECTION:
+1-4 week outlook: NOAA forecasting continued below-average precipitation. If drought extends through July pollination window, corn yield losses accelerate non-linearly. Key uncertainty: July rainfall.
+
+---
+
+**SCAN depth — same analysis:**
+IMPACT: High. Midwest precipitation -68% of normal. Corn +18% in 30 days. Drought extending through pollination = further upside.

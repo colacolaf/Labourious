@@ -33,3 +33,28 @@ SIGNAL ASSESSMENT: [High / Moderate / Low]
 ```
 
 SCAN depth: net direction + top 3 transactions only.
+
+## Example Output
+
+**DEEP depth — NVDA institutional & insider activity, Q4 2026:**
+
+INSTITUTIONAL FLOW: Accumulating
+
+INSIDER ACTIVITY:
+- Jensen Huang (CEO): Sell — 120,000 shares at $148.20 on Dec 3. 10b5-1 plan sale (pre-scheduled). Low signal.
+- Colette Kress (CFO): Sell — 12,000 shares at $146.80 on Dec 5. 10b5-1 plan. Low signal.
+- No open-market insider buys this quarter.
+
+INSTITUTIONAL CHANGES:
+- Vanguard: Added 4.2M shares (+3.8%). Significant — largest holder increasing.
+- BlackRock: Added 2.8M shares (+2.1%). Consistent accumulator.
+- Renaissance Technologies: New position — 1.5M shares. High signal — RenTech rarely initiates.
+- Tiger Global: Reduced 3.1M shares (-15%). Taking profits after 200%+ gain.
+
+SIGNAL ASSESSMENT: Moderate
+Institutional accumulation (Vanguard, BlackRock, RenTech) is bullish. Insider selling is routine 10b5-1 — no red flag. Tiger reduction is profit-taking, not thesis change. No insider cluster buying to upgrade to High.
+
+---
+
+**SCAN depth — same analysis:**
+Net direction: Accumulating. Top 3: Vanguard +4.2M, RenTech new 1.5M, Tiger -3.1M (profit-taking).

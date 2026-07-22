@@ -32,3 +32,18 @@ RESULTS: [X] entries found for [query].
 ```
 
 SCAN depth: top 1 result. DEEP depth: all results with full metadata.
+
+## Example Output
+
+**DEEP depth — Query: NVDA past analyses:**
+
+RESULTS: 4 entries found for NVDA.
+- Dec 16, 2026 | PM Synthesis: NVDA hold — 22% premium to DCF, momentum decelerating, supply chain healthy. Conviction: Moderate-High. ID: PM-2026-12-16-001
+- Sep 22, 2026 | Fundamental (Buffett): DCF range $650-790. Stock at $720. Passed. ID: FUND-2026-09-22-003
+- Sep 22, 2026 | Risk (Taleb): Concentration risk flagged — NVDA would be 12% of portfolio at proposed weight. ID: RISK-2026-09-22-002
+- Jun 15, 2026 | Research (Burry): AI capex cycle accelerating faster than modeled. Bullish signal. ID: RES-2026-06-15-001
+
+---
+
+**SCAN depth — same query:**
+Top result: Dec 16, 2026 | PM Synthesis: NVDA hold at 22% DCF premium. Conviction: Moderate-High.

@@ -48,3 +48,27 @@ GEOSPATIAL CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: IMAGERY FINDING only. Skip location detail.
+
+## Example Output
+
+**DEEP depth — WMT Q4 2026 parking lot analysis:**
+
+IMAGERY FINDING:
+Walmart Supercenter parking lots across 47 locations show 18% decline in average fullness vs Q4 2025. Trend accelerated in December. 92% confidence (minimal cloud cover).
+
+LOCATION DETAIL:
+- Bentonville, AR (#1047): 62% full vs 78% baseline. -21%. Confidence: High.
+- Dallas, TX (#2183): 54% full vs 71% baseline. -24%. Confidence: High.
+- Phoenix, AZ (#3401): 71% full vs 75% baseline. -5%. Confidence: Moderate (partial cloud).
+- [44 additional locations consistent with trend]
+
+ANOMALIES:
+Phoenix location bucks trend — only -5%. Possible weather effect (record heat keeping shoppers indoors). Recommended: correlate with weather data.
+
+GEOSPATIAL CONVICTION: High
+Consistent across 46/47 locations. Trend acceleration in December is meaningful — holiday season weakness.
+
+---
+
+**SCAN depth — same analysis:**
+IMAGERY FINDING: Walmart parking lots down 18% YoY across 47 locations. Trend accelerating in December. Confidence: High.

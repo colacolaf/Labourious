@@ -32,3 +32,23 @@ QUERY: [Entity] → [X] connections found.
 ```
 
 SCAN depth: top 3 connections only.
+
+## Example Output
+
+**DEEP depth — Query: Entity="NVDA"**
+
+QUERY: NVDA → 8 connections found.
+- NVDA —[analyzed_by]→ Fundamental (Buffett). Source: PM. Date: Dec 16, 2026. Conviction: Moderate-High.
+- NVDA —[analyzed_by]→ Risk (Taleb). Source: PM. Date: Dec 16, 2026. Conviction: Moderate-High.
+- NVDA —[competes_with]→ AMD. Source: Alt Data (Granade). Date: Nov 22, 2026. Conviction: High.
+- NVDA —[depends_on]→ TSMC. Source: Research (Burry). Date: Oct 15, 2026. Conviction: High.
+- NVDA —[owned_in]→ SOXX ETF. Source: Strategy (Dalio). Date: Sep 30, 2026. Conviction: N/A.
+- NVDA —[prior_decision]→ Passed (Sep 2026). Conviction: High. Outcome: NVDA +23% since pass.
+- [3 additional connections — DEEP traversal complete.]
+
+PATTERN: NVDA most connected to Fundamental and Risk rooms. Prior "pass" decision aged well. No contradictory analyses stored.
+
+---
+
+**SCAN depth — same query:**
+Top 3: analyzed_by Fundamental (Dec 16), analyzed_by Risk (Dec 16), competes_with AMD (Nov 22).

@@ -32,3 +32,24 @@ SIGNAL QUALITY: [High / Moderate / Low]
 ```
 
 SCAN depth: top 3 signals + composite score only.
+
+## Example Output
+
+**DEEP depth — Tech sector technical screen:**
+
+TECHNICAL SIGNALS:
+- NVDA: Bullish — Composite: 78/100. Trend:82, Momentum:75, Mean Rev:45, Vol:55, Volume:68
+- AMD: Neutral — Composite: 52/100. Trend:48, Momentum:55, Mean Rev:60, Vol:42, Volume:50
+- MSFT: Bullish — Composite: 71/100. Trend:75, Momentum:68, Mean Rev:50, Vol:38, Volume:62
+
+BACKTEST:
+- Win Rate: 64% | Sharpe: 1.2 | Max DD: -18%
+- False Signal Rate: 22%
+
+SIGNAL QUALITY: Moderate
+Bullish signals on NVDA/MSFT have multi-factor confluence. AMD is mixed — no clear signal. Composite scores above 70 historically have 68% win rate. Current false signal rate (22%) is within normal range.
+
+---
+
+**SCAN depth — same screen:**
+Top 3: NVDA 78/100 (Bullish), MSFT 71/100 (Bullish), AMD 52/100 (Neutral).

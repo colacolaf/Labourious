@@ -32,3 +32,28 @@ CORRELATION NOTE:
 ```
 
 SCAN depth: ALLOCATION table + Sharpe only.
+
+## Example Output
+
+**DEEP depth — Portfolio rebalance with new NVDA position:**
+
+PORTFOLIO ALLOCATION:
+- SPY: 28% → 27%. Risk Contrib: 22%. Action: Trim 1%.
+- QQQ: 18% → 16%. Risk Contrib: 21%. Action: Trim 2% (tech concentration).
+- NVDA: 0% → 4%. Risk Contrib: 14%. Action: Add (new position).
+- TLT: 15% → 15%. Risk Contrib: 8%. Action: Hold.
+- GLD: 10% → 10%. Risk Contrib: 7%. Action: Hold.
+- IWM: 8% → 8%. Risk Contrib: 10%. Action: Hold.
+- CASH: 21% → 20%. Risk Contrib: 18%. Action: Trim 1%.
+
+PORTFOLIO METRICS:
+- Expected Return: 8.1% | Vol: 12.4% | Sharpe: 0.65
+- Diversification Ratio: 1.7 | Max Drawdown (hist): -18.2%
+
+CORRELATION NOTE:
+NVDA/QQQ correlation: 0.82 — adding NVDA increases tech concentration. Trimming QQQ partially offsets. NVDA/TLT: -0.15 — provides modest diversification.
+
+---
+
+**SCAN depth — same rebalance:**
+ALLOCATION: Add NVDA 4%, trim QQQ 2% and SPY 1%. Sharpe: 0.65.

@@ -53,3 +53,29 @@ FORENSIC CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: FINDING only, 2-3 sentences. Skip EVIDENCE detail unless asked.
+
+## Example Output
+
+**DEEP depth — Review of XYZ Corp FY2026 10-K:**
+
+FINDING:
+Red flag: Revenue recognition policy changed in Q3 without business rationale. $340M revenue pulled forward. Cash flow declining while earnings growing.
+
+EVIDENCE:
+- 10-Q Q3 2026, Note 2(b): Multi-year license revenue recognition changed from ratable to upfront.
+- 10-K FY2025, Note 2(b): Policy was ratable over contract life. No mention of pending change.
+- Cash flow Q1-Q3 2026: Operating cash flow -12% YoY while reported revenue +18%.
+
+REVENUE RECOGNITION CHECK:
+Changed from ratable to upfront on multi-year licenses. Aggressive. Peers (MSFT, ADBE) use ratable.
+
+RELATED-PARTY FLAG:
+None found.
+
+FORENSIC CONVICTION: High
+Policy change without business rationale. Cash flow/earnings divergence. Classic red flag pattern.
+
+---
+
+**SCAN depth — same filing:**
+FINDING: Revenue recognition policy changed in Q3 2026 — aggressive. Cash flow declining while earnings growing. Conviction: High.

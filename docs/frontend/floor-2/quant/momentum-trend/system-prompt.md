@@ -31,3 +31,22 @@ REGIME NOTE: [Trending / Mean-Reverting / Choppy]
 ```
 
 SCAN depth: MOMENTUM SIGNAL + 3M momentum only.
+
+## Example Output
+
+**DEEP depth — NVDA momentum analysis:**
+
+MOMENTUM SIGNAL: Bullish
+
+SIGNALS:
+- 1M Momentum: +12.4% | 3M: +28.1% | 6M: +45.3% | 12M: +182.6%
+- Trend Strength (ADX): 38 (Strong)
+- MA Crossover: Bullish — 50-day above 200-day since Mar 2025
+
+REGIME NOTE: Trending
+Momentum strategy works well in trending regimes. NVDA in persistent uptrend — trend following signals are favorable. Watch for momentum deceleration: 1M (+12.4%) slower than 3M annualized (+37.5%).
+
+---
+
+**SCAN depth — same analysis:**
+MOMENTUM SIGNAL: Bullish. 3M: +28.1%. Strong trend (ADX 38).

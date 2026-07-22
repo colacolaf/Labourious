@@ -30,3 +30,24 @@ ASSUMPTION FRAGILITY: [High / Moderate / Low]
 ```
 
 SCAN depth: KEY ASSUMPTION only.
+
+## Example Output
+
+**DEEP depth — Assumption audit of NVDA bull thesis:**
+
+ASSUMPTION INVENTORY:
+- AI capex growth continues at 40%+ CAGR through 2029: Critical. Uncertain. Testable (via hyperscaler guidance). If wrong: Revenue growth drops to 15-20%, DCF collapses to $80-100.
+- CUDA moat remains impenetrable: Critical. Uncertain. Partially testable (developer surveys, PyTorch adoption). If wrong: AMD/INTC gain 10-15% share, gross margin compresses 500bps+.
+- TSMC supply remains uninterrupted: Critical. Uncertain. Testable (satellite imagery, shipping data). If wrong: Production halts, catastrophic.
+- GPU remains the dominant AI compute architecture: Supporting. Certain. If wrong: All assumptions about TAM need revision. (Probability: Low — no credible alternative at scale.)
+- U.S.-China chip restrictions don't escalate to full embargo: Supporting. Uncertain. Testable (policy analysis). If wrong: 20-25% of revenue at risk.
+
+KEY ASSUMPTION: AI capex sustaining 40%+ CAGR through 2029. This is the thesis. Everything else is detail.
+
+ASSUMPTION FRAGILITY: High
+Two critical, uncertain assumptions (capex growth, CUDA moat) drive the valuation. One uncertain but critical geopolitical assumption (TSMC). Thesis is overconfident given how much rests on these three bets.
+
+---
+
+**SCAN depth — same thesis:**
+KEY ASSUMPTION: AI capex sustaining 40%+ CAGR through 2029. If wrong, thesis collapses to $80-100.

@@ -48,3 +48,26 @@ FLOW CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: UNUSUAL ACTIVITY only. Top 1-2 prints.
+
+## Example Output
+
+**DEEP depth — NVDA options flow analysis:**
+
+UNUSUAL ACTIVITY:
+5,000 Jan $150 calls bought at $3.40 — $1.7M bet on upside by January. Volume 8x open interest at this strike.
+
+KEY PRINTS:
+- NVDA Jan $150 C: 5,000 contracts at $3.40. Bullish. Timed during afternoon dip.
+- NVDA Jan $130 P: 2,000 contracts sold at $2.10. Bullish (put seller collecting premium).
+- Dark pool: 150,000 shares at $142.15. Buyer: institutional (block at mid, no impact).
+
+SKEW READ:
+25-delta put/call skew: -3.2% (calls expensive vs puts). Bullish signal. Shifted from -1.1% last week — conviction building.
+
+FLOW CONVICTION: High
+Clear institutional call buying with size. Put selling confirms bullish stance. Skew moving in favor.
+
+---
+
+**SCAN depth — same ticker:**
+UNUSUAL ACTIVITY: 5,000 NVDA Jan $150 calls bought at $3.40 — $1.7M bullish bet. 8x normal volume.

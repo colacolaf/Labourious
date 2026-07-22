@@ -51,3 +51,28 @@ FORENSIC CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: FORENSIC FINDING only with M-Score.
+
+## Example Output
+
+**DEEP depth — Forensic review of XYZ Corp:**
+
+FORENSIC FINDING:
+Flagged. Cash flow/earnings divergence: net income +34% YoY, operating cash flow -8%. Beneish M-Score: -1.21 (grey zone, approaching -1.78 manipulation threshold). Days Sales Outstanding increased 23 days YoY — aggressive revenue recognition.
+
+RED FLAGS:
+- DSO increase: 47→70 days YoY. Customers taking longer to pay. Suggests channel stuffing or extended payment terms to pull revenue forward. Source: 10-K FY2026, pp. 42-43.
+- Accruals/Assets: 18% vs industry avg 6%. High accruals = earnings manufactured. Source: Balance sheet, cash flow statement reconciliation.
+- Auditor change: Switched from Deloitte to regional firm (Grant Thornton) in 2025. No explanation provided. Auditor tenure risk. Source: 8-K, March 2025.
+
+BENEISH M-SCORE: -1.21 — Grey zone. Not above manipulation threshold but elevated. Days Sales Receivable Index (DSRI) is the primary driver.
+
+AUDITOR NOTE:
+Grant Thornton, 2-year tenure. No going concern language. Independence: no consulting fees disclosed, but regional firm doing a $2B market cap company raises questions.
+
+FORENSIC CONVICTION: Moderate
+Multiple flags but none individually conclusive. The pattern (cash flow lagging earnings + DSO inflation + auditor downgrade) is the classic setup. Recommend deeper review of revenue contracts.
+
+---
+
+**SCAN depth — same review:**
+FORENSIC FINDING: Flagged. Earnings +34%, cash flow -8%. M-Score: -1.21 (grey zone). DSO up 23 days. Conviction: Moderate.

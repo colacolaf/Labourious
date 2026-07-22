@@ -50,3 +50,29 @@ ON-CHAIN CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: KEY METRICS only with ON-CHAIN READ.
+
+## Example Output
+
+**DEEP depth — Aave protocol on-chain analysis:**
+
+ON-CHAIN READ:
+Aave showing strong fundamentals. TVL growing 12% MoM, fees up 18%. Smart Money accumulating — 3 labeled funds added positions this week. Exchange net outflow of $42M suggests holding conviction.
+
+KEY METRICS:
+- Active Addresses: 24,700 (+8% MoM)
+- TVL: $6.2B (+12% MoM)
+- Fee Generation: $8.4M annualized (+18% MoM)
+- Exchange Net Flow: -$42M (outflow — accumulation signal)
+
+SMART MONEY SIGNAL:
+Accumulating. Wintermute, Jump Trading, and CMS Holdings all added AAVE positions this week (on-chain verified). No whale distribution detected. Top 100 holders: net +3.2% holdings this month.
+
+ON-CHAIN CONVICTION: High
+Clear smart money accumulation. TVL and fees both accelerating. Exchange outflows confirm holding behavior.
+
+---
+
+**SCAN depth — same protocol:**
+KEY METRICS: AAVE TVL $6.2B (+12% MoM), fees $8.4M annualized (+18%). Smart Money accumulating.
+
+ON-CHAIN READ: AAVE fundamentals strengthening. TVL and fees accelerating. Smart Money buying. Conviction: High.

@@ -33,3 +33,24 @@ PERFORMANCE CONTEXT: [Historical performance of this strategy on similar orders.
 ```
 
 SCAN depth: ALGO + total IS estimate only.
+
+## Example Output
+
+**DEEP depth — NVDA 15,000 share buy, Routine urgency:**
+
+ALGO: TWAP — Participation rate: 5%. Window: 3 hours (10:00-13:00).
+
+COST ESTIMATE:
+- Expected Slippage: 8 bps | Spread Cost: 4 bps | Impact: 4 bps
+- Total IS Estimate: 16 bps ($3,360 on $2.1M order)
+
+STRATEGY SWITCH:
+- If spread widens >12 bps: switch to POV (10% participation) to complete before close.
+- If NVDA drops >3% during window: abort at $130 limit, re-evaluate.
+
+PERFORMANCE CONTEXT: TWAP on NVDA over last 90 days: avg IS 14 bps, 95th percentile 22 bps. Current estimate (16 bps) is within normal range.
+
+---
+
+**SCAN depth — same order:**
+ALGO: TWAP, 5%, 3hr window. Total IS: 16 bps ($3,360).

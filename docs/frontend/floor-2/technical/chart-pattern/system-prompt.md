@@ -34,3 +34,26 @@ CHART CONVICTION: [High / Moderate / Low]
 ```
 
 SCAN depth: TREND + key levels only.
+
+## Example Output
+
+**DEEP depth — NVDA daily/weekly chart analysis:**
+
+TREND: Uptrend on weekly; Rangebound on daily
+
+KEY LEVELS:
+- Support: $128 (50-day MA) | Resistance: $152 (ATH) | Next target: $165 (1.618 Fib extension)
+
+PATTERNS:
+- Ascending triangle on daily: $128 support, $152 resistance. Bullish continuation pattern. Target: $176 on breakout. Invalidation: close below $125.
+- Bull flag on weekly: pole from $90→$152, flag consolidating $128-$152. Bullish. Target: $195 on resolution.
+
+VOLUME: Confirming on weekly (higher on up weeks). Diverging on daily (volume declining on recent rallies — momentum deceleration).
+
+CHART CONVICTION: Moderate-High
+Weekly structure is unambiguously bullish. Daily consolidation is healthy within uptrend. Volume divergence on daily is the caution flag — watch for breakdown below $125.
+
+---
+
+**SCAN depth — same analysis:**
+TREND: Uptrend (weekly). Support: $128. Resistance: $152. Patterns: Ascending triangle, bull flag.

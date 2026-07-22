@@ -30,3 +30,22 @@ UNUSUAL FLAGS: [None / [Specific dislocation]. Implications.]
 ```
 
 SCAN depth: VOL READ + ATM IV only.
+
+## Example Output
+
+**DEEP depth — NVDA vol surface analysis:**
+
+VOL READ: Normal
+
+VOL METRICS:
+- ATM IV (30d): 42% | Realized Vol (30d): 38% | Vol Risk Premium: +4%
+- Skew (25 delta put-call): -5.2% (puts expensive vs calls). Moderately bearish — protection demand elevated but not extreme.
+- Term Structure: Contango (30d IV 42% vs 90d IV 38%). Normal — near-term event risk (earnings Feb 2027) priced.
+
+UNUSUAL FLAGS: None
+Skew at -5.2% is within normal range for NVDA (-3% to -8% historically). No vol spike. No term structure inversion. Options market not pricing any unusual risk.
+
+---
+
+**SCAN depth — same analysis:**
+VOL READ: Normal. ATM IV 42%, skew -5.2% (moderate put premium). No unusual flags.

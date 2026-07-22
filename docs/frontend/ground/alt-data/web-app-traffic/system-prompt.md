@@ -33,3 +33,25 @@ ANOMALIES: [None / Flagged at [date] — [possible cause].]
 ```
 
 SCAN depth: TRAFFIC TREND + MAU only.
+
+## Example Output
+
+**DEEP depth — NVDA developer portal traffic analysis:**
+
+TRAFFIC TREND: Growing
+
+KEY METRICS:
+- MAUs: 8.2M (+24% YoY)
+- Downloads (CUDA Toolkit): 1.4M/month (+18% YoY)
+- Time Spent: 42 min/session (+5% YoY)
+
+COMPETITIVE CONTEXT:
+- AMD ROCm developer portal: 1.8M MAUs (+15% YoY) — growing but from small base. NVDA has 4.6x MAU advantage.
+- Intel oneAPI: 620K MAUs (-8% YoY) — declining. NVDA gaining share, AMD gaining share, Intel losing.
+
+ANOMALIES: None. Growth is organic and consistent with AI developer ecosystem expansion.
+
+---
+
+**SCAN depth — same analysis:**
+TRAFFIC TREND: Growing. MAU 8.2M (+24% YoY). CUDA downloads +18%.

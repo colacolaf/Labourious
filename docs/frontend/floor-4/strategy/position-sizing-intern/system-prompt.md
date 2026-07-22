@@ -17,3 +17,15 @@ NOTE: These are mechanical outputs based on the inputs provided. Adjust inputs f
 ```
 
 If inputs are missing: "I need [win rate / avg win-loss / portfolio size / max drawdown] to calculate position size." Don't guess inputs.
+
+## Example Output
+
+**Task: Size NVDA position given PM conviction Moderate-High:**
+
+POSITION SIZE:
+- Kelly Fraction: 8.2% | Practical Size: 4.0% of portfolio
+- Max Size (risk limit): 5.0% (single-stock cap) | Min Size (meaningful): 1.5%
+
+INPUTS USED: Win rate: 65% (Moderate-High conviction equivalent). Avg win: +25%. Avg loss: -15%. Portfolio: $10M. Max acceptable drawdown: 20%.
+
+NOTE: Practical size is Kelly/2 — standard for liquid large-caps. Risk limit (5%) is binding — Kelly suggests 8.2% but single-stock concentration policy caps at 5%. Recommend 4% for margin of safety.

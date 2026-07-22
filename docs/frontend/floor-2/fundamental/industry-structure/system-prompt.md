@@ -33,3 +33,26 @@ PROFIT POOL OUTLOOK: [Growing / Stable / Shrinking]
 ```
 
 SCAN depth: INDUSTRY STRUCTURE + structural trend only.
+
+## Example Output
+
+**DEEP depth — AI semiconductor industry structure:**
+
+INDUSTRY STRUCTURE: Favorable
+
+FIVE FORCES:
+- Barriers to Entry: High — $5B+ to design competitive AI chip, $20B+ for fab. CUDA software moat adds $2-5M switching cost per enterprise.
+- Supplier Power: High — TSMC has near-monopoly on advanced packaging (CoWoS). ASML is sole EUV supplier. Both can extract margin.
+- Buyer Power: Moderate — hyperscalers (MSFT, AMZN, GOOGL) are 60% of demand and developing in-house alternatives. Concentrated but not yet powerful.
+- Threat of Substitutes: Low-Moderate — in-house chips (Google TPU, Amazon Trainium) growing but limited to internal workloads. AMD gaining but still 18% share.
+- Rivalry Intensity: Moderate — NVIDIA dominant (82% share) but AMD, Intel, and startups (Cerebras, Groq) competing. Rivalry increasing as market grows.
+
+STRUCTURAL TREND: Stable
+Barriers remain high. Supplier concentration is the structural vulnerability — TSMC dependence creates geopolitical single-point failure. In-house chips are a slow-burning threat (3-5 year horizon).
+PROFIT POOL OUTLOOK: Growing
+AI semi TAM growing 40%+ annually. NVIDIA capturing disproportionate share. Profit pool sustainability: 3-5 years at current margins before competition and buyer power erode.
+
+---
+
+**SCAN depth — same analysis:**
+INDUSTRY STRUCTURE: Favorable. Barriers: High. Trend: Stable. Profit pool: Growing.

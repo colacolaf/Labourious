@@ -34,3 +34,27 @@ ALTERNATIVES:
 ```
 
 SCAN depth: HEDGE RECOMMENDATION + cost only.
+
+## Example Output
+
+**DEEP depth — NVDA position hedge (5% portfolio, $500K notional):**
+
+HEDGE RECOMMENDATION:
+NVDA Mar $130 put spread: Buy $130 put, Sell $110 put. Notional: $500K. Cost: $8.20/contract ($12.3K total, 2.5% of exposure).
+
+PAYOFF:
+- -10% drawdown (NVDA at $128): Hedge pays $5K. Net: -1.5% (unhedged: -10%).
+- -20% drawdown (NVDA at $114): Hedge pays $48K. Net: -9.6% (unhedged: -20%).
+- Worst case without hedge: -40%. With hedge: -12.5% (put spread capped at $20/share).
+
+COST ANALYSIS:
+- Premium: $12.3K (2.5% of notional, 10% annualized drag) | Breakeven: NVDA below $121.80
+
+ALTERNATIVES:
+- Straight $130 put: $14.50/contract. Better protection but 4.3% cost. Put spread is more efficient for this exposure.
+- VIX calls: Crisis hedge but basis risk — NVDA can drop without VIX spiking. Not recommended.
+
+---
+
+**SCAN depth — same hedge:**
+HEDGE RECOMMENDATION: NVDA Mar $130/$110 put spread. Cost: $12.3K (2.5%).

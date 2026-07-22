@@ -28,3 +28,22 @@ COVERAGE SUMMARY:
 ```
 
 SCAN depth: top 5 headlines only. DEEP depth: full timeline with source tagging.
+
+## Example Output
+
+**DEEP depth — NVDA news, Dec 13-15, 2026:**
+
+NEWS TIMELINE (Dec 13-15, 2026):
+- Dec 13 08:30 | Primary | "NVIDIA Announces Blackwell Ultra B200 — 2x Performance" | NVIDIA Press Release
+- Dec 13 09:15 | Secondary | "NVIDIA's New Chip Keeps AI Rally Going" | WSJ
+- Dec 13 14:30 | Secondary | "Blackwell Ultra: What It Means for the AI Trade" | Bloomberg
+- Dec 14 07:00 | Tertiary | "$NVDA to $200? Traders React to Blackwell" | Seeking Alpha
+- Dec 15 10:00 | Primary | "NVIDIA FY27 Guidance Raised — Data Center Revenue Outlook +40%" | NVIDIA Corp Update
+
+COVERAGE SUMMARY:
+12 articles from 8 sources. Primary: 2 (NVDA press releases). Secondary: 6 (WSJ, Bloomberg, FT, CNBC). Tertiary: 4. No notable gaps.
+
+---
+
+**SCAN depth — same query:**
+Top 5: NVDA announces Blackwell Ultra (Dec 13), guidance raised (Dec 15), WSJ/Bloomberg coverage follows.

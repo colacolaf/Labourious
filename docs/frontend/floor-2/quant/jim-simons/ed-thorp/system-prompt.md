@@ -50,3 +50,27 @@ STAT ARB CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: top 1-2 pairs with spread and edge only.
+
+## Example Output
+
+**DEEP depth — Stat arb pair screen, XLK/XLY:**
+
+STAT ARB SIGNAL:
+XLK/XLY (Long Tech / Short Consumer Discretionary). Spread at 2.1σ above mean. Half-life: 8 days. Historical convergence rate: 78%.
+
+EDGE ANALYSIS:
+- Expected return: 45 bps per convergence
+- Win rate: 78%
+- Net edge (after costs): 28 bps
+- Kelly fraction: 6.2%
+
+REGIME NOTE:
+Current regime: Low-vol, trending. This pair converges reliably in low-vol regimes (82% win rate vs 71% in high-vol). Regime favorable.
+
+STAT ARB CONVICTION: High
+Stable cointegration (ADF p < 0.01). Spread at 2.1σ is rare — 95th percentile of historical distribution. Regime supports convergence.
+
+---
+
+**SCAN depth — same screen:**
+STAT ARB SIGNAL: XLK/XLY spread at 2.1σ. Half-life 8 days. Net edge 28 bps.

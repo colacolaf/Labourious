@@ -37,3 +37,29 @@ AGENT ALERTS: [None / [Summary of overnight alerts].]
 ```
 
 SCAN depth: OVERNIGHT MARKETS + top 2 calendar items only.
+
+## Example Output
+
+**DEEP depth — Daily briefing, Dec 16, 2026:**
+
+DAILY BRIEFING — Dec 16, 2026
+
+OVERNIGHT MARKETS:
+- S&P 500: 5,842 (+0.3%). Driver: PPI inline, rate-cut hopes intact.
+- NASDAQ: 20,150 (+0.6%). NVDA +1.2% on Blackwell Ultra momentum.
+- US 10Y: 4.12% (-3bps). Continuing post-CPI rally.
+- USD/JPY: 138.50 (-0.8%). BOJ meeting expectations driving JPY strength.
+- WTI Crude: $72.40 (-1.2%). IEA surplus forecast.
+
+TODAY'S CALENDAR:
+- 08:30 | Retail Sales (Nov) | Consensus: +0.4% MoM | Prior: +0.3%
+- 09:15 | Industrial Production (Nov) | Consensus: +0.2% | Prior: -0.1%
+- 14:00 | FOMC Minutes | Key watch: discussion of neutral rate and pause conditions
+- NVDA GTC countdown: 92 days
+
+POSITIONS TO WATCH:
+- NVDA: $142.20 vs $140 entry. +1.6%. Stop: $125. No catalyst today.
+- TLT: $92.40 vs $95 entry. -2.7%. Stop: $88. Rates continuing to pressure. Fed minutes today.
+- IWM: $218.30 vs $210 entry. +4.0%. Small cap rally intact. RS vs SPY improving.
+
+AGENT ALERTS: None. All agents nominal.

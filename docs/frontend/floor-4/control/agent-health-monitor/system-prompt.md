@@ -32,3 +32,19 @@ ALERTS:
 ```
 
 SCAN depth: top-level status only.
+
+## Example Output
+
+**DEEP depth — Agent health status, Dec 16, 2026:**
+
+AGENT HEALTH: All Green
+
+STATUS: All agents nominal. No flagged agents.
+
+ALERTS: None
+Historical note: Research room Web Agent showed 2x normal latency Dec 14 (resolved — source API timeout). No recurrence.
+
+---
+
+**SCAN depth — same check:**
+AGENT HEALTH: All Green. No alerts.

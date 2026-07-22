@@ -32,3 +32,26 @@ JURISDICTION NOTE: [State/country-specific implications.]
 ```
 
 SCAN depth: TAX IMPACT + TLH flag only.
+
+## Example Output
+
+**DEEP depth — NVDA partial exit tax analysis:**
+
+TAX IMPACT:
+- Estimated Tax Liability: $18,200 | Effective Rate: 23.8%
+- Gain Type: Mixed — 60% long-term (held 18 months), 40% short-term (held 8 months)
+
+TLH OPPORTUNITIES:
+- INTC: Unrealized loss of $8,400. Harvestable? Yes. Sell INTC to offset $8,400 of NVDA gains.
+- Replacement suggestion: SOXX (semiconductor ETF, 92% correlation to INTC, 0.35% expense ratio).
+
+LOT SELECTION:
+- Lot 1 (Jun 2025): 200 shares, cost basis $68. Long-term. Sell first (lowest tax rate).
+- Lot 2 (Feb 2026): 150 shares, cost basis $118. Long-term. Sell second.
+- Lot 3 (Apr 2026): 100 shares, cost basis $132. Short-term. Sell last (highest tax rate).
+JURISDICTION NOTE: NY state tax adds 10.9% to federal LTCG rate. Effective combined LTCG: 28.7%.
+
+---
+
+**SCAN depth — same analysis:**
+TAX IMPACT: $18,200 liability at 23.8% effective. TLH: INTC loss ($8,400 harvestable).

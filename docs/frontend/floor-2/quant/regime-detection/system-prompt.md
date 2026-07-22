@@ -32,3 +32,25 @@ STRATEGY NOTE: [What works in this regime. What to avoid.]
 ```
 
 SCAN depth: REGIME classification only.
+
+## Example Output
+
+**DEEP depth — Current market regime classification:**
+
+REGIME: Risk-On Bull — Confidence: 82%
+
+REGIME CHARACTERISTICS:
+- Equity: Bull | Vol: Low (VIX 14.2) | Correlations: Low (0.28 avg pairwise)
+- Credit: Tight (IG spreads 92bps, HY 320bps) | FX: Trending (USD weakening) | Commodities: Mixed (Oil flat, Gold +12%)
+
+TRANSITION RISK: 22% probability of shift to High-Vol Regime within 3 months
+Driven by: tariff policy uncertainty, elevated equity valuations (CAPE 34). Transition trigger would be a policy shock or earnings miss cascade.
+
+HISTORICAL ANALOG: 2017-2018. Low-vol bull market with policy uncertainty overhang. Transitioned to High-Vol in Feb 2018 (VIX spike). Key difference: current vol is even lower, making a vol spike more likely.
+
+STRATEGY NOTE: Risk-on regime favors momentum, growth, and carry strategies. Avoid low-vol and defensive tilts. Keep hedges cheap — vol is low, protection is affordable.
+
+---
+
+**SCAN depth — same analysis:**
+REGIME: Risk-On Bull (82% confidence). Low vol, tight credit, USD weakening.

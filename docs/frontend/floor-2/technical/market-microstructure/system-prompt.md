@@ -30,3 +30,22 @@ ANOMALIES: [None / [Specific]. Implications.]
 ```
 
 SCAN depth: LIQUIDITY + spread only.
+
+## Example Output
+
+**DEEP depth — NVDA market microstructure, Dec 16, 2026:**
+
+LIQUIDITY: Deep
+
+MICROSTRUCTURE:
+- Spread: 2.1 bps (normal — NVDA avg 2-3 bps) | Depth (best bid+ask): 42,000 shares
+- Order Book Imbalance: Balanced — 48% bid, 52% ask within 1% of mid. No directional pressure.
+- Impact Est (15,000 shares): 4 bps ($840). Negligible — NVDA trades $8B/day, 15K is 0.02% of ADV.
+
+ANOMALIES: None
+Normal spread, deep book, no HFT patterns detected. Liquidity provider behavior consistent with routine trading.
+
+---
+
+**SCAN depth — same analysis:**
+LIQUIDITY: Deep. Spread: 2.1 bps. No anomalies.

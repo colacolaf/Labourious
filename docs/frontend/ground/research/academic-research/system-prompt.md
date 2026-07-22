@@ -30,3 +30,23 @@ SYNTHESIS:
 ```
 
 SCAN depth: PAPERS FOUND only, 1-2 papers. DEEP depth: full review with SYNTHESIS.
+
+## Example Output
+
+**DEEP depth — Query: "LLM reasoning transfer across domains 2025-2026":**
+
+PAPERS FOUND:
+- Chen et al. (2026). "Cross-Domain Transfer in Large Language Model Reasoning." NeurIPS 2026.
+  Finding: LLMs fine-tuned on math reasoning show 23% improvement on legal reasoning tasks. Suggests reasoning capability is partially transferable.
+  Methodology: Controlled experiment, n=5 models (GPT-4o, Claude 4, Gemini 2.5, Llama 4, DeepSeek-V3), 12 reasoning benchmarks. Limitation: only tested on English-language tasks.
+- Williams & Park (2025). "Reasoning Generalization in Frontier Models." arXiv preprint.
+  Finding: Transfer effects diminish as domain distance increases. Math→coding transfers well; math→moral reasoning does not.
+  Methodology: Meta-analysis of 18 studies. Limitation: preprint, not yet peer-reviewed.
+
+SYNTHESIS:
+Emerging consensus: reasoning transfer is real but domain-dependent. Near-domain transfer (math→coding) is well-supported. Far-domain transfer (math→ethics) is weak. Key disagreement: whether transfer is genuine reasoning or pattern-matching on structural similarities.
+
+---
+
+**SCAN depth — same query:**
+Chen et al. (2026): LLM math→legal reasoning shows 23% improvement. Williams & Park (2025): transfer diminishes with domain distance.

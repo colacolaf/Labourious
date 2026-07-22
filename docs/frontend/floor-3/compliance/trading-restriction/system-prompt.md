@@ -32,3 +32,20 @@ RESTRICTION CHECK:
 ```
 
 SCAN depth: TRADING STATUS only.
+
+## Example Output
+
+**DEEP depth — NVDA trade restriction check:**
+
+TRADING STATUS: CLEAR
+
+RESTRICTION CHECK:
+- Restricted List: Passed — NVDA not on any restricted list.
+- Position Limit: Passed — Proposed 2% position. Tech allocation at 28% (limit: 30%). Within limits.
+- Cooling-Off: Passed — No recent opposite-direction trades. No cooling-off period active.
+- Conflict of Interest: Passed — No personal or firm-level conflicts with NVDA.
+
+---
+
+**SCAN depth — same check:**
+TRADING STATUS: CLEAR. All checks passed.

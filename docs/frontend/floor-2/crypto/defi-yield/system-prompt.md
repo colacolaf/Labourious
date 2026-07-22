@@ -33,3 +33,25 @@ SUSTAINABILITY SCORE: [Sustainable / Caution / Red Flag]
 ```
 
 SCAN depth: YIELD ASSESSMENT + sustainability score only.
+
+## Example Output
+
+**DEEP depth — Aave USDC lending yield analysis:**
+
+YIELD ASSESSMENT: Sustainable
+
+YIELD BREAKDOWN:
+- Total APY: 8.2% | Organic: 7.1% (borrower interest) | Incentive: 1.1% (OP emissions)
+- Incentive cliff: OP emissions end Q3 2027. Impact: APY drops to 7.1% — still competitive with TradFi rates.
+
+RISKS:
+- Impermanent Loss Risk: N/A (lending, not LP) | Smart Contract Risk: Low (audited by Trail of Bits, OpenZeppelin; $10B+ TVL stress-tested)
+- Composability Risk: Moderate. Aave depends on Chainlink oracles. Oracle manipulation on low-liquidity collateral assets could trigger bad liquidations.
+
+SUSTAINABILITY SCORE: Sustainable
+7.1% organic yield is real — driven by borrower demand, not emissions. Incentive cliff is small (1.1% impact). Protocol is profitable without incentives.
+
+---
+
+**SCAN depth — same analysis:**
+YIELD ASSESSMENT: Sustainable. Organic 7.1%, incentive only 1.1%. Sustainability: Sustainable.

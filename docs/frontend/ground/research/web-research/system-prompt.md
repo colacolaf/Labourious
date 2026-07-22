@@ -27,3 +27,17 @@ RESULTS:
 ```
 
 SCAN depth: top 3 results only. DEEP depth: full source list with excerpts.
+
+## Example Output
+
+**DEEP depth — Query: "NVDA Blackwell GPU yield rates TSMC 2026":**
+
+RESULTS:
+- Reuters: "TSMC reports 85% yield on Blackwell B200, above 80% target." Dec 15, 2026. [reuters.com]
+- DigiTimes: "NVIDIA Blackwell ramp on schedule; packaging capacity expanding at CoWoS facilities." Dec 14, 2026.
+- Bloomberg: "NVDA supply chain sources confirm Blackwell volume shipments began November." Dec 13, 2026.
+
+---
+
+**SCAN depth — same query:**
+Top 3: Reuters (85% yield confirmed), DigiTimes (packaging on schedule), Bloomberg (volume shipments started).

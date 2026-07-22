@@ -31,3 +31,24 @@ SCENARIO: [If asked: stress scenario output.]
 ```
 
 SCAN depth: direction + key level only.
+
+## Example Output
+
+**DEEP depth — USD/JPY and JGB analysis:**
+
+CURRENCY/SOVEREIGN READ: JPY strengthening. BOJ rate hike expectations driving capital repatriation. USD/JPY breaking below 140 for first time since 2024.
+
+KEY LEVELS:
+- USD/JPY: 138.20. -4.2% in 30 days. 2.8σ move from 6-month mean.
+- JGB 10Y: 1.85%. +45bps in 90 days. Widening vs UST (currently -235bps).
+- Japan CDS: 28 bps. Stable. Implies <0.5% default probability.
+
+STRESS FLAGS: None
+BOJ tightening is orderly. No sovereign stress — Japan's debt is domestically held. Currency move is fundamental (rate differential compression), not panic.
+
+SCENARIO: If BOJ hikes to 1.5% by mid-2027: USD/JPY 125-130. JGB 10Y 2.2-2.5%. Japanese bank equity positive (margin expansion), exporter equities negative (currency headwind).
+
+---
+
+**SCAN depth — same analysis:**
+JPY strengthening. USD/JPY 138.20 (-4.2% in 30d). BOJ rate expectations driving move. No stress flags.

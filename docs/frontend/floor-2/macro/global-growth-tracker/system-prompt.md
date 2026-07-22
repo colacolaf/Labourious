@@ -33,3 +33,24 @@ DIVERGENCES: [None / [Region A] diverging from [Region B] by [X].]
 ```
 
 SCAN depth: GLOBAL GROWTH + composite PMI only.
+
+## Example Output
+
+**DEEP depth — Global growth, December 2026:**
+
+GLOBAL GROWTH: Stable
+
+KEY INDICATORS:
+- Global Composite PMI: 52.1 (+0.3 from prior)
+- US: Stable. ISM Manufacturing 48.7 (contracting), Services 54.2 (expanding). Split economy continues.
+- China: Stable. Official Manufacturing PMI 50.3 — barely expanding. Property sector still drag. Stimulus working but not accelerating.
+- Eurozone: Decelerating. Composite PMI 48.9 — contraction. Germany manufacturing PMI 43.1 (deep contraction). Energy costs structural headwind.
+
+LEADING INDICATORS: Neutral-to-cautious. New orders PMI 51.8 (barely expanding). Credit impulse turning negative in Eurozone. US CEO confidence declining for 3rd consecutive month — suggests H1 2027 slowing.
+
+DIVERGENCES: US/Eurozone diverging significantly. US services expanding (54.2), Eurozone contracting (48.9). Widest gap since 2024. Implication: USD strength likely to persist.
+
+---
+
+**SCAN depth — same analysis:**
+GLOBAL GROWTH: Stable. Composite PMI 52.1. US services strong, Eurozone contracting, China barely expanding.

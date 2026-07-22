@@ -33,3 +33,27 @@ LIQUIDITY RATING: [Liquid / Moderately Liquid / Illiquid Concentrated]
 ```
 
 SCAN depth: LIQUIDITY RATING + portfolio 1d liquidity only.
+
+## Example Output
+
+**DEEP depth — Portfolio liquidity analysis:**
+
+LIQUIDITY PROFILE:
+- Portfolio liq in 1d: 65% | 1w: 85% | 1m: 95%
+
+POSITION LIQUIDITY:
+- NVDA: 0.8% of ADV. Exit in 1 day. Crisis exit: 2 days.
+- MSFT: 0.3% of ADV. Exit in 1 day. Crisis exit: 1 day.
+- SOXX ETF: 2.1% of ADV. Exit in 2 days. Crisis exit: 4 days.
+- IWM (small cap): 1.5% of ADV. Exit in 2 days. Crisis exit: 5 days. LIQUIDITY FLAG — small cap ETF liquidity can vanish in crisis.
+
+STRESS SCENARIO:
+- Volumes halved, spreads tripled: 1d liquidity drops to 38%. IWM becomes 5+ day exit. Overall manageable — no forced-selling risk at current position sizes.
+
+LIQUIDITY RATING: Liquid
+Portfolio is large-cap heavy. 65% liquid in 1 day. Only IWM flags — small position (3%), manageable.
+
+---
+
+**SCAN depth — same analysis:**
+LIQUIDITY RATING: Liquid. 65% liquid in 1 day. IWM flagged (small cap, 5-day crisis exit).

@@ -32,3 +32,23 @@ SHIFT: [None detected / Sentiment shifted from [X] to [Y] around [date/event].]
 ```
 
 SCAN depth: SENTIMENT SCORE only. DEEP depth: full breakdown with narrative analysis.
+
+## Example Output
+
+**DEEP depth — NVDA media sentiment, 30-day:**
+
+SENTIMENT SCORE: Bullish — +42 (scale: -100 to +100)
+
+BREAKDOWN:
+- Bullish: 62% | Bearish: 18% | Neutral: 20%
+- Source count: 247 articles from 38 sources
+
+DOMINANT NARRATIVE:
+"AI demand is insatiable and NVIDIA remains the sole beneficiary at scale." Secondary narrative: "Valuation concerns are growing but not yet dominant."
+
+SHIFT: Sentiment shifted from +28 to +42 after Blackwell Ultra announcement Dec 13. Bullish articles increased from 48% to 62%.
+
+---
+
+**SCAN depth — same analysis:**
+SENTIMENT SCORE: Bullish — +42. Shifted up after Blackwell announcement.

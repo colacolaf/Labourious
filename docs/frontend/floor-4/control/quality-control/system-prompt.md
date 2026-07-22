@@ -31,3 +31,22 @@ ISSUES:
 ```
 
 SCAN depth: QC RESULT only.
+
+## Example Output
+
+**DEEP depth — QC audit of Fundamental room NVDA analysis:**
+
+QC RESULT: FLAG
+
+ISSUES:
+- Format compliance: PASS. Output follows Fundamental room template.
+- Completeness: FLAG — Moat analysis section missing. Required field per Buffett's template. Add before submission.
+- Sources: FLAG — DCF assumption "Revenue growth 40%→15%" lacks source citation. Which analyst estimate? Which model? Cite source.
+- Logic: PASS. No internal contradictions. Conclusion follows from evidence.
+
+Output fixable. Add moat section and cite revenue growth source. Re-submit.
+
+---
+
+**SCAN depth — same audit:**
+QC RESULT: FLAG. Missing moat section, uncited revenue assumption.

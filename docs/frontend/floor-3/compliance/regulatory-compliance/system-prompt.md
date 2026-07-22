@@ -33,3 +33,26 @@ REGULATORY RISK: [Low / Moderate / High]
 ```
 
 SCAN depth: RULING + regulation cited only.
+
+## Example Output
+
+**DEEP depth — NVDA insider trading check for proposed trade:**
+
+RULING: Permitted
+
+REGULATION CITED:
+- SEC Rule 10b5-1: Trade is not based on material non-public information. No insider relationship with NVDA. No MNPI exposure.
+- SEC Section 16: Not applicable — not an NVDA insider.
+- Reg FD: No selective disclosure concerns. NVDA last earnings Dec 13 (3 days ago). Information is public.
+
+CONDITIONS: None. Trade can proceed immediately.
+
+ENFORCEMENT PRECEDENT: No relevant enforcement actions for buying publicly traded large-cap stock with no insider connection. Low-risk profile.
+
+REGULATORY RISK: Low
+Standard large-cap equity purchase. No insider trading, disclosure, or manipulation concerns.
+
+---
+
+**SCAN depth — same check:**
+RULING: Permitted. No MNPI exposure. No insider connection.

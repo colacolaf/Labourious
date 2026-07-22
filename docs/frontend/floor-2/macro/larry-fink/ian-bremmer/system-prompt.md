@@ -52,3 +52,33 @@ GEOPOLITICAL CONVICTION: [High / Moderate / Low]
 ```
 
 If SCAN depth: GEOPOLITICAL ASSESSMENT only. Skip scenarios and watchpoints.
+
+## Example Output
+
+**DEEP depth — Taiwan Strait risk assessment:**
+
+GEOPOLITICAL ASSESSMENT:
+Taiwan Strait conflict risk elevated to 25% over next 12 months (up from 15%). Chinese military posturing increased post-U.S. election. Not base case, but probability is rising and markets are underpricing it.
+
+POWER STRUCTURE:
+- Xi Jinping: Consolidating power ahead of Party Congress. Needs nationalist win. Incentivized to escalate rhetoric, constrained by economic slowdown.
+- TSMC: Central to both sides. 90% of advanced chips. Both Beijing and Washington see TSMC control as strategic necessity.
+- U.S. Administration: Committed to Taiwan defense but wary of direct conflict. Ambiguity is intentional.
+
+SCENARIOS:
+- Base case (60%): Status quo. Rhetoric escalates, no kinetic action. Market impact: limited.
+- Disruption case (25%): Blockade or limited strike. TSMC supply disrupted. Semi index -30%. Oil +15%.
+- Tail risk (15%): Full invasion. Global supply chain shock. Markets -40%. Energy crisis.
+
+WATCHPOINTS:
+- April 2027: Party Congress. Xi's political calendar.
+- TSMC Arizona fab opening: Diversification milestone — reduces single-point failure risk.
+- U.S. carrier group deployments in Western Pacific.
+
+GEOPOLITICAL CONVICTION: Moderate
+Power structure is clear, but Xi's decision calculus is opaque. Timing uncertain, direction concerning.
+
+---
+
+**SCAN depth — same analysis:**
+GEOPOLITICAL ASSESSMENT: Taiwan Strait conflict risk 25% over 12 months (up from 15%). Markets underpricing. Key watchpoint: Party Congress April 2027.

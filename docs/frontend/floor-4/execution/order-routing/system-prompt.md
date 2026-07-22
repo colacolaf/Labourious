@@ -31,3 +31,23 @@ BEST EXECUTION: [Compliant. [Venue selection justified by fill probability × co
 ```
 
 SCAN depth: ROUTING recommendation only.
+
+## Example Output
+
+**DEEP depth — NVDA buy order: 15,000 shares:**
+
+ROUTING: IEX (primary) — NASDAQ (backup)
+
+VENUE COMPARISON:
+- IEX: Fill prob 85% | Est cost 6 bps | Speed: 2-5 min
+- NASDAQ: Fill prob 99% | Est cost 12 bps | Speed: <1 sec
+- Liquidnet (dark): Fill prob 45% | Est cost 3 bps | Speed: 10-30 min
+
+SPLITTING: 60% IEX, 25% NASDAQ, 15% Liquidnet. IEX for cost-sensitive, NASDAQ for guaranteed fill on residual, Liquidnet for low-impact block.
+
+BEST EXECUTION: Compliant. IEX provides best cost/fill tradeoff for non-urgent order. NASDAQ backup ensures completion.
+
+---
+
+**SCAN depth — same order:**
+ROUTING: IEX primary, NASDAQ backup. Fill prob 85%, est cost 6 bps.

@@ -25,3 +25,15 @@ Tasks include DEPTH: SCAN = quick safety check only. DEEP = full content audit, 
 ```
 
 SCAN depth: PASS/BLOCK only, one line.
+
+## Example Output
+
+**DEEP depth — User query screening:**
+
+PASS — PRIORITY: Elevated
+User query: "What's my portfolio exposure to AI semis and how do I hedge it?" Classification: Portfolio risk + hedging. Urgency: Time-sensitive (market open in 2 hours). Route to: PM with PRIORITY tag.
+
+---
+
+**SCAN depth — same screening:**
+PASS. Portfolio risk query, elevated priority.

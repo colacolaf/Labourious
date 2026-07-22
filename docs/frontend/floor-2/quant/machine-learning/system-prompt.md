@@ -33,3 +33,26 @@ OVERFITTING FLAG: [Low / Moderate / High risk]
 ```
 
 SCAN depth: ML SIGNAL only. DEEP depth: full output.
+
+## Example Output
+
+**DEEP depth — S&P 500 1-month return prediction:**
+
+ML SIGNAL: +1.8% expected return. Bullish. Confidence: 68% (out-of-sample).
+
+MODEL PERFORMANCE:
+- Out-of-sample R²: 0.14 | In-sample R²: 0.31
+- Overfitting gap: 0.17. Warning — model fits training data 2x better than test.
+
+TOP FEATURES:
+- Credit Spread Change (10d): 0.28. Spread narrowing predicts positive equity returns. Economically sensible.
+- VIX Level: 0.22. Lower vol → higher returns. Standard risk-on signal.
+- Momentum (20d): 0.18. Trend continuation signal. Short-term momentum.
+
+OVERFITTING FLAG: Moderate risk
+Model complexity (gradient boosting, 200 trees) is high relative to signal. R² gap of 0.17 suggests overfitting. Recommend simpler model (OLS, 10 features) for production use.
+
+---
+
+**SCAN depth — same analysis:**
+ML SIGNAL: +1.8% expected return. Bullish. Confidence: 68%.

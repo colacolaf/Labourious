@@ -30,3 +30,23 @@ MOST IMPORTANT MISSING PIECE:
 ```
 
 SCAN depth: MOST IMPORTANT MISSING PIECE only.
+
+## Example Output
+
+**DEEP depth — Blind spot scan of NVDA bull thesis:**
+
+BLIND SPOTS:
+- TSMC geopolitical dependency: Thesis assumes uninterrupted TSMC supply. No scenario models a Taiwan Strait blockade. A 30-day disruption would halt 100% of advanced GPU production. This risk is acknowledged but not priced — options market implies <2% probability.
+- Hyperscaler demand sustainability: Thesis assumes linear AI capex growth. What if hyperscalers overbuild and pause spending? The 2000 fiber optic overbuild analog suggests 2-3 year cycles of overinvestment followed by capex digestion.
+
+BIAS FLAGS:
+- Confirmation bias: Thesis cites only bullish sell-side reports. Bearish analysts (D.A. Davidson, New Constructs) are dismissed rather than engaged.
+- Recency bias: Thesis weights last 2 years of performance (NVDA +500%) as predictive. Base rate for semis sustaining >40% revenue growth beyond 3 years: <15%.
+
+MOST IMPORTANT MISSING PIECE:
+No analysis of what NVDA's valuation looks like if revenue growth decelerates to 20% (still triple the semi industry average). At 20% growth, DCF supports $80-100, not $140. The entire bull case rests on >30% growth sustaining through 2029.
+
+---
+
+**SCAN depth — same analysis:**
+MOST IMPORTANT MISSING PIECE: Valuation at 20% revenue growth (still excellent) would be $80-100. Bull case requires >30% growth through 2029.

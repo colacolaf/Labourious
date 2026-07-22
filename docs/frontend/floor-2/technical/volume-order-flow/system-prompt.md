@@ -32,3 +32,23 @@ FLOW IMBALANCE: [Buying / Selling / Balanced]
 ```
 
 SCAN depth: VOLUME ASSESSMENT + ratio only.
+
+## Example Output
+
+**DEEP depth — NVDA volume & order flow analysis:**
+
+VOLUME ASSESSMENT: Accumulation (moderate)
+
+VOLUME METRICS:
+- Up day avg volume: 42M shares | Down day avg volume: 28M shares | Ratio: 1.5 (Accumulation — more volume on up days)
+- Current volume vs 20d avg: 85% (Below normal — holiday period)
+
+UNUSUAL VOLUME: Detected on Dec 13: 2.8x avg (98M shares). Catalyst: Blackwell Ultra announcement. Volume confirmed price move (+8.2%).
+
+FLOW IMBALANCE: Buying
+Large block trades at ask suggest institutional accumulation. Dark pool prints: 3.2M shares at $140.60 (above market). Bids stepping up at $135-138 support zone.
+
+---
+
+**SCAN depth — same analysis:**
+VOLUME ASSESSMENT: Accumulation. Up/down ratio: 1.5. Block trades at ask.

@@ -34,3 +34,25 @@ HOLDER CONCENTRATION: [Low / Moderate / High]
 ```
 
 SCAN depth: TOKENOMICS RATING + next unlock only.
+
+## Example Output
+
+**DEEP depth — AAVE tokenomics analysis:**
+
+TOKENOMICS RATING: Sound
+
+SUPPLY:
+- Circulating: 14.8M (92.5% of total) | Max: 16M | Inflation: 0% (fully vested)
+- Next unlock: None — fully vested. No dilution risk.
+
+VALUE CAPTURE:
+- Mechanism: Fee share (staking) + Buy-and-burn (safety module). Stakers earn ~7% of protocol fees. Buy-and-burn activated when safety module surplus exceeds threshold.
+- Assessment: Token captures value. Fee share is real revenue, not emissions. Buy-and-burn is deflationary.
+
+HOLDER CONCENTRATION: Moderate
+Top 10: 28%. Top holder: Aave DAO treasury (12%). No single-entity risk. Distribution improved over 4 years — top 10 was 45% in 2022.
+
+---
+
+**SCAN depth — same analysis:**
+TOKENOMICS RATING: Sound. Fully vested (no dilution). Fee share + buy-and-burn value capture.

@@ -31,3 +31,25 @@ INFLUENCER NOTE: [Key accounts driving sentiment. Credibility assessment.]
 ```
 
 SCAN depth: top 3 trending mentions only.
+
+## Example Output
+
+**DEEP depth — NVDA social sentiment, 7-day:**
+
+SOCIAL SENTIMENT: Bullish
+
+PLATFORM BREAKDOWN:
+- Reddit: Mentions: 4,200 | Sentiment: Bullish | Engagement: High
+  Key post: "Blackwell Ultra is a generational leap — NVDA $200 EOY" by u/TechInvestor2026 — 3.4K upvotes, 892 comments
+- Twitter/X: Mentions: 28,500 | Sentiment: Bullish | Engagement: High
+  Key post: "Jensen just dropped the mic. Blackwell Ultra is 2x H100. No one is close." by @semianalysis — 12K likes, 3.2K retweets
+- StockTwits: Mentions: 8,100 | Sentiment: Bullish | Engagement: Medium
+
+UNUSUAL ACTIVITY: Spike detected on Reddit Dec 13 — mentions 3x normal within 2 hours of Blackwell announcement. Organic (not coordinated).
+
+INFLUENCER NOTE: @semianalysis and r/WallStreetBets mod team driving conversation. Both credible (track record of accurate semi analysis, no pump-and-dump history).
+
+---
+
+**SCAN depth — same analysis:**
+Top 3: Reddit (4.2K mentions, bullish), Twitter/X (28.5K, bullish), StockTwits (8.1K, bullish). Blackwell announcement driving engagement.

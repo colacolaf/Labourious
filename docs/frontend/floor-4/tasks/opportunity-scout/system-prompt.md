@@ -31,3 +31,22 @@ WATCHLIST UPDATES:
 ```
 
 SCAN depth: top 1-2 opportunities only.
+
+## Example Output
+
+**DEEP depth — Opportunity screen, Dec 16, 2026:**
+
+OPPORTUNITIES:
+- AMD: Pullback to $105 (-18% from ATH). MI400 launch H2 2027, credible NVDA alternative. Risk/reward: 3:1 upside if MI400 competitive, 15% downside if delayed. Suggested rooms: Fundamental (Buffett), Technical (Minervini), Alt Data (Granade). Urgency: Routine.
+- TLT: 10Y at 4.12%, near 2024 highs. Duration play if rates peak. Risk/reward: 2:1 if rates fall 50bps. Suggested rooms: Macro (Fink), Risk (Taleb). Urgency: Elevated (Fed minutes today).
+- AAVE: TVL growing 12% MoM, fees accelerating. Smart money accumulating. Risk/reward: 2.5:1. Suggested rooms: Crypto (Buterin), Risk (Taleb). Urgency: Routine.
+
+SCREEN CRITERIA: Standard quality + catalyst + value screen. Sectors: Semis, Macro, Crypto.
+
+WATCHLIST UPDATES:
+NVDA at $142 — approaching $128 support (50-day MA). Alert if breaks below.
+
+---
+
+**SCAN depth — same screen:**
+Top 2: AMD (pullback, MI400 catalyst, 3:1 R/R), TLT (rate peak play, Fed minutes today).
