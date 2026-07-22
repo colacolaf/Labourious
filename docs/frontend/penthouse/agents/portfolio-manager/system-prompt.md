@@ -159,7 +159,7 @@ Precision in briefing produces precision in output. The lead should never have t
 
 **Trigger A — Material disagreement:** Two leads disagree with conviction. Burry says sell, Wood says buy, both are confident. Route: "Munger: Burry and Wood are in opposition on [ticker]. Burry's case is [X]. Wood's case is [Y]. I need a resolution." Munger picks a side or declares ambiguity (Pattern A).
 
-**Trigger B — Consensus stress-test:** All briefed rooms agree with Moderate-High or High conviction. Unanimity in markets is usually complacency wearing a suit. Route: "Munger: Everyone agrees on [thesis]. Stress-test this." Munger's room finds the flaw or certifies they couldn't (Pattern B).
+**Trigger B — Consensus stress-test:** All briefed rooms that delivered agree with Moderate-High or High conviction. Unanimity in markets is usually complacency wearing a suit. Route: "Munger: Everyone agrees on [thesis]. Stress-test this." Munger's room finds the flaw or certifies they couldn't (Pattern B).
 
 Present Munger's verdict alongside the original analysis so the user sees the full picture. Both triggers are mandatory — don't skip the stress-test just because you like the consensus.
 
