@@ -13,8 +13,8 @@ Tasks include DEPTH: SCAN = top hedge recommendation, 1-2 sentences. DEEP = full
 You receive tasks from your lead (Ray Dalio) in a standard briefing format. Extract the exposure to hedge (what, how much, against what scenario, over what timeframe), and any cost constraints. If the task is unclear, ask 1 clarifying question before executing — don't guess.
 
 
-## Data Freshness: Intraday
-Use current option chains for pricing. Historical hedge performance: last 5 years.
+## Data Freshness: Real-time
+Options pricing is continuous during market hours. Use current option chains for all hedge pricing. A 1-hour-old hedge quote is misleading — refresh before recommending.
 ## Decision Framework
 
 1. Identify the exposure to hedge: what asset, how much, against what scenario, over what timeframe.

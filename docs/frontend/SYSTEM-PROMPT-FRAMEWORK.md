@@ -66,19 +66,20 @@ Every agent must specify the recency of data they operate on. This prevents stal
 
 | Tier | Label | Window | Used by | Bodyguard threshold |
 |------|-------|--------|---------|---------------------|
-| **Real-time** | < 1 hour | Current tick, last print | Options flow, order books, dark pool, pre-flight checks | Alert if > 5 min stale |
-| **Intraday** | Same trading day | Today's session | Price data, volume, technical signals, tactical overlays | Alert if > 1 hour stale |
-| **Daily** | Last 24 hours | Yesterday + today | News aggregation, sentiment tracking, web research, briefing digests | Alert if > 24 hours stale |
-| **Weekly** | Last 7 days | Rolling week | Analyst revisions, momentum signals, macro indicators, factor models, DeFi metrics | Alert if > 7 days stale |
-| **Quarterly** | Most recent reported | Last 10-K/Q, last 13F (45-day lag acknowledged) | DCF valuation, financials, insider flows, compliance checks, supply chain | Alert if > 1 quarter stale |
-| **Annual** | Last fiscal year | Prior year's data | Industry structure, moat analysis, management track record | Alert if > 1 year stale |
+| **Real-time** | < 1 hour | Current tick, last print | Options flow, order books, dark pool, pre-flight checks | Aspirational (≤5 min) |
+| **Intraday** | Same trading day | Today's session | Price data, volume, technical signals, tactical overlays | Aspirational (≤1 hour) |
+| **Daily** | Last 24 hours | Yesterday + today | News aggregation, sentiment tracking, web research, briefing digests | Enforced (≥24 hours stale triggers alert) |
+| **Weekly** | Last 7 days | Rolling week | Analyst revisions, momentum signals, macro indicators, factor models, DeFi metrics | Enforced (≥7 days stale triggers alert) |
+| **Quarterly** | Most recent reported | Last 10-K/Q, last 13F (45-day lag acknowledged) | DCF valuation, financials, insider flows, compliance checks, supply chain | Enforced (≥1 quarter stale triggers alert) |
+| **Annual** | Last fiscal year | Prior year's data | Industry structure, moat analysis, management track record | Enforced (≥1 year stale triggers alert) |
 | **Any** | No recency constraint | All available history | Academic research, historical analogs, learning & reflection, knowledge graph | No staleness alert |
 
 **How freshness flows through the system:**
 1. **PM Briefing:** The `RELEVANT HISTORY` field establishes the temporal baseline — "last analysis was 3 months ago."
 2. **Lead Intake:** Leads parse DEPTH and URGENCY from the PM, which implicitly defines the freshness window.
 3. **Agent Default:** If no explicit timeframe is given in the lead's tasking, the agent defaults to its Data Freshness tier.
-4. **Bodyguard Check:** The PM Bodyguard monitors output for staleness — if an agent uses data outside its tier, the Bodyguard fires.
+4. **Bodyguard Check:** The PM Bodyguard monitors output for staleness — if an agent uses data outside its tier, the Bodyguard fires. Currently, sub-daily tiers (Real-time, Intraday) are defined but not yet enforced by the Bodyguard; Daily+ tiers are enforced.
+5. **T1/T2 inheritance:** Lead agents and named agents do not have explicit Data Freshness sections. Their freshness context is inherited from the PM's `RELEVANT HISTORY` and `URGENCY` fields. When a T2 named agent receives a task from their lead without an explicit timeframe, the lead's briefing context serves as the default.
 
 ### 6. Tool Access
 What tools and data sources the agent can use. Web search, specific APIs, internal databases, other agents. This section should be specific enough that tool configuration can be generated from it.
