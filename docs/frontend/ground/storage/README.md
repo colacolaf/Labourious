@@ -10,3 +10,9 @@ Storage keeps everything organized. Data persistence, caching, and archival for 
 | Agent | File |
 |-------|------|
 | Storage Agent | [`storage/`](storage/) |
+
+## Tools
+
+### API Keys
+
+**No external API keys required.** All agents in this room use internal models, qualitative analysis, or data passed from other rooms.

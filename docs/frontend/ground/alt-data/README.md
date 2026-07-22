@@ -15,3 +15,17 @@ Alternative Data finds signals nobody else is looking at. Satellites, supply cha
 | Consumer Spending Agent | [`consumer-spending/`](consumer-spending/) |
 | Weather & Commodity Agent | [`weather-commodity/`](weather-commodity/) |
 | Web & App Traffic Agent | [`web-app-traffic/`](web-app-traffic/) |
+
+## Tools
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `PLANET_API_KEY` | Planet Labs | Satellite imagery for parking lot counts, tanker tracking, crop yields |
+| `OPENWEATHER_API_KEY` | OpenWeatherMap | Current weather, forecasts, and commodity-impacting patterns |
+| `SECOND_MEASURE_API_KEY` | Bloomberg Second Measure | Consumer transaction data by merchant, category, demographic |
+| `SIMILARWEB_API_KEY` | SimilarWeb | Website and app traffic estimates and engagement metrics |
+| `PANJIVA_API_KEY` | Panjiva / S&P Global | Trade data — bills of lading, import/export volumes, supplier relationships |
+
+Set in `.env` or environment: `export VARIABLE="your-key-here"`

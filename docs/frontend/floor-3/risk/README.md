@@ -16,3 +16,13 @@ Risk stress-tests the numbers. VaR models, correlation matrices, black swan dete
 | Drawdown Monitor Agent | [`drawdown-monitor/`](drawdown-monitor/) |
 | Liquidity Risk Agent | [`liquidity-risk/`](liquidity-risk/) |
 | Factor Risk Agent | [`factor-risk/`](factor-risk/) |
+
+## Tools
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Historical price and options data for VaR, correlation, and stress testing |
+
+Set in `.env` or environment: `export VARIABLE="your-key-here"`

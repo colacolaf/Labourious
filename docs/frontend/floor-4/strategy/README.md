@@ -16,3 +16,13 @@ Strategy builds the plan. Asset allocation, hedging, tax optimization, and portf
 | Tax Optimization Agent | [`tax-optimization/`](tax-optimization/) |
 | Portfolio Construction Agent | [`portfolio-construction/`](portfolio-construction/) |
 | Position Sizing Intern | [`position-sizing-intern/`](position-sizing-intern/) |
+
+## Tools
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Options chain and market data for hedging, portfolio construction, and tax optimization |
+
+Set in `.env` or environment: `export VARIABLE="your-key-here"`

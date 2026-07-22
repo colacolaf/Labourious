@@ -14,3 +14,13 @@ Macro watches the global stage. Central banks, geopolitics, currencies, sovereig
 | **Ian Bremmer** — Geopolitical Risk Agent | [`geopolitical-risk/`](geopolitical-risk/) |
 | Currency & Sovereign Debt Agent | [`currency-sovereign-debt/`](currency-sovereign-debt/) |
 | Global Growth Tracker Agent | [`global-growth-tracker/`](global-growth-tracker/) |
+
+## Tools
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `FRED_API_KEY` | FRED (Federal Reserve) | Interest rates, balance sheet data, PMI composites, GDP growth |
+
+Set in `.env` or environment: `export VARIABLE="your-key-here"`

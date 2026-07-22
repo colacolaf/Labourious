@@ -16,3 +16,9 @@ Critique argues against everything. Devil's advocacy, blind spot detection, assu
 | Historical Analog Intern | [`historical-analog-intern/`](historical-analog-intern/) |
 | Assumption Challenger Agent | [`assumption-challenger/`](assumption-challenger/) |
 | Conflict Resolution Agent | [`conflict-resolution/`](conflict-resolution/) |
+
+## Tools
+
+### API Keys
+
+**No external API keys required.** All agents in this room use internal models, qualitative analysis, or data passed from other rooms.

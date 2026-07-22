@@ -13,3 +13,9 @@ Compliance makes sure nothing illegal slips through. Regulatory requirements, cr
 | Regulatory Compliance Agent | [`regulatory-compliance/`](regulatory-compliance/) |
 | **H. David Rosenbloom** — Cross-Border Tax Agent | [`cross-border-tax/`](cross-border-tax/) |
 | Trading Restriction Agent | [`trading-restriction/`](trading-restriction/) |
+
+## Tools
+
+### API Keys
+
+**No external API keys required.** All agents in this room use internal models, qualitative analysis, or data passed from other rooms.

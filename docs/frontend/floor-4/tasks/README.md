@@ -12,3 +12,9 @@ Tasks runs autonomously when enabled. Daily Briefing surfaces the morning summar
 |-------|------|
 | Daily Briefing Agent | [`daily-briefing/`](daily-briefing/) |
 | Opportunity Scout Agent | [`opportunity-scout/`](opportunity-scout/) |
+
+## Tools
+
+### API Keys
+
+**No external API keys required.** All agents in this room use internal models, qualitative analysis, or data passed from other rooms.

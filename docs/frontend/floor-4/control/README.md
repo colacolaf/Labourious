@@ -11,3 +11,9 @@ Control watches everything. Quality Control audits agent outputs for accuracy. A
 |-------|------|
 | Quality Control Agent | [`quality-control/`](quality-control/) |
 | Agent Health Monitor | [`agent-health-monitor/`](agent-health-monitor/) |
+
+## Tools
+
+### API Keys
+
+**No external API keys required.** All agents in this room use internal models, qualitative analysis, or data passed from other rooms.

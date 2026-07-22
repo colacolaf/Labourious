@@ -11,3 +11,9 @@ Memory learns from everything. The knowledge graph connects all research, decisi
 |-------|------|
 | Knowledge Graph Agent | [`knowledge-graph/`](knowledge-graph/) |
 | Learning & Reflection Agent | [`learning-reflection/`](learning-reflection/) |
+
+## Tools
+
+### API Keys
+
+**No external API keys required.** All agents in this room use internal models, qualitative analysis, or data passed from other rooms.

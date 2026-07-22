@@ -17,3 +17,13 @@ Quant builds the models. Factor analysis, statistical arbitrage, volatility, mom
 | Machine Learning Agent | [`machine-learning/`](machine-learning/) |
 | Regime Detection Agent | [`regime-detection/`](regime-detection/) |
 | Risk Budgeting & Allocation Agent | [`risk-budgeting-allocation/`](risk-budgeting-allocation/) |
+
+## Tools
+
+### API Keys
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `POLYGON_API_KEY` | Polygon.io | Historical price data, options chains, and market data for quant models |
+
+Set in `.env` or environment: `export VARIABLE="your-key-here"`
