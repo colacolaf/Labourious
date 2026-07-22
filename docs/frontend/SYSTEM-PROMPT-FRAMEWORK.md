@@ -9,8 +9,8 @@
 |------|-------|--------|--------|----------|
 | **T1** | Lead | 13 | ~1200–1500 words | All 6 |
 | **T2** | Named | 11 | ~800–1000 words | All 6 |
-| **T3** | Utility | 46 | ~300–500 words | 4 (Identity, Role, Decision Framework, Tool Access) |
-| **T4** | Intern | 6 | ~150–250 words | 3 (Identity, Role, Communication Rules) |
+| **T3** | Utility | 46 | ~300–500 words | 4 (Identity, Role, Decision Framework, Tool Access) + Data Freshness |
+| **T4** | Intern | 6 | ~150–250 words | 3 (Identity, Role, Communication Rules) + Data Freshness |
 
 ## Section Definitions
 
@@ -60,6 +60,25 @@ How they format output. Structure of responses, when to use bullet points vs pro
 - A routine request (shows default behavior)
 - An edge case or ambiguous request (shows judgment)
 - A "pushback" moment (shows when they challenge or escalate)
+
+### 7. Data Freshness
+Every agent must specify the recency of data they operate on. This prevents stale analysis and ensures the PM Bodyguard can detect when decisions are based on outdated information. Each T3 and T4 agent includes a `## Data Freshness` section with exactly one tier tag and one default sentence.
+
+| Tier | Label | Window | Used by | Bodyguard threshold |
+|------|-------|--------|---------|---------------------|
+| **Real-time** | < 1 hour | Current tick, last print | Options flow, order books, dark pool, pre-flight checks | Alert if > 5 min stale |
+| **Intraday** | Same trading day | Today's session | Price data, volume, technical signals, tactical overlays | Alert if > 1 hour stale |
+| **Daily** | Last 24 hours | Yesterday + today | News aggregation, sentiment tracking, web research, briefing digests | Alert if > 24 hours stale |
+| **Weekly** | Last 7 days | Rolling week | Analyst revisions, momentum signals, macro indicators, factor models, DeFi metrics | Alert if > 7 days stale |
+| **Quarterly** | Most recent reported | Last 10-K/Q, last 13F (45-day lag acknowledged) | DCF valuation, financials, insider flows, compliance checks, supply chain | Alert if > 1 quarter stale |
+| **Annual** | Last fiscal year | Prior year's data | Industry structure, moat analysis, management track record | Alert if > 1 year stale |
+| **Any** | No recency constraint | All available history | Academic research, historical analogs, learning & reflection, knowledge graph | No staleness alert |
+
+**How freshness flows through the system:**
+1. **PM Briefing:** The `RELEVANT HISTORY` field establishes the temporal baseline — "last analysis was 3 months ago."
+2. **Lead Intake:** Leads parse DEPTH and URGENCY from the PM, which implicitly defines the freshness window.
+3. **Agent Default:** If no explicit timeframe is given in the lead's tasking, the agent defaults to its Data Freshness tier.
+4. **Bodyguard Check:** The PM Bodyguard monitors output for staleness — if an agent uses data outside its tier, the Bodyguard fires.
 
 ### 6. Tool Access
 What tools and data sources the agent can use. Web search, specific APIs, internal databases, other agents. This section should be specific enough that tool configuration can be generated from it.
@@ -143,9 +162,24 @@ they bring. How they handle edge cases in their domain.]
 [1 paragraph. What they do, in one crisp sentence. Their functional
 personality — not a real person, but a clear operating style.]
 
+## Depth Levels
+[SCAN vs STANDARD vs DEEP definitions for this agent's domain.]
+
+## Intake
+[How they receive and parse tasks from their lead.]
+
+## Data Freshness: [Real-time | Intraday | Daily | Weekly | Quarterly | Annual | Any]
+[One sentence default: "Use [window]. If the lead's tasking specifies a different timeframe, use that instead."]
+
 ## Decision Framework
 [1-2 paragraphs. Their process. What they look for, how they filter
 signal from noise, what they flag versus what they discard.]
+
+## Communication Rules
+[Output format. FROM/TO headers. Edge cases. Escalation.]
+
+## Example Output
+[At least 1 example showing SCAN + DEEP depth variants.]
 
 ## Tool Access
 [Specific data sources and refresh cadence]
@@ -159,9 +193,17 @@ signal from noise, what they flag versus what they discard.]
 ## Identity & Role
 [2-3 sentences. What they do, who they support, their scope.]
 
+## Intake
+[How they parse tasks from their lead or room agents.]
+
+## Data Freshness: [Weekly | Quarterly | Annual | Any]
+[One sentence default: "Use [window]. If the tasking specifies a different timeframe, use that instead."]
+
 ## Communication Rules
-[1 paragraph. How they format findings. When they hand off to their
-supervising agent. Their default humility — they know they're junior.]
+[1 paragraph. How they format findings. FROM/TO headers. Edge cases. Escalation.]
+
+## Example Output
+[At least 1 example.]
 ```
 
 ---
