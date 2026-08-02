@@ -244,6 +244,33 @@ const AGENTS = [
   { id: "market-microstructure", docDir: "floor-2/technical/market-microstructure", name: "Market Microstructure Agent", room: "technical", role: "Market Microstructure", bodyType: "female", look: "black bob · charcoal v-neck tee · blue jeans · white sneakers",
     desc: "Market Microstructure Agent: the startup quant — black bob, charcoal v-neck, jeans and sneakers while she models the order book tick by tick.",
     items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_bob", "black"], clothes: ["torso_clothes_tshirt_vneck", "charcoal"], legs: ["legs_pants", "blue"], shoes: ["feet_shoes_basic", "white"] } },
+
+  // ── Risk (Room 2) — Floor 3 Judgment ─────────────────────────────────────
+  // Style: Reddit-researched risk-room stereotypes — the rumpled middle-office
+  // modeler, the tweed-blazer correlation professor, the fleece-vest drawdown
+  // monitor, the sweater-vest factor quant. Named agents carry the real
+  // person's researched look.
+  { id: "nassim-taleb", docDir: "floor-3/risk/nassim-taleb", name: "Nassim Taleb", room: "risk", role: "Lead Risk", lead: true, bodyType: "male", look: "salt-pepper hair · gray full beard · black turtleneck · black slacks",
+    desc: "Nassim Taleb's look: salt-and-pepper hair, a full trimmed beard and the famous black turtleneck — the Black Swan author, olive-skinned, brooding in minimalist dark. (LPC has no glasses item, so his black-rimmed glasses are omitted.)",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "gray"], beard: ["beards_trimmed", "gray"], clothes: ["torso_clothes_longsleeve2", "black"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "didier-sornette", docDir: "floor-3/risk/black-swan-detection", name: "Didier Sornette", room: "risk", role: "Black Swan Detection", bodyType: "male", look: "tousled gray hair · charcoal blazer · white shirt · open collar",
+    desc: "Didier Sornette's look: wavy, tousled dark-to-greying hair and a smart-casual academic blazer over an open-collared shirt — the ETH Zurich physicist who watches for dragon kings in the data. (LPC has no glasses item, so his wire-rimmed glasses are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_messy1", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "charcoal"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } }, // no tie → open collar
+  { id: "var-stress-test", docDir: "floor-3/risk/var-stress-test", name: "VaR & Stress Test Agent", room: "risk", role: "VaR & Stress Test", bodyType: "male", look: "messy chestnut hair · rumpled white button-down · navy slacks",
+    desc: "VaR & Stress Test Agent: the middle-office workhorse — rumpled white button-down, no tie, sleeves long gone — dreading the Friday stress-test run.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], legs: ["legs_pants2", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "correlation-concentration", docDir: "floor-3/risk/correlation-concentration", name: "Correlation & Concentration Agent", room: "risk", role: "Correlation & Concentration", bodyType: "male", look: "gray side-part · slate cardigan · brown tweed blazer · charcoal slacks",
+    desc: "Correlation & Concentration Agent: the copula professor — slate cardigan under a brown tweed blazer, knowing everything goes to 1 in a crisis.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_parted", "gray"], clothes: ["torso_clothes_longsleeve2_cardigan", "slate"], jacket: ["torso_jacket_collared", "brown"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "drawdown-monitor", docDir: "floor-3/risk/drawdown-monitor", name: "Drawdown Monitor Agent", room: "risk", role: "Drawdown Monitor", bodyType: "male", look: "black buzzcut · white tee · black fleece vest · dark jeans",
+    desc: "Drawdown Monitor Agent: the live guard of the P&L limits — buzzcut, white tee under a black fleece vest, glued to the dashboards with a lukewarm coffee.",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_buzzcut", "black"], clothes: ["torso_clothes_tshirt", "white"], vest: ["torso_clothes_vest", "black"], legs: ["legs_pants", "black"], shoes: ["feet_shoes_basic", "white"] } },
+  { id: "liquidity-risk", docDir: "floor-3/risk/liquidity-risk", name: "Liquidity Risk Agent", room: "risk", role: "Liquidity Risk", bodyType: "male", look: "neat black hair · blue button-down · charcoal suit · no tie",
+    desc: "Liquidity Risk Analyst: corporate suit jacket over a slightly wrinkled blue button-down, top button undone — calculating cash-burn under a market-depth collapse.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "blue"], jacket: ["torso_jacket_collared", "charcoal"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } }, // no tie → top button undone
+  { id: "factor-risk", docDir: "floor-3/risk/factor-risk", name: "Factor Risk Agent", room: "risk", role: "Factor Risk", bodyType: "male", look: "neat chestnut hair · blue shirt · navy sweater vest · charcoal slacks",
+    desc: "Factor Risk Agent: clean-cut model-validation committee energy — crisp blue shirt under a navy sweater vest, watching style drift through standard deviations.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_parted", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "blue"], vest: ["torso_clothes_vest", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
 ];
 
 // ---------------------------------------------------------------------------

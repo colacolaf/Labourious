@@ -2433,5 +2433,302 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "nassim-taleb",
+    "name": "Nassim Taleb",
+    "room": "risk",
+    "role": "Lead Risk",
+    "lead": true,
+    "bodyType": "male",
+    "look": "salt-pepper hair · gray full beard · black turtleneck · black slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/nassim-taleb/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/nassim-taleb/z020-black.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/nassim-taleb/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/nassim-taleb/z035-black.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/nassim-taleb/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/nassim-taleb/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/nassim-taleb/z110-gray.png",
+        "zPos": 110
+      },
+      {
+        "src": "/assets/agents/nassim-taleb/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "didier-sornette",
+    "name": "Didier Sornette",
+    "room": "risk",
+    "role": "Black Swan Detection",
+    "lead": false,
+    "bodyType": "male",
+    "look": "tousled gray hair · charcoal blazer · white shirt · open collar",
+    "layers": [
+      {
+        "src": "/assets/agents/didier-sornette/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/didier-sornette/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/didier-sornette/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/didier-sornette/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/didier-sornette/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/didier-sornette/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/didier-sornette/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/didier-sornette/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "var-stress-test",
+    "name": "VaR & Stress Test Agent",
+    "room": "risk",
+    "role": "VaR & Stress Test",
+    "lead": false,
+    "bodyType": "male",
+    "look": "messy chestnut hair · rumpled white button-down · navy slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/var-stress-test/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/var-stress-test/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/var-stress-test/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/var-stress-test/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/var-stress-test/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/var-stress-test/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/var-stress-test/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "correlation-concentration",
+    "name": "Correlation & Concentration Agent",
+    "room": "risk",
+    "role": "Correlation & Concentration",
+    "lead": false,
+    "bodyType": "male",
+    "look": "gray side-part · slate cardigan · brown tweed blazer · charcoal slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/correlation-concentration/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/correlation-concentration/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/correlation-concentration/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/correlation-concentration/z035-slate.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/correlation-concentration/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/correlation-concentration/z055-brown.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/correlation-concentration/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/correlation-concentration/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "drawdown-monitor",
+    "name": "Drawdown Monitor Agent",
+    "room": "risk",
+    "role": "Drawdown Monitor",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black buzzcut · white tee · black fleece vest · dark jeans",
+    "layers": [
+      {
+        "src": "/assets/agents/drawdown-monitor/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/drawdown-monitor/z015-white.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/drawdown-monitor/z020-black.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/drawdown-monitor/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/drawdown-monitor/z045-black.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/drawdown-monitor/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/drawdown-monitor/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/drawdown-monitor/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "liquidity-risk",
+    "name": "Liquidity Risk Agent",
+    "room": "risk",
+    "role": "Liquidity Risk",
+    "lead": false,
+    "bodyType": "male",
+    "look": "neat black hair · blue button-down · charcoal suit · no tie",
+    "layers": [
+      {
+        "src": "/assets/agents/liquidity-risk/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/liquidity-risk/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/liquidity-risk/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/liquidity-risk/z035-blue.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/liquidity-risk/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/liquidity-risk/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/liquidity-risk/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/liquidity-risk/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "factor-risk",
+    "name": "Factor Risk Agent",
+    "room": "risk",
+    "role": "Factor Risk",
+    "lead": false,
+    "bodyType": "male",
+    "look": "neat chestnut hair · blue shirt · navy sweater vest · charcoal slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/factor-risk/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/factor-risk/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/factor-risk/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/factor-risk/z035-blue.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/factor-risk/z045-navy.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/factor-risk/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/factor-risk/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/factor-risk/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
   }
 ]
