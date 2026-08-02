@@ -360,6 +360,17 @@ const AGENTS = [
   { id: "pre-flight-check", docDir: "floor-4/execution/pre-flight-check", name: "Pre-Flight Check Agent", room: "execution", role: "Pre-Flight Check", bodyType: "male", look: "gray hair · walnut polo · navy slacks",
     desc: "Pre-Flight Check Agent: the launch-checklist operator — khaki-walnut polo, clipboard discipline, running the pre-trade checks a hundred times before any order gets the green light.",
     items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_balding", "gray"], clothes: ["torso_clothes_shortsleeve_polo", "walnut"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "brown"] } },
+
+  // ── Memory (Room 10) — Floor 4 Command ───────────────────────────────────
+  // Style: the building's brain — creative, no named leads. Two silhouettes
+  // that exist nowhere else in the roster: the kimono-wearing knowledge weaver
+  // and the bowler-hatted reflection sage. No suits in this room.
+  { id: "knowledge-graph", docDir: "floor-4/memory/knowledge-graph", name: "Knowledge Graph Agent", room: "memory", role: "Knowledge Graph", bodyType: "female", look: "raven braid · purple kimono · walnut sash",
+    desc: "Knowledge Graph Agent: the archivist who weaves every thread of the building's memory together — a purple kimono with a walnut obi, braiding research, decisions and outcomes into one living graph.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_braid", "raven"], dress: ["dress_kimono", "purple"], sash: ["belt_sash", "walnut"], legs: ["legs_pants", "black"], shoes: ["feet_boots_basic", "brown"] } },
+  { id: "learning-reflection", docDir: "floor-4/memory/learning-reflection", name: "Learning & Reflection Agent", room: "memory", role: "Learning & Reflection", bodyType: "male", look: "white hair · gray beard · brown bowler · white shirt · maroon cravat",
+    desc: "Learning & Reflection Agent: the sage who journals every lesson — white hair, a trimmed gray beard, a brown bowler hat and a maroon cravat, writing down everything the building should remember.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "white"], beard: ["beards_trimmed", "gray"], hat: ["hat_formal_bowler", "brown"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], cravat: ["neck_cravat", "maroon"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
 ];
 
 // ---------------------------------------------------------------------------

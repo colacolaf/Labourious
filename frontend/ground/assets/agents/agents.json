@@ -3731,5 +3731,103 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "knowledge-graph",
+    "name": "Knowledge Graph Agent",
+    "room": "memory",
+    "role": "Knowledge Graph",
+    "lead": false,
+    "bodyType": "female",
+    "look": "raven braid · purple kimono · walnut sash",
+    "layers": [
+      {
+        "src": "/assets/agents/knowledge-graph/z009-raven.png",
+        "zPos": 9
+      },
+      {
+        "src": "/assets/agents/knowledge-graph/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/knowledge-graph/z020-black.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/knowledge-graph/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/knowledge-graph/z030-purple.png",
+        "zPos": 30
+      },
+      {
+        "src": "/assets/agents/knowledge-graph/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/knowledge-graph/z065-walnut.png",
+        "zPos": 65
+      },
+      {
+        "src": "/assets/agents/knowledge-graph/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/knowledge-graph/z120-raven.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "learning-reflection",
+    "name": "Learning & Reflection Agent",
+    "room": "memory",
+    "role": "Learning & Reflection",
+    "lead": false,
+    "bodyType": "male",
+    "look": "white hair · gray beard · brown bowler · white shirt · maroon cravat",
+    "layers": [
+      {
+        "src": "/assets/agents/learning-reflection/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/learning-reflection/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/learning-reflection/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/learning-reflection/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/learning-reflection/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/learning-reflection/z090-maroon.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/learning-reflection/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/learning-reflection/z110-gray.png",
+        "zPos": 110
+      },
+      {
+        "src": "/assets/agents/learning-reflection/z120-white.png",
+        "zPos": 120
+      },
+      {
+        "src": "/assets/agents/learning-reflection/z130-brown.png",
+        "zPos": 130
+      }
+    ]
   }
 ]

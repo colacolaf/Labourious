@@ -26,6 +26,7 @@ export const ROOM_TITLES = {
   compliance: "COMPLIANCE & TAX · ROOM 12",
   strategy:  "STRATEGY · ROOM 8",
   execution: "EXECUTION · ROOM 9",
+  memory:    "MEMORY · ROOM 10",
 };
 
 export function roomTitle(room) {
