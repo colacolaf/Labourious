@@ -3829,5 +3829,103 @@
         "zPos": 130
       }
     ]
+  },
+  {
+    "id": "quality-control",
+    "name": "Quality Control Agent",
+    "room": "control",
+    "role": "Quality Control",
+    "lead": false,
+    "bodyType": "female",
+    "look": "chestnut buns · half-moon glasses · gray cardigan · red scarf · charcoal slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/quality-control/z009-chestnut.png",
+        "zPos": 9
+      },
+      {
+        "src": "/assets/agents/quality-control/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/quality-control/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/quality-control/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/quality-control/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/quality-control/z035-gray.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/quality-control/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/quality-control/z090-red.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/quality-control/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/quality-control/z115-black.png",
+        "zPos": 115
+      },
+      {
+        "src": "/assets/agents/quality-control/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "agent-health-monitor",
+    "name": "Agent Health Monitor",
+    "room": "control",
+    "role": "Agent Health Monitor",
+    "lead": false,
+    "bodyType": "male",
+    "look": "messy black hair · forest hood up · forest hoodie · charcoal pants · black sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/agent-health-monitor/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/agent-health-monitor/z015-black.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/agent-health-monitor/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/agent-health-monitor/z035-forest.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/agent-health-monitor/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/agent-health-monitor/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/agent-health-monitor/z120-black.png",
+        "zPos": 120
+      },
+      {
+        "src": "/assets/agents/agent-health-monitor/z130-forest.png",
+        "zPos": 130
+      }
+    ]
   }
 ]

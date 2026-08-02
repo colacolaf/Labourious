@@ -27,6 +27,7 @@ export const ROOM_TITLES = {
   strategy:  "STRATEGY · ROOM 8",
   execution: "EXECUTION · ROOM 9",
   memory:    "MEMORY · ROOM 10",
+  control:   "CONTROL · ROOM 15",
 };
 
 export function roomTitle(room) {

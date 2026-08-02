@@ -371,6 +371,17 @@ const AGENTS = [
   { id: "learning-reflection", docDir: "floor-4/memory/learning-reflection", name: "Learning & Reflection Agent", room: "memory", role: "Learning & Reflection", bodyType: "male", look: "white hair · gray beard · brown bowler · white shirt · maroon cravat",
     desc: "Learning & Reflection Agent: the sage who journals every lesson — white hair, a trimmed gray beard, a brown bowler hat and a maroon cravat, writing down everything the building should remember.",
     items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "white"], beard: ["beards_trimmed", "gray"], hat: ["hat_formal_bowler", "brown"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], cravat: ["neck_cravat", "maroon"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+
+  // ── Control (Room 15) — Floor 4 Command ──────────────────────────────────
+  // Style: the watchdogs — no named leads, reports to PM. Research-grounded:
+  // the red-scarf + half-moon-glasses inspector (first glasses in the roster)
+  // and the hood-up, energy-drink NOC watcher.
+  { id: "quality-control", docDir: "floor-4/control/quality-control", name: "Quality Control Agent", room: "control", role: "Quality Control", bodyType: "female", look: "chestnut buns · half-moon glasses · gray cardigan · red scarf · charcoal slacks",
+    desc: "Quality Control Agent: the meticulous inspector — chestnut buns, half-moon reading glasses on a lanyard, a red scarf as her red pen — checking every output twice before it ships.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_bunches", "chestnut"], glasses: ["facial_glasses_halfmoon", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], cardigan: ["torso_clothes_longsleeve2_cardigan", "gray"], scarf: ["neck_scarf", "red"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "agent-health-monitor", docDir: "floor-4/control/agent-health-monitor", name: "Agent Health Monitor", room: "control", role: "Agent Health Monitor", bodyType: "male", look: "messy black hair · forest hood up · forest hoodie · charcoal pants · black sneakers",
+    desc: "Agent Health Monitor: the 24/7 NOC watcher — forest-green hood up over a hoodie, permanently caffeinated, eyes on every dashboard and dark circles under a smile that never quite convinces anyone.",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], hat: ["hat_hood_cloth", "forest"], clothes: ["torso_clothes_longsleeve2", "forest"], legs: ["legs_pants", "charcoal"], shoes: ["feet_shoes_basic", "black"] } },
 ];
 
 // ---------------------------------------------------------------------------
