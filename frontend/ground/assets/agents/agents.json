@@ -1,0 +1,218 @@
+[
+  {
+    "id": "walkable-example",
+    "name": "Walkable Example Agent",
+    "bodyType": "male",
+    "look": "light skin · blue eyes · chestnut hair · blue tee · charcoal pants · brown boots",
+    "layers": [
+      {
+        "src": "/assets/agents/walkable-example/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/walkable-example/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/walkable-example/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/walkable-example/z035-blue.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/walkable-example/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/walkable-example/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/walkable-example/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "female-default",
+    "name": "Female Default",
+    "bodyType": "female",
+    "look": "light skin · blue eyes · blonde bob · white blouse · navy skirt · brown boots",
+    "layers": [
+      {
+        "src": "/assets/agents/female-default/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/female-default/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/female-default/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/female-default/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/female-default/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/female-default/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/female-default/z120-blonde.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "formal-walker",
+    "name": "Formal Walker",
+    "bodyType": "male",
+    "look": "olive skin · brown eyes · black hair · white buttoned shirt · charcoal suit pants · black boots",
+    "layers": [
+      {
+        "src": "/assets/agents/formal-walker/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/formal-walker/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/formal-walker/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/formal-walker/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/formal-walker/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/formal-walker/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/formal-walker/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "scoop-walker",
+    "name": "Scoop Tee Walker",
+    "bodyType": "female",
+    "look": "bronze skin · green eyes · raven hair · pink scoop tee · charcoal leggings · brown boots",
+    "layers": [
+      {
+        "src": "/assets/agents/scoop-walker/z010-bronze.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/scoop-walker/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/scoop-walker/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/scoop-walker/z035-pink.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/scoop-walker/z045-bronze.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/scoop-walker/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/scoop-walker/z120-raven.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "polo-walker",
+    "name": "Polo Walker",
+    "bodyType": "male",
+    "look": "brown skin · brown eyes · black bedhead · navy polo · gray pants · brown boots",
+    "layers": [
+      {
+        "src": "/assets/agents/polo-walker/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/polo-walker/z020-gray.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/polo-walker/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/polo-walker/z035-navy.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/polo-walker/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/polo-walker/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/polo-walker/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "longsleeve-walker",
+    "name": "Longsleeve Walker",
+    "bodyType": "female",
+    "look": "light skin · blue eyes · ginger bob · white long-sleeve blouse · charcoal skirt · black boots",
+    "layers": [
+      {
+        "src": "/assets/agents/longsleeve-walker/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/longsleeve-walker/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/longsleeve-walker/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/longsleeve-walker/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/longsleeve-walker/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/longsleeve-walker/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/longsleeve-walker/z120-ginger.png",
+        "zPos": 120
+      }
+    ]
+  }
+]

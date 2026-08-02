@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Labourious — Walkable Agent Preview (deskrpg-exact)</title>
+
+  <!-- Inline SVG favicon (same as index.html). -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%238b8378'/><rect x='5' y='6' width='6' height='2' fill='%23d4af37'/></svg>" />
+
+  <!-- Press Start 2P — same pixel chrome as the ground lobby prototype. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: #ffffff; /* user asked: pure white background */
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #2a3340;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    canvas#preview {
+      display: block;
+      background: #ffffff;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      box-shadow: 0 0 0 1px #e3e6ea, 0 24px 60px -20px rgba(20, 30, 50, 0.25);
+      border-radius: 4px;
+    }
+    .caption {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      line-height: 1.9;
+      color: #2a3340;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+    .caption .title {
+      font-size: 12px;
+      color: #6b4226;
+      margin-bottom: 6px;
+    }
+    .caption .src {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      color: #8a94a0;
+    }
+    .error {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      color: #b33636;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="preview" width="512" height="512"></canvas>
+    <div class="caption">
+      <div class="title" id="title">WALKABLE EXAMPLE AGENT</div>
+      standstill · facing down · 64×64 frame ×8
+      <br /><span id="look">light skin · blue eyes · chestnut hair · blue tee · charcoal pants · brown boots</span>
+      <div class="src">verbatim port of deskrpg src/lib/sprite-compositor.ts · LPC layers</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { compositeCharacter, drawStandstill } from "./assets/agents/agent-compositor.js";
+
+    // First entry of the manifest = deskrpg's DEFAULT_LAYERS_MALE walkable
+    // example agent (src/hooks/useCharacterAppearance.ts).
+    const agent = (await (await fetch("/assets/agents/agents.json")).json())[0];
+
+    const preview = document.getElementById("preview");
+    document.getElementById("title").textContent = agent.name.toUpperCase();
+    document.getElementById("look").textContent  = agent.look;
+
+    const sheet = document.createElement("canvas");
+    await compositeCharacter(sheet, agent.layers);
+    drawStandstill(preview, sheet, { scale: 8 });
+  </script>
+</body>
+</html>

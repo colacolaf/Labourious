@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Labourious — Ground Floor Lobby (deskrpg-faithful)</title>
+
+  <!-- Inline SVG favicon. -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%238b8378'/><rect x='5' y='6' width='6' height='2' fill='%23d4af37'/></svg>" />
+
+  <!-- Press Start 2P for Pixel-font chrome. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: radial-gradient(ellipse at 50% 40%, #fafbfc 0%, #e4eaf0 70%);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #2a3340;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px;
+      box-sizing: border-box;
+    }
+    #game-root {
+      width: 640px;
+      height: 480px;
+      box-shadow: 0 0 0 1px #aab2bc, 0 30px 80px -20px rgba(0, 0, 0, 0.4);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+    }
+    /* A chrome label above the canvas so users can read "deskrpg-faithful". */
+    .chrome-label {
+      position: absolute;
+      top: -28px; left: 0;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: #2a3340;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-root">
+    <div class="chrome-label">LABOURIOUS · GROUND FLOOR · deskrpg-faithful</div>
+  </div>
+
+  <!-- Phaser 3.90 (matches deskrpg runtime). -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+  <script type="module" src="./src/lib/scene.js"></script>
+</body>
+</html>
