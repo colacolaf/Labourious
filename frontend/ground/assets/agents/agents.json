@@ -2,6 +2,9 @@
   {
     "id": "walkable-example",
     "name": "Walkable Example Agent",
+    "room": "examples",
+    "role": "Example",
+    "lead": false,
     "bodyType": "male",
     "look": "light skin · blue eyes · chestnut hair · blue tee · charcoal pants · brown boots",
     "layers": [
@@ -38,6 +41,9 @@
   {
     "id": "female-default",
     "name": "Female Default",
+    "room": "examples",
+    "role": "Example",
+    "lead": false,
     "bodyType": "female",
     "look": "light skin · blue eyes · blonde bob · white blouse · navy skirt · brown boots",
     "layers": [
@@ -74,6 +80,9 @@
   {
     "id": "formal-walker",
     "name": "Formal Walker",
+    "room": "examples",
+    "role": "Example",
+    "lead": false,
     "bodyType": "male",
     "look": "olive skin · brown eyes · black hair · white buttoned shirt · charcoal suit pants · black boots",
     "layers": [
@@ -110,6 +119,9 @@
   {
     "id": "scoop-walker",
     "name": "Scoop Tee Walker",
+    "room": "examples",
+    "role": "Example",
+    "lead": false,
     "bodyType": "female",
     "look": "bronze skin · green eyes · raven hair · pink scoop tee · charcoal leggings · brown boots",
     "layers": [
@@ -146,6 +158,9 @@
   {
     "id": "polo-walker",
     "name": "Polo Walker",
+    "room": "examples",
+    "role": "Example",
+    "lead": false,
     "bodyType": "male",
     "look": "brown skin · brown eyes · black bedhead · navy polo · gray pants · brown boots",
     "layers": [
@@ -182,6 +197,9 @@
   {
     "id": "longsleeve-walker",
     "name": "Longsleeve Walker",
+    "room": "examples",
+    "role": "Example",
+    "lead": false,
     "bodyType": "female",
     "look": "light skin · blue eyes · ginger bob · white long-sleeve blouse · charcoal skirt · black boots",
     "layers": [
@@ -211,6 +229,279 @@
       },
       {
         "src": "/assets/agents/longsleeve-walker/z120-ginger.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "michael-burry",
+    "name": "Michael Burry",
+    "room": "research",
+    "role": "Lead Researcher",
+    "lead": true,
+    "bodyType": "male",
+    "look": "shaved bald · white trimmed beard · plain gray tee · black pants",
+    "layers": [
+      {
+        "src": "/assets/agents/michael-burry/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/michael-burry/z020-black.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/michael-burry/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/michael-burry/z035-gray.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/michael-burry/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/michael-burry/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/michael-burry/z110-white.png",
+        "zPos": 110
+      }
+    ]
+  },
+  {
+    "id": "john-hempton",
+    "name": "John Hempton",
+    "room": "research",
+    "role": "SEC / Regulatory",
+    "lead": false,
+    "bodyType": "male",
+    "look": "wispy gray hair · clean-shaven · navy polo · gray pants",
+    "layers": [
+      {
+        "src": "/assets/agents/john-hempton/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/john-hempton/z020-gray.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/john-hempton/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/john-hempton/z035-navy.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/john-hempton/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/john-hempton/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/john-hempton/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "web-research",
+    "name": "Web Research Agent",
+    "room": "research",
+    "role": "Web Research",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black afro · teal v-neck tee · blue jeans",
+    "layers": [
+      {
+        "src": "/assets/agents/web-research/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/web-research/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/web-research/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/web-research/z035-teal.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/web-research/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/web-research/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/web-research/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "filings-intern",
+    "name": "Hedge Fund & Political Filings Intern",
+    "room": "research",
+    "role": "Intern",
+    "lead": false,
+    "bodyType": "male",
+    "look": "messy chestnut hair · white dress shirt · charcoal suit pants",
+    "layers": [
+      {
+        "src": "/assets/agents/filings-intern/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/filings-intern/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/filings-intern/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/filings-intern/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/filings-intern/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/filings-intern/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/filings-intern/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "academic-research",
+    "name": "Academic Research Agent",
+    "room": "research",
+    "role": "Academic Research",
+    "lead": false,
+    "bodyType": "male",
+    "look": "thin white hair · maroon cardigan · charcoal slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/academic-research/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/academic-research/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/academic-research/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/academic-research/z035-maroon.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/academic-research/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/academic-research/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/academic-research/z120-white.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "news-aggregation",
+    "name": "News Aggregation Agent",
+    "room": "research",
+    "role": "News Aggregation",
+    "lead": false,
+    "bodyType": "female",
+    "look": "strawberry pixie cut · sky scoop tee · navy pants",
+    "layers": [
+      {
+        "src": "/assets/agents/news-aggregation/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/news-aggregation/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/news-aggregation/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/news-aggregation/z035-sky.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/news-aggregation/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/news-aggregation/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/news-aggregation/z120-strawberry.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "data-scout",
+    "name": "Data Scout Agent",
+    "room": "research",
+    "role": "Data Scout",
+    "lead": false,
+    "bodyType": "male",
+    "look": "chestnut buzzcut · forest field shirt · tan pants",
+    "layers": [
+      {
+        "src": "/assets/agents/data-scout/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/data-scout/z020-tan.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/data-scout/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/data-scout/z035-forest.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/data-scout/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/data-scout/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/data-scout/z120-chestnut.png",
         "zPos": 120
       }
     ]
