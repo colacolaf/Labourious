@@ -13,115 +13,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" />
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      min-height: 100%;
-      background: #ffffff; /* user asked: pure white background */
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      color: #2a3340;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 24px 64px;
-      box-sizing: border-box;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 36px;
-    }
-    header h1 {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 18px;
-      color: #6b4226;
-      letter-spacing: 1px;
-      margin: 0 0 10px;
-    }
-    header p {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 9px;
-      line-height: 1.8;
-      color: #2a3340;
-      margin: 0;
-    }
-    header .src {
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      font-size: 11px;
-      color: #8a94a0;
-      margin-top: 10px;
-    }
-    #roster {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 28px;
-      max-width: 1200px;
-    }
-    .card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      padding: 18px 18px 16px;
-      background: #ffffff;
-      border: 1px solid #e3e6ea;
-      border-radius: 6px;
-      box-shadow: 0 10px 30px -18px rgba(20, 30, 50, 0.35);
-      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    }
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 22px 44px -18px rgba(20, 30, 50, 0.45);
-      border-color: #d4af37;
-    }
-    .card canvas {
-      display: block;
-      background: #ffffff;
-      image-rendering: pixelated;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: crisp-edges;
-    }
-    .room-title {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 12px;
-      color: #6b4226;
-      letter-spacing: 1px;
-      width: 100%;
-      text-align: center;
-      margin: 12px 0 4px;
-    }
-    .card.lead {
-      border: 2px solid #d4af37;
-      box-shadow: 0 10px 34px -16px rgba(212, 175, 55, 0.55);
-    }
-    .card .name {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 10px;
-      color: #2a3340;
-      letter-spacing: 0.5px;
-      text-align: center;
-    }
-    .card .role {
-      font-size: 11px;
-      font-weight: 600;
-      color: #6b4226;
-      text-align: center;
-    }
-    .card .look {
-      font-size: 11px;
-      color: #8a94a0;
-      text-align: center;
-      max-width: 240px;
-    }
-    .error {
-      font-size: 13px;
-      color: #b33636;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    }
-  </style>
+  <!-- Shared roster styles. -->
+  <link rel="stylesheet" href="./assets/agents/agent-cards.css" />
 </head>
 <body>
   <header>
@@ -132,67 +25,28 @@
   <div id="roster"><div class="error">Loading…</div></div>
 
   <script type="module">
-    import { compositeCharacter, drawStandstill, FRAME_WIDTH } from "./assets/agents/agent-compositor.js";
-
-    const SCALE = 4; // frame × 4 = 256 px per card
-    const SIZE  = FRAME_WIDTH * SCALE;
+    import { appendAgentCard, loadManifest, roomTitle, showError } from "./assets/agents/agent-cards.js";
 
     const roster = document.getElementById("roster");
-    roster.textContent = "";
-
-    // Fail loudly instead of leaving a blank roster.
-    let agents;
     try {
-      agents = await (await fetch("/assets/agents/agents.json")).json();
+      const agents = await loadManifest();
+      roster.textContent = "";
+
+      // Group cards by room, preserving manifest order.
+      const byRoom = new Map();
+      for (const agent of agents) {
+        if (!byRoom.has(agent.room)) byRoom.set(agent.room, []);
+        byRoom.get(agent.room).push(agent);
+      }
+      for (const [room, list] of byRoom) {
+        const h = document.createElement("h2");
+        h.className = "room-title";
+        h.textContent = roomTitle(room);
+        roster.appendChild(h);
+        for (const agent of list) await appendAgentCard(roster, agent);
+      }
     } catch (err) {
-      const el = document.createElement("div");
-      el.className = "error";
-      el.textContent = "Failed to load agent roster: " + err.message;
-      roster.appendChild(el);
-    }
-
-    const ROOM_TITLES = { examples: "EXAMPLES", research: "RESEARCH · ROOM 1" };
-
-    async function makeCard(agent) {
-      const card = document.createElement("div");
-      card.className = "card" + (agent.lead ? " lead" : "");
-
-      const canvas = document.createElement("canvas");
-      canvas.width  = SIZE;
-      canvas.height = SIZE;
-
-      const sheet = document.createElement("canvas");
-      await compositeCharacter(sheet, agent.layers);
-      drawStandstill(canvas, sheet, { scale: SCALE });
-
-      const name = document.createElement("div");
-      name.className = "name";
-      name.textContent = agent.name.toUpperCase();
-
-      const role = document.createElement("div");
-      role.className = "role";
-      role.textContent = agent.role;
-
-      const look = document.createElement("div");
-      look.className = "look";
-      look.textContent = agent.look;
-
-      card.append(canvas, name, role, look);
-      return card;
-    }
-
-    // Group cards by room, preserving manifest order.
-    const byRoom = new Map();
-    for (const agent of agents ?? []) {
-      if (!byRoom.has(agent.room)) byRoom.set(agent.room, []);
-      byRoom.get(agent.room).push(agent);
-    }
-    for (const [room, list] of byRoom) {
-      const h = document.createElement("h2");
-      h.className = "room-title";
-      h.textContent = ROOM_TITLES[room] ?? room.toUpperCase();
-      roster.appendChild(h);
-      for (const agent of list) roster.appendChild(await makeCard(agent));
+      showError(roster, err);
     }
   </script>
 </body>

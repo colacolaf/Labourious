@@ -13,6 +13,11 @@
 // To add agents for a new room: append entries to AGENTS below with
 // `room`, `role`, `bodyType`, `look`, `desc` and an `items` map of
 // { category: [itemKey, variant] }. Omit `hair` for shaved-bald characters.
+//
+// ROOM-STYLE RULE: unnamed agents should dress like the room's culture so the
+// roster reads as one world — e.g. Quant = suits / Patagonia vests, Crypto =
+// casual + gold chain, Sentiment = media/social/desk mix. Named agents carry
+// the real person's researched look.
 // ---------------------------------------------------------------------------
 
 const fs = require("fs");
@@ -66,6 +71,28 @@ const AGENTS = [
   { id: "data-scout", docDir: "ground/research/data-scout", name: "Data Scout Agent", room: "research", role: "Data Scout", bodyType: "male", look: "chestnut buzzcut · forest field shirt · tan pants",
     desc: "Data Scout Agent: rugged field investigator with a chestnut buzzcut and a forest-green field shirt.",
     items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_buzzcut", "chestnut"], clothes: ["torso_clothes_longsleeve2", "forest"], legs: ["legs_pants", "tan"], shoes: ["feet_boots_basic", "brown"] } },
+
+  // ── Sentiment (Room 7) — Ground Floor Intake ────────────────────────────
+  // Style: media/social/desk mix — institutional formality, newsroom polish,
+  // and one streetwear grinder. Named agents carry the real person's look.
+  { id: "cathie-wood", docDir: "ground/sentiment/cathie-wood", name: "Cathie Wood", room: "sentiment", role: "Lead Sentiment", lead: true, bodyType: "female", look: "platinum-blonde side-part bob · bright pink blazer · black suit pants",
+    desc: "Cathie Wood's look: platinum-blonde side-parted bob and a bright pink blazer — ARK Invest's innovation queen in her signature bold color.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_bob_side_part", "blonde"], clothes: ["torso_clothes_longsleeve2_buttoned", "pink"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "jon-najarian", docDir: "ground/sentiment/options-flow-dark-pool", name: "Jon Najarian", room: "sentiment", role: "Options Flow & Dark Pool", bodyType: "male", look: "shaved head · gray goatee · brown flat cap · white buttoned shirt · charcoal suit",
+    desc: "Jon Najarian's look: shaved head under a signature brown flat cap, gray goatee, white buttoned shirt — the options trader who is 'not your typical Wall Street suit'. (LPC has no glasses item, so his usual reading glasses are omitted — the flat cap + goatee carry the look.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], beard: ["beards_trimmed", "gray"], hat: ["hat_cap_leather", "brown"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } }, // no hair → shaved head
+  { id: "news-sentiment", docDir: "ground/sentiment/news-sentiment", name: "News Sentiment Agent", room: "sentiment", role: "News Sentiment", bodyType: "female", look: "raven ponytail · sky newsroom blouse · charcoal pants",
+    desc: "News Sentiment Agent: media-desk journalist in a sky blouse with a sleek raven ponytail — reads the mood of the headlines.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_ponytail", "raven"], clothes: ["torso_clothes_longsleeve2", "sky"], legs: ["legs_pants2", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "social-media-retail", docDir: "ground/sentiment/social-media-retail", name: "Social Media & Retail Agent", room: "sentiment", role: "Social Media & Retail", bodyType: "male", look: "hood up · black hoodie · white tee · blue jeans",
+    desc: "Social Media & Retail Agent: streetwear-grinder energy — hood up, white tee, jeans — the one tracking the vibe of the timeline.",
+    items: { body: ["body", "bronze"], eye_color: ["eye_color", "brown"], hair: ["hair_afro", "black"], hat: ["hat_hood_cloth", "hood_black"], clothes: ["torso_clothes_tshirt_vneck", "white"], legs: ["legs_pants", "blue"], shoes: ["feet_boots_basic", "brown"] } },
+  { id: "insider-institutional", docDir: "ground/sentiment/insider-institutional", name: "Insider & Institutional Agent", room: "sentiment", role: "Insider & Institutional", bodyType: "male", look: "side-parted black hair · dark navy suit · charcoal trousers",
+    desc: "Insider & Institutional Agent: buttoned-up institutional desk in a dark navy suit — watches the 13Fs and Form 4s.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "analyst-earnings-revision", docDir: "ground/sentiment/analyst-earnings-revision", name: "Analyst & Earnings Revision Agent", room: "sentiment", role: "Analyst & Earnings Revision", bodyType: "female", look: "chestnut bob · lavender buttoned blouse · navy trousers",
+    desc: "Analyst & Earnings Revision Agent: business-casual analyst desk in a lavender blouse and navy trousers — tracking the estimate cuts and raises.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_bob", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "lavender"], legs: ["legs_pants2", "navy"], shoes: ["feet_boots_basic", "brown"] } },
 ];
 
 // ---------------------------------------------------------------------------

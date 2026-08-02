@@ -505,5 +505,251 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "cathie-wood",
+    "name": "Cathie Wood",
+    "room": "sentiment",
+    "role": "Lead Sentiment",
+    "lead": true,
+    "bodyType": "female",
+    "look": "platinum-blonde side-part bob · bright pink blazer · black suit pants",
+    "layers": [
+      {
+        "src": "/assets/agents/cathie-wood/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/cathie-wood/z020-black.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/cathie-wood/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/cathie-wood/z035-pink.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/cathie-wood/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/cathie-wood/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/cathie-wood/z120-blonde.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "jon-najarian",
+    "name": "Jon Najarian",
+    "room": "sentiment",
+    "role": "Options Flow & Dark Pool",
+    "lead": false,
+    "bodyType": "male",
+    "look": "shaved head · gray goatee · brown flat cap · white buttoned shirt · charcoal suit",
+    "layers": [
+      {
+        "src": "/assets/agents/jon-najarian/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/jon-najarian/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/jon-najarian/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/jon-najarian/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/jon-najarian/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/jon-najarian/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/jon-najarian/z110-gray.png",
+        "zPos": 110
+      },
+      {
+        "src": "/assets/agents/jon-najarian/z130-brown.png",
+        "zPos": 130
+      }
+    ]
+  },
+  {
+    "id": "news-sentiment",
+    "name": "News Sentiment Agent",
+    "room": "sentiment",
+    "role": "News Sentiment",
+    "lead": false,
+    "bodyType": "female",
+    "look": "raven ponytail · sky newsroom blouse · charcoal pants",
+    "layers": [
+      {
+        "src": "/assets/agents/news-sentiment/z009-raven.png",
+        "zPos": 9
+      },
+      {
+        "src": "/assets/agents/news-sentiment/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/news-sentiment/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/news-sentiment/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/news-sentiment/z035-sky.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/news-sentiment/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/news-sentiment/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/news-sentiment/z120-raven.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "social-media-retail",
+    "name": "Social Media & Retail Agent",
+    "room": "sentiment",
+    "role": "Social Media & Retail",
+    "lead": false,
+    "bodyType": "male",
+    "look": "hood up · black hoodie · white tee · blue jeans",
+    "layers": [
+      {
+        "src": "/assets/agents/social-media-retail/z010-bronze.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/social-media-retail/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/social-media-retail/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/social-media-retail/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/social-media-retail/z045-bronze.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/social-media-retail/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/social-media-retail/z120-black.png",
+        "zPos": 120
+      },
+      {
+        "src": "/assets/agents/social-media-retail/z130-hood_black.png",
+        "zPos": 130
+      }
+    ]
+  },
+  {
+    "id": "insider-institutional",
+    "name": "Insider & Institutional Agent",
+    "room": "sentiment",
+    "role": "Insider & Institutional",
+    "lead": false,
+    "bodyType": "male",
+    "look": "side-parted black hair · dark navy suit · charcoal trousers",
+    "layers": [
+      {
+        "src": "/assets/agents/insider-institutional/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/insider-institutional/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/insider-institutional/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/insider-institutional/z035-navy.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/insider-institutional/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/insider-institutional/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/insider-institutional/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "analyst-earnings-revision",
+    "name": "Analyst & Earnings Revision Agent",
+    "room": "sentiment",
+    "role": "Analyst & Earnings Revision",
+    "lead": false,
+    "bodyType": "female",
+    "look": "chestnut bob · lavender buttoned blouse · navy trousers",
+    "layers": [
+      {
+        "src": "/assets/agents/analyst-earnings-revision/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/analyst-earnings-revision/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/analyst-earnings-revision/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/analyst-earnings-revision/z035-lavender.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/analyst-earnings-revision/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/analyst-earnings-revision/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/analyst-earnings-revision/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
   }
 ]
