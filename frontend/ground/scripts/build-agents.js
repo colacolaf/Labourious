@@ -204,6 +204,26 @@ const AGENTS = [
   { id: "industry-structure", docDir: "floor-2/fundamental/industry-structure", name: "Industry Structure Agent", room: "fundamental", role: "Industry Structure", bodyType: "male", look: "balding gray hair · white shirt · navy suspenders · navy tie",
     desc: "Industry Structure Agent: the old-school analyst with sleeves rolled up — white shirt, navy suspenders, tie; no jacket needed when you've seen every cycle since the 80s.",
     items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_balding", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], suspenders: ["torso_aprons_suspenders", "navy"], tie: ["neck_necktie", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+
+  // ── Macro (Room 3) — Floor 2 Global Stage ────────────────────────────────
+  // Style: the global-macro desk — sober central-bank suits, one bond-desk
+  // woman, TV-guest polish. Everyone distinct: no two share hair + shirt +
+  // tie. Named agents carry the real person's researched look.
+  { id: "larry-fink", docDir: "floor-2/macro/larry-fink", name: "Larry Fink", room: "macro", role: "Lead Macro", lead: true, bodyType: "male", look: "silver hair · navy suit · open blue shirt",
+    desc: "Larry Fink's look: thinning silver hair, thin-framed executive glasses, and the signature navy suit with an open-collar blue shirt and no tie — the BlackRock CEO's boardroom-casual uniform. (LPC has no glasses item, so his glasses are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "white"], clothes: ["torso_clothes_longsleeve2_buttoned", "blue"], jacket: ["torso_jacket_collared", "navy"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } }, // no tie → open collar
+  { id: "ian-bremmer", docDir: "floor-2/macro/geopolitical-risk", name: "Ian Bremmer", room: "macro", role: "Geopolitical Risk", bodyType: "male", look: "gray hair · charcoal suit · sky shirt · navy tie",
+    desc: "Ian Bremmer's look: short gray hair, thick bold glasses and a sharp dark suit on every geopolitical panel — the Eurasia Group founder who reads the world's crises for a living. (LPC has no glasses item, so his thick frames are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "sky"], jacket: ["torso_jacket_collared", "charcoal"], tie: ["neck_necktie", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "central-bank-liquidity", docDir: "floor-2/macro/central-bank-liquidity", name: "Central Bank & Liquidity Agent", room: "macro", role: "Central Bank & Liquidity", bodyType: "male", look: "balding gray hair · navy suit · white shirt · black tie",
+    desc: "Central Bank & Liquidity Agent: the sober central-banking type — balding gray hair, navy suit, black tie, watching the balance sheets drain.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_balding", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_necktie", "black"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "currency-sovereign-debt", docDir: "floor-2/macro/currency-sovereign-debt", name: "Currency & Sovereign Debt Agent", room: "macro", role: "Currency & Sovereign Debt", bodyType: "female", look: "chestnut bob · charcoal suit · white shirt · gray tie",
+    desc: "Currency & Sovereign Debt Agent: the bond-desk analyst in a charcoal suit with a gray tie — tracking the reserves, the spreads, and the defaults before they print.",
+    items: { body: ["body", "bronze"], eye_color: ["eye_color", "brown"], hair: ["hair_bob", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "charcoal"], tie: ["neck_necktie", "gray"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "global-growth-tracker", docDir: "floor-2/macro/global-growth-tracker", name: "Global Growth Tracker Agent", room: "macro", role: "Global Growth Tracker", bodyType: "male", look: "black hair · navy suit · lavender shirt · green tie",
+    desc: "Global Growth Tracker Agent: the PMI desk — navy suit, lavender shirt, green tie, refreshing the composite indices every single morning.",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "lavender"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_necktie", "green"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "brown"] } },
 ];
 
 // ---------------------------------------------------------------------------

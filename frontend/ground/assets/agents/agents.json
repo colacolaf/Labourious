@@ -2003,5 +2003,236 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "larry-fink",
+    "name": "Larry Fink",
+    "room": "macro",
+    "role": "Lead Macro",
+    "lead": true,
+    "bodyType": "male",
+    "look": "silver hair · navy suit · open blue shirt",
+    "layers": [
+      {
+        "src": "/assets/agents/larry-fink/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/larry-fink/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/larry-fink/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/larry-fink/z035-blue.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/larry-fink/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/larry-fink/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/larry-fink/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/larry-fink/z120-white.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "ian-bremmer",
+    "name": "Ian Bremmer",
+    "room": "macro",
+    "role": "Geopolitical Risk",
+    "lead": false,
+    "bodyType": "male",
+    "look": "gray hair · charcoal suit · sky shirt · navy tie",
+    "layers": [
+      {
+        "src": "/assets/agents/ian-bremmer/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/ian-bremmer/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/ian-bremmer/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/ian-bremmer/z035-sky.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/ian-bremmer/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/ian-bremmer/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/ian-bremmer/z090-navy.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/ian-bremmer/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/ian-bremmer/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "central-bank-liquidity",
+    "name": "Central Bank & Liquidity Agent",
+    "room": "macro",
+    "role": "Central Bank & Liquidity",
+    "lead": false,
+    "bodyType": "male",
+    "look": "balding gray hair · navy suit · white shirt · black tie",
+    "layers": [
+      {
+        "src": "/assets/agents/central-bank-liquidity/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/central-bank-liquidity/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/central-bank-liquidity/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/central-bank-liquidity/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/central-bank-liquidity/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/central-bank-liquidity/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/central-bank-liquidity/z090-black.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/central-bank-liquidity/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/central-bank-liquidity/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "currency-sovereign-debt",
+    "name": "Currency & Sovereign Debt Agent",
+    "room": "macro",
+    "role": "Currency & Sovereign Debt",
+    "lead": false,
+    "bodyType": "female",
+    "look": "chestnut bob · charcoal suit · white shirt · gray tie",
+    "layers": [
+      {
+        "src": "/assets/agents/currency-sovereign-debt/z010-bronze.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/currency-sovereign-debt/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/currency-sovereign-debt/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/currency-sovereign-debt/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/currency-sovereign-debt/z045-bronze.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/currency-sovereign-debt/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/currency-sovereign-debt/z090-gray.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/currency-sovereign-debt/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/currency-sovereign-debt/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "global-growth-tracker",
+    "name": "Global Growth Tracker Agent",
+    "room": "macro",
+    "role": "Global Growth Tracker",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black hair · navy suit · lavender shirt · green tie",
+    "layers": [
+      {
+        "src": "/assets/agents/global-growth-tracker/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/global-growth-tracker/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/global-growth-tracker/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/global-growth-tracker/z035-lavender.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/global-growth-tracker/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/global-growth-tracker/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/global-growth-tracker/z090-green.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/global-growth-tracker/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/global-growth-tracker/z120-black.png",
+        "zPos": 120
+      }
+    ]
   }
 ]
