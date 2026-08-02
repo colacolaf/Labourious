@@ -147,6 +147,17 @@ const AGENTS = [
   { id: "risk-budgeting-allocation", docDir: "floor-2/quant/risk-budgeting-allocation", name: "Risk Budgeting & Allocation Agent", room: "quant", role: "Risk Budgeting & Allocation", bodyType: "female", look: "raven braid · slate button-down · tan vest · charcoal slacks",
     desc: "Risk Budgeting & Allocation Agent: keeper of the capital — slate button-down and a tan vest, pencil down when the allocations move.",
     items: { body: ["body", "bronze"], eye_color: ["eye_color", "brown"], hair: ["hair_braid", "raven"], clothes: ["torso_clothes_longsleeve2_buttoned", "slate"], vest: ["torso_clothes_vest", "tan"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "brown"] } },
+
+  // ── Security — Perimeter (main door) + Penthouse (PM bodyguard) ───────────
+  // Style: BIG + BROAD. LPC bodies are one size, so bulk comes from heavy dark
+  // layering — full beards, buzzcuts/shaved heads, tactical vest (armour_leather)
+  // and suit-jacket + tie + chain stacks that widen the silhouette.
+  { id: "entrance-bodyguard", docDir: "ground/perimeter/entrance-bodyguard", name: "Entrance Bodyguard Agent", room: "perimeter", role: "Main Door", bodyType: "male", look: "buzzcut · full black beard · black tactical shirt + vest · black slacks",
+    desc: "Entrance Bodyguard: the first line at the main door — a big, broad wall of a man in a black tactical vest over a black shirt, full beard, buzzcut. Vets every request before it reaches the building.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_buzzcut", "black"], beard: ["beards_medium", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "black"], vest: ["torso_armour_leather", "black"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "pm-bodyguard", docDir: "penthouse/agents/pm-bodyguard", name: "PM Bodyguard", room: "penthouse", role: "Last Line of Defense", bodyType: "male", look: "shaved head · trimmed beard · black suit + tie · gold chain · earpiece",
+    desc: "PM Bodyguard: stands by the penthouse window in a black suit with a tie, gold chain and a comms earpiece — loyal, protective, silent until the PM is about to make a catastrophic call. (LPC has no watch item, so the wristwatch is omitted — the gold chain + earpiece stud carry the accessories.)",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], beard: ["beards_trimmed", "black"], chain: ["neck_necklace_chain", "gold"], ear: ["facial_earrings_stud", "silver"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "black"], tie: ["neck_necktie", "black"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } }, // no hair → shaved head
 ];
 
 // ---------------------------------------------------------------------------

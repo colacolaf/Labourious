@@ -15,6 +15,8 @@ export const ROOM_TITLES = {
   sentiment: "SENTIMENT · ROOM 7",
   altdata:   "ALTERNATIVE DATA · ROOM 13",
   quant:     "QUANT · ROOM 4",
+  perimeter: "PERIMETER · GROUND FLOOR",
+  penthouse: "PENTHOUSE · THE TOP",
 };
 
 export function roomTitle(room) {

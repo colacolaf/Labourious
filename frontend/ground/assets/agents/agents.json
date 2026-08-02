@@ -1349,5 +1349,107 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "entrance-bodyguard",
+    "name": "Entrance Bodyguard Agent",
+    "room": "perimeter",
+    "role": "Main Door",
+    "lead": false,
+    "bodyType": "male",
+    "look": "buzzcut · full black beard · black tactical shirt + vest · black slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/entrance-bodyguard/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/entrance-bodyguard/z020-black.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/entrance-bodyguard/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/entrance-bodyguard/z035-black.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/entrance-bodyguard/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/entrance-bodyguard/z060-black.png",
+        "zPos": 60
+      },
+      {
+        "src": "/assets/agents/entrance-bodyguard/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/entrance-bodyguard/z110-black.png",
+        "zPos": 110
+      },
+      {
+        "src": "/assets/agents/entrance-bodyguard/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "pm-bodyguard",
+    "name": "PM Bodyguard",
+    "room": "penthouse",
+    "role": "Last Line of Defense",
+    "lead": false,
+    "bodyType": "male",
+    "look": "shaved head · trimmed beard · black suit + tie · gold chain · earpiece",
+    "layers": [
+      {
+        "src": "/assets/agents/pm-bodyguard/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z020-black.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z055-black.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z080-gold.png",
+        "zPos": 80
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z090-black.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z110-black.png",
+        "zPos": 110
+      },
+      {
+        "src": "/assets/agents/pm-bodyguard/z115-silver.png",
+        "zPos": 115
+      }
+    ]
   }
 ]
