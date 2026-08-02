@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Labourious — Tasks · Room 16 (deskrpg-exact)</title>
+
+  <!-- Inline SVG favicon (same as index.html). -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%238b8378'/><rect x='5' y='6' width='6' height='2' fill='%23d4af37'/></svg>" />
+
+  <!-- Press Start 2P — same pixel chrome as the ground lobby prototype. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" />
+
+  <!-- Shared roster styles. -->
+  <link rel="stylesheet" href="./assets/agents/agent-cards.css" />
+</head>
+<body>
+  <header>
+    <h1>TASKS · ROOM 16</h1>
+    <p>floor 4 · command · opt-in · reports to pm</p>
+    <p class="src">standstill · facing down · 64×64 frame ×4 · LPC composites ported 1:1 from deskrpg</p>
+  </header>
+  <div id="roster"><div class="error">Loading…</div></div>
+
+  <script type="module">
+    import { appendAgentCard, loadManifest, showError } from "./assets/agents/agent-cards.js";
+
+    const roster = document.getElementById("roster");
+    try {
+      const agents = await loadManifest();
+      roster.textContent = "";
+      for (const agent of agents.filter((a) => a.room === "tasks")) {
+        await appendAgentCard(roster, agent);
+      }
+    } catch (err) {
+      showError(roster, err);
+    }
+  </script>
+</body>
+</html>

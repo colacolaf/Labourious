@@ -3927,5 +3927,95 @@
         "zPos": 130
       }
     ]
+  },
+  {
+    "id": "daily-briefing",
+    "name": "Daily Briefing Agent",
+    "room": "tasks",
+    "role": "Daily Briefing",
+    "lead": false,
+    "bodyType": "female",
+    "look": "sandy ponytail · white blouse · sky cardigan · navy slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/daily-briefing/z009-sandy.png",
+        "zPos": 9
+      },
+      {
+        "src": "/assets/agents/daily-briefing/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/daily-briefing/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/daily-briefing/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/daily-briefing/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/daily-briefing/z035-sky.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/daily-briefing/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/daily-briefing/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/daily-briefing/z120-sandy.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "opportunity-scout",
+    "name": "Opportunity Scout Agent",
+    "room": "tasks",
+    "role": "Opportunity Scout",
+    "lead": false,
+    "bodyType": "male",
+    "look": "buzzcut · navy hoodie · black backpack · jeans · white sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/opportunity-scout/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/opportunity-scout/z015-white.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/opportunity-scout/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/opportunity-scout/z035-navy.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/opportunity-scout/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/opportunity-scout/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/opportunity-scout/z110-black.png",
+        "zPos": 110
+      },
+      {
+        "src": "/assets/agents/opportunity-scout/z120-black.png",
+        "zPos": 120
+      }
+    ]
   }
 ]

@@ -382,6 +382,17 @@ const AGENTS = [
   { id: "agent-health-monitor", docDir: "floor-4/control/agent-health-monitor", name: "Agent Health Monitor", room: "control", role: "Agent Health Monitor", bodyType: "male", look: "messy black hair · forest hood up · forest hoodie · charcoal pants · black sneakers",
     desc: "Agent Health Monitor: the 24/7 NOC watcher — forest-green hood up over a hoodie, permanently caffeinated, eyes on every dashboard and dark circles under a smile that never quite convinces anyone.",
     items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], hat: ["hat_hood_cloth", "forest"], clothes: ["torso_clothes_longsleeve2", "forest"], legs: ["legs_pants", "charcoal"], shoes: ["feet_shoes_basic", "black"] } },
+
+  // ── Tasks (Room 16) — Floor 4 Command (the finale) ───────────────────────
+  // Style: creative but simple — just daily tasks. The bright morning-news
+  // briefing host (first sky cardigan) and the quiet background scout with the
+  // roster's first backpack. No lead — opt-in, reports to PM.
+  { id: "daily-briefing", docDir: "floor-4/tasks/daily-briefing", name: "Daily Briefing Agent", room: "tasks", role: "Daily Briefing", bodyType: "female", look: "sandy ponytail · white blouse · sky cardigan · navy slacks",
+    desc: "Daily Briefing Agent: the bright morning voice of the building — sandy ponytail and a sky-blue cardigan over a white blouse, up before the sun to read the day's news back to everyone.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_ponytail", "sandy"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], cardigan: ["torso_clothes_longsleeve2_cardigan", "sky"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "brown"] } },
+  { id: "opportunity-scout", docDir: "floor-4/tasks/opportunity-scout", name: "Opportunity Scout Agent", room: "tasks", role: "Opportunity Scout", bodyType: "male", look: "buzzcut · navy hoodie · black backpack · jeans · white sneakers",
+    desc: "Opportunity Scout Agent: the quiet background hunter — navy hoodie, a black backpack packed with the overnight scans, quietly screening for the one idea nobody noticed yet.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_buzzcut", "black"], clothes: ["torso_clothes_longsleeve2", "navy"], backpack: ["backpack", "black"], legs: ["legs_pants", "blue"], shoes: ["feet_shoes_basic", "white"] } },
 ];
 
 // ---------------------------------------------------------------------------
