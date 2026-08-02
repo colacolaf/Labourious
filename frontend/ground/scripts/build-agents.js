@@ -93,6 +93,29 @@ const AGENTS = [
   { id: "analyst-earnings-revision", docDir: "ground/sentiment/analyst-earnings-revision", name: "Analyst & Earnings Revision Agent", room: "sentiment", role: "Analyst & Earnings Revision", bodyType: "female", look: "chestnut bob · lavender buttoned blouse · navy trousers",
     desc: "Analyst & Earnings Revision Agent: business-casual analyst desk in a lavender blouse and navy trousers — tracking the estimate cuts and raises.",
     items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_bob", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "lavender"], legs: ["legs_pants2", "navy"], shoes: ["feet_boots_basic", "brown"] } },
+
+  // ── Alternative Data (Room 13) — Ground Floor Intake ─────────────────────
+  // Style: field ops meets tech — rugged utility for the satellite/weather
+  // crew, startup hoodie for the traffic watcher. Named agents carry the
+  // real person's researched look.
+  { id: "matthew-granade", docDir: "ground/alt-data/matthew-granade", name: "Matthew Granade", room: "altdata", role: "Lead Alt Data", lead: true, bodyType: "male", look: "short chestnut hair · blue button-down · charcoal suit",
+    desc: "Matthew Granade's look: short chestnut hair and a sharp blue button-down — Point72's CIO and the architect of Bridgewater's research engine. (Based on general profile knowledge — public photos not verified.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_parted", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "blue"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "james-crawford", docDir: "ground/alt-data/satellite-geospatial", name: "James Crawford", room: "altdata", role: "Satellite & Geospatial", bodyType: "male", look: "short chestnut hair · light-blue button-down · dark denim",
+    desc: "James Crawford's look: short dark-brown hair, clean-shaven, light-blue button-down — the Orbital Insight founder who reads the Earth from space.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_messy1", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "sky"], legs: ["legs_pants2", "charcoal"], shoes: ["feet_boots_basic", "brown"] } },
+  { id: "supply-chain", docDir: "ground/alt-data/supply-chain", name: "Supply Chain Agent", room: "altdata", role: "Supply Chain", bodyType: "male", look: "buzzcut · forest utility vest · tan cargo pants",
+    desc: "Supply Chain Agent: field-ops utility vest and cargo pants — tracking bills of lading from the warehouse floor.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_buzzcut", "chestnut"], clothes: ["torso_clothes_sleeveless2", "forest"], legs: ["legs_pants", "tan"], shoes: ["feet_boots_basic", "brown"] } },
+  { id: "consumer-spending", docDir: "ground/alt-data/consumer-spending", name: "Consumer Spending Agent", room: "altdata", role: "Consumer Spending", bodyType: "female", look: "chestnut ponytail · slate cardigan · jeans",
+    desc: "Consumer Spending Agent: comfy cardigan and jeans — reading the receipts, one transaction at a time.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_ponytail", "chestnut"], clothes: ["torso_clothes_longsleeve2_cardigan", "slate"], legs: ["legs_pants2", "blue"], shoes: ["feet_boots_basic", "brown"] } },
+  { id: "weather-commodity", docDir: "ground/alt-data/weather-commodity", name: "Weather & Commodity Agent", room: "altdata", role: "Weather & Commodity", bodyType: "male", look: "sandy messy hair · red bandana · forest field shirt · tan pants",
+    desc: "Weather & Commodity Agent: field-weather rugged with a red bandana — chasing the storms that move the markets.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_messy2", "sandy"], hat: ["hat_bandana", "bandana_red"], clothes: ["torso_clothes_longsleeve2", "forest"], legs: ["legs_pants", "tan"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "web-app-traffic", docDir: "ground/alt-data/web-app-traffic", name: "Web & App Traffic Agent", room: "altdata", role: "Web & App Traffic", bodyType: "male", look: "navy hood up · gray tee · jeans",
+    desc: "Web & App Traffic Agent: startup hoodie energy — watching the clicks, sessions and dwell time.",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], hat: ["hat_hood_cloth", "navy"], clothes: ["torso_clothes_tshirt_vneck", "gray"], legs: ["legs_pants", "blue"], shoes: ["feet_boots_basic", "brown"] } },
 ];
 
 // ---------------------------------------------------------------------------
@@ -167,6 +190,15 @@ function build() {
       fs.mkdirSync(docDir, { recursive: true });
       fs.writeFileSync(path.join(docDir, "look.md"), md);
     }
+  }
+
+  // Fail loudly BEFORE writing — a missing layer must never silently ship
+  // (it would drop a part of the character), and a broken manifest must
+  // never land on disk.
+  if (missing.length) {
+    console.error("ABORT: missing LPC layer files:");
+    for (const m of missing) console.error("  -", m);
+    process.exit(1);
   }
 
   fs.writeFileSync(path.join(DST, "agents.json"), JSON.stringify(manifest, null, 2));

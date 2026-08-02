@@ -13,6 +13,7 @@ export const ROOM_TITLES = {
   examples:  "EXAMPLES",
   research:  "RESEARCH · ROOM 1",
   sentiment: "SENTIMENT · ROOM 7",
+  altdata:   "ALTERNATIVE DATA · ROOM 13",
 };
 
 export function roomTitle(room) {

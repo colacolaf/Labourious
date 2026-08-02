@@ -751,5 +751,251 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "matthew-granade",
+    "name": "Matthew Granade",
+    "room": "altdata",
+    "role": "Lead Alt Data",
+    "lead": true,
+    "bodyType": "male",
+    "look": "short chestnut hair · blue button-down · charcoal suit",
+    "layers": [
+      {
+        "src": "/assets/agents/matthew-granade/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/matthew-granade/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/matthew-granade/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/matthew-granade/z035-blue.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/matthew-granade/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/matthew-granade/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/matthew-granade/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "james-crawford",
+    "name": "James Crawford",
+    "room": "altdata",
+    "role": "Satellite & Geospatial",
+    "lead": false,
+    "bodyType": "male",
+    "look": "short chestnut hair · light-blue button-down · dark denim",
+    "layers": [
+      {
+        "src": "/assets/agents/james-crawford/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/james-crawford/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/james-crawford/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/james-crawford/z035-sky.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/james-crawford/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/james-crawford/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/james-crawford/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "supply-chain",
+    "name": "Supply Chain Agent",
+    "room": "altdata",
+    "role": "Supply Chain",
+    "lead": false,
+    "bodyType": "male",
+    "look": "buzzcut · forest utility vest · tan cargo pants",
+    "layers": [
+      {
+        "src": "/assets/agents/supply-chain/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/supply-chain/z020-tan.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/supply-chain/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/supply-chain/z035-forest.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/supply-chain/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/supply-chain/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/supply-chain/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "consumer-spending",
+    "name": "Consumer Spending Agent",
+    "room": "altdata",
+    "role": "Consumer Spending",
+    "lead": false,
+    "bodyType": "female",
+    "look": "chestnut ponytail · slate cardigan · jeans",
+    "layers": [
+      {
+        "src": "/assets/agents/consumer-spending/z009-chestnut.png",
+        "zPos": 9
+      },
+      {
+        "src": "/assets/agents/consumer-spending/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/consumer-spending/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/consumer-spending/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/consumer-spending/z035-slate.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/consumer-spending/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/consumer-spending/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/consumer-spending/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "weather-commodity",
+    "name": "Weather & Commodity Agent",
+    "room": "altdata",
+    "role": "Weather & Commodity",
+    "lead": false,
+    "bodyType": "male",
+    "look": "sandy messy hair · red bandana · forest field shirt · tan pants",
+    "layers": [
+      {
+        "src": "/assets/agents/weather-commodity/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/weather-commodity/z020-tan.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/weather-commodity/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/weather-commodity/z035-forest.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/weather-commodity/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/weather-commodity/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/weather-commodity/z120-sandy.png",
+        "zPos": 120
+      },
+      {
+        "src": "/assets/agents/weather-commodity/z120-bandana_red.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "web-app-traffic",
+    "name": "Web & App Traffic Agent",
+    "room": "altdata",
+    "role": "Web & App Traffic",
+    "lead": false,
+    "bodyType": "male",
+    "look": "navy hood up · gray tee · jeans",
+    "layers": [
+      {
+        "src": "/assets/agents/web-app-traffic/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/web-app-traffic/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/web-app-traffic/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/web-app-traffic/z035-gray.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/web-app-traffic/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/web-app-traffic/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/web-app-traffic/z120-black.png",
+        "zPos": 120
+      },
+      {
+        "src": "/assets/agents/web-app-traffic/z130-navy.png",
+        "zPos": 130
+      }
+    ]
   }
 ]
