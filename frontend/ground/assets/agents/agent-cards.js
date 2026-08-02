@@ -14,6 +14,7 @@ export const ROOM_TITLES = {
   research:  "RESEARCH · ROOM 1",
   sentiment: "SENTIMENT · ROOM 7",
   altdata:   "ALTERNATIVE DATA · ROOM 13",
+  quant:     "QUANT · ROOM 4",
 };
 
 export function roomTitle(room) {

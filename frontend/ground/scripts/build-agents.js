@@ -13,6 +13,8 @@
 // To add agents for a new room: append entries to AGENTS below with
 // `room`, `role`, `bodyType`, `look`, `desc` and an `items` map of
 // { category: [itemKey, variant] }. Omit `hair` for shaved-bald characters.
+// Extra item keys (e.g. `vest:`, `jacket:`) layer over `clothes:` by zPos —
+// that's how the dress-shirt-under-fleece-vest quant uniform is built.
 //
 // ROOM-STYLE RULE: unnamed agents should dress like the room's culture so the
 // roster reads as one world — e.g. Quant = suits / Patagonia vests, Crypto =
@@ -116,6 +118,35 @@ const AGENTS = [
   { id: "web-app-traffic", docDir: "ground/alt-data/web-app-traffic", name: "Web & App Traffic Agent", room: "altdata", role: "Web & App Traffic", bodyType: "male", look: "navy hood up · gray tee · jeans",
     desc: "Web & App Traffic Agent: startup hoodie energy — watching the clicks, sessions and dwell time.",
     items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], hat: ["hat_hood_cloth", "navy"], clothes: ["torso_clothes_tshirt_vneck", "gray"], legs: ["legs_pants", "blue"], shoes: ["feet_boots_basic", "brown"] } },
+
+  // ── Quant (Room 4) — Floor 2 Analysis ─────────────────────────────────────
+  // Style: strictly professional + the analyst uniform — dress shirt under a
+  // Patagonia-style fleece vest (the Wall Street stereotype), blazers for the
+  // partners. Named agents carry the real person's researched look.
+  { id: "jim-simons", docDir: "floor-2/quant/jim-simons", name: "Jim Simons", room: "quant", role: "Lead Quant", lead: true, bodyType: "male", look: "white balding hair · open white shirt · navy blazer · charcoal slacks",
+    desc: "Jim Simons' look: thin white hair, classic glasses, open-collar white shirt under a navy blazer — the Renaissance founder who famously never wore socks. (LPC has no glasses item, so his glasses are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_balding", "white"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "ed-thorp", docDir: "floor-2/quant/statistical-arbitrage", name: "Ed Thorp", room: "quant", role: "Statistical Arbitrage", bodyType: "male", look: "black side-parted hair · white button-down · maroon sweater vest · gray slacks",
+    desc: "Ed Thorp's look: neat dark side-parted hair, clean-shaven, horn-rimmed glasses and a knit sweater vest over a crisp button-down — the MIT professor who beat the dealer, then the market. (LPC has no glasses item, so his horn-rims are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], vest: ["torso_clothes_vest", "maroon"], legs: ["legs_formal", "gray"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "factor-analysis", docDir: "floor-2/quant/factor-analysis", name: "Factor Analysis Agent", room: "quant", role: "Factor Analysis", bodyType: "male", look: "black hair · white button-down · navy Patagonia vest · charcoal slacks",
+    desc: "Factor Analysis Agent: the analyst uniform itself — crisp white button-down under a navy Patagonia-style fleece vest with charcoal slacks.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], vest: ["torso_clothes_vest", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "options-volatility", docDir: "floor-2/quant/options-volatility", name: "Options & Volatility Agent", room: "quant", role: "Options & Volatility", bodyType: "male", look: "gray side-parted hair · sky button-down · forest green vest · gray slacks",
+    desc: "Options & Volatility Agent: senior desk hand in a forest-green vest over a sky button-down — speaks fluent vega.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_parted", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "sky"], vest: ["torso_clothes_vest", "forest"], legs: ["legs_pants2", "gray"], shoes: ["feet_boots_basic", "brown"] } },
+  { id: "momentum-trend", docDir: "floor-2/quant/momentum-trend", name: "Momentum & Trend Agent", room: "quant", role: "Momentum & Trend", bodyType: "female", look: "chestnut ponytail · lavender button-down · black vest · navy slacks",
+    desc: "Momentum & Trend Agent: trend-chasing desk analyst in a black vest over a lavender button-down.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_ponytail", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "lavender"], vest: ["torso_clothes_vest", "black"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "machine-learning", docDir: "floor-2/quant/machine-learning", name: "Machine Learning Agent", room: "quant", role: "Machine Learning", bodyType: "male", look: "black buzzcut · white shirt · black suit jacket · black slacks",
+    desc: "Machine Learning Agent: the serious one in a full black suit — trains the models that train on the markets.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_buzzcut", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "black"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "regime-detection", docDir: "floor-2/quant/regime-detection", name: "Regime Detection Agent", room: "quant", role: "Regime Detection", bodyType: "female", look: "gray bob · white button-down · charcoal vest · navy slacks",
+    desc: "Regime Detection Agent: watches the macro switches — salt-and-pepper bob, charcoal vest over a white button-down.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_bob_side_part", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], vest: ["torso_clothes_vest", "charcoal"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "risk-budgeting-allocation", docDir: "floor-2/quant/risk-budgeting-allocation", name: "Risk Budgeting & Allocation Agent", room: "quant", role: "Risk Budgeting & Allocation", bodyType: "female", look: "raven braid · slate button-down · tan vest · charcoal slacks",
+    desc: "Risk Budgeting & Allocation Agent: keeper of the capital — slate button-down and a tan vest, pencil down when the allocations move.",
+    items: { body: ["body", "bronze"], eye_color: ["eye_color", "brown"], hair: ["hair_braid", "raven"], clothes: ["torso_clothes_longsleeve2_buttoned", "slate"], vest: ["torso_clothes_vest", "tan"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "brown"] } },
 ];
 
 // ---------------------------------------------------------------------------
@@ -133,7 +164,10 @@ function walkPaths(itemKey, bodyType, variant) {
   if (!it) { console.log("  !! missing item:", itemKey); return []; }
   const out = [];
   for (const ld of Object.values(it.layers)) {
-    let base = ld.paths[bodyType];
+    // Unisex fallback: some garments (vests, jacket_collared, ...) only ship a
+    // male sprite in the LPC set — use it for female bodies too rather than
+    // silently dropping the layer (deskrpg's getLayerPaths would skip it).
+    let base = ld.paths[bodyType] ?? ld.paths.male;
     if (!base) continue;
     base = base.replace(/\$\{head\}/g, "adult").replace(/\$\{expression\}/g, "default");
     if (itemKey === "eye_color") base = "eyes/default";
