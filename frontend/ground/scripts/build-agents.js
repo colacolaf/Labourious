@@ -161,11 +161,11 @@ const AGENTS = [
   // Shades/chain/watch/flip flops are custom LPC-style sheets (this clone's
   // palette data only ships up/left frames for glasses/chains, and LPC has
   // no watch or flip flops).
-  { id: "portfolio-manager", docDir: "penthouse/agents/portfolio-manager", name: "Portfolio Manager", room: "penthouse", role: "The Boss", lead: true, bodyType: "male", look: "bald · gray tee · charcoal slacks · gold watch · half-moon glasses · barefoot",
-    desc: "The Portfolio Manager: the boss of the whole building — shaved bald, a calm gray tee, charcoal dress slacks, a gold watch and half-moon reading glasses, barefoot because he doesn't need shoes. Zen, unbothered, the chillest man in the building.",
-    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], glasses: ["halfmoon", "black"], watch: ["watch", "gold"], clothes: ["torso_clothes_tshirt", "gray"], legs: ["legs_pants2", "charcoal"] } },
+  { id: "portfolio-manager", docDir: "penthouse/agents/portfolio-manager", name: "Portfolio Manager", room: "penthouse", role: "The Boss", lead: true, bodyType: "male", look: "bald · gray tee · charcoal slacks · premium cigar · half-moon glasses · barefoot",
+    desc: "The Portfolio Manager: the boss of the whole building — shaved bald, a calm gray tee, charcoal dress slacks, half-moon reading glasses and a premium cigar burning in the corner of his mouth, barefoot because he doesn't need shoes. Zen, unbothered, the chillest man in the building — and he can afford the good smoke.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], glasses: ["halfmoon", "black"], cigar: ["cigar", "brown"], clothes: ["torso_clothes_tshirt", "gray"], legs: ["legs_pants2", "charcoal"] } },
   { id: "pm-bodyguard", docDir: "penthouse/agents/pm-bodyguard", name: "PM Bodyguard", room: "penthouse", role: "Last Line of Defense", bodyType: "male", look: "shaved head · trimmed beard · black suit + tie · gold chain · earpiece",
-    desc: "PM Bodyguard: stands by the penthouse window in a black suit with a tie, gold chain and a comms earpiece — loyal, protective, silent until the PM is about to make a catastrophic call. (The chain + earpiece stud carry the accessories — he keeps the wrist bare while the boss wears the gold watch.)",
+    desc: "PM Bodyguard: stands by the penthouse window in a black suit with a tie, gold chain and a comms earpiece — loyal, protective, silent until the PM is about to make a catastrophic call. (The chain + earpiece stud carry the accessories — he keeps his wrist bare while the boss enjoys the cigar.)",
     items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], beard: ["beards_trimmed", "black"], chain: ["chain", "gold"], ear: ["facial_earrings_stud", "silver"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "black"], tie: ["neck_necktie", "black"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } }, // no hair → shaved head
 
   // ── Crypto (Room 14) — Floor 2 Digital Frontier ───────────────────────────
@@ -425,6 +425,7 @@ const CUSTOM = {
   flipflops: { zPos: 25,  file: "custom/flipflops/walk" },
   suit:      { zPos: 55,  file: "custom/suit/walk" },   // slim-fit suit jacket (LPC jacket zPos)
   halfmoon:  { zPos: 115, file: "custom/halfmoon/walk" }, // calm wire half-moon reading glasses
+  cigar:     { zPos: 112, file: "custom/cigar/walk" },    // premium cigar in the mouth (LPC mouth-region zPos)
 };
 
 function walkPaths(itemKey, bodyType, variant) {
@@ -509,7 +510,11 @@ function build() {
     process.exit(1);
   }
 
-  fs.writeFileSync(path.join(DST, "agents.json"), JSON.stringify(manifest, null, 2));
+  // Manifest carries a build version so roster pages can bust browser caches.
+  // A stale cached agents.json (or its layer PNGs) is exactly how an old look
+  // keeps showing up after a rebuild — the pages append ?v=<version> to every
+  // layer URL, so any rebuild invalidates all cached sprite images.
+  fs.writeFileSync(path.join(DST, "agents.json"), JSON.stringify({ version: Date.now(), agents: manifest }, null, 2));
   console.log("copied files:", copied);
   console.log("missing:", missing.length ? missing : "none");
   console.log("manifest agents:", manifest.length);

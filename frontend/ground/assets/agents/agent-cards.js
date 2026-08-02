@@ -36,9 +36,18 @@ export function roomTitle(room) {
 }
 
 export async function loadManifest() {
-  const res = await fetch("/assets/agents/agents.json");
+  // Cache-bust the manifest fetch (the dev server sends long-lived cache
+  // headers), then append the build version to every layer PNG URL — a stale
+  // cached agents.json is exactly how an old look keeps showing up after a
+  // rebuild. Tolerates the old plain-array manifest shape too.
+  const res = await fetch("/assets/agents/agents.json?bust=" + Date.now());
   if (!res.ok) throw new Error("HTTP " + res.status);
-  return res.json();
+  const json = await res.json();
+  const agents = json.agents ?? json;
+  if (json.version) {
+    for (const a of agents) for (const l of a.layers) l.src += "?v=" + json.version;
+  }
+  return agents;
 }
 
 export function showError(container, err) {

@@ -86,7 +86,9 @@
 
     // First entry of the manifest = deskrpg's DEFAULT_LAYERS_MALE walkable
     // example agent (src/hooks/useCharacterAppearance.ts).
-    const agent = (await (await fetch("/assets/agents/agents.json")).json())[0];
+    const json = await (await fetch("/assets/agents/agents.json?bust=" + Date.now())).json();
+    const agent = (json.agents ?? json)[0];
+    if (json.version) for (const l of agent.layers) l.src += "?v=" + json.version;
 
     const preview = document.getElementById("preview");
     document.getElementById("title").textContent = agent.name.toUpperCase();
