@@ -1398,6 +1398,45 @@
     ]
   },
   {
+    "id": "portfolio-manager",
+    "name": "Portfolio Manager",
+    "room": "penthouse",
+    "role": "The Boss",
+    "lead": true,
+    "bodyType": "male",
+    "look": "bald · gray tee · charcoal slacks · gold watch · half-moon glasses · barefoot",
+    "layers": [
+      {
+        "src": "/assets/agents/portfolio-manager/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/portfolio-manager/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/portfolio-manager/z035-gray.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/portfolio-manager/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/portfolio-manager/z070-gold.png",
+        "zPos": 70
+      },
+      {
+        "src": "/assets/agents/portfolio-manager/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/portfolio-manager/z115-black.png",
+        "zPos": 115
+      }
+    ]
+  },
+  {
     "id": "pm-bodyguard",
     "name": "PM Bodyguard",
     "room": "penthouse",

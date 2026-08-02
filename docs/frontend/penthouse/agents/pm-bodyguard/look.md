@@ -1,6 +1,6 @@
 # Look & Feel
 
-PM Bodyguard: stands by the penthouse window in a black suit with a tie, gold chain and a comms earpiece — loyal, protective, silent until the PM is about to make a catastrophic call. (LPC has no watch item, so the wristwatch is omitted — the gold chain + earpiece stud carry the accessories.)
+PM Bodyguard: stands by the penthouse window in a black suit with a tie, gold chain and a comms earpiece — loyal, protective, silent until the PM is about to make a catastrophic call. (The chain + earpiece stud carry the accessories — he keeps the wrist bare while the boss wears the gold watch.)
 
 - **Skin:** brown · **Eyes:** brown
 - **Hair:** none (shaved bald)

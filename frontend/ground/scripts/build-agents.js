@@ -155,9 +155,18 @@ const AGENTS = [
   { id: "entrance-bodyguard", docDir: "ground/perimeter/entrance-bodyguard", name: "Entrance Bodyguard Agent", room: "perimeter", role: "Main Door", bodyType: "male", look: "buzzcut · full black beard · black tactical shirt + vest · black slacks",
     desc: "Entrance Bodyguard: the first line at the main door — a big, broad wall of a man in a black tactical vest over a black shirt, full beard, buzzcut. Vets every request before it reaches the building.",
     items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_buzzcut", "black"], beard: ["beards_medium", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "black"], vest: ["torso_armour_leather", "black"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } },
+  // ── Penthouse — The Boss ─────────────────────────────────────────────────
+  // The Portfolio Manager runs the whole building. Boardroom up top, beach
+  // down below: dark shades, gold chain + watch, tee, shorts, flip flops.
+  // Shades/chain/watch/flip flops are custom LPC-style sheets (this clone's
+  // palette data only ships up/left frames for glasses/chains, and LPC has
+  // no watch or flip flops).
+  { id: "portfolio-manager", docDir: "penthouse/agents/portfolio-manager", name: "Portfolio Manager", room: "penthouse", role: "The Boss", lead: true, bodyType: "male", look: "bald · gray tee · charcoal slacks · gold watch · half-moon glasses · barefoot",
+    desc: "The Portfolio Manager: the boss of the whole building — shaved bald, a calm gray tee, charcoal dress slacks, a gold watch and half-moon reading glasses, barefoot because he doesn't need shoes. Zen, unbothered, the chillest man in the building.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], glasses: ["halfmoon", "black"], watch: ["watch", "gold"], clothes: ["torso_clothes_tshirt", "gray"], legs: ["legs_pants2", "charcoal"] } },
   { id: "pm-bodyguard", docDir: "penthouse/agents/pm-bodyguard", name: "PM Bodyguard", room: "penthouse", role: "Last Line of Defense", bodyType: "male", look: "shaved head · trimmed beard · black suit + tie · gold chain · earpiece",
-    desc: "PM Bodyguard: stands by the penthouse window in a black suit with a tie, gold chain and a comms earpiece — loyal, protective, silent until the PM is about to make a catastrophic call. (LPC has no watch item, so the wristwatch is omitted — the gold chain + earpiece stud carry the accessories.)",
-    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], beard: ["beards_trimmed", "black"], chain: ["neck_necklace_chain", "gold"], ear: ["facial_earrings_stud", "silver"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "black"], tie: ["neck_necktie", "black"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } }, // no hair → shaved head
+    desc: "PM Bodyguard: stands by the penthouse window in a black suit with a tie, gold chain and a comms earpiece — loyal, protective, silent until the PM is about to make a catastrophic call. (The chain + earpiece stud carry the accessories — he keeps the wrist bare while the boss wears the gold watch.)",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], beard: ["beards_trimmed", "black"], chain: ["chain", "gold"], ear: ["facial_earrings_stud", "silver"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "black"], tie: ["neck_necktie", "black"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } }, // no hair → shaved head
 
   // ── Crypto (Room 14) — Floor 2 Digital Frontier ───────────────────────────
   // Style: the crypto stereotype — hoodies (up for the degens), gold chains,
@@ -405,21 +414,40 @@ const cats = Array.isArray(reg) ? reg : (reg.categories || []);
 const byKey = {};
 for (const c of cats) for (const it of (c.items || [])) byKey[it.key] = it;
 
+// Custom item layers — hand-drawn LPC-style sheets for items this clone's
+// palette data only ships for up/left directions (ties, jackets, glasses,
+// chains) or that LPC simply lacks (watch, flip flops). Stored in
+// frontend/ground/assets/custom/<itemKey>/walk/<variant>.png.
+const CUSTOM = {
+  shades:    { zPos: 115, file: "custom/shades/walk" },
+  chain:     { zPos: 80,  file: "custom/chain/walk" },
+  watch:     { zPos: 70,  file: "custom/watch/walk" },
+  flipflops: { zPos: 25,  file: "custom/flipflops/walk" },
+  suit:      { zPos: 55,  file: "custom/suit/walk" },   // slim-fit suit jacket (LPC jacket zPos)
+  halfmoon:  { zPos: 115, file: "custom/halfmoon/walk" }, // calm wire half-moon reading glasses
+};
+
 function walkPaths(itemKey, bodyType, variant) {
   const it = byKey[itemKey];
-  if (!it) { console.log("  !! missing item:", itemKey); return []; }
-  const out = [];
-  for (const ld of Object.values(it.layers)) {
-    // Unisex fallback: some garments (vests, jacket_collared, ...) only ship a
-    // male sprite in the LPC set — use it for female bodies too rather than
-    // silently dropping the layer (deskrpg's getLayerPaths would skip it).
-    let base = ld.paths[bodyType] ?? ld.paths.male;
-    if (!base) continue;
-    base = base.replace(/\$\{head\}/g, "adult").replace(/\$\{expression\}/g, "default");
-    if (itemKey === "eye_color") base = "eyes/default";
-    out.push({ zPos: ld.zPos, file: `${base}/walk/${variant}.png`, itemKey, variant });
+  if (it) {
+    const out = [];
+    for (const ld of Object.values(it.layers)) {
+      // Unisex fallback: some garments (vests, jacket_collared, ...) only ship a
+      // male sprite in the LPC set — use it for female bodies too rather than
+      // silently dropping the layer (deskrpg's getLayerPaths would skip it).
+      let base = ld.paths[bodyType] ?? ld.paths.male;
+      if (!base) continue;
+      base = base.replace(/\$\{head\}/g, "adult").replace(/\$\{expression\}/g, "default");
+      if (itemKey === "eye_color") base = "eyes/default";
+      out.push({ zPos: ld.zPos, file: `${base}/walk/${variant}.png`, itemKey, variant });
+    }
+    return out;
   }
-  return out;
+  if (CUSTOM[itemKey]) {
+    return [{ zPos: CUSTOM[itemKey].zPos, file: `${CUSTOM[itemKey].file}/${variant}.png`, itemKey, variant, custom: true }];
+  }
+  console.log("  !! missing item:", itemKey);
+  return [];
 }
 
 function build() {
@@ -440,7 +468,7 @@ function build() {
     const manifestLayers = [];
     const seen = new Set();
     for (const l of layers) {
-      const src = path.join(LPC_SPRITESHEETS, l.file);
+      const src = l.custom ? path.join(GROUND, "assets", l.file) : path.join(LPC_SPRITESHEETS, l.file);
       if (!fs.existsSync(src)) { missing.push(`${agent.id}: ${l.file}`); continue; }
       const leaf = path.basename(l.file);
       let name = `z${String(l.zPos).padStart(3, "0")}-${leaf}`;
