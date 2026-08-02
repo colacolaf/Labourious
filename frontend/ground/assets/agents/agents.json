@@ -3039,5 +3039,193 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "preet-bharara",
+    "name": "Preet Bharara",
+    "room": "compliance",
+    "role": "Lead Compliance",
+    "lead": true,
+    "bodyType": "male",
+    "look": "slicked black hair · navy suit · white shirt · bluegray tie",
+    "layers": [
+      {
+        "src": "/assets/agents/preet-bharara/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/preet-bharara/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/preet-bharara/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/preet-bharara/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/preet-bharara/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/preet-bharara/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/preet-bharara/z090-bluegray.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/preet-bharara/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/preet-bharara/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "h-david-rosenbloom",
+    "name": "H. David Rosenbloom",
+    "room": "compliance",
+    "role": "Cross-Border Tax",
+    "lead": false,
+    "bodyType": "male",
+    "look": "white hair · charcoal suit · white shirt · purple tie",
+    "layers": [
+      {
+        "src": "/assets/agents/h-david-rosenbloom/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/h-david-rosenbloom/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/h-david-rosenbloom/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/h-david-rosenbloom/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/h-david-rosenbloom/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/h-david-rosenbloom/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/h-david-rosenbloom/z090-purple.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/h-david-rosenbloom/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/h-david-rosenbloom/z120-white.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "regulatory-compliance",
+    "name": "Regulatory Compliance Agent",
+    "room": "compliance",
+    "role": "Regulatory Compliance",
+    "lead": false,
+    "bodyType": "male",
+    "look": "gray hair · navy suit · white shirt · slate tie",
+    "layers": [
+      {
+        "src": "/assets/agents/regulatory-compliance/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/regulatory-compliance/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/regulatory-compliance/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/regulatory-compliance/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/regulatory-compliance/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/regulatory-compliance/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/regulatory-compliance/z090-slate.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/regulatory-compliance/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/regulatory-compliance/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "trading-restriction",
+    "name": "Trading Restriction Agent",
+    "room": "compliance",
+    "role": "Trading Restriction",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black buzzcut · charcoal suit · white shirt · forest tie",
+    "layers": [
+      {
+        "src": "/assets/agents/trading-restriction/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/trading-restriction/z020-gray.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/trading-restriction/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/trading-restriction/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/trading-restriction/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/trading-restriction/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/trading-restriction/z090-forest.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/trading-restriction/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/trading-restriction/z120-black.png",
+        "zPos": 120
+      }
+    ]
   }
 ]

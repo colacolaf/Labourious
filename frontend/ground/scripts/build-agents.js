@@ -297,6 +297,23 @@ const AGENTS = [
   { id: "conflict-resolution", docDir: "floor-3/critique/conflict-resolution", name: "Conflict Resolution Agent", room: "critique", role: "Conflict Resolution", bodyType: "male", look: "gray hair · white shirt · tan cardigan · charcoal slacks",
     desc: "Conflict Resolution Agent: the exhausted corporate mediator — neutral tan cardigan over a white shirt, keeping the peace between screaming analysts.",
     items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_balding", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], cardigan: ["torso_clothes_longsleeve2_cardigan", "tan"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+
+  // ── Compliance & Tax (Room 12) — Floor 3 Judgment ───────────────────────
+  // Style: the buttoned-up rule-room — conservative suits + ties, four brand-
+  // new tie colors (bluegray / purple / slate / forest). Named agents carry
+  // the real person's researched look.
+  { id: "preet-bharara", docDir: "floor-3/compliance/preet-bharara", name: "Preet Bharara", room: "compliance", role: "Lead Compliance", lead: true, bodyType: "male", look: "slicked black hair · navy suit · white shirt · bluegray tie",
+    desc: "Preet Bharara's look: slicked-back dark hair with silver streaks, medium-brown skin, and a sharp navy suit — the prosecutor who put Wall Street on notice. (LPC has no glasses item, so his glasses are omitted.)",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_necktie", "bluegray"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "h-david-rosenbloom", docDir: "floor-3/compliance/cross-border-tax", name: "H. David Rosenbloom", room: "compliance", role: "Cross-Border Tax", bodyType: "male", look: "white hair · charcoal suit · white shirt · purple tie",
+    desc: "H. David Rosenbloom's look: neat white hair, thin-rimmed glasses and a charcoal suit with a muted purple tie — the elder statesman of international tax law, Treasury's former Tax Counsel. (LPC has no glasses item, so his glasses are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "white"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "charcoal"], tie: ["neck_necktie", "purple"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "regulatory-compliance", docDir: "floor-3/compliance/regulatory-compliance", name: "Regulatory Compliance Agent", room: "compliance", role: "Regulatory Compliance", bodyType: "male", look: "gray hair · navy suit · white shirt · slate tie",
+    desc: "Regulatory Compliance Agent: the rule-book analyst — buttoned to the top in a navy suit and slate tie, the one who has read every regulation twice.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_necktie", "slate"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "trading-restriction", docDir: "floor-3/compliance/trading-restriction", name: "Trading Restriction Agent", room: "compliance", role: "Trading Restriction", bodyType: "male", look: "black buzzcut · charcoal suit · white shirt · forest tie",
+    desc: "Trading Restriction Agent: the window enforcer — buzzcut and a charcoal suit with a forest tie, watching every personal trade and pre-clearance request.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_buzzcut", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "charcoal"], tie: ["neck_necktie", "forest"], legs: ["legs_formal", "gray"], shoes: ["feet_boots_basic", "black"] } },
 ];
 
 // ---------------------------------------------------------------------------
