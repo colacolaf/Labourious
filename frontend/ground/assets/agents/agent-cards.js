@@ -20,6 +20,7 @@ export const ROOM_TITLES = {
   crypto:    "CRYPTO · ROOM 14",
   fundamental: "FUNDAMENTAL · ROOM 5",
   macro:     "MACRO · ROOM 3",
+  technical: "TECHNICAL · ROOM 6",
 };
 
 export function roomTitle(room) {

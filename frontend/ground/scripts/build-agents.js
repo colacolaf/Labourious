@@ -224,6 +224,26 @@ const AGENTS = [
   { id: "global-growth-tracker", docDir: "floor-2/macro/global-growth-tracker", name: "Global Growth Tracker Agent", room: "macro", role: "Global Growth Tracker", bodyType: "male", look: "black hair · navy suit · lavender shirt · green tie",
     desc: "Global Growth Tracker Agent: the PMI desk — navy suit, lavender shirt, green tie, refreshing the composite indices every single morning.",
     items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "lavender"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_necktie", "green"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "brown"] } },
+
+  // ── Technical (Room 6) — Floor 2 Price Action ────────────────────────────
+  // Style: the chart room — one blazer-and-beard lead, then startup-casual:
+  // hoodies, polos, tees, sneakers. Everyone distinct: no shared hair+shirt
+  // combo, one beard in the room (Minervini's).
+  { id: "mark-minervini", docDir: "floor-2/technical/mark-minervini", name: "Mark Minervini", room: "technical", role: "Lead Technical", lead: true, bodyType: "male", look: "shaved bald · gray trimmed beard · navy blazer · open white shirt",
+    desc: "Mark Minervini's look: shaved bald head, neatly trimmed gray beard and a navy blazer over an open-collar white shirt — the US Investing Champion, tie-less on CNBC.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], beard: ["beards_trimmed", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } }, // no hair → shaved bald
+  { id: "technical-signal-engine", docDir: "floor-2/technical/technical-signal-engine", name: "Technical Signal Engine Agent", room: "technical", role: "Technical Signal Engine", bodyType: "male", look: "black hair · charcoal hoodie · blue jeans · white sneakers",
+    desc: "Technical Signal Engine Agent: the overnight coder — charcoal hoodie, jeans, sneakers, and a triple screen setup of moving averages.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], clothes: ["torso_clothes_longsleeve2", "charcoal"], legs: ["legs_pants", "blue"], shoes: ["feet_shoes_basic", "white"] } },
+  { id: "volume-order-flow", docDir: "floor-2/technical/volume-order-flow", name: "Volume & Order Flow Agent", room: "technical", role: "Volume & Order Flow", bodyType: "male", look: "chestnut hair · blue polo · charcoal pants",
+    desc: "Volume & Order Flow Agent: the tape reader — blue polo, watching the footprint charts fill in one candle at a time.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_buzzcut", "chestnut"], clothes: ["torso_clothes_shortsleeve_polo", "blue"], legs: ["legs_pants2", "charcoal"], shoes: ["feet_shoes_basic", "black"] } },
+  { id: "chart-pattern", docDir: "floor-2/technical/chart-pattern", name: "Chart & Pattern Agent", room: "technical", role: "Chart & Pattern", bodyType: "male", look: "balding gray hair · sky polo · charcoal pants",
+    desc: "Chart & Pattern Agent: the classic chartist — balding gray hair, sky polo, glasses on the desk reading double tops and head-and-shoulders. (LPC has no glasses item, so his reading glasses are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_balding", "gray"], clothes: ["torso_clothes_shortsleeve_polo", "sky"], legs: ["legs_pants2", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "market-microstructure", docDir: "floor-2/technical/market-microstructure", name: "Market Microstructure Agent", room: "technical", role: "Market Microstructure", bodyType: "female", look: "black bob · charcoal v-neck tee · blue jeans · white sneakers",
+    desc: "Market Microstructure Agent: the startup quant — black bob, charcoal v-neck, jeans and sneakers while she models the order book tick by tick.",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_bob", "black"], clothes: ["torso_clothes_tshirt_vneck", "charcoal"], legs: ["legs_pants", "blue"], shoes: ["feet_shoes_basic", "white"] } },
 ];
 
 // ---------------------------------------------------------------------------

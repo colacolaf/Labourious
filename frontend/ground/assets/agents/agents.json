@@ -2234,5 +2234,204 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "mark-minervini",
+    "name": "Mark Minervini",
+    "room": "technical",
+    "role": "Lead Technical",
+    "lead": true,
+    "bodyType": "male",
+    "look": "shaved bald · gray trimmed beard · navy blazer · open white shirt",
+    "layers": [
+      {
+        "src": "/assets/agents/mark-minervini/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/mark-minervini/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/mark-minervini/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/mark-minervini/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/mark-minervini/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/mark-minervini/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/mark-minervini/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/mark-minervini/z110-gray.png",
+        "zPos": 110
+      }
+    ]
+  },
+  {
+    "id": "technical-signal-engine",
+    "name": "Technical Signal Engine Agent",
+    "room": "technical",
+    "role": "Technical Signal Engine",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black hair · charcoal hoodie · blue jeans · white sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/technical-signal-engine/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/technical-signal-engine/z015-white.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/technical-signal-engine/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/technical-signal-engine/z035-charcoal.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/technical-signal-engine/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/technical-signal-engine/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/technical-signal-engine/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "volume-order-flow",
+    "name": "Volume & Order Flow Agent",
+    "room": "technical",
+    "role": "Volume & Order Flow",
+    "lead": false,
+    "bodyType": "male",
+    "look": "chestnut hair · blue polo · charcoal pants",
+    "layers": [
+      {
+        "src": "/assets/agents/volume-order-flow/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/volume-order-flow/z015-black.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/volume-order-flow/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/volume-order-flow/z035-blue.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/volume-order-flow/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/volume-order-flow/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/volume-order-flow/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "chart-pattern",
+    "name": "Chart & Pattern Agent",
+    "room": "technical",
+    "role": "Chart & Pattern",
+    "lead": false,
+    "bodyType": "male",
+    "look": "balding gray hair · sky polo · charcoal pants",
+    "layers": [
+      {
+        "src": "/assets/agents/chart-pattern/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/chart-pattern/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/chart-pattern/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/chart-pattern/z035-sky.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/chart-pattern/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/chart-pattern/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/chart-pattern/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "market-microstructure",
+    "name": "Market Microstructure Agent",
+    "room": "technical",
+    "role": "Market Microstructure",
+    "lead": false,
+    "bodyType": "female",
+    "look": "black bob · charcoal v-neck tee · blue jeans · white sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/market-microstructure/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/market-microstructure/z015-white.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/market-microstructure/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/market-microstructure/z035-charcoal.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/market-microstructure/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/market-microstructure/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/market-microstructure/z120-black.png",
+        "zPos": 120
+      }
+    ]
   }
 ]
