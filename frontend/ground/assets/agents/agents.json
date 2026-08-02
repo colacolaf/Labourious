@@ -1451,5 +1451,557 @@
         "zPos": 115
       }
     ]
+  },
+  {
+    "id": "vitalik-buterin",
+    "name": "Vitalik Buterin",
+    "room": "crypto",
+    "role": "Lead Crypto",
+    "lead": true,
+    "bodyType": "male",
+    "look": "long messy brown hair · light stubble · gray hoodie · blue jeans · white sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/vitalik-buterin/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/vitalik-buterin/z015-white.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/vitalik-buterin/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/vitalik-buterin/z035-gray.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/vitalik-buterin/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/vitalik-buterin/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/vitalik-buterin/z111-chestnut.png",
+        "zPos": 111
+      },
+      {
+        "src": "/assets/agents/vitalik-buterin/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "alex-svanevik",
+    "name": "Alex Svanevik",
+    "room": "crypto",
+    "role": "On-Chain Analytics",
+    "lead": false,
+    "bodyType": "male",
+    "look": "sandy short hair · light stubble · navy hoodie · charcoal pants · black sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/alex-svanevik/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/alex-svanevik/z015-black.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/alex-svanevik/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/alex-svanevik/z035-navy.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/alex-svanevik/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/alex-svanevik/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/alex-svanevik/z111-sandy.png",
+        "zPos": 111
+      },
+      {
+        "src": "/assets/agents/alex-svanevik/z120-sandy.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "defi-yield",
+    "name": "DeFi & Yield Agent",
+    "room": "crypto",
+    "role": "DeFi & Yield",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black hoodie up · gold chain · blue jeans · white sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/defi-yield/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/defi-yield/z015-white.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/defi-yield/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/defi-yield/z035-black.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/defi-yield/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/defi-yield/z080-gold.png",
+        "zPos": 80
+      },
+      {
+        "src": "/assets/agents/defi-yield/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/defi-yield/z120-black.png",
+        "zPos": 120
+      },
+      {
+        "src": "/assets/agents/defi-yield/z130-black.png",
+        "zPos": 130
+      }
+    ]
+  },
+  {
+    "id": "tokenomics",
+    "name": "Tokenomics Agent",
+    "room": "crypto",
+    "role": "Tokenomics",
+    "lead": false,
+    "bodyType": "female",
+    "look": "raven ponytail · white v-neck tee · gold chain · black pants · white sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/tokenomics/z009-raven.png",
+        "zPos": 9
+      },
+      {
+        "src": "/assets/agents/tokenomics/z010-bronze.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/tokenomics/z015-white.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/tokenomics/z020-black.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/tokenomics/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/tokenomics/z045-bronze.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/tokenomics/z080-gold.png",
+        "zPos": 80
+      },
+      {
+        "src": "/assets/agents/tokenomics/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/tokenomics/z120-raven.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "protocol-risk",
+    "name": "Protocol Risk Agent",
+    "room": "crypto",
+    "role": "Protocol Risk",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black hair · black flat cap · charcoal tee · silver chain · gray pants",
+    "layers": [
+      {
+        "src": "/assets/agents/protocol-risk/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/protocol-risk/z015-black.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/protocol-risk/z020-gray.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/protocol-risk/z035-charcoal.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/protocol-risk/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/protocol-risk/z080-silver.png",
+        "zPos": 80
+      },
+      {
+        "src": "/assets/agents/protocol-risk/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/protocol-risk/z120-black.png",
+        "zPos": 120
+      },
+      {
+        "src": "/assets/agents/protocol-risk/z130-black.png",
+        "zPos": 130
+      }
+    ]
+  },
+  {
+    "id": "warren-buffett",
+    "name": "Warren Buffett",
+    "room": "fundamental",
+    "role": "Lead Fundamental",
+    "lead": true,
+    "bodyType": "male",
+    "look": "white hair · navy suit · white shirt · red tie",
+    "layers": [
+      {
+        "src": "/assets/agents/warren-buffett/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/warren-buffett/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/warren-buffett/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/warren-buffett/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/warren-buffett/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/warren-buffett/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/warren-buffett/z090-red.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/warren-buffett/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/warren-buffett/z120-white.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "harry-markopolos",
+    "name": "Harry Markopolos",
+    "room": "fundamental",
+    "role": "Forensic Accounting",
+    "lead": false,
+    "bodyType": "male",
+    "look": "short dark hair · light-gray suit · white shirt · navy tie",
+    "layers": [
+      {
+        "src": "/assets/agents/harry-markopolos/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/harry-markopolos/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/harry-markopolos/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/harry-markopolos/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/harry-markopolos/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/harry-markopolos/z055-gray.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/harry-markopolos/z090-navy.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/harry-markopolos/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/harry-markopolos/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "dcf-valuation",
+    "name": "DCF & Valuation Agent",
+    "room": "fundamental",
+    "role": "DCF & Valuation",
+    "lead": false,
+    "bodyType": "male",
+    "look": "chestnut hair · navy suit · white shirt · blue tie",
+    "layers": [
+      {
+        "src": "/assets/agents/dcf-valuation/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/dcf-valuation/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/dcf-valuation/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/dcf-valuation/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/dcf-valuation/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/dcf-valuation/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/dcf-valuation/z090-blue.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/dcf-valuation/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/dcf-valuation/z120-chestnut.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "moat-competitive-analysis",
+    "name": "Moat & Competitive Analysis Agent",
+    "room": "fundamental",
+    "role": "Moat & Competitive Analysis",
+    "lead": false,
+    "bodyType": "male",
+    "look": "gray hair · charcoal suit · white shirt · maroon tie",
+    "layers": [
+      {
+        "src": "/assets/agents/moat-competitive-analysis/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/moat-competitive-analysis/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/moat-competitive-analysis/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/moat-competitive-analysis/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/moat-competitive-analysis/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/moat-competitive-analysis/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/moat-competitive-analysis/z090-maroon.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/moat-competitive-analysis/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/moat-competitive-analysis/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "management-quality",
+    "name": "Management Quality Agent",
+    "room": "fundamental",
+    "role": "Management Quality",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black hair · navy suit · sky shirt · black bowtie",
+    "layers": [
+      {
+        "src": "/assets/agents/management-quality/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/management-quality/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/management-quality/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/management-quality/z035-sky.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/management-quality/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/management-quality/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/management-quality/z090-black.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/management-quality/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/management-quality/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "catalyst-event",
+    "name": "Catalyst & Event Agent",
+    "room": "fundamental",
+    "role": "Catalyst & Event",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black bedhead hair · charcoal suit · open white shirt",
+    "layers": [
+      {
+        "src": "/assets/agents/catalyst-event/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/catalyst-event/z020-gray.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/catalyst-event/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/catalyst-event/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/catalyst-event/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/catalyst-event/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/catalyst-event/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/catalyst-event/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "industry-structure",
+    "name": "Industry Structure Agent",
+    "room": "fundamental",
+    "role": "Industry Structure",
+    "lead": false,
+    "bodyType": "male",
+    "look": "balding gray hair · white shirt · navy suspenders · navy tie",
+    "layers": [
+      {
+        "src": "/assets/agents/industry-structure/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/industry-structure/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/industry-structure/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/industry-structure/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/industry-structure/z038-navy.png",
+        "zPos": 38
+      },
+      {
+        "src": "/assets/agents/industry-structure/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/industry-structure/z090-navy.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/industry-structure/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/industry-structure/z120-gray.png",
+        "zPos": 120
+      }
+    ]
   }
 ]

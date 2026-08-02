@@ -158,6 +158,52 @@ const AGENTS = [
   { id: "pm-bodyguard", docDir: "penthouse/agents/pm-bodyguard", name: "PM Bodyguard", room: "penthouse", role: "Last Line of Defense", bodyType: "male", look: "shaved head · trimmed beard · black suit + tie · gold chain · earpiece",
     desc: "PM Bodyguard: stands by the penthouse window in a black suit with a tie, gold chain and a comms earpiece — loyal, protective, silent until the PM is about to make a catastrophic call. (LPC has no watch item, so the wristwatch is omitted — the gold chain + earpiece stud carry the accessories.)",
     items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], beard: ["beards_trimmed", "black"], chain: ["neck_necklace_chain", "gold"], ear: ["facial_earrings_stud", "silver"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "black"], tie: ["neck_necktie", "black"], legs: ["legs_formal", "black"], shoes: ["feet_boots_basic", "black"] } }, // no hair → shaved head
+
+  // ── Crypto (Room 14) — Floor 2 Digital Frontier ───────────────────────────
+  // Style: the crypto stereotype — hoodies (up for the degens), gold chains,
+  // t-shirts, jeans, sneakers. Zero formality. Named agents carry the real
+  // person's researched look.
+  { id: "vitalik-buterin", docDir: "floor-2/crypto/vitalik-buterin", name: "Vitalik Buterin", room: "crypto", role: "Lead Crypto", lead: true, bodyType: "male", look: "long messy brown hair · light stubble · gray hoodie · blue jeans · white sneakers",
+    desc: "Vitalik Buterin's look: the iconic mop of long wavy brown hair, a few days of scruff, and the gray hoodie + jeans + sneakers of the Ethereum co-founder who codes through conferences.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_long_messy", "chestnut"], beard: ["beards_5oclock_shadow", "chestnut"], clothes: ["torso_clothes_longsleeve2", "gray"], legs: ["legs_pants", "blue"], shoes: ["feet_shoes_basic", "white"] } },
+  { id: "alex-svanevik", docDir: "floor-2/crypto/on-chain-analytics", name: "Alex Svanevik", room: "crypto", role: "On-Chain Analytics", bodyType: "male", look: "sandy short hair · light stubble · navy hoodie · charcoal pants · black sneakers",
+    desc: "Alex Svanevik's look: short sandy-blonde crop, light stubble, navy hoodie — the Nansen CEO who reads the blockchain in Singapore smart-casual.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_curly_short", "sandy"], beard: ["beards_5oclock_shadow", "sandy"], clothes: ["torso_clothes_longsleeve2", "navy"], legs: ["legs_pants2", "charcoal"], shoes: ["feet_shoes_basic", "black"] } },
+  { id: "defi-yield", docDir: "floor-2/crypto/defi-yield", name: "DeFi & Yield Agent", room: "crypto", role: "DeFi & Yield", bodyType: "male", look: "black hoodie up · gold chain · blue jeans · white sneakers",
+    desc: "DeFi & Yield Agent: hood up, gold chain out, jeans — the degen chasing the next basis point on the yield curve of a new pool.",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], hat: ["hat_hood_cloth", "black"], chain: ["neck_necklace_chain", "gold"], clothes: ["torso_clothes_longsleeve2", "black"], legs: ["legs_pants", "blue"], shoes: ["feet_shoes_basic", "white"] } },
+  { id: "tokenomics", docDir: "floor-2/crypto/tokenomics", name: "Tokenomics Agent", room: "crypto", role: "Tokenomics", bodyType: "female", look: "raven ponytail · white v-neck tee · gold chain · black pants · white sneakers",
+    desc: "Tokenomics Agent: designs supply schedules and unlock curves — white tee, gold chain, sneakers.",
+    items: { body: ["body", "bronze"], eye_color: ["eye_color", "brown"], hair: ["hair_ponytail", "raven"], chain: ["neck_necklace_chain", "gold"], clothes: ["torso_clothes_tshirt_vneck", "white"], legs: ["legs_pants2", "black"], shoes: ["feet_shoes_basic", "white"] } },
+  { id: "protocol-risk", docDir: "floor-2/crypto/protocol-risk", name: "Protocol Risk Agent", room: "crypto", role: "Protocol Risk", bodyType: "male", look: "black hair · black flat cap · charcoal tee · silver chain · gray pants",
+    desc: "Protocol Risk Agent: audits the smart contracts before the exploit does — black flat cap, charcoal tee, silver chain.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_messy2", "black"], hat: ["hat_cap_leather", "black"], chain: ["neck_necklace_chain", "silver"], clothes: ["torso_clothes_tshirt_vneck", "charcoal"], legs: ["legs_pants", "gray"], shoes: ["feet_shoes_basic", "black"] } },
+
+  // ── Fundamental (Room 5) — Floor 2 Company Analysis ──────────────────────
+  // Style: the old-school value-investor uniform — navy/charcoal/gray suits,
+  // white shirts, ties (one bowtie, one suspenders-and-sleeves look). Named
+  // agents carry the real person's researched look.
+  { id: "warren-buffett", docDir: "floor-2/fundamental/warren-buffett", name: "Warren Buffett", room: "fundamental", role: "Lead Fundamental", lead: true, bodyType: "male", look: "white hair · navy suit · white shirt · red tie",
+    desc: "Warren Buffett's look: snow-white hair, thick tortoiseshell glasses, and a navy suit with a red tie — the Oracle of Omaha, sipping a Cherry Coke between value picks. (LPC has no glasses item, so his iconic glasses are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_parted", "white"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_necktie", "red"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "harry-markopolos", docDir: "floor-2/fundamental/forensic-accounting", name: "Harry Markopolos", room: "fundamental", role: "Forensic Accounting", bodyType: "male", look: "short dark hair · light-gray suit · white shirt · navy tie",
+    desc: "Harry Markopolos's look: neat dark hair, thin metal-frame glasses and his famous light-gray suit — the forensic accountant who chased Madoff for nine years before the world listened. (LPC has no glasses item, so his glasses are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "gray"], tie: ["neck_necktie", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "dcf-valuation", docDir: "floor-2/fundamental/dcf-valuation", name: "DCF & Valuation Agent", room: "fundamental", role: "DCF & Valuation", bodyType: "male", look: "chestnut hair · navy suit · white shirt · blue tie",
+    desc: "DCF & Valuation Agent: the discount-rate desk — navy suit, blue tie, terminal value on the brain.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_necktie", "blue"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "moat-competitive-analysis", docDir: "floor-2/fundamental/moat-competitive-analysis", name: "Moat & Competitive Analysis Agent", room: "fundamental", role: "Moat & Competitive Analysis", bodyType: "male", look: "gray hair · charcoal suit · white shirt · maroon tie",
+    desc: "Moat & Competitive Analysis Agent: the Porter's-five-forces desk — charcoal suit, maroon tie, measuring the moats.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_parted", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "charcoal"], tie: ["neck_necktie", "maroon"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "management-quality", docDir: "floor-2/fundamental/management-quality", name: "Management Quality Agent", room: "fundamental", role: "Management Quality", bodyType: "male", look: "black hair · navy suit · sky shirt · black bowtie",
+    desc: "Management Quality Agent: the people-reader — navy suit, sky shirt and a black bowtie while he sizes up the CEO.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "sky"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_bowtie", "black"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "catalyst-event", docDir: "floor-2/fundamental/catalyst-event", name: "Catalyst & Event Agent", room: "fundamental", role: "Catalyst & Event", bodyType: "male", look: "black bedhead hair · charcoal suit · open white shirt",
+    desc: "Catalyst & Event Agent: the youngest on the floor — charcoal suit, open collar, watching for the trigger event.",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_bedhead", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "charcoal"], legs: ["legs_formal", "gray"], shoes: ["feet_boots_basic", "brown"] } }, // no tie → open collar
+  { id: "industry-structure", docDir: "floor-2/fundamental/industry-structure", name: "Industry Structure Agent", room: "fundamental", role: "Industry Structure", bodyType: "male", look: "balding gray hair · white shirt · navy suspenders · navy tie",
+    desc: "Industry Structure Agent: the old-school analyst with sleeves rolled up — white shirt, navy suspenders, tie; no jacket needed when you've seen every cycle since the 80s.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_balding", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], suspenders: ["torso_aprons_suspenders", "navy"], tie: ["neck_necktie", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
 ];
 
 // ---------------------------------------------------------------------------

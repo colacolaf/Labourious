@@ -17,6 +17,8 @@ export const ROOM_TITLES = {
   quant:     "QUANT · ROOM 4",
   perimeter: "PERIMETER · GROUND FLOOR",
   penthouse: "PENTHOUSE · THE TOP",
+  crypto:    "CRYPTO · ROOM 14",
+  fundamental: "FUNDAMENTAL · ROOM 5",
 };
 
 export function roomTitle(room) {
