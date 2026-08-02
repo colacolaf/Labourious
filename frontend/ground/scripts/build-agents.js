@@ -314,6 +314,32 @@ const AGENTS = [
   { id: "trading-restriction", docDir: "floor-3/compliance/trading-restriction", name: "Trading Restriction Agent", room: "compliance", role: "Trading Restriction", bodyType: "male", look: "black buzzcut · charcoal suit · white shirt · forest tie",
     desc: "Trading Restriction Agent: the window enforcer — buzzcut and a charcoal suit with a forest tie, watching every personal trade and pre-clearance request.",
     items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_buzzcut", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "charcoal"], tie: ["neck_necktie", "forest"], legs: ["legs_formal", "gray"], shoes: ["feet_boots_basic", "black"] } },
+
+  // ── Strategy (Room 8) — Floor 4 Command ──────────────────────────────────
+  // Style: where capital decisions happen — blazers and turtlenecks for the
+  // leads, conservative suits + cardigan for the desk, two casual interns.
+  // Named agents carry the real person's researched look.
+  { id: "ray-dalio", docDir: "floor-4/strategy/ray-dalio", name: "Ray Dalio", room: "strategy", role: "Lead Strategy", lead: true, bodyType: "male", look: "silver hair · navy blazer · black turtleneck · gray slacks",
+    desc: "Ray Dalio's look: short silver-white hair, clean-shaven, and a navy blazer over a black turtleneck — the Bridgewater founder's radically transparent smart-casual. (LPC has no turtleneck item — the black crew reads as his turtleneck.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "white"], clothes: ["torso_clothes_longsleeve2", "black"], jacket: ["torso_jacket_collared", "navy"], legs: ["legs_formal", "gray"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "david-swensen", docDir: "floor-4/strategy/asset-allocation", name: "David Swensen", room: "strategy", role: "Asset Allocation", bodyType: "male", look: "white hair · navy suit · white shirt · blue tie",
+    desc: "David Swensen's look: neat white hair, glasses and a classic navy suit — the Yale endowment CIO who built the Yale model and out-returned everyone for three decades. (LPC has no glasses item, so his glasses are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_parted", "white"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_necktie", "blue"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "hedging-protection", docDir: "floor-4/strategy/hedging-protection", name: "Hedging & Protection Agent", room: "strategy", role: "Hedging & Protection", bodyType: "male", look: "balding gray hair · white shirt · navy cardigan · charcoal slacks",
+    desc: "Hedging & Protection Agent: the cautious insurance guy — white shirt under a navy cardigan, sleeves never fully committed to anything.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_balding", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], cardigan: ["torso_clothes_longsleeve2_cardigan", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "tax-optimization", docDir: "floor-4/strategy/tax-optimization", name: "Tax Optimization Agent", room: "strategy", role: "Tax Optimization", bodyType: "male", look: "black hair · charcoal suit · white shirt · rose tie",
+    desc: "Tax Optimization Agent: the clever schemer — charcoal suit with a rose tie, turning tax lots into alpha.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "charcoal"], tie: ["neck_necktie", "rose"], legs: ["legs_formal", "gray"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "portfolio-construction", docDir: "floor-4/strategy/portfolio-construction", name: "Portfolio Construction Agent", room: "strategy", role: "Portfolio Construction", bodyType: "male", look: "sandy hair · navy suit · white shirt · walnut tie",
+    desc: "Portfolio Construction Agent: the architect — navy suit and a walnut tie, building the portfolio one sleeve at a time.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "sandy"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], tie: ["neck_necktie", "walnut"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "position-sizing-intern", docDir: "floor-4/strategy/position-sizing-intern", name: "Position Sizing Intern", room: "strategy", role: "Position Sizing Intern", bodyType: "male", look: "black bedhead hair · white button-down · navy slacks",
+    desc: "Position Sizing Intern: the clean junior — white button-down, no jacket, still learning how much is too much.",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_bedhead", "black"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "brown"] } }, // no tie → open collar
+  { id: "tactical-overlay-intern", docDir: "floor-4/strategy/tactical-overlay-intern", name: "Tactical Overlay Intern", room: "strategy", role: "Tactical Overlay Intern", bodyType: "male", look: "black messy hair · gray v-neck tee · blue jeans · white sneakers",
+    desc: "Tactical Overlay Intern: the short-term guy — gray v-neck, jeans and sneakers, overlaying the tactical bets on top of the long-term plan.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], clothes: ["torso_clothes_tshirt_vneck", "gray"], legs: ["legs_pants", "blue"], shoes: ["feet_shoes_basic", "white"] } },
 ];
 
 // ---------------------------------------------------------------------------

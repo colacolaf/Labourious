@@ -3227,5 +3227,310 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "ray-dalio",
+    "name": "Ray Dalio",
+    "room": "strategy",
+    "role": "Lead Strategy",
+    "lead": true,
+    "bodyType": "male",
+    "look": "silver hair · navy blazer · black turtleneck · gray slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/ray-dalio/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/ray-dalio/z020-gray.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/ray-dalio/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/ray-dalio/z035-black.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/ray-dalio/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/ray-dalio/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/ray-dalio/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/ray-dalio/z120-white.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "david-swensen",
+    "name": "David Swensen",
+    "room": "strategy",
+    "role": "Asset Allocation",
+    "lead": false,
+    "bodyType": "male",
+    "look": "white hair · navy suit · white shirt · blue tie",
+    "layers": [
+      {
+        "src": "/assets/agents/david-swensen/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/david-swensen/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/david-swensen/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/david-swensen/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/david-swensen/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/david-swensen/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/david-swensen/z090-blue.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/david-swensen/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/david-swensen/z120-white.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "hedging-protection",
+    "name": "Hedging & Protection Agent",
+    "room": "strategy",
+    "role": "Hedging & Protection",
+    "lead": false,
+    "bodyType": "male",
+    "look": "balding gray hair · white shirt · navy cardigan · charcoal slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/hedging-protection/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/hedging-protection/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/hedging-protection/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/hedging-protection/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/hedging-protection/z035-navy.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/hedging-protection/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/hedging-protection/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/hedging-protection/z120-gray.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "tax-optimization",
+    "name": "Tax Optimization Agent",
+    "room": "strategy",
+    "role": "Tax Optimization",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black hair · charcoal suit · white shirt · rose tie",
+    "layers": [
+      {
+        "src": "/assets/agents/tax-optimization/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/tax-optimization/z020-gray.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/tax-optimization/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/tax-optimization/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/tax-optimization/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/tax-optimization/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/tax-optimization/z090-rose.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/tax-optimization/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/tax-optimization/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "portfolio-construction",
+    "name": "Portfolio Construction Agent",
+    "room": "strategy",
+    "role": "Portfolio Construction",
+    "lead": false,
+    "bodyType": "male",
+    "look": "sandy hair · navy suit · white shirt · walnut tie",
+    "layers": [
+      {
+        "src": "/assets/agents/portfolio-construction/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/portfolio-construction/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/portfolio-construction/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/portfolio-construction/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/portfolio-construction/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/portfolio-construction/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/portfolio-construction/z090-walnut.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/portfolio-construction/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/portfolio-construction/z120-sandy.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "position-sizing-intern",
+    "name": "Position Sizing Intern",
+    "room": "strategy",
+    "role": "Position Sizing Intern",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black bedhead hair · white button-down · navy slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/position-sizing-intern/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/position-sizing-intern/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/position-sizing-intern/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/position-sizing-intern/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/position-sizing-intern/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/position-sizing-intern/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/position-sizing-intern/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "tactical-overlay-intern",
+    "name": "Tactical Overlay Intern",
+    "room": "strategy",
+    "role": "Tactical Overlay Intern",
+    "lead": false,
+    "bodyType": "male",
+    "look": "black messy hair · gray v-neck tee · blue jeans · white sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/tactical-overlay-intern/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/tactical-overlay-intern/z015-white.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/tactical-overlay-intern/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/tactical-overlay-intern/z035-gray.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/tactical-overlay-intern/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/tactical-overlay-intern/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/tactical-overlay-intern/z120-black.png",
+        "zPos": 120
+      }
+    ]
   }
 ]
