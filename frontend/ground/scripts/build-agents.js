@@ -340,6 +340,26 @@ const AGENTS = [
   { id: "tactical-overlay-intern", docDir: "floor-4/strategy/tactical-overlay-intern", name: "Tactical Overlay Intern", room: "strategy", role: "Tactical Overlay Intern", bodyType: "male", look: "black messy hair · gray v-neck tee · blue jeans · white sneakers",
     desc: "Tactical Overlay Intern: the short-term guy — gray v-neck, jeans and sneakers, overlaying the tactical bets on top of the long-term plan.",
     items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], clothes: ["torso_clothes_tshirt_vneck", "gray"], legs: ["legs_pants", "blue"], shoes: ["feet_shoes_basic", "white"] } },
+
+  // ── Execution (Room 9) — Floor 4 Command ─────────────────────────────────
+  // Style: the dark execution desk — midnight blues, charcoal, black, one
+  // khaki-polo checklist operator. Everyone distinct: no shared hair+shirt
+  // combo. Named agent carries the real person's researched look.
+  { id: "vlad-tenev", docDir: "floor-4/execution/vlad-tenev", name: "Vlad Tenev", room: "execution", role: "Lead Execution", lead: true, bodyType: "male", look: "neat black hair · charcoal blazer · black turtleneck · gray slacks",
+    desc: "Vlad Tenev's look: neat dark hair, clean-shaven, and the dark minimalist blazer over a black turtleneck — Robinhood's co-founder, the zero-commission execution man who lives on the fill times. (LPC has no watch item, so his rose-gold Rolex is omitted.)",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "black"], clothes: ["torso_clothes_longsleeve2", "black"], jacket: ["torso_jacket_collared", "charcoal"], legs: ["legs_formal", "gray"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "order-routing", docDir: "floor-4/execution/order-routing", name: "Order Routing Agent", room: "execution", role: "Order Routing", bodyType: "male", look: "buzzcut · navy polo · charcoal slacks",
+    desc: "Order Routing Agent: the order-flow babysitter — navy polo, buzzcut, one eye on the blotter and one on the headset, routing every ticket to the venue without spilling it.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_buzzcut", "black"], clothes: ["torso_clothes_shortsleeve_polo", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "execution-algorithm", docDir: "floor-4/execution/execution-algorithm", name: "Execution Algorithm Agent", room: "execution", role: "Execution Algorithm", bodyType: "male", look: "messy dark hair · forest v-neck tee · navy pants · black sneakers",
+    desc: "Execution Algorithm Agent: the speed hacker — forest v-neck tee and navy pants, tuned to shave microseconds off every fill and outsmart the queue.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_messy1", "raven"], clothes: ["torso_clothes_tshirt_vneck", "forest"], legs: ["legs_pants", "navy"], shoes: ["feet_shoes_basic", "black"] } },
+  { id: "timing-slippage", docDir: "floor-4/execution/timing-slippage", name: "Timing & Slippage Agent", room: "execution", role: "Timing & Slippage", bodyType: "male", look: "messy sandy hair · charcoal button-down · navy slacks",
+    desc: "Timing & Slippage Agent: the microsecond-obsessed one — rumpled sandy hair, charcoal button-down, muttering about implementation shortfall and the spread that got away.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_bedhead", "sandy"], clothes: ["torso_clothes_longsleeve2_buttoned", "charcoal"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "pre-flight-check", docDir: "floor-4/execution/pre-flight-check", name: "Pre-Flight Check Agent", room: "execution", role: "Pre-Flight Check", bodyType: "male", look: "gray hair · walnut polo · navy slacks",
+    desc: "Pre-Flight Check Agent: the launch-checklist operator — khaki-walnut polo, clipboard discipline, running the pre-trade checks a hundred times before any order gets the green light.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_balding", "gray"], clothes: ["torso_clothes_shortsleeve_polo", "walnut"], legs: ["legs_formal", "navy"], shoes: ["feet_boots_basic", "brown"] } },
 ];
 
 // ---------------------------------------------------------------------------

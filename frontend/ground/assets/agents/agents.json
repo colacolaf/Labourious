@@ -3532,5 +3532,204 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "vlad-tenev",
+    "name": "Vlad Tenev",
+    "room": "execution",
+    "role": "Lead Execution",
+    "lead": true,
+    "bodyType": "male",
+    "look": "neat black hair · charcoal blazer · black turtleneck · gray slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/vlad-tenev/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/vlad-tenev/z020-gray.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/vlad-tenev/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/vlad-tenev/z035-black.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/vlad-tenev/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/vlad-tenev/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/vlad-tenev/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/vlad-tenev/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "order-routing",
+    "name": "Order Routing Agent",
+    "room": "execution",
+    "role": "Order Routing",
+    "lead": false,
+    "bodyType": "male",
+    "look": "buzzcut · navy polo · charcoal slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/order-routing/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/order-routing/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/order-routing/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/order-routing/z035-navy.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/order-routing/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/order-routing/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/order-routing/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "execution-algorithm",
+    "name": "Execution Algorithm Agent",
+    "room": "execution",
+    "role": "Execution Algorithm",
+    "lead": false,
+    "bodyType": "male",
+    "look": "messy dark hair · forest v-neck tee · navy pants · black sneakers",
+    "layers": [
+      {
+        "src": "/assets/agents/execution-algorithm/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/execution-algorithm/z015-black.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/execution-algorithm/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/execution-algorithm/z035-forest.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/execution-algorithm/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/execution-algorithm/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/execution-algorithm/z120-raven.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "timing-slippage",
+    "name": "Timing & Slippage Agent",
+    "room": "execution",
+    "role": "Timing & Slippage",
+    "lead": false,
+    "bodyType": "male",
+    "look": "messy sandy hair · charcoal button-down · navy slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/timing-slippage/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/timing-slippage/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/timing-slippage/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/timing-slippage/z035-charcoal.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/timing-slippage/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/timing-slippage/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/timing-slippage/z120-sandy.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "pre-flight-check",
+    "name": "Pre-Flight Check Agent",
+    "room": "execution",
+    "role": "Pre-Flight Check",
+    "lead": false,
+    "bodyType": "male",
+    "look": "gray hair · walnut polo · navy slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/pre-flight-check/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/pre-flight-check/z020-navy.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/pre-flight-check/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/pre-flight-check/z035-walnut.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/pre-flight-check/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/pre-flight-check/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/pre-flight-check/z120-gray.png",
+        "zPos": 120
+      }
+    ]
   }
 ]
