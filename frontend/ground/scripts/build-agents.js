@@ -271,6 +271,32 @@ const AGENTS = [
   { id: "factor-risk", docDir: "floor-3/risk/factor-risk", name: "Factor Risk Agent", room: "risk", role: "Factor Risk", bodyType: "male", look: "neat chestnut hair · blue shirt · navy sweater vest · charcoal slacks",
     desc: "Factor Risk Agent: clean-cut model-validation committee energy — crisp blue shirt under a navy sweater vest, watching style drift through standard deviations.",
     items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_parted", "chestnut"], clothes: ["torso_clothes_longsleeve2_buttoned", "blue"], vest: ["torso_clothes_vest", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+
+  // ── Critique (Room 11) — Floor 3 Judgment ────────────────────────────────
+  // Style: Reddit-researched contrarian stereotypes — the hood-up bear intern,
+  // tweed-blazer inspector, sweater-vest history nerd, leather-jacket rebel,
+  // beige-cardigan mediator. Named agents carry the real person's look.
+  { id: "charlie-munger", docDir: "floor-3/critique/charlie-munger", name: "Charlie Munger", room: "critique", role: "Lead Critique", lead: true, bodyType: "male", look: "white hair · charcoal suit · white shirt · brown tie",
+    desc: "Charlie Munger's look: thin white hair, heavy tortoiseshell glasses and the old-school charcoal suit + tie he wore every single day — the midwestern lawyer-investor who argued against everything. (LPC has no glasses item, so his iconic thick frames are omitted.)",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_parted", "white"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "charcoal"], tie: ["neck_necktie", "brown"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "meredith-whitney", docDir: "floor-3/critique/devils-advocate", name: "Meredith Whitney", room: "critique", role: "Devil's Advocate", bodyType: "female", look: "golden blonde bob · navy blazer · white blouse",
+    desc: "Meredith Whitney's look: the golden blonde blowout and sharp navy blazer of the woman who called the crash — the analyst who said the unthinkable about Citigroup and was right.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_bob", "blonde"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], jacket: ["torso_jacket_collared", "navy"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "bear-case-intern", docDir: "floor-3/critique/bear-case-intern", name: "Bear Case Intern", room: "critique", role: "Bear Case Intern", bodyType: "male", look: "hood up · gray hoodie · charcoal pants",
+    desc: "Bear Case Intern: the pale, sleep-deprived doom prophet — gray hoodie up, watching the put options and waiting for the crash.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "raven"], hat: ["hat_hood_cloth", "gray"], clothes: ["torso_clothes_longsleeve2", "gray"], legs: ["legs_pants", "charcoal"], shoes: ["feet_shoes_basic", "black"] } },
+  { id: "blind-spot-detector", docDir: "floor-3/critique/blind-spot-detector", name: "Blind Spot Detector Agent", room: "critique", role: "Blind Spot Detector", bodyType: "male", look: "messy black hair · white tee · brown tweed blazer · charcoal pants",
+    desc: "Blind Spot Detector Agent: the obsessive inspector — white tee under a worn brown tweed blazer, sweeping back his hair to squint at the model's blind spots.",
+    items: { body: ["body", "olive"], eye_color: ["eye_color", "brown"], hair: ["hair_messy2", "black"], clothes: ["torso_clothes_tshirt", "white"], jacket: ["torso_jacket_collared", "brown"], legs: ["legs_pants", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
+  { id: "historical-analog-intern", docDir: "floor-3/critique/historical-analog-intern", name: "Historical Analog Intern", room: "critique", role: "Historical Analog Intern", bodyType: "male", look: "sandy hair · white shirt · green sweater vest · charcoal slacks",
+    desc: "Historical Analog Intern: the history-buff nerd — green cable-knit sweater vest over an Oxford shirt, forever drawing parallels to 1929 and Tulip Mania.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "green"], hair: ["hair_parted", "sandy"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], vest: ["torso_clothes_vest", "green"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "brown"] } },
+  { id: "assumption-challenger", docDir: "floor-3/critique/assumption-challenger", name: "Assumption Challenger Agent", room: "critique", role: "Assumption Challenger", bodyType: "male", look: "messy black hair · stubble · white tee · leather jacket · jeans",
+    desc: "Assumption Challenger: the rebel with a rumpled leather jacket over a faded tee — stubble and a skeptical scowl, poking holes in every model.",
+    items: { body: ["body", "brown"], eye_color: ["eye_color", "brown"], hair: ["hair_messy1", "black"], beard: ["beards_5oclock_shadow", "black"], clothes: ["torso_clothes_tshirt", "white"], jacket: ["torso_jacket_collared", "leather"], legs: ["legs_pants", "blue"], shoes: ["feet_shoes_basic", "black"] } },
+  { id: "conflict-resolution", docDir: "floor-3/critique/conflict-resolution", name: "Conflict Resolution Agent", room: "critique", role: "Conflict Resolution", bodyType: "male", look: "gray hair · white shirt · tan cardigan · charcoal slacks",
+    desc: "Conflict Resolution Agent: the exhausted corporate mediator — neutral tan cardigan over a white shirt, keeping the peace between screaming analysts.",
+    items: { body: ["body", "light"], eye_color: ["eye_color", "blue"], hair: ["hair_balding", "gray"], clothes: ["torso_clothes_longsleeve2_buttoned", "white"], cardigan: ["torso_clothes_longsleeve2_cardigan", "tan"], legs: ["legs_formal", "charcoal"], shoes: ["feet_boots_basic", "black"] } },
 ];
 
 // ---------------------------------------------------------------------------

@@ -2730,5 +2730,314 @@
         "zPos": 120
       }
     ]
+  },
+  {
+    "id": "charlie-munger",
+    "name": "Charlie Munger",
+    "room": "critique",
+    "role": "Lead Critique",
+    "lead": true,
+    "bodyType": "male",
+    "look": "white hair · charcoal suit · white shirt · brown tie",
+    "layers": [
+      {
+        "src": "/assets/agents/charlie-munger/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/charlie-munger/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/charlie-munger/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/charlie-munger/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/charlie-munger/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/charlie-munger/z055-charcoal.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/charlie-munger/z090-brown.png",
+        "zPos": 90
+      },
+      {
+        "src": "/assets/agents/charlie-munger/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/charlie-munger/z120-white.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "meredith-whitney",
+    "name": "Meredith Whitney",
+    "room": "critique",
+    "role": "Devil's Advocate",
+    "lead": false,
+    "bodyType": "female",
+    "look": "golden blonde bob · navy blazer · white blouse",
+    "layers": [
+      {
+        "src": "/assets/agents/meredith-whitney/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/meredith-whitney/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/meredith-whitney/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/meredith-whitney/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/meredith-whitney/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/meredith-whitney/z055-navy.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/meredith-whitney/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/meredith-whitney/z120-blonde.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "bear-case-intern",
+    "name": "Bear Case Intern",
+    "room": "critique",
+    "role": "Bear Case Intern",
+    "lead": false,
+    "bodyType": "male",
+    "look": "hood up · gray hoodie · charcoal pants",
+    "layers": [
+      {
+        "src": "/assets/agents/bear-case-intern/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/bear-case-intern/z015-black.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/bear-case-intern/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/bear-case-intern/z035-gray.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/bear-case-intern/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/bear-case-intern/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/bear-case-intern/z120-raven.png",
+        "zPos": 120
+      },
+      {
+        "src": "/assets/agents/bear-case-intern/z130-gray.png",
+        "zPos": 130
+      }
+    ]
+  },
+  {
+    "id": "blind-spot-detector",
+    "name": "Blind Spot Detector Agent",
+    "room": "critique",
+    "role": "Blind Spot Detector",
+    "lead": false,
+    "bodyType": "male",
+    "look": "messy black hair · white tee · brown tweed blazer · charcoal pants",
+    "layers": [
+      {
+        "src": "/assets/agents/blind-spot-detector/z010-olive.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/blind-spot-detector/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/blind-spot-detector/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/blind-spot-detector/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/blind-spot-detector/z045-olive.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/blind-spot-detector/z055-brown.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/blind-spot-detector/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/blind-spot-detector/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "historical-analog-intern",
+    "name": "Historical Analog Intern",
+    "room": "critique",
+    "role": "Historical Analog Intern",
+    "lead": false,
+    "bodyType": "male",
+    "look": "sandy hair · white shirt · green sweater vest · charcoal slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/historical-analog-intern/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/historical-analog-intern/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/historical-analog-intern/z025-brown.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/historical-analog-intern/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/historical-analog-intern/z045-green.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/historical-analog-intern/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/historical-analog-intern/z105-green.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/historical-analog-intern/z120-sandy.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "assumption-challenger",
+    "name": "Assumption Challenger Agent",
+    "room": "critique",
+    "role": "Assumption Challenger",
+    "lead": false,
+    "bodyType": "male",
+    "look": "messy black hair · stubble · white tee · leather jacket · jeans",
+    "layers": [
+      {
+        "src": "/assets/agents/assumption-challenger/z010-brown.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/assumption-challenger/z015-black.png",
+        "zPos": 15
+      },
+      {
+        "src": "/assets/agents/assumption-challenger/z020-blue.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/assumption-challenger/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/assumption-challenger/z045-brown.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/assumption-challenger/z055-leather.png",
+        "zPos": 55
+      },
+      {
+        "src": "/assets/agents/assumption-challenger/z105-brown.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/assumption-challenger/z111-black.png",
+        "zPos": 111
+      },
+      {
+        "src": "/assets/agents/assumption-challenger/z120-black.png",
+        "zPos": 120
+      }
+    ]
+  },
+  {
+    "id": "conflict-resolution",
+    "name": "Conflict Resolution Agent",
+    "room": "critique",
+    "role": "Conflict Resolution",
+    "lead": false,
+    "bodyType": "male",
+    "look": "gray hair · white shirt · tan cardigan · charcoal slacks",
+    "layers": [
+      {
+        "src": "/assets/agents/conflict-resolution/z010-light.png",
+        "zPos": 10
+      },
+      {
+        "src": "/assets/agents/conflict-resolution/z020-charcoal.png",
+        "zPos": 20
+      },
+      {
+        "src": "/assets/agents/conflict-resolution/z025-black.png",
+        "zPos": 25
+      },
+      {
+        "src": "/assets/agents/conflict-resolution/z035-white.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/conflict-resolution/z035-tan.png",
+        "zPos": 35
+      },
+      {
+        "src": "/assets/agents/conflict-resolution/z045-light.png",
+        "zPos": 45
+      },
+      {
+        "src": "/assets/agents/conflict-resolution/z105-blue.png",
+        "zPos": 105
+      },
+      {
+        "src": "/assets/agents/conflict-resolution/z120-gray.png",
+        "zPos": 120
+      }
+    ]
   }
 ]

@@ -22,6 +22,7 @@ export const ROOM_TITLES = {
   macro:     "MACRO · ROOM 3",
   technical: "TECHNICAL · ROOM 6",
   risk:      "RISK · ROOM 2",
+  critique:  "CRITIQUE · ROOM 11",
 };
 
 export function roomTitle(room) {
