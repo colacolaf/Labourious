@@ -13,7 +13,6 @@ The runnable work currently lives in [`frontend/ground/`](frontend/ground/):
 - A browser-based Phaser 3 Ground Floor lobby using a deskrpg-faithful pixel-art pipeline.
 - Agent roster pages for the building's rooms, plus a combined [`Agent Gallery`](frontend/ground/agent-gallery.html).
 - A Penthouse roster for the Portfolio Manager and PM Bodyguard.
-- A generated furniture-variant catalog for chairs and plants: [`Furniture Catalog`](frontend/ground/furniture-variants.html).
 - Procedural and generated assets under [`frontend/ground/assets/`](frontend/ground/assets/), with room and building layout documentation under [`docs/frontend/`](docs/frontend/).
 
 The current agent manifest contains **94 entries**, including example characters and the room roster. The documented HQ model organizes the operation across five levels: Ground / Intake, Floor 2 / Analysis, Floor 3 / Judgment, Floor 4 / Command, and the Penthouse / The Top.
@@ -39,7 +38,6 @@ Then open <http://localhost:8080/>. Use an HTTP server rather than opening the H
 | [`docs/LABOURIOUS_SETUP.md`](docs/LABOURIOUS_SETUP.md) | Aspirational local-first setup guide |
 | [`docs/SECURITY.md`](docs/SECURITY.md) | Planned local-first security model |
 | [`docs/frontend/README.md`](docs/frontend/README.md) | Frontend floors, rooms, and agent profile index |
-| [`docs/frontend/building-artifacts.md`](docs/frontend/building-artifacts.md) | Furniture catalog and room-level layout rules |
 
 ## Design principles
 

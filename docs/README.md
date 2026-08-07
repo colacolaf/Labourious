@@ -87,7 +87,7 @@ If agents disagree, the Execution Room's conflict resolution agent makes the fin
 
 ## Status
 
-**Phase: Frontend prototype and documentation** — the architecture and agent taxonomy are defined, and the browser-based Ground HQ, room pages, roster gallery, Penthouse, and furniture catalog are implemented. Backend orchestration, persistent memory, desktop packaging, and broker integrations remain planned work.
+**Phase: Frontend prototype and documentation** — the architecture and agent taxonomy are defined, and the browser-based Ground HQ, room pages, roster gallery, and Penthouse are implemented. Backend orchestration, persistent memory, desktop packaging, and broker integrations remain planned work.
 
 The current visual roster contains 94 manifest entries, including examples and the room roster. See the [frontend documentation](frontend/README.md) and [root README](../README.md) for the implemented surface area.
 
