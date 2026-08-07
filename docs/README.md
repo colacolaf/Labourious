@@ -1,8 +1,12 @@
-# Labourious
+# Labourious Documentation
 
-**The ultimate AI portfolio manager. So detailed it won't miss.**
+This directory contains the product design, architecture, agent taxonomy, security model, and frontend documentation for Labourious. For the repository overview and the currently runnable frontend prototype, start with the [root README](../README.md).
 
-Labourious is a local-first, GitHub-installable Electron desktop app. You connect your own API model, chat with a calm, collected Portfolio Manager, and it orchestrates 50+ highly sophisticated AI subagents across 16 specialized rooms to give you insights most AI misses entirely.
+> **Status note:** the backend orchestration and Electron application described below are planned architecture. The currently runnable implementation is the browser-based pixel-art HQ prototype in [`../frontend/ground/`](../frontend/ground/).
+
+**The AI portfolio manager designed to go deeper.**
+
+Labourious is designed as a local-first, GitHub-installable Electron desktop app. You connect your own API model, chat with a calm, collected Portfolio Manager, and it orchestrates specialized AI subagents across 16 rooms to produce deeper investment research.
 
 ---
 
@@ -83,7 +87,9 @@ If agents disagree, the Execution Room's conflict resolution agent makes the fin
 
 ## Status
 
-**Phase: Documentation & Design** — architecture defined, agent taxonomy in progress. Implementation begins after frontend design is finalized.
+**Phase: Frontend prototype and documentation** — the architecture and agent taxonomy are defined, and the browser-based Ground HQ, room pages, roster gallery, Penthouse, and furniture catalog are implemented. Backend orchestration, persistent memory, desktop packaging, and broker integrations remain planned work.
+
+The current visual roster contains 94 manifest entries, including examples and the room roster. See the [frontend documentation](frontend/README.md) and [root README](../README.md) for the implemented surface area.
 
 ---
 
