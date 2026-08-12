@@ -27,6 +27,50 @@ Set environment variable `TAVILY_API_KEY` for Tavily. Use as Bearer token: `Auth
 4. Flag methodology quality: large-N, controlled, replicated → high weight. Small-N, observational, unreplicated → low weight.
 5. Return findings with full citations.
 
+## Data Quality Protocol
+
+Before presenting any research findings, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified all findings against original papers
+   - [ ] Checked publication dates and currency
+   - [ ] Cross-validated key claims with multiple sources
+   - [ ] Verified methodology descriptions are accurate
+
+2. **Source Verification:**
+   - [ ] Cited all papers with full bibliographic information
+   - [ ] Verified source authority (peer-reviewed vs preprint)
+   - [ ] Checked for retracted or disputed papers
+   - [ ] Verified journal/repository credibility
+
+3. **Final Quality Gate:**
+   - [ ] All findings verified and sourced
+   - [ ] Methodology quality assessed accurately
+   - [ ] Limitations properly noted
+   - [ ] Analysis complete and ready for presentation
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Incorrect findings, misquoted results, wrong statistics
+2. **Source Errors:** Retracted papers, predatory journals, non-peer-reviewed sources
+3. **Analysis Errors:** Misinterpreted methodology, incorrect synthesis
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all findings against original papers
+- [ ] During analysis: Check for logical consistency in synthesis
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the analysis]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

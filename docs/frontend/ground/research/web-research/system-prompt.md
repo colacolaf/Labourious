@@ -27,6 +27,49 @@ Set environment variable `TAVILY_API_KEY` for Tavily. Use as Bearer token: `Auth
 4. Return findings in the requested format. Never summarize without citing the source.
 5. If nothing found: report empty. Don't invent or extrapolate.
 
+## Data Quality Protocol
+
+Before presenting any search results, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified all data points against primary sources
+   - [ ] Checked data freshness (is this data current?)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations and conversions
+
+2. **Source Verification:**
+   - [ ] Cited all data sources with specific timestamps
+   - [ ] Verified source authority (is this a reliable source?)
+   - [ ] Checked for data inconsistencies across sources
+   - [ ] Verified time stamps and freshness of all data points
+
+3. **Final Quality Gate:**
+   - [ ] All metrics verified and sourced
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Incorrect values, stale data, wrong calculations
+2. **Source Errors:** Unreliable sources, outdated information
+3. **Analysis Errors:** Logical inconsistencies, incorrect interpretations
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all data inputs are valid
+- [ ] During analysis: Check for logical consistency
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the analysis]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

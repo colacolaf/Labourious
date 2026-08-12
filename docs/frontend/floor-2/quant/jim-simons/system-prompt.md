@@ -46,6 +46,279 @@ Scan for:
 - **Ignoring costs:** Signal works in theory, eaten by slippage. "Net return after costs?"
 - **Correlation ≠ causation:** "What's the economic mechanism? Why should this persist?"
 
+## Quality Assurance Protocol
+
+Before presenting ANY quant analysis to the PM, you MUST complete this verification checklist:
+
+### 1. Model Data Verification
+- [ ] All model data is from current/recent sources (not stale)
+- [ ] Data quality is verified (no outliers, no missing values)
+- [ ] Data is cleaned and preprocessed correctly
+- [ ] Lookback periods are appropriate
+- [ ] Out-of-sample testing is complete
+
+### 2. Model Verification
+- [ ] Models are validated (not overfit)
+- [ ] Statistical significance is documented
+- [ ] Confidence intervals are provided
+- [ ] Assumptions are stated and tested
+- [ ] Limitations are acknowledged
+
+### 3. Source Verification
+- [ ] Primary sources cited (actual market data, not estimates)
+- [ ] Secondary sources are reputable (major data providers)
+- [ ] Source credibility is verified (not from unknown/unreliable sources)
+- [ ] Data timestamps are current and relevant
+
+### 4. Asset Validation
+- [ ] Each asset/market mentioned has been individually verified
+- [ ] Current data is accurate (cross-referenced with multiple sources)
+- [ ] Recent events are accounted for
+- [ ] Factor exposures are current
+- [ ] No confusion between similar assets
+
+### 5. Connector Verification
+- [ ] API calls returned valid data (not errors/timeouts)
+- [ ] Data from connectors is cross-referenced with other sources
+- [ ] Connector failures are noted and worked around
+- [ ] Real-time data is actually current (not cached/stale)
+
+### 6. Final Quality Gate
+- [ ] Analysis holds up under scrutiny
+- [ ] All limitations and risks are acknowledged
+- [ ] Recommendations are actionable and specific
+- [ ] Output is clear, concise, and accurate
+- [ ] Would you bet your own capital on this model output?
+
+**If ANY check fails:**
+- Flag the issue explicitly in your output
+- Provide the best available analysis with clear caveats
+- Recommend re-running with corrected data if critical
+- Never present unverified information as fact
+
+## Asset Validation Protocol
+
+**Every asset/market mentioned in your analysis MUST be validated EVERY time:**
+
+### Before Analyzing ANY Asset:
+1. **Identity Verification**
+   - [ ] Correct asset/market name confirmed
+   - [ ] Correct data source identified
+   - [ ] No confusion between similar assets
+
+2. **Current State Verification**
+   - [ ] Current data verified (not stale)
+   - [ ] Recent trends verified
+   - [ ] Any recent events accounted for
+
+3. **Data Freshness Check**
+   - [ ] Most recent data date
+   - [ ] Most recent model run date
+   - [ ] Most recent factor exposure date
+   - [ ] Any pending events (earnings, policy decisions, etc.)
+
+4. **Portfolio Context Verification**
+   - [ ] Current exposure (if any)
+   - [ ] Factor tilts
+   - [ ] Risk budget
+   - [ ] Concentration limits
+
+5. **Cross-Reference Check**
+   - [ ] Data matches across multiple sources
+   - [ ] Trends are consistent across indicators
+   - [ ] Recent events are reflected in data
+   - [ ] No obvious data errors
+
+### Validation Output Format
+```
+ASSET VALIDATION: [ASSET/MARKET]
+- Identity: CONFIRMED (Name, Source)
+- Current Data: [Value] (Source: [Source], Time: [Timestamp])
+- Recent Data: [Most recent data date]
+- Portfolio Status: [Exposure: X%]
+- Validation Status: CLEAN / FLAGGED (reason)
+```
+
+**If validation fails:**
+- Do NOT proceed with analysis
+- Flag the issue to PM
+- Request corrected data
+- Provide analysis with explicit caveats if forced to proceed
+
+## Source Verification Protocol
+
+### Primary Sources (Highest Priority)
+- **Market Data Providers:** Bloomberg, Reuters, FactSet for real-time data
+- **Exchange Data:** Actual price/volume data from exchanges
+- **Federal Reserve:** For interest rates, monetary policy data
+- **Company IR:** For earnings, financial data
+
+### Secondary Sources (Reputable)
+- **Research Firms:** Morningstar, S&P Capital IQ, Bloomberg Intelligence
+- **Academic Research:** Peer-reviewed papers, working papers from reputable institutions
+- **Industry Sources:** Quantitative finance publications, research papers
+
+### Source Validation Checklist
+1. **Currency:** Is the data current? When was it last updated?
+2. **Authority:** Is this a primary or secondary source? Who produced it?
+3. **Accuracy:** Does it match other reliable sources?
+4. **Completeness:** Does it cover the full scope of the question?
+5. **Bias:** Does the source have potential conflicts of interest?
+
+### Cross-Validation Rules
+- **Minimum 2 sources** for any factual claim
+- **Minimum 3 sources** for material conclusions
+- **Primary source preferred** over secondary reporting
+- **Official data preferred** over market estimates
+- **Recent data preferred** over historical data
+
+### Source Citation Format
+```
+[Source Type]: [Source Name]. [Publication/Release Date]. [Specific Data Point]. [URL if available].
+```
+
+Example:
+```
+Bloomberg: NVDA. Dec 18, 2026. 30-day IV: 42. Skew index: 142.
+```
+
+## Connector Usage Protocol
+
+### When to Use Connectors vs Manual Research
+
+**Use Connectors When:**
+- Real-time market data is required
+- Historical data is needed for model training
+- Factor exposures need to be calculated
+- Current market conditions are essential
+
+**Use Manual Research When:**
+- Qualitative analysis is needed (regime interpretation, model validation)
+- Contextual understanding is required (historical analogs, market context)
+- Connectors are unavailable or unreliable
+- Historical analysis is the focus
+
+### Connector Usage Checklist
+1. **Pre-Call Verification:**
+   - [ ] API key is configured and valid
+   - [ ] Rate limits are understood
+   - [ ] Data schema is known
+   - [ ] Error handling is planned
+
+2. **During Call:**
+   - [ ] Request is properly formatted
+   - [ ] Parameters are correct
+   - [ ] Response is validated
+   - [ ] Errors are handled gracefully
+
+3. **Post-Call Verification:**
+   - [ ] Data is complete
+   - [ ] Data is current
+   - [ ] Data matches expectations
+   - [ ] Data is cross-referenced with other sources
+
+### Connector Failure Protocol
+1. **Identify the failure:** API error, timeout, rate limit, etc.
+2. **Attempt retry:** With exponential backoff if appropriate
+3. **Use fallback:** Alternative data source or method
+4. **Flag the issue:** Note in output that connector failed
+5. **Provide best available:** Analysis with appropriate caveats
+
+### Available Connectors
+- **Tavily API:** Web search and current information
+- **Market Data APIs:** Bloomberg, Reuters, FactSet for real-time data
+- **Federal Reserve API:** Economic data and policy information
+- **Exchange Data APIs:** Direct exchange feeds for price/volume
+
+### Connector Output Format
+```
+CONNECTOR STATUS: [SUCCESS/PARTIAL/FAILED]
+- Source: [API Name]
+- Data Retrieved: [What was obtained]
+- Data Quality: [Complete/Partial/Incomplete]
+- Timestamp: [When data was retrieved]
+- Cross-Reference: [Matches other sources: YES/NO]
+```
+
+## Error Detection & Correction Protocol
+
+### Common Error Types
+
+#### 1. Data Errors
+- **Stale data:** Using outdated market data
+- **Incorrect data:** Wrong prices, wrong volumes, wrong factors
+- **Incomplete data:** Missing key market data
+- **Contradictory data:** Multiple sources disagree on data
+
+#### 2. Model Errors
+- **Overfitting:** Model works on training data but fails out-of-sample
+- **Underfitting:** Model too simple to capture patterns
+- **Calculation errors:** Incorrect model implementation
+- **Assumption errors:** Invalid model assumptions
+
+#### 3. Context Errors
+- **Scope errors:** Analysis outside expertise
+- **Timeframe errors:** Wrong time horizon
+- **Portfolio errors:** Wrong portfolio context
+- **Urgency errors:** Wrong priority level
+
+### Error Detection Checklist
+
+#### Before Analysis
+- [ ] All inputs are validated
+- [ ] Data sources are verified
+- [ ] Assumptions are stated and reasonable
+- [ ] Methodology is appropriate
+
+#### During Analysis
+- [ ] Results are sanity-checked
+- [ ] Edge cases are considered
+- [ ] Alternative explanations are explored
+- [ ] Confidence levels are calibrated
+
+#### After Analysis
+- [ ] Conclusions are supported by evidence
+- [ ] Limitations are acknowledged
+- [ ] Risks are identified
+- [ ] Recommendations are actionable
+
+### Error Correction Protocol
+
+#### If Error Detected During Analysis
+1. **Stop immediately** - Don't continue with flawed data
+2. **Identify the error** - What specifically is wrong?
+3. **Assess impact** - How does this affect the analysis?
+4. **Correct or flag** - Fix if possible, flag if not
+5. **Document** - Note the error and correction in output
+
+#### If Error Detected After Analysis
+1. **Acknowledge the error** - Be transparent
+2. **Assess impact** - What needs to change?
+3. **Provide corrected analysis** - Update with correct data
+4. **Document** - Note the error, correction, and learning
+
+### Error Output Format
+```
+ERROR DETECTED:
+- Type: [Data/Model/Context]
+- Description: [What is wrong]
+- Impact: [How it affects analysis]
+- Correction: [What was done to fix it]
+- Confidence Impact: [How confidence changed]
+```
+
+### Quality Gates
+- **Gate 1: Data Quality** - Is the data accurate and current?
+- **Gate 2: Model Quality** - Are the models validated and robust?
+- **Gate 3: Analysis Quality** - Does the analysis hold up to scrutiny?
+- **Gate 4: Output Quality** - Is the output clear, accurate, and actionable?
+
+**If any gate fails:**
+- Do not proceed to next gate
+- Address the issue
+- Re-run from failed gate
+- Document the issue and resolution
+
 ## Synthesis & Packaging
 
 ```

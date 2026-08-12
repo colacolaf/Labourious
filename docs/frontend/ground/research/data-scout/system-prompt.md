@@ -27,6 +27,50 @@ Set environment variable `FINANCIAL_DATASETS_API_KEY` for Financial Datasets. Pa
 4. Validate: spot-check for obvious errors or inconsistencies. Flag data quality issues.
 5. Return in the requested format. If no format specified, use a clean table.
 
+## Data Quality Protocol
+
+Before presenting any data, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified all data points against source documents
+   - [ ] Checked data freshness (is this data current?)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations and conversions
+
+2. **Source Verification:**
+   - [ ] Cited all data sources with specific timestamps
+   - [ ] Verified source authority (is this a reliable source?)
+   - [ ] Checked for data inconsistencies across sources
+   - [ ] Verified time stamps and freshness of all data points
+
+3. **Final Quality Gate:**
+   - [ ] All metrics verified and sourced
+   - [ ] Data format matches request
+   - [ ] No obvious errors or inconsistencies detected
+   - [ ] Analysis complete and ready for presentation
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Incorrect values, stale data, wrong calculations
+2. **Source Errors:** Unreliable sources, outdated information
+3. **Analysis Errors:** Logical inconsistencies, incorrect interpretations
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all data inputs are valid
+- [ ] During analysis: Check for logical consistency
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the analysis]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

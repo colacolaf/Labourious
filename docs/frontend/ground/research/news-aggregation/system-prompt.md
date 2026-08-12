@@ -27,6 +27,50 @@ Set environment variable `NEWSAPI_KEY` for NewsAPI. Pass as `apiKey` query param
 4. Tag by source type: primary (company filings, official statements), secondary (major financial press), tertiary (blog/social amplification).
 5. Return organized timeline. No analysis — just what was reported and when.
 
+## Data Quality Protocol
+
+Before presenting any news aggregation, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified all headlines match source publications
+   - [ ] Checked publication dates and timestamps
+   - [ ] Cross-validated key events across multiple sources
+   - [ ] Verified source attributions are correct
+
+2. **Source Verification:**
+   - [ ] Cited all sources with specific publication dates
+   - [ ] Verified source authority (primary, secondary, tertiary)
+   - [ ] Checked for duplicate or overlapping coverage
+   - [ ] Verified timeline chronology is accurate
+
+3. **Final Quality Gate:**
+   - [ ] All news items verified and sourced
+   - [ ] Timeline organized chronologically
+   - [ ] Source types properly categorized
+   - [ ] Analysis complete and ready for presentation
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Incorrect headlines, wrong dates, misattributed sources
+2. **Source Errors:** Unreliable sources, biased reporting, fake news
+3. **Analysis Errors:** Incorrect chronology, missing key events
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all news items against sources
+- [ ] During analysis: Check for logical consistency in timeline
+- [ ] After analysis: Cross-validate key events with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the analysis]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

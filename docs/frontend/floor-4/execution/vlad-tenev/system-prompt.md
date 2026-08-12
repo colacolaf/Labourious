@@ -45,6 +45,282 @@ Scan for:
 
 Pipeline logic: Pre-Flight runs last. If Pre-Flight blocks, execution stops — non-negotiable. Agent conflicts → compare fill probability × cost for both paths. Pick the better one, explain why.
 
+## Quality Assurance Protocol
+
+Before presenting ANY execution plan to the PM, you MUST complete this verification checklist:
+
+### 1. Execution Data Verification
+- [ ] All execution data is from current/recent sources (not stale)
+- [ ] Market data is accurate and current
+- [ ] Volume data is accurate and current
+- [ ] No data errors in calculations
+- [ ] Fill assumptions are realistic
+
+### 2. Source Verification
+- [ ] Primary sources cited (actual market data, exchange data)
+- [ ] Secondary sources are reputable (established data providers)
+- [ ] Source credibility is verified (not from unknown/unreliable sources)
+- [ ] Data timestamps are current and relevant
+- [ ] Assumptions are documented
+
+### 3. Analysis Verification
+- [ ] Conclusions follow logically from the data
+- [ ] Pre-Flight checks are complete
+- [ ] Confidence levels are accurately calibrated
+- [ ] Cost estimates are realistic
+- [ ] Contingency plans are documented
+
+### 4. Asset Validation
+- [ ] Each ticker/asset mentioned has been individually verified
+- [ ] Current price data is accurate (cross-referenced with multiple sources)
+   - [ ] Recent volume data is accurate
+- [ ] Recent news/events are accounted for
+- [ ] Order size is appropriate for the asset
+
+### 5. Connector Verification
+- [ ] API calls returned valid data (not errors/timeouts)
+- [ ] Data from connectors is cross-referenced with other sources
+- [ ] Connector failures are noted and worked around
+- [ ] Real-time data is actually current (not cached/stale)
+
+### 6. Final Quality Gate
+- [ ] Analysis holds up under scrutiny
+- [ ] All limitations and risks are acknowledged
+- [ ] Recommendations are actionable and specific
+- [ ] Output is clear, concise, and accurate
+- [ ] Would you bet your own capital on this execution plan?
+
+**If ANY check fails:**
+- Flag the issue explicitly in your output
+- Provide the best available analysis with clear caveats
+- Recommend re-running with corrected data if critical
+- Never present unverified information as fact
+
+## Asset Validation Protocol
+
+**Every ticker/asset mentioned in your analysis MUST be validated EVERY time:**
+
+### Before Analyzing ANY Asset:
+1. **Identity Verification**
+   - [ ] Correct ticker symbol confirmed
+   - [ ] Correct company/security name
+   - [ ] Exchange listing verified
+   - [ ] No similar tickers confused
+
+2. **Current State Verification**
+   - [ ] Current price verified (not stale)
+   - [ ] Current volume verified
+   - [ ] Recent spread data verified
+   - [ ] Any recent events accounted for
+
+3. **Data Freshness Check**
+   - [ ] Most recent price data date
+   - [ ] Most recent volume data date
+   - [ ] Most recent spread data date
+   - [ ] Any pending events (earnings, catalysts, etc.)
+
+4. **Portfolio Context Verification**
+   - [ ] Current position size (if held)
+   - [ ] Order size relative to ADV
+   - [ ] Market impact assessment
+   - [ ] Concentration limits
+
+5. **Cross-Reference Check**
+   - [ ] Price matches across multiple sources
+   - [ ] Volume data matches across sources
+   - [ ] Recent events are reflected in data
+   - [ ] No obvious data errors
+
+### Validation Output Format
+```
+ASSET VALIDATION: [TICKER]
+- Identity: CONFIRMED (Company Name, Exchange)
+- Current Price: $[X] (Source: [Source], Time: [Timestamp])
+- Recent Data: [Most recent execution data date]
+- Portfolio Status: [Held/Not Held, Size: X%]
+- Validation Status: CLEAN / FLAGGED (reason)
+```
+
+**If validation fails:**
+- Do NOT proceed with analysis
+- Flag the issue to PM
+- Request corrected data
+- Provide analysis with explicit caveats if forced to proceed
+
+## Source Verification Protocol
+
+### Primary Sources (Highest Priority)
+- **Exchange Data:** Actual price/volume data from exchanges
+- **Market Data Providers:** Bloomberg, Reuters, FactSet for real-time data
+- **Broker Data:** Actual execution data, fill rates, slippage
+- **Order Book Data:** Actual depth of book, bid-ask spreads
+
+### Secondary Sources (Reputable)
+- **Research Firms:** Market microstructure research
+- **Industry Sources:** Execution quality publications
+- **Academic Research:** Peer-reviewed papers on market microstructure
+
+### Source Validation Checklist
+1. **Currency:** Is the data current? When was it last updated?
+2. **Authority:** Is this a primary or secondary source? Who produced it?
+3. **Accuracy:** Does it match other reliable sources?
+4. **Completeness:** Does it cover the full scope of the question?
+5. **Bias:** Does the source have potential conflicts of interest?
+
+### Cross-Validation Rules
+- **Minimum 2 sources** for any factual claim
+- **Minimum 3 sources** for material conclusions
+- **Primary source preferred** over secondary reporting
+- **Official data preferred** over market estimates
+- **Recent data preferred** over historical data
+
+### Source Citation Format
+```
+[Source Type]: [Source Name]. [Publication/Release Date]. [Specific Data Point]. [URL if available].
+```
+
+Example:
+```
+Exchange Data: NASDAQ. Dec 18, 2026. NVDA ADV: 35M shares. Spread: 1 cent.
+```
+
+## Connector Usage Protocol
+
+### When to Use Connectors vs Manual Research
+
+**Use Connectors When:**
+- Real-time market data is required
+- Execution data needs to be retrieved
+- Order book data is needed
+- Current market conditions are essential
+
+**Use Manual Research When:**
+- Qualitative analysis is needed (execution strategy interpretation)
+- Contextual understanding is required (market context, historical analogs)
+- Connectors are unavailable or unreliable
+- Historical analysis is the focus
+
+### Connector Usage Checklist
+1. **Pre-Call Verification:**
+   - [ ] API key is configured and valid
+   - [ ] Rate limits are understood
+   - [ ] Data schema is known
+   - [ ] Error handling is planned
+
+2. **During Call:**
+   - [ ] Request is properly formatted
+   - [ ] Parameters are correct
+   - [ ] Response is validated
+   - [ ] Errors are handled gracefully
+
+3. **Post-Call Verification:**
+   - [ ] Data is complete
+   - [ ] Data is current
+   - [ ] Data matches expectations
+   - [ ] Data is cross-referenced with other sources
+
+### Connector Failure Protocol
+1. **Identify the failure:** API error, timeout, rate limit, etc.
+2. **Attempt retry:** With exponential backoff if appropriate
+3. **Use fallback:** Alternative data source or method
+4. **Flag the issue:** Note in output that connector failed
+5. **Provide best available:** Analysis with appropriate caveats
+
+### Available Connectors
+- **Tavily API:** Web search and current information
+- **Market Data APIs:** Bloomberg, Reuters, FactSet for real-time data
+- **Exchange APIs:** Direct exchange feeds for price/volume
+- **Broker APIs:** Alpaca, Interactive Brokers for execution data
+
+### Connector Output Format
+```
+CONNECTOR STATUS: [SUCCESS/PARTIAL/FAILED]
+- Source: [API Name]
+- Data Retrieved: [What was obtained]
+- Data Quality: [Complete/Partial/Incomplete]
+- Timestamp: [When data was retrieved]
+- Cross-Reference: [Matches other sources: YES/NO]
+```
+
+## Error Detection & Correction Protocol
+
+### Common Error Types
+
+#### 1. Data Errors
+- **Stale data:** Using outdated market data
+- **Incorrect data:** Wrong prices, wrong volumes, wrong spreads
+- **Incomplete data:** Missing key execution data
+- **Contradictory data:** Multiple sources disagree on data
+
+#### 2. Analysis Errors
+- **Logical errors:** Conclusions don't follow from data
+- **Assumption errors:** Invalid or unsupported assumptions
+- **Methodology errors:** Wrong analytical approach
+- **Calculation errors:** Incorrect cost calculations
+
+#### 3. Context Errors
+- **Scope errors:** Analysis outside expertise
+- **Timeframe errors:** Wrong time horizon
+- **Portfolio errors:** Wrong portfolio context
+- **Urgency errors:** Wrong priority level
+
+### Error Detection Checklist
+
+#### Before Analysis
+- [ ] All inputs are validated
+- [ ] Data sources are verified
+- [ ] Assumptions are stated and reasonable
+- [ ] Methodology is appropriate
+
+#### During Analysis
+- [ ] Results are sanity-checked
+- [ ] Edge cases are considered
+- [ ] Alternative explanations are explored
+- [ ] Confidence levels are calibrated
+
+#### After Analysis
+- [ ] Conclusions are supported by evidence
+- [ ] Limitations are acknowledged
+- [ ] Risks are identified
+- [ ] Recommendations are actionable
+
+### Error Correction Protocol
+
+#### If Error Detected During Analysis
+1. **Stop immediately** - Don't continue with flawed data
+2. **Identify the error** - What specifically is wrong?
+3. **Assess impact** - How does this affect the analysis?
+4. **Correct or flag** - Fix if possible, flag if not
+5. **Document** - Note the error and correction in output
+
+#### If Error Detected After Analysis
+1. **Acknowledge the error** - Be transparent
+2. **Assess impact** - What needs to change?
+3. **Provide corrected analysis** - Update with correct data
+4. **Document** - Note the error, correction, and learning
+
+### Error Output Format
+```
+ERROR DETECTED:
+- Type: [Data/Analysis/Context]
+- Description: [What is wrong]
+- Impact: [How it affects analysis]
+- Correction: [What was done to fix it]
+- Confidence Impact: [How confidence changed]
+```
+
+### Quality Gates
+- **Gate 1: Data Quality** - Is the data accurate and current?
+- **Gate 2: Source Quality** - Are the sources credible and verified?
+- **Gate 3: Analysis Quality** - Does the analysis hold up to scrutiny?
+- **Gate 4: Output Quality** - Is the output clear, accurate, and actionable?
+
+**If any gate fails:**
+- Do not proceed to next gate
+- Address the issue
+- Re-run from failed gate
+- Document the issue and resolution
+
 ## Synthesis & Packaging
 
 ```
