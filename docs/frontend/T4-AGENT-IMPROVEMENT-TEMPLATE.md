@@ -238,18 +238,34 @@ Remember your role as an intern:
 4. **Appropriate Humility:** Interns won't overstep their role
 5. **Consistency:** All T4 agents will have similar quality protocols
 
-## As Actually Applied (2026-08-11)
+## As Actually Applied (2026-08-11, deep pass)
 
-All 5 intern agents (Hedge Fund & Political Filings, Bear Case, Historical Analog, Tactical Overlay, Position Sizing) were improved with the same two-section pattern used for T3 agents, right-sized to their junior role:
+All 5 intern agents (Hedge Fund & Political Filings, Bear Case, Historical Analog, Tactical Overlay, Position Sizing) received a two-stage enhancement:
 
+**Stage 1 — first pass (with the T3 batch):**
 1. **Data Quality Protocol** — accuracy check, source verification (EDGAR original / historical records / current portfolio data), and a per-asset gate (`EVERY [entity/position/situation] in the task was [checked] — never skip one`)
 2. **Error Detection Protocol** — common error types for the intern's specific task + the standard `⚠️ DATA QUALITY NOTICE` output format
 
-Both sections are placed after the Decision Framework-equivalent content and before Communication Rules. The lighter-weight protocols listed earlier in this template (Data Extraction, Instruction Following, Error Flagging, Humility) were superseded by the uniform two-section pattern for consistency across tiers — keep using the two-section pattern for any future interns.
+**Stage 2 — deep pass (T4-focused):**
+3. **Data Extraction Protocol** — verify data points against source documents, check units/dates/calculations, cite every data point, per-asset completeness (placed after Intake)
+4. **Instruction Following Protocol** — scope discipline (do ONLY the assigned task), format compliance, completeness checklist (placed after Data Extraction)
+5. **Error Flagging Protocol** — missing/inconsistent/outdated data flagged clearly + the `⚠️ DATA EXTRACTION NOTICE` output format (placed after Data Quality Protocol)
+6. **Humility Protocol** — intern role boundaries: present, don't decide; ask when unsure; stay in your lane (placed after Error Flagging)
+
+**Final section order in every intern prompt:** Identity & Role → Intake → Data Extraction → Instruction Following → Data Freshness → Data Quality → Error Flagging → Humility → Error Detection → Communication Rules → Edge Cases → Escalation → Example Output.
+
+**⚠️ Format usage (avoid confusion — three distinct formats):**
+1. `⚠️ DATA EXTRACTION NOTICE` — use for data problems (missing / inconsistent / outdated data) found while extracting. From Error Flagging Protocol.
+2. `⚠️ DATA QUALITY NOTICE` — use when a verification or error-detection step finds a potential inaccuracy (wrong values, bad source, flawed analysis). From Error Detection Protocol.
+3. `⚠️ FLAG FOR [LEAD]` — use ONLY for the escalation triggers in the Escalation section (e.g., >30% bear-case probability, tilt over 5% cap). This is the only one that interrupts the lead.
+
+When in doubt: data problems → DATA EXTRACTION NOTICE; analysis/verification problems → DATA QUALITY NOTICE; escalation triggers → FLAG FOR [LEAD].
+
+**Tests:** `docs/frontend/TEST-T4-INTERN-AGENTS.md` covers all 5 interns with a normal task + a deliberately messed-up input each.
 
 ## Next Steps
 
-1. Apply this template to all 5 T4 intern agents
-2. Customize for each agent's specific domain and tasks
-3. Test with example tasks to verify improvements
+1. ~~Apply this template to all 5 T4 intern agents~~ ✅ COMPLETED (deep pass)
+2. ~~Customize for each agent's specific domain and tasks~~ ✅ Tailored per intern (e.g., filings intern checks units and amendments; sizing intern refuses guessed inputs; overlay intern requires a defined exit)
+3. Run the test scenarios in TEST-T4-INTERN-AGENTS.md
 4. Document any agent-specific variations needed

@@ -56,13 +56,15 @@ All 60 T3 utility agents have been improved with domain-tailored Data Quality + 
 
 **Batch 6 — stragglers (6):** Harry Markopolos (missed T2), Hedge Fund & Political Filings Intern, Bear Case Intern, Historical Analog Intern, Position Sizing Intern, Tactical Overlay Intern
 
-### T4 Intern Agents (5 of 5 completed) ✓
-All 5 intern agents have been improved with data-quality + error-detection protocols tailored to their junior role:
-1. Hedge Fund & Political Filings Intern ✓
-2. Bear Case Intern ✓
-3. Historical Analog Intern ✓
-4. Tactical Overlay Intern ✓
-5. Position Sizing Intern ✓
+### T4 Intern Agents (5 of 5 completed — deep pass) ✓
+All 5 intern agents have been improved with data-quality + error-detection protocols AND a deep enhancement pass adding the four intern-specific protocols:
+1. Hedge Fund & Political Filings Intern ✓ — + Data Extraction, Instruction Following, Error Flagging, Humility
+2. Bear Case Intern ✓ — + same four protocols, tailored to downside-scenario building
+3. Historical Analog Intern ✓ — + same four protocols, tailored to precedent finding
+4. Tactical Overlay Intern ✓ — + same four protocols, tailored to event-driven tilts
+5. Position Sizing Intern ✓ — + same four protocols, tailored to mechanical sizing
+
+Each intern now carries: Identity & Role → Intake → Data Extraction → Instruction Following → Data Freshness → Data Quality → Error Flagging → Humility → Error Detection → Communication Rules → Edge Cases → Escalation → Example Output. Tests: `docs/frontend/TEST-T4-INTERN-AGENTS.md` (normal + messed-up input per intern).
 
 *(Note: The framework's T4 list also counts the Portfolio Manager, which is improved under T1.)*
 
@@ -172,8 +174,8 @@ All T2 named agents have been improved with comprehensive verification protocols
 ### Phase 2: Implement for T3 Utility Agents (60 agents) ✓ COMPLETED
 All 60 T3 agents improved with domain-tailored Data Quality + Error Detection protocols. Verification confirmed 100% coverage across all 89 system prompts in the project.
 
-### Phase 3: Implement for T4 Intern Agents (5 agents) ✓ COMPLETED
-All 5 intern agents improved with data-quality + error-detection protocols appropriate to their junior role.
+### Phase 3: Implement for T4 Intern Agents (5 agents) ✓ COMPLETED (deep pass)
+All 5 intern agents improved with data-quality + error-detection protocols AND the four intern-specific protocols (Data Extraction, Instruction Following, Error Flagging, Humility). Test scenarios created in `docs/frontend/TEST-T4-INTERN-AGENTS.md`.
 
 ### Phase 4: Testing & Validation - IN PROGRESS
 **Completed:**
