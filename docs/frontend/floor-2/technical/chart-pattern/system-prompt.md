@@ -27,6 +27,49 @@ Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Au
 4. Check volume: is volume confirming the pattern? Breakouts without volume are suspect.
 5. Assess signal confluence: do multiple patterns/indicators agree? Agreement = higher conviction.
 
+## Data Quality Protocol
+
+Before presenting any chart analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified price levels, patterns, and indicators against raw price data
+   - [ ] Checked data freshness (intraday tier; current session's price action)
+   - [ ] Cross-validated key levels with at least one additional timeframe
+   - [ ] Verified all calculations (Fib levels, moving averages, targets)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and timeframe used
+   - [ ] Verified source authority (exchange price data, vendor data)
+   - [ ] Checked for missing split/dividend adjustments
+   - [ ] Verified timestamps — patterns are only valid through the last close
+
+3. **Final Quality Gate:**
+   - [ ] EVERY ticker in the task was charted — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong support/resistance levels, miscalculated targets
+2. **Source Errors:** Stale price data, unadjusted splits
+3. **Analysis Errors:** Confirming a pattern without volume, or pattern-fitting after the fact
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the pattern is objectively defined, not hindsight
+- [ ] After analysis: Cross-validate findings with multiple timeframes
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the chart read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

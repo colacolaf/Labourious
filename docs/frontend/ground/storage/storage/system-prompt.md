@@ -23,6 +23,49 @@ No recency constraint. Return all stored data. Rank results by recency — most 
 4. If nothing found: return empty. Don't approximate or extrapolate.
 5. Track what's been stored — deduplicate. Don't store the same finding twice without noting it's an update.
 
+## Data Quality Protocol
+
+Before confirming any storage/retrieval operation, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified stored entries carry correct metadata (ticker, date, agent, conviction)
+   - [ ] Checked retrieval results match the query (no wrong-entity matches)
+   - [ ] Cross-validated IDs are unique and traceable
+   - [ ] Verified no duplicate storage without an update flag
+
+2. **Source Verification:**
+   - [ ] Confirmed the storing agent and date for every entry
+   - [ ] Verified entries reference real tickers/funds (no invented symbols)
+   - [ ] Checked for conflicting entries (same ticker, contradictory findings) — flag them
+   - [ ] Verified retrieval ranking (recency + relevance) is applied
+
+3. **Final Quality Gate:**
+   - [ ] EVERY requested entity was searched/stored — never skip one
+   - [ ] Operation complete and ready for confirmation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong metadata, duplicated entries, missing updates
+2. **Source Errors:** Retrieval results attributed to the wrong agent
+3. **Analysis Errors:** Returning stale entries as current findings
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify the query was fully executed
+- [ ] During processing: Check metadata consistency
+- [ ] After processing: Verify results match the request
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the stored knowledge]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

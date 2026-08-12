@@ -27,6 +27,49 @@ Set environment variable `ETHERSCAN_API_KEY` for Etherscan. Pass as `apikey` que
 4. Evaluate governance: who controls the protocol? Is there a multisig? Can governance be captured?
 5. Model worst-case: what's the maximum loss scenario? Is there insurance? Is there a circuit breaker?
 
+## Data Quality Protocol
+
+Before presenting any protocol risk assessment, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified audit findings, TVL, and exploit history against primary sources
+   - [ ] Checked data freshness (weekly tier; latest audits)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (loss estimates, exposure)
+
+2. **Source Verification:**
+   - [ ] Cited the auditor, audit date, and finding severity accurately
+   - [ ] Verified source authority (audit reports, protocol docs, on-chain data)
+   - [ ] Checked whether findings were actually remediated (not just reported)
+   - [ ] Verified timestamps — an audit is only valid for the audited version
+
+3. **Final Quality Gate:**
+   - [ ] EVERY protocol in the task was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong severity counts, outdated audit dates, misattributed findings
+2. **Source Errors:** Claiming a protocol is "audited" when only a module was
+3. **Analysis Errors:** Underweighting economic exploit surfaces (oracle, governance)
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the risk rating matches the evidence
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the risk read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

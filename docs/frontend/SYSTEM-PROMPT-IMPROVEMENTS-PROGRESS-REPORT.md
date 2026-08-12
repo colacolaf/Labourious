@@ -39,17 +39,11 @@ All 11 T2 Named agents have been improved with comprehensive verification protoc
 10. H. David Rosenbloom (Cross-Border Tax) ✓
 11. David Swensen (Asset Allocation) ✓
 
-### 🔄 T3 Utility Agents (4 of 60 completed)
-**Completed:**
-1. Web Research Agent ✓
-2. Academic Research Agent ✓
-3. News Aggregation Agent ✓
-4. Data Scout Agent ✓
+### ✅ T3 Utility Agents (60 of 60 completed)
+All 60 T3 utility agents have been improved with domain-tailored Data Quality + Error Detection protocols, each including a per-asset coverage gate so no stock/fund is ever skipped. Completed in 6 batches (ground floor, Floor 2 quant/fundamental, Floor 2 technical/crypto + Floor 3 risk, Floor 3 critique/compliance + Floor 4 strategy, Floor 4 execution/memory/control/tasks + PM Bodyguard, stragglers).
 
-**Remaining:** 56 T3 utility agents pending implementation
-
-### 🔄 T4 Intern Agents (0 of 6 completed)
-**Pending implementation**
+### ✅ T4 Intern Agents (5 of 5 completed)
+All 5 intern agents improved: Hedge Fund & Political Filings, Bear Case, Historical Analog, Tactical Overlay, Position Sizing. Harry Markopolos (T2) also completed in the final batch.
 
 ## Key Improvements Implemented
 
@@ -113,8 +107,9 @@ Created T4 improvement template with:
 
 ### After Improvements (Current Status)
 - **T1/T2 Agents:** 100% have comprehensive verification protocols
-- **T3 Agents:** 7% (4/60) have basic quality protocols
-- **T4 Agents:** 0% have basic protocols (templates created)
+- **T3 Agents:** 100% (60/60) have domain-tailored quality protocols
+- **T4 Agents:** 100% (5/5) have quality protocols
+- **All system prompts (89/89):** 100% coverage — verified via grep across the codebase
 
 ## Quality Metrics
 
@@ -134,16 +129,16 @@ Created T4 improvement template with:
 
 ## Next Steps
 
-### Immediate (Next Session)
-1. **Complete T3 Agent Improvements** (56 remaining)
-   - Apply T3 improvement template to all remaining T3 agents
-   - Customize for each agent's specific domain and data sources
-   - Test with example scenarios
+### Immediate (Completed)
+1. **T3 Agent Improvements** ✓ COMPLETED — all 60 agents improved and verified
+2. **T4 Agent Improvements** ✓ COMPLETED — all 5 interns improved
+3. **Harry Markopolos (T2 straggler)** ✓ COMPLETED
 
-2. **Complete T4 Agent Improvements** (6 agents)
-   - Apply T4 improvement template to all T4 intern agents
-   - Customize for each agent's specific tasks
-   - Test with example tasks
+### Short-term (This Week)
+3. **Testing & Validation** (remaining)
+   - Test improved agents with example portfolios (Web Research test scenario exists)
+   - Verify improvements are consistent across tiers
+   - Document any issues or needed adjustments
 
 ### Short-term (This Week)
 3. **Testing & Validation**

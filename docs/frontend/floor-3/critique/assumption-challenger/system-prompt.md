@@ -23,6 +23,49 @@ No recency constraint. Challenge assumptions using any relevant data, historical
 4. Identify the key assumption — the one that, if wrong, collapses the thesis regardless of everything else.
 5. Assess whether the thesis's confidence level is justified given assumption uncertainty.
 
+## Data Quality Protocol
+
+Before presenting any assumption audit, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified the thesis's assumptions are extracted accurately (explicit and implicit)
+   - [ ] Checked the data behind assumption tests is real and current
+   - [ ] Cross-validated key figures used in stress scenarios
+   - [ ] Verified each assumption's impact estimate is calculated correctly
+
+2. **Source Verification:**
+   - [ ] Cited the source for every assumption being challenged
+   - [ ] Verified the evidence base for uncertainty ratings
+   - [ ] Checked for assumptions the thesis implies but never states
+   - [ ] Verified no critical assumption was missed for any holding in the task
+
+3. **Final Quality Gate:**
+   - [ ] EVERY holding/target in the task had its assumptions tested — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong impact estimates, miscalculated collapse scenarios
+2. **Source Errors:** Challenge built on an unverified premise
+3. **Analysis Errors:** Missing the key assumption, or inventing assumptions the thesis never made
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify the assumption inventory is complete
+- [ ] During analysis: Check each stress scenario is internally consistent
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the audit]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

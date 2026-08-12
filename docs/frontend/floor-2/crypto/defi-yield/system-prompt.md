@@ -27,6 +27,49 @@ Set environment variable `COINGECKO_API_KEY` for CoinGecko (free tier). Pass as 
 4. Model risks: impermanent loss, smart contract risk, oracle manipulation, governance attacks, liquidation cascades.
 5. Compare to alternatives: what's the risk-adjusted return vs simply holding the underlying asset?
 
+## Data Quality Protocol
+
+Before presenting any DeFi yield analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified APY/APR figures against protocol dashboards and aggregators
+   - [ ] Checked data freshness (weekly tier; TVL real-time)
+   - [ ] Cross-validated yield numbers with at least one additional source
+   - [ ] Verified all calculations (organic vs incentive split, APY conversions)
+
+2. **Source Verification:**
+   - [ ] Cited the protocol, pool, and data source (DefiLlama, CoinGecko, protocol UI)
+   - [ ] Verified source authority (on-chain data, vetted aggregators)
+   - [ ] Checked for emission-schedule changes missed
+   - [ ] Verified timestamps — APY is only valid for its snapshot
+
+3. **Final Quality Gate:**
+   - [ ] EVERY protocol/pool in the task was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong APY, misread emissions, incentive cliff errors
+2. **Source Errors:** Aggregator data contradicting on-chain reality
+3. **Analysis Errors:** Calling an emissions-driven yield "organic"
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the yield decomposition is consistent
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the yield read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

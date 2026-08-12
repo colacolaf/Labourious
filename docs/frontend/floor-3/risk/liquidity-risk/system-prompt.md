@@ -27,6 +27,49 @@ Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Au
 4. Calculate portfolio liquidity: what % can be liquidated in 1 day / 1 week / 1 month?
 5. Flag liquidity mismatches: positions that are large relative to the market but small relative to the portfolio.
 
+## Data Quality Protocol
+
+Before presenting any liquidity analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified ADV, spreads, and depth figures against raw data
+   - [ ] Checked data freshness (real-time tier; 20-day ADV)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (% of ADV, exit days, impact)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and timestamp
+   - [ ] Verified source authority (exchange data, vendor feeds)
+   - [ ] Checked for ADV anomalies (halts, data gaps) skewing estimates
+   - [ ] Verified timestamps — liquidity metrics are only valid as of the snapshot
+
+3. **Final Quality Gate:**
+   - [ ] EVERY position's liquidity was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong ADV, miscalculated exit days, impact model errors
+2. **Source Errors:** Stale depth treated as current liquidity
+3. **Analysis Errors:** Ignoring crisis liquidity collapse (spreads widen, volumes halve)
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check stress scenarios were run, not just normal liquidity
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the liquidity read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

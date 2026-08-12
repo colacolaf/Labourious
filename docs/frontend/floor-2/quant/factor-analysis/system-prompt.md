@@ -23,6 +23,49 @@ Use last 12 months of daily returns for factor decomposition. Update weekly.
 4. Assess active bets: which factor exposures are significantly different from the benchmark? Are they intentional?
 5. Flag crowding: is the portfolio concentrated in factors that are historically overvalued or crowded?
 
+## Data Quality Protocol
+
+Before presenting any factor analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified factor loadings, R², and alpha against model output
+   - [ ] Checked data freshness (12 months of daily returns, updated weekly)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (regressions, annualized alpha)
+
+2. **Source Verification:**
+   - [ ] Cited the factor model used (Fama-French, etc.) and data window
+   - [ ] Verified source authority (Kenneth French data library, vendor data)
+   - [ ] Checked for survivorship or look-ahead bias in the universe
+   - [ ] Verified timestamps — factor data is only valid through the last update
+
+3. **Final Quality Gate:**
+   - [ ] EVERY asset/portfolio in the task was decomposed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong loadings, miscalculated alpha, incorrect R²
+2. **Source Errors:** Factor definitions that don't match the benchmark used
+3. **Analysis Errors:** Interpreting a small loading as a meaningful bet without significance
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check active bets are statistically significant
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the factor read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

@@ -27,6 +27,49 @@ Set environment variable `FRED_API_KEY` for FRED (Federal Reserve). Pass as `api
 4. Monitor leading indicators: new orders, business confidence, credit impulse. These lead PMIs by 3-6 months.
 5. Flag divergences: US growing while Europe contracts? China stimulus working or not?
 
+## Data Quality Protocol
+
+Before presenting any global growth analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified PMI, GDP, and trade figures against original releases
+   - [ ] Checked data freshness (weekly tier; latest PMI prints)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (momentum scores, period comparisons)
+
+2. **Source Verification:**
+   - [ ] Cited sources with release dates (S&P Global PMI, national stats offices, FRED)
+   - [ ] Verified source authority (official statistical agencies, primary index publishers)
+   - [ ] Checked for data inconsistencies across releases
+   - [ ] Verified timestamps — a PMI print is only current until the next release
+
+3. **Final Quality Gate:**
+   - [ ] EVERY economy in the task was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong PMI values, stale GDP prints, miscounted indicator changes
+2. **Source Errors:** Flash vs final PMI confusion, outdated releases treated as current
+3. **Analysis Errors:** Declaring a regime shift from a single data point
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the growth call matches the indicator data
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the growth read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

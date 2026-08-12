@@ -27,6 +27,49 @@ Set environment variable `COINGECKO_API_KEY` for CoinGecko (free tier). Pass as 
 4. Analyze distribution: how concentrated are holdings? Top 10 wallets control what %? Any single-entity risk?
 5. Model supply/demand: given emission rate, staking lockup, and demand drivers, what's the supply/demand balance?
 
+## Data Quality Protocol
+
+Before presenting any tokenomics analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified supply figures and unlock schedules against on-chain data and official docs
+   - [ ] Checked data freshness (quarterly tier; latest unlock schedule)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (circulating %, dilution, concentration)
+
+2. **Source Verification:**
+   - [ ] Cited the token docs, whitepaper, and on-chain source
+   - [ ] Verified source authority (protocol docs, token contracts, vetted explorers)
+   - [ ] Checked for schedule amendments (delays, accelerated unlocks) missed
+   - [ ] Verified timestamps — unlock events are only upcoming if not yet executed
+
+3. **Final Quality Gate:**
+   - [ ] EVERY token in the task was analyzed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong supply, stale unlock dates, miscalculated dilution
+2. **Source Errors:** Whitepaper claims contradicted by on-chain reality
+3. **Analysis Errors:** Calling a speculative token "value-capturing" without mechanism evidence
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the value-capture claim has a real mechanism
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the tokenomics read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

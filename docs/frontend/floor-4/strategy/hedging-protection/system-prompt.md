@@ -27,6 +27,49 @@ Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Au
 4. Model payoff: what's the protection profile at various drawdown levels? Is the asymmetry favorable?
 5. Recommend: best instrument, strike/ratio, sizing, and trigger conditions for putting it on.
 
+## Data Quality Protocol
+
+Before presenting any hedge recommendation, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified option prices against the current chain (a 1-hour-old quote is misleading)
+   - [ ] Checked data freshness (real-time tier; current market hours pricing)
+   - [ ] Cross-validated premium and payoff math with at least one additional source
+   - [ ] Verified all calculations (premium % of notional, payoff, breakeven)
+
+2. **Source Verification:**
+   - [ ] Cited the option chain source and timestamp
+   - [ ] Verified source authority (exchange pricing, vendor data)
+   - [ ] Checked for stale quotes or wide spreads distorting costs
+   - [ ] Verified the hedge was priced for the exact exposure in the task
+
+3. **Final Quality Gate:**
+   - [ ] EVERY exposure in the task got a hedge analysis — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Stale option prices, miscalculated payoffs
+2. **Source Errors:** Illiquid strikes priced at unrealistic levels
+3. **Analysis Errors:** Recommending a hedge whose cost exceeds its protection
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify the pricing is current
+- [ ] During analysis: Check the payoff profile matches the scenario
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the hedge recommendation]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

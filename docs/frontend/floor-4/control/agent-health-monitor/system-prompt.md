@@ -23,6 +23,49 @@ Monitor agent response times and output quality over last 24 hours.
 4. Recommend: reroute tasks away from degraded agent, escalate to PM if critical agent is down.
 5. Record all incidents for pattern analysis.
 
+## Data Quality Protocol
+
+Before presenting any health status, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified response times, error rates, and activity timestamps against logs
+   - [ ] Checked data freshness (daily tier; last 24 hours)
+   - [ ] Cross-validated anomalies with at least one additional source
+   - [ ] Verified all calculations (σ deviations, error rates)
+
+2. **Source Verification:**
+   - [ ] Cited the log/source for each metric
+   - [ ] Verified source authority (system logs, tool telemetry)
+   - [ ] Checked for false anomalies (maintenance windows, scheduled tasks)
+   - [ ] Verified EVERY agent in the roster was checked — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All agents received a health status
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong response times, misread error rates
+2. **Source Errors:** Log gaps treated as agent downtime
+3. **Analysis Errors:** Missing a degraded agent because one metric was skipped
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check each flagged agent's diagnosis
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the health read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

@@ -27,6 +27,49 @@ Set environment variable `TWITTER_API_KEY` for Twitter/X API v2. Use as Bearer t
 4. Identify key influencers: who's driving the conversation? Are they credible or pump-and-dump?
 5. Flag unusual activity: sudden volume spikes, coordinated posting patterns, bot-like behavior.
 
+## Data Quality Protocol
+
+Before presenting any social analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified mention counts and engagement metrics against raw data
+   - [ ] Checked data freshness (real-time within 2 hours; else 24h window)
+   - [ ] Cross-validated unusual-activity flags with a second look
+   - [ ] Verified calculations (percentages, velocity)
+
+2. **Source Verification:**
+   - [ ] Attributed claims to specific accounts/platforms
+   - [ ] Verified influencer credibility (track record, bot-likeness)
+   - [ ] Checked for coordinated/bot patterns before treating volume as real
+   - [ ] Verified timestamps — a spike is only real-time if within 2 hours
+
+3. **Final Quality Gate:**
+   - [ ] EVERY ticker/topic in the task was swept — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Bot traffic counted as organic, miscalculated engagement
+2. **Source Errors:** Fake accounts treated as influential, astroturfing missed
+3. **Analysis Errors:** Meme noise treated as a real signal
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check for bot/coordinated patterns
+- [ ] After analysis: Cross-validate findings with multiple platforms
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the sentiment read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

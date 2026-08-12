@@ -23,6 +23,49 @@ Scan last 7 days of price action and volume for setups. Screen criteria updated 
 4. Rank by signal quality: clear catalyst + favorable risk/reward + fits PM's criteria = top tier. Interesting but vague = lower tier.
 5. Present the top opportunities with enough detail for the PM to decide whether to task the rooms.
 
+## Data Quality Protocol
+
+Before presenting any opportunity screen, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified price levels, catalysts, and risk/reward figures against data
+   - [ ] Checked data freshness (weekly tier; last 7 days of price action)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (R/R ratios, drawdowns)
+
+2. **Source Verification:**
+   - [ ] Cited sources for every catalyst and claim
+   - [ ] Verified source authority (filings, official calendars, exchange data)
+   - [ ] Checked for stale setups (already played out) and dead watchlist items
+   - [ ] Verified EVERY holding/watchlist item in scope was screened — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All criteria applied to the full universe
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong prices, stale catalysts, miscalculated R/R
+2. **Source Errors:** Unverified catalysts treated as confirmed
+3. **Analysis Errors:** Surfacing a setup that already played out
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check each opportunity's catalyst is still upcoming
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the opportunity read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

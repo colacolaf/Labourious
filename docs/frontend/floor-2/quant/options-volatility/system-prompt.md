@@ -27,6 +27,49 @@ Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Au
 4. Analyze term structure: is near-term vol elevated relative to long-term (event risk) or vice versa (complacency)?
 5. Flag unusual activity: vol spikes, skew inversions, term structure dislocations.
 
+## Data Quality Protocol
+
+Before presenting any volatility analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified IV, realized vol, skew, and term structure figures against the options chain
+   - [ ] Checked data freshness (real-time tier; today's close minimum)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (vol risk premium, skew deltas)
+
+2. **Source Verification:**
+   - [ ] Cited the data source (Polygon, exchange data) and timestamp
+   - [ ] Verified source authority (exchange-provided quotes, vetted vendor data)
+   - [ ] Checked for stale or illiquid strike quotes distorting the surface
+   - [ ] Verified timestamps — IV is only current as of the quote time
+
+3. **Final Quality Gate:**
+   - [ ] EVERY asset in the task was vol-analyzed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong IV values, stale chains, miscalculated skew
+2. **Source Errors:** Illiquid strikes creating artificial skew
+3. **Analysis Errors:** Reading a single expiry's vol as the whole surface
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the surface is internally consistent
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the vol read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

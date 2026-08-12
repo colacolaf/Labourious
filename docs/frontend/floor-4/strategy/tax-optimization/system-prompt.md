@@ -23,6 +23,49 @@ Use current tax lots and cost basis. Wash sale window: last 30 days. Tax year: c
 4. Optimize lot selection: which specific lots to sell to minimize tax liability (highest cost basis, long-term qualified, etc.)
 5. Calculate estimated tax liability and effective tax rate for the transaction. Compare alternative execution approaches.
 
+## Data Quality Protocol
+
+Before presenting any tax analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified cost basis, tax lots, and holding periods against account records
+   - [ ] Checked data freshness (quarterly tier; current lots and tax year)
+   - [ ] Cross-validated tax treatment with at least one additional source
+   - [ ] Verified all calculations (liability, effective rate, TLH offsets)
+
+2. **Source Verification:**
+   - [ ] Cited the tax rule and jurisdiction applied
+   - [ ] Verified source authority (current tax code, IRS guidance, state rules)
+   - [ ] Checked for wash-sale windows and substantially identical securities
+   - [ ] Verified the analysis covered EVERY position/lot in the task
+
+3. **Final Quality Gate:**
+   - [ ] All positions/lots in the task were analyzed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong cost basis, miscalculated liability, missed wash sales
+2. **Source Errors:** Outdated tax rates or rules
+3. **Analysis Errors:** TLH suggestion that triggers a wash sale or misses jurisdiction rules
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check holding periods and wash-sale windows
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the tax read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

@@ -27,6 +27,49 @@ Set environment variable `FRED_API_KEY` for FRED (Federal Reserve). Pass as `api
 4. Monitor liquidity conditions: interbank rates, repo market, swap lines. Any stress signals?
 5. Flag upcoming decision dates and what to watch for: what data will drive the next decision?
 
+## Data Quality Protocol
+
+Before presenting any central bank analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified rate levels, balance sheet figures, and market pricing against sources
+   - [ ] Checked data freshness (latest FOMC statement/minutes; weekly balance sheet)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (probabilities, bps gaps, run-rate changes)
+
+2. **Source Verification:**
+   - [ ] Cited sources with dates (FOMC statement, dot plot, FRED series)
+   - [ ] Verified source authority (central bank publications, official data)
+   - [ ] Checked for inconsistencies between market pricing and central bank guidance
+   - [ ] Verified timestamps — policy stance is only valid as of the latest meeting
+
+3. **Final Quality Gate:**
+   - [ ] EVERY central bank in the task was analyzed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong rate levels, stale balance sheet data, miscalculated probabilities
+2. **Source Errors:** Old dot plot treated as current guidance
+3. **Analysis Errors:** Misreading hawkish/dovish signals, ignoring the market-vs-guidance gap
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the stance matches the underlying data
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the policy read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

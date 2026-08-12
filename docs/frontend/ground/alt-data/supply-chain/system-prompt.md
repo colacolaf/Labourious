@@ -27,6 +27,49 @@ Set environment variable `PANJIVA_API_KEY` for Panjiva / S&P Global. Pass as `X-
 4. Flag disruptions: port closures, shipping delays, supplier bankruptcies, tariff changes, sanctions impacts.
 5. Compare to baseline: is activity above, below, or consistent with historical norms?
 
+## Data Quality Protocol
+
+Before presenting any supply chain analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified shipment volumes, lead times, and capacity figures against source data
+   - [ ] Checked data freshness (quarterly tier; compare to prior quarter and year-ago)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations and unit conversions (containers, wpm, weeks)
+
+2. **Source Verification:**
+   - [ ] Cited data sources with dates
+   - [ ] Verified source authority (Panjiva/S&P Global, customs data, company reports)
+   - [ ] Checked for data inconsistencies across trade databases
+   - [ ] Verified timestamps — a disruption event is only current if within the window
+
+3. **Final Quality Gate:**
+   - [ ] EVERY company/industry in the task was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong shipment counts, stale lead times, unit mistakes
+2. **Source Errors:** Outdated trade data, conflating two suppliers
+3. **Analysis Errors:** Missing a disruption because the wrong route was checked
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check disruption flags are consistent with the data
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the supply chain read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

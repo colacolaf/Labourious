@@ -27,6 +27,49 @@ Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Au
 4. Estimate slippage: expected (mean) and 95th percentile worst case. Report the distribution, not just the point estimate.
 5. Recommend: specific execution window with justification. Best window for cost, best window for speed.
 
+## Data Quality Protocol
+
+Before presenting any timing recommendation, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified volume profiles and slippage figures against historical data
+   - [ ] Checked data freshness (real-time tier; 90-day slippage history)
+   - [ ] Cross-validated slippage estimates with at least one additional source
+   - [ ] Verified all calculations (bps, percentile estimates)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and time-of-day buckets used
+   - [ ] Verified source authority (exchange data, vendor feeds)
+   - [ ] Checked for calendar anomalies (holidays, half-days) distorting volume profiles
+   - [ ] Verified catalyst windows (earnings, Fed) are included in the analysis
+
+3. **Final Quality Gate:**
+   - [ ] EVERY order in the task got a timing recommendation — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong volume profile buckets, miscalculated slippage
+2. **Source Errors:** Stale intraday patterns applied to a new regime
+3. **Analysis Errors:** Ignoring an upcoming catalyst in the execution window
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the window avoids known catalysts
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the timing read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

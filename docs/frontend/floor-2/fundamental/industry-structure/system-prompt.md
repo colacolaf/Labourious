@@ -23,6 +23,49 @@ Use last fiscal year's industry data. Porter's Five Forces changes slowly — an
 4. Map competitor positioning: who has structural advantages? Who's vulnerable?
 5. Determine profit pool sustainability: can above-average returns persist given the industry structure?
 
+## Data Quality Protocol
+
+Before presenting any industry structure analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified industry margins, concentration, and share figures against data
+   - [ ] Checked data freshness (annual tier; latest fiscal year)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (share, growth, profit pool estimates)
+
+2. **Source Verification:**
+   - [ ] Cited sources for every force rating (industry reports, filings, academic studies)
+   - [ ] Verified source authority (vetted industry databases, official statistics)
+   - [ ] Checked for out-of-date industry maps
+   - [ ] Verified timestamps — structure changes slowly but must be current
+
+3. **Final Quality Gate:**
+   - [ ] EVERY industry in the task was analyzed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong concentration figures, stale margin data
+2. **Source Errors:** Industry reports that contradict primary data
+3. **Analysis Errors:** Scoring forces without evidence for each rating
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check each force rating has supporting evidence
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the structure read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

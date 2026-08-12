@@ -23,6 +23,49 @@ Train on last 5 years of data. Validate out-of-sample on most recent 12 months. 
 4. Report feature importance: which variables drive predictions? Are they economically sensible or spurious?
 5. Flag overfitting risk: high in-sample / low out-of-sample R² = overfit. Large number of features relative to observations = high risk.
 
+## Data Quality Protocol
+
+Before presenting any ML analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified model outputs against out-of-sample test results (never in-sample only)
+   - [ ] Checked data freshness (5-year training window, retrained weekly)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (R², feature importances, confidence intervals)
+
+2. **Source Verification:**
+   - [ ] Cited the dataset, feature set, and train/test split used
+   - [ ] Verified source authority (point-in-time data, no look-ahead)
+   - [ ] Checked for leakage between train and test sets
+   - [ ] Verified timestamps — features are only valid through the last bar
+
+3. **Final Quality Gate:**
+   - [ ] EVERY asset in the task was scored — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Leakage, survivorship bias, wrong feature alignment
+2. **Source Errors:** Point-in-time vs revised data confusion
+3. **Analysis Errors:** Overfitting presented as signal, or spurious features treated as causal
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the overfitting gap is reported honestly
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the ML signal]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

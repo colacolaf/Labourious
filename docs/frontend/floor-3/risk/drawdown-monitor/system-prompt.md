@@ -23,6 +23,49 @@ Use entire price history. Current drawdown: real-time. Recovery analysis: all hi
 4. Attribute drawdown risk: which positions contribute most to drawdown risk? Which would be the hardest to recover from?
 5. Set drawdown triggers: at what drawdown level should the PM take action? What's the threshold?
 
+## Data Quality Protocol
+
+Before presenting any drawdown analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified peak, trough, and drawdown figures against price/NAV data
+   - [ ] Checked data freshness (weekly tier; current drawdown real-time)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (drawdown %, recovery months)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and valuation dates
+   - [ ] Verified source authority (portfolio NAV data, price data)
+   - [ ] Checked for cash flows distorting NAV-based drawdowns
+   - [ ] Verified timestamps — peak date is only valid if truly the peak
+
+3. **Final Quality Gate:**
+   - [ ] EVERY position's drawdown contribution was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong peak/trough dates, miscalculated drawdowns
+2. **Source Errors:** NAV distortions from flows, stale prices
+3. **Analysis Errors:** Recovery estimates ignoring regime changes
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the drawdown path is internally consistent
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the drawdown read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

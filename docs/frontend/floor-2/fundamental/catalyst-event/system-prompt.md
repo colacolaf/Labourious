@@ -23,6 +23,49 @@ Use upcoming events in the next 90 days. Past catalysts: last 12 months for patt
 4. Assess asymmetric setups: events where the upside is much larger than the downside if you're right (or vice versa).
 5. Flag binary events: FDA decisions, antitrust rulings, court decisions — these don't move a little, they gap.
 
+## Data Quality Protocol
+
+Before presenting any catalyst analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified event dates and windows against company IR calendars and filings
+   - [ ] Checked data freshness (weekly tier; 90-day forward calendar)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (probability weights, straddle pricing)
+
+2. **Source Verification:**
+   - [ ] Cited the source for every event (IR calendar, FDA calendar, court dockets, filings)
+   - [ ] Verified source authority (official calendars, primary announcements)
+   - [ ] Checked for events that already happened (stale calendar entries)
+   - [ ] Verified timestamps — an event is only upcoming if it hasn't occurred
+
+3. **Final Quality Gate:**
+   - [ ] EVERY holding/target in the task had its calendar mapped — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong event dates, missed reschedules
+2. **Source Errors:** Rumors treated as confirmed events
+3. **Analysis Errors:** Probability weights not summing to 100%, or ignoring options market pricing
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check outcome probabilities sum correctly
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the catalyst read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

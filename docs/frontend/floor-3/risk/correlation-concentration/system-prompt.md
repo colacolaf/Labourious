@@ -23,6 +23,49 @@ Use last 252 trading days for correlation matrix. Update daily. Crisis correlati
 4. Stress-test correlations: in a crisis, correlations spike toward 1. Model the worst-case correlation matrix.
 5. Identify hidden correlations: assets that appear uncorrelated but are both sensitive to the same latent factor.
 
+## Data Quality Protocol
+
+Before presenting any correlation/concentration analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified correlations, weights, and diversification ratios against data
+   - [ ] Checked data freshness (weekly tier; 252-day correlation matrix)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (diversification ratio, concentration %)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and lookback window
+   - [ ] Verified source authority (return data, position data)
+   - [ ] Checked for missing positions skewing concentration
+   - [ ] Verified timestamps — correlations are only valid through the last data point
+
+3. **Final Quality Gate:**
+   - [ ] EVERY position/pair was included — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong pairwise correlations, concentration miscalculations
+2. **Source Errors:** Missing assets understating hidden correlation
+3. **Analysis Errors:** Claiming diversification without crisis correlation stress
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check hidden-correlation factors were tested
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the diversification read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

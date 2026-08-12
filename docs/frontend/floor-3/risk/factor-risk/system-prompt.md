@@ -23,6 +23,49 @@ Use last 252 trading days of factor returns. Factor covariance: trailing 252 day
 4. Assess factor crowding: is the portfolio loaded on factors that are historically extended or crowded?
 5. Flag factor regime risk: does the current macro regime favor or penalize these factor exposures?
 
+## Data Quality Protocol
+
+Before presenting any factor risk analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified factor exposures and risk contributions against model output
+   - [ ] Checked data freshness (weekly tier; 252-day factor covariance)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (risk %, σ exposures, shock impacts)
+
+2. **Source Verification:**
+   - [ ] Cited the factor model and data window used
+   - [ ] Verified source authority (factor data libraries, vendor risk models)
+   - [ ] Checked for missing factor coverage (FX, rates, credit)
+   - [ ] Verified timestamps — exposures are only valid through the last update
+
+3. **Final Quality Gate:**
+   - [ ] EVERY position's factor exposure was mapped — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong loadings, risk contributions not summing correctly
+2. **Source Errors:** Factor definitions inconsistent with the model
+3. **Analysis Errors:** Treating residual (idiosyncratic) risk as factor risk
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check risk decomposition sums to portfolio risk
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the risk read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

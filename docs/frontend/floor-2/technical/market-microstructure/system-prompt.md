@@ -27,6 +27,49 @@ Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Au
 4. Estimate market impact: what's the expected slippage for [X] shares? How does impact scale with size?
 5. Flag microstructure anomalies: unusual spread widening, order book thinning, liquidity provider withdrawal.
 
+## Data Quality Protocol
+
+Before presenting any microstructure analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified spread, depth, and imbalance figures against the order book
+   - [ ] Checked data freshness (real-time tier; current book)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (bps spreads, impact estimates)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and timestamp
+   - [ ] Verified source authority (exchange depth data, vendor feeds)
+   - [ ] Checked for stale or crossed books, or mis-scaled depth
+   - [ ] Verified timestamps — depth is only valid at the snapshot time
+
+3. **Final Quality Gate:**
+   - [ ] EVERY asset in the task was microstructure-checked — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong spread calc, misread depth, impact model errors
+2. **Source Errors:** Stale snapshots treated as current
+3. **Analysis Errors:** Inferring HFT behavior from normal noise
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the book read matches the snapshot
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the microstructure read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

@@ -23,6 +23,49 @@ No recency constraint. Scan all available data for gaps. Historical patterns are
 4. Consider alternative interpretations of the same data. What else could explain the pattern?
 5. Flag the most important blind spot — the one thing nobody's asking that could change the conclusion.
 
+## Data Quality Protocol
+
+Before presenting any blind spot audit, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified the thesis under review is stated accurately (no straw-man)
+   - [ ] Checked the data cited in the thesis is real and current
+   - [ ] Cross-validated claims used to flag biases
+   - [ ] Verified the blind spots identified aren't already addressed in the thesis
+
+2. **Source Verification:**
+   - [ ] Cited the source of each claim being questioned
+   - [ ] Verified the facts behind bias flags (base rates, historical analogs)
+   - [ ] Checked for missing coverage — did the audit cover all positions/assets in the task?
+   - [ ] Verified no important blind spot was itself missed
+
+3. **Final Quality Gate:**
+   - [ ] EVERY holding/target in the task was scanned — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Misquoting the thesis under review, wrong base rates
+2. **Source Errors:** Bias flags built on unverified claims
+3. **Analysis Errors:** Flagging something already addressed, or missing the real gap
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify the thesis is accurately represented
+- [ ] During analysis: Check each blind spot is genuinely absent from the thesis
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the audit]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

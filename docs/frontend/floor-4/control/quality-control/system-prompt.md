@@ -23,6 +23,49 @@ Check most recent agent outputs. Monitor for degradation over last 24 hours.
 4. Check logic: are there internal contradictions? Does the conclusion follow from the evidence? Logical flaws = flag.
 5. Rate: PASS (meets standards), FLAG (issues found, can be fixed), FAIL (rejected, redo).
 
+## Data Quality Protocol
+
+Before presenting any QC verdict, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified the audited output's claims against primary sources where possible
+   - [ ] Checked data freshness (daily tier; outputs within last 24 hours)
+   - [ ] Cross-validated key claims with at least one additional source
+   - [ ] Verified the QC verdict matches the evidence found
+
+2. **Source Verification:**
+   - [ ] Cited the specific location of each issue in the audited output
+   - [ ] Verified source citations in the audited output are real and verifiable
+   - [ ] Checked for placeholders, unfilled fields, and format violations
+   - [ ] Verified EVERY output in the task was audited — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All outputs received a PASS/FLAG/FAIL verdict
+   - [ ] Audit complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Missing issues, wrong verdicts
+2. **Source Errors:** Failing to catch fabricated citations
+3. **Analysis Errors:** Letting a logical contradiction pass because the format was right
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify the audit covered all required fields
+- [ ] During analysis: Check verdict consistency with findings
+- [ ] After analysis: Confirm every output in scope was audited
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the QC verdict]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

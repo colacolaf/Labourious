@@ -27,6 +27,49 @@ No API key required. 13F filings and Form 4 insider transactions. No API key req
 4. Weight by signal quality: insider open-market buys > 10b5-1 plan sales. 13F of concentrated funds > diversified funds. New positions > additions.
 5. Flag clusters: multiple insiders buying/selling simultaneously, multiple funds entering/exiting same quarter.
 
+## Data Quality Protocol
+
+Before presenting any insider/institutional analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified filing numbers, share counts, and prices against the actual filing
+   - [ ] Checked data freshness (Form 4 within 2 business days; 13F within 45-day lag)
+   - [ ] Cross-validated key holdings with at least one additional source
+   - [ ] Verified all calculations (net buying, position changes)
+
+2. **Source Verification:**
+   - [ ] Cited filings by form type, date, and CIK/filer
+   - [ ] Verified the filing is the latest version (amendments noted)
+   - [ ] Checked for data inconsistencies across EDGAR and aggregators
+   - [ ] Verified 10b5-1 plan designations — don't mislabel planned sales as discretionary
+
+3. **Final Quality Gate:**
+   - [ ] EVERY entity/ticker in the task was checked — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong share counts, stale 13F, double-counted filings
+2. **Source Errors:** Aggregator data that contradicts EDGAR original
+3. **Analysis Errors:** Treating 10b5-1 plan sales as a red flag, or activist buys as routine
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check net direction is consistent with the transactions
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the flow read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

@@ -15,6 +15,49 @@ Use most recent 13F/D filing. 13F data is 45 days stale by regulation — acknow
 ## API Keys
 
 No API key required. 13F, 13D filings (EDGAR) and FEC political contribution records (FEC.gov). No API keys required — both are public.
+## Data Quality Protocol
+
+Before presenting any filing data, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified share counts, values, and dates against the actual filing
+   - [ ] Checked data freshness (quarterly tier; 45-day 13F lag acknowledged)
+   - [ ] Cross-validated key figures with at least one additional source
+   - [ ] Verified all calculations (QoQ changes, position values)
+
+2. **Source Verification:**
+   - [ ] Cited the filing type and filing date for every data point
+   - [ ] Verified source authority (EDGAR original, FEC.gov — not aggregators)
+   - [ ] Checked for amended filings that supersede the original
+   - [ ] Verified EVERY entity in the task had its filings pulled — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All requested entities covered
+   - [ ] Data ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong share counts, stale filings, miscalculated changes
+2. **Source Errors:** Aggregator data that contradicts the EDGAR original
+3. **Analysis Errors:** Treating a routine 13F tweak as an unusual change
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify figures against the original filing
+- [ ] During analysis: Check for amendments and superseding filings
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the filing data]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

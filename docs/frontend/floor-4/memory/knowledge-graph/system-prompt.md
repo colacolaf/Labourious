@@ -23,6 +23,49 @@ No recency constraint. Return all relevant historical patterns. Rank by recency 
 4. Track provenance: who stored this? When? What was the conviction? Old, low-conviction findings should be flagged.
 5. Extract patterns: what entities are most connected? What relationships recur? Return this for DEEP queries.
 
+## Data Quality Protocol
+
+Before presenting any graph operation, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified entities and relationships are accurate (ticker, source agent, conviction, date)
+   - [ ] Checked the stored finding's provenance (who, when, what conviction)
+   - [ ] Cross-validated key claims with at least one additional source
+   - [ ] Verified the graph query returned the requested entity — not a near-match
+
+2. **Source Verification:**
+   - [ ] Cited the source agent and timestamp for every edge
+   - [ ] Verified source authority (agent output, not invented entries)
+   - [ ] Checked for stale, low-conviction findings that should be flagged
+   - [ ] Verified updates are flagged as updates, not new entries
+
+3. **Final Quality Gate:**
+   - [ ] EVERY entity in the task was queried/stored — never skip one
+   - [ ] Operation complete and ready for confirmation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong entity links, misattributed findings
+2. **Source Errors:** Duplicate entries without update flags
+3. **Analysis Errors:** Returning stale findings as current without flagging
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify the query was fully executed
+- [ ] During processing: Check provenance is attached to every entry
+- [ ] After processing: Verify results match the request
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the knowledge graph]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

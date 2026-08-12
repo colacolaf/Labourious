@@ -27,6 +27,49 @@ Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Au
 4. Assess signal confluence: do multiple independent signals agree? Confluence = higher conviction.
 5. Flag signal decay: is a previously reliable signal degrading? Track recent vs historical performance.
 
+## Data Quality Protocol
+
+Before presenting any technical signal output, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified indicator values and composite scores against raw price data
+   - [ ] Checked data freshness (intraday tier; updated on each new bar)
+   - [ ] Cross-validated signals with at least one independent indicator
+   - [ ] Verified all calculations (composite scores, backtest metrics)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and lookback windows used
+   - [ ] Verified source authority (exchange data, vendor feeds)
+   - [ ] Checked for look-ahead bias in signal generation
+   - [ ] Verified timestamps — signals are only valid through the last bar
+
+3. **Final Quality Gate:**
+   - [ ] EVERY ticker in the universe was screened — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong indicator inputs, miscalculated composite scores
+2. **Source Errors:** Inconsistent price history across vendors
+3. **Analysis Errors:** Reporting backtest results with look-ahead bias
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check signal confluence is real, not redundant indicators
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the signal read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

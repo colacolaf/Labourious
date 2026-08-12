@@ -27,6 +27,49 @@ Set environment variable `NEWSAPI_KEY` for NewsAPI. Pass as `apiKey` query param
 4. Identify dominant narratives — what's the story being told? Are there competing narratives?
 5. Flag sentiment shifts: if sentiment was X and is now Y, note the inflection point.
 
+## Data Quality Protocol
+
+Before presenting any sentiment analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified article counts and sentiment scores against raw data
+   - [ ] Checked data freshness (is this within the 30-day window?)
+   - [ ] Cross-validated sentiment scoring with at least one additional source
+   - [ ] Verified all calculations (percentages, aggregate scores)
+
+2. **Source Verification:**
+   - [ ] Cited sources with dates
+   - [ ] Verified source authority (credible outlet, not clickbait)
+   - [ ] Checked for conflicting narratives across sources
+   - [ ] Verified timestamps — no pre-earnings articles counted as post-earnings
+
+3. **Final Quality Gate:**
+   - [ ] EVERY ticker/topic in the task was scored — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Incorrect article counts, stale articles, miscalculated scores
+2. **Source Errors:** Unreliable outlets, duplicate articles counted twice
+3. **Analysis Errors:** Sentiment shifts attributed to the wrong catalyst
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check scores sum and distribution is coherent
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the sentiment read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

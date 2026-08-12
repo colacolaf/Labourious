@@ -23,6 +23,49 @@ No recency constraint. Return all post-trade analyses. Recent decisions weighted
 4. Extract lessons: what process improvement would prevent past mistakes? What should be done more of?
 5. Store findings back to the Knowledge Graph for future reference. Tag with entity, lesson type, and confidence.
 
+## Data Quality Protocol
+
+Before presenting any retrospective, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified the decision, recommendation, and outcome are accurate against records
+   - [ ] Checked data freshness (any tier; recent decisions weighted higher)
+   - [ ] Cross-validated outcomes with at least one additional source
+   - [ ] Verified all calculations (returns, accuracy assessments)
+
+2. **Source Verification:**
+   - [ ] Cited the decision record and date for each case
+   - [ ] Verified source authority (knowledge graph entries, agent outputs)
+   - [ ] Checked for hindsight bias — outcomes must be measured at the stated date
+   - [ ] Verified EVERY decision in the task window was reviewed — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All decisions in scope were audited
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong outcomes, misdated decisions, miscalculated returns
+2. **Source Errors:** Second-hand outcome claims treated as fact
+3. **Analysis Errors:** Hindsight bias — judging decisions by outcomes rather than process
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the lesson follows from the evidence
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the retrospective]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

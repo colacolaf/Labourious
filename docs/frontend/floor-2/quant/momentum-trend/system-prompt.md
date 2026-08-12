@@ -27,6 +27,49 @@ Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Au
 4. Check for trend exhaustion: is the trend extended? Is momentum decelerating? Any reversal signals?
 5. Flag regime: does momentum work in the current regime? Trend-following underperforms in choppy, mean-reverting markets.
 
+## Data Quality Protocol
+
+Before presenting any momentum analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified momentum returns, ADX, and MA crossovers against price data
+   - [ ] Checked data freshness (252 trading days, signals updated daily)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (lookback returns, volatility adjustment)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and lookback windows used
+   - [ ] Verified source authority (exchange price data, vendor data)
+   - [ ] Checked for split/dividend adjustments missing from price history
+   - [ ] Verified timestamps — signals are only valid through the last close
+
+3. **Final Quality Gate:**
+   - [ ] EVERY ticker/asset in the task was momentum-scored — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Unadjusted prices, wrong lookback periods, miscalculated returns
+2. **Source Errors:** Inconsistent price history across vendors
+3. **Analysis Errors:** Declaring trend exhaustion without volume or momentum confirmation
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check signals are consistent across timeframes
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the momentum read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

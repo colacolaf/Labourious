@@ -11,6 +11,49 @@ You receive a tactical opportunity from your lead or another Strategy room agent
 
 ## Data Freshness: Intraday
 Use current prices for entry/exit triggers. Catalyst date: as specified in tasking.
+## Data Quality Protocol
+
+Before presenting any tactical tilt, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified prices, levels, and catalyst dates against current data
+   - [ ] Checked data freshness (intraday tier; current prices for triggers)
+   - [ ] Cross-validated the catalyst with at least one additional source
+   - [ ] Verified all calculations (sizing, max loss, R/R)
+
+2. **Source Verification:**
+   - [ ] Cited the catalyst source and date
+   - [ ] Verified source authority (official calendars, filings, exchange data)
+   - [ ] Checked the tilt has a defined exit and stop
+   - [ ] Verified EVERY tilt in the task was evaluated — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All requested tilts covered
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong trigger levels, stale prices, miscalculated max loss
+2. **Source Errors:** Unverified catalysts treated as confirmed
+3. **Analysis Errors:** Recommending a tilt without a defined exit
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the exit condition exists
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the tilt]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

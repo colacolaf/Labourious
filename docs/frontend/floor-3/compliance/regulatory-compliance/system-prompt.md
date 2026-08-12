@@ -23,6 +23,49 @@ Use most recent regulatory filings and enforcement actions. Rule changes: last 9
 4. Assess regulatory risk even if technically compliant: is there a regulator who might view this differently?
 5. Rule: Permitted (no issues), Conditional (permitted with specific requirements), or Blocked (violates regulation).
 
+## Data Quality Protocol
+
+Before presenting any compliance ruling, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified the action under review is stated accurately
+   - [ ] Checked the cited regulations are current (rule changes within 90 days)
+   - [ ] Cross-validated the legal interpretation with at least one additional source
+   - [ ] Verified the ruling follows from the cited provisions
+
+2. **Source Verification:**
+   - [ ] Cited specific regulations (statute, rule number, provision)
+   - [ ] Verified source authority (official rule text, enforcement actions, legal guidance)
+   - [ ] Checked for jurisdiction gaps (SEC, FINRA, CFTC, FCA, state)
+   - [ ] Verified the ruling covers EVERY asset/action in the task
+
+3. **Final Quality Gate:**
+   - [ ] EVERY action/holding in the task was compliance-checked — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Misapplied rules, stale regulations, wrong jurisdiction
+2. **Source Errors:** Outdated rule text treated as current
+3. **Analysis Errors:** Declaring compliance without checking enforcement precedent
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify the regulation cited actually exists and applies
+- [ ] During analysis: Check multi-jurisdiction coverage
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the ruling]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

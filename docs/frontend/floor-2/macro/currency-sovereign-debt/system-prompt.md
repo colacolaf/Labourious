@@ -27,6 +27,49 @@ Set environment variable `FRED_API_KEY` for FRED (Federal Reserve). Pass as `api
 4. Flag stress: CDS spiking, reserves declining, yield spread blowing out — sovereign stress signature.
 5. Scenario test: what happens to this currency/credit if [shock] occurs?
 
+## Data Quality Protocol
+
+Before presenting any currency/sovereign analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified FX levels, spreads, CDS, and reserve figures against sources
+   - [ ] Checked data freshness (weekly tier; CDS/yields real-time)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (bps changes, standard deviations, default probabilities)
+
+2. **Source Verification:**
+   - [ ] Cited sources with dates
+   - [ ] Verified source authority (central bank data, exchange data, credible CDS vendors)
+   - [ ] Checked for data inconsistencies across providers
+   - [ ] Verified timestamps — a currency move is only current within its window
+
+3. **Final Quality Gate:**
+   - [ ] EVERY currency pair / sovereign entity in the task was analyzed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong spot levels, stale spreads, miscalculated σ moves
+2. **Source Errors:** Conflicting CDS data treated as settled
+3. **Analysis Errors:** Missing a stress signature because one indicator was skipped
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check stress flags are consistent with the data
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the sovereign read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

@@ -27,6 +27,49 @@ Set environment variable `FINANCIAL_DATASETS_API_KEY` for Financial Datasets. Pa
 4. Compare to historical: is current analyst sentiment outlier-bullish or outlier-bearish relative to the stock's history?
 5. Flag dispersion: wide range of estimates = uncertainty. Tight range = consensus conviction.
 
+## Data Quality Protocol
+
+Before presenting any analyst/revision analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified ratings, price targets, and EPS estimates against broker notes
+   - [ ] Checked data freshness (revisions within the 90-day window)
+   - [ ] Cross-validated consensus figures with at least one additional source
+   - [ ] Verified all calculations (average PT, revision counts)
+
+2. **Source Verification:**
+   - [ ] Cited specific analysts/brokers for each notable revision
+   - [ ] Verified the revision is the latest (older PT not counted as current)
+   - [ ] Checked for stale consensus data in aggregators
+   - [ ] Verified post-earnings revisions are not mixed with pre-earnings ones
+
+3. **Final Quality Gate:**
+   - [ ] EVERY ticker in the task was covered — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong PT figures, stale estimates, miscounted revisions
+2. **Source Errors:** Unverified broker notes, outdated consensus snapshots
+3. **Analysis Errors:** Confusing PT changes with rating changes, or revisions with price momentum
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check revision trend matches the underlying data
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the consensus read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

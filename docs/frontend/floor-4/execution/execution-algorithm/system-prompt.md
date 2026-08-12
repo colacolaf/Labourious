@@ -27,6 +27,49 @@ Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Set both `APCA-API
 4. Define strategy switch conditions: if spread widens beyond X, switch from passive to aggressive. If volume spikes, increase participation rate.
 5. Estimate cost: expected implementation shortfall in bps, including spread, impact, and delay costs.
 
+## Data Quality Protocol
+
+Before presenting any algo recommendation, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified algo parameters and cost estimates against current market data
+   - [ ] Checked data freshness (real-time tier; latest calibration)
+   - [ ] Cross-validated slippage estimates with at least one additional source
+   - [ ] Verified all calculations (IS decomposition, participation rates)
+
+2. **Source Verification:**
+   - [ ] Cited the market data source and calibration date
+   - [ ] Verified source authority (vendor data, historical fills)
+   - [ ] Checked for parameter settings inconsistent with current vol/liquidity
+   - [ ] Verified the algo was matched to the order's urgency and size
+
+3. **Final Quality Gate:**
+   - [ ] EVERY order in the task got an algo — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong IS estimates, mis-set participation rates
+2. **Source Errors:** Calibration data from a different market regime
+3. **Analysis Errors:** Recommending a passive algo for an urgent order
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the algo matches urgency and size
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the execution]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

@@ -23,6 +23,49 @@ Use most recent week's risk metrics. Portfolio data: current. Factor covariance:
 4. Run optimization. Output: optimal weights, risk contribution per position, expected portfolio metrics.
 5. Sensitivity test: how do weights change if return assumptions shift by ±10%? If correlations spike?
 
+## Data Quality Protocol
+
+Before presenting any allocation output, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified input returns, vols, and correlations before optimizing (garbage in = garbage out)
+   - [ ] Checked data freshness (weekly risk metrics, 252-day covariance)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (weights sum to 100%, risk contributions add up)
+
+2. **Source Verification:**
+   - [ ] Cited the objective function, constraints, and inputs used
+   - [ ] Verified source authority (risk model data, position data)
+   - [ ] Checked for stale covariance estimates or missing positions
+   - [ ] Verified timestamps — inputs are only valid as of the last update
+
+3. **Final Quality Gate:**
+   - [ ] EVERY position in the portfolio was allocated — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong covariance inputs, weights that don't sum to 100%
+2. **Source Errors:** Missing positions or stale risk metrics
+3. **Analysis Errors:** Optimizing on garbage inputs — always flag input quality first
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check constraint violations and weight consistency
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the allocation]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

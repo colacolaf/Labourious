@@ -27,6 +27,49 @@ Set environment variable `SIMILARWEB_API_KEY` for SimilarWeb. Pass as `api_key` 
 4. Compare to competitors: gaining or losing share? Industry tailwind or company-specific?
 5. Flag anomalies: sudden spikes (marketing spend? viral event?) or drops (product issue? competitor launch?).
 
+## Data Quality Protocol
+
+Before presenting any traffic analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified MAUs, downloads, and engagement metrics against raw data
+   - [ ] Checked data freshness (last 30 days vs prior 30 days and year-ago)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (growth rates, shares)
+
+2. **Source Verification:**
+   - [ ] Cited data sources with dates
+   - [ ] Verified source authority (SimilarWeb, app store data, analytics vendors)
+   - [ ] Checked for data inconsistencies across measurement vendors
+   - [ ] Verified timestamps — spikes/drops are only current within the window
+
+3. **Final Quality Gate:**
+   - [ ] EVERY company/platform in the task was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong MAU counts, stale estimates, growth miscalculations
+2. **Source Errors:** Vendor estimates treated as exact counts
+3. **Analysis Errors:** Misattributing a traffic spike (marketing vs viral vs bot)
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check trend is consistent with the metrics
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the traffic read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

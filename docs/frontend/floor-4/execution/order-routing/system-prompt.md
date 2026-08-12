@@ -27,6 +27,49 @@ Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Set both `APCA-API
 4. Assess information leakage risk: large orders in lit markets signal intent. Break into slices or use dark venues.
 5. Recommend: primary venue, backup, and any order-splitting instructions. Must meet best execution obligation.
 
+## Data Quality Protocol
+
+Before presenting any routing recommendation, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified venue quotes, fill probabilities, and cost estimates against current data
+   - [ ] Checked data freshness (real-time tier; current quotes)
+   - [ ] Cross-validated routing metrics with at least one additional source
+   - [ ] Verified all calculations (bps costs, split ratios)
+
+2. **Source Verification:**
+   - [ ] Cited the venue data source and timestamp
+   - [ ] Verified source authority (exchange feeds, vendor routing data)
+   - [ ] Checked for stale quotes or dark pool indications
+   - [ ] Verified the route was designed for the exact order in the task
+
+3. **Final Quality Gate:**
+   - [ ] EVERY order in the task was routed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Stale venue quotes, miscalculated fill probabilities
+2. **Source Errors:** Dark pool indications that never materialize
+3. **Analysis Errors:** Routing large orders to lit venues that leak intent
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check best-execution obligation is met
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the routing]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

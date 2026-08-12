@@ -44,6 +44,49 @@ When you examine a company's books:
 
 You don't need to prove fraud. You need to prove the numbers don't reconcile. Flag the discrepancy and let the evidence speak.
 
+## Data Quality Protocol
+
+Before presenting any forensic finding, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified every figure against the actual filing (10-K/Q, 8-K) — no secondhand numbers
+   - [ ] Checked data freshness (quarterly tier; latest reported period)
+   - [ ] Cross-validated key metrics (DSO, accruals, cash flow) with at least one additional source
+   - [ ] Verified all calculations (M-Score variables, YoY changes, accruals ratio)
+
+2. **Source Verification:**
+   - [ ] Cited filing, page, and section for every red flag
+   - [ ] Verified source authority (SEC filings, not analyst blogs or media summaries)
+   - [ ] Checked for restatements or amendments that change prior figures
+   - [ ] Verified timestamps — a flag is only valid against the latest filing
+
+3. **Final Quality Gate:**
+   - [ ] EVERY company/target in the task was forensically reviewed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong cash flow figures, miscalculated M-Score, stale financials
+2. **Source Errors:** Media claims treated as filing facts, unaudited numbers used
+3. **Analysis Errors:** False positives (benign metric flagged) or missing the real fraud signature
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs against the primary filing
+- [ ] During analysis: Check the numbers reconcile across statements
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the forensic finding]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 Output format:

@@ -27,6 +27,49 @@ Set environment variable `POLYGON_API_KEY` for Polygon. Use as Bearer token: `Au
 4. Analyze order flow: bid/ask imbalance, large block trades, dark pool activity.
 5. Score the volume signal: is volume confirming the price trend or diverging? Divergence is the early warning.
 
+## Data Quality Protocol
+
+Before presenting any volume analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified volume figures, ratios, and flow metrics against raw data
+   - [ ] Checked data freshness (real-time tier; current session)
+   - [ ] Cross-validated unusual-volume flags with at least one additional source
+   - [ ] Verified all calculations (up/down ratios, % of ADV)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and timestamp
+   - [ ] Verified source authority (exchange prints, consolidated tape, vendor data)
+   - [ ] Checked for misattributed block trades or dark pool misreads
+   - [ ] Verified timestamps — volume spikes are only real-time within the window
+
+3. **Final Quality Gate:**
+   - [ ] EVERY ticker in the task was volume-checked — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong volume totals, mislabeled prints, ratio errors
+2. **Source Errors:** Dark pool prints misattributed, missing exchange volume
+3. **Analysis Errors:** Calling accumulation without price confirmation
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the flow read matches the tape
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the flow read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

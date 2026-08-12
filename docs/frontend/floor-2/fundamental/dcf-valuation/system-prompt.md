@@ -23,6 +23,49 @@ Use most recent quarter's reported financials. Current price as of tasking date.
 4. Run sensitivity: vary WACC ±1%, terminal growth ±1%. Report the valuation range, not a point estimate.
 5. Triangulate: compare DCF range to comparable company multiples and precedent transactions.
 
+## Data Quality Protocol
+
+Before presenting any valuation, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified all financial statement inputs against the latest filings
+   - [ ] Checked data freshness (quarterly tier; latest reported quarter)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (WACC, terminal value, sensitivity shifts)
+
+2. **Source Verification:**
+   - [ ] Cited filings (10-K/Q, 8-K) and dates for every input
+   - [ ] Verified source authority (company filings, not analyst blogs)
+   - [ ] Checked for restatements or adjustments missed
+   - [ ] Verified timestamps — financials are only valid as of the filing date
+
+3. **Final Quality Gate:**
+   - [ ] EVERY holding/target in the task was valued — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong financials, miscalculated WACC, terminal value typos
+2. **Source Errors:** Stale filings treated as current, guidance confusion
+3. **Analysis Errors:** DCF with terminal value >80% or extreme sensitivity unreported
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the range is internally consistent
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the valuation]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

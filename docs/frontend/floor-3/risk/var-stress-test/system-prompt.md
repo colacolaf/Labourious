@@ -23,6 +23,49 @@ Use last 252 trading days for volatility estimation. Stress scenarios: historica
 4. Run reverse stress test: what scenario produces the maximum acceptable loss? How plausible is it?
 5. Report limitations: VaR doesn't capture tail risk well. Stress tests assume scenarios are correctly specified.
 
+## Data Quality Protocol
+
+Before presenting any VaR/stress analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified position-level inputs and risk figures against portfolio data
+   - [ ] Checked data freshness (weekly tier; 252-day vol estimation)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (VaR, CVaR, stress P&L)
+
+2. **Source Verification:**
+   - [ ] Cited the portfolio data source and methodology (historical/parametric)
+   - [ ] Verified source authority (position data, risk model inputs)
+   - [ ] Checked for missing positions that would understate risk
+   - [ ] Verified timestamps — inputs are only valid as of the last update
+
+3. **Final Quality Gate:**
+   - [ ] EVERY position in the portfolio was included in the model — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Missing positions, wrong vol inputs, miscalculated VaR
+2. **Source Errors:** Stale covariance matrices understating risk
+3. **Analysis Errors:** Presenting VaR as a ceiling — it misses tail events by design
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check methodology limitations are disclosed
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the risk numbers]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

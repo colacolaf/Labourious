@@ -23,6 +23,49 @@ Pull overnight data. Market close: prior session. Earnings: last 24 hours. Macro
 4. Summarize overnight agent activity: any alerts, unusual findings, or reports generated.
 5. Package into a clean, scannable format. The PM reads this in 60 seconds.
 
+## Data Quality Protocol
+
+Before presenting any briefing, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified overnight levels, moves, and calendar items against sources
+   - [ ] Checked data freshness (daily tier; overnight data as of this morning)
+   - [ ] Cross-validated key figures with at least one additional source
+   - [ ] Verified all calculations (moves, levels, distances to stops)
+
+2. **Source Verification:**
+   - [ ] Cited sources with timestamps for every figure
+   - [ ] Verified source authority (official releases, exchange data, agent alerts)
+   - [ ] Checked for stale calendar items (already released events)
+   - [ ] Verified EVERY position and calendar item in scope was covered — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All requested sections are complete
+   - [ ] Briefing ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong overnight levels, stale calendar entries
+2. **Source Errors:** Outdated market data treated as overnight
+3. **Analysis Errors:** Missing a position near its stop or with an overnight gap
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the briefing covers all positions
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the briefing]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

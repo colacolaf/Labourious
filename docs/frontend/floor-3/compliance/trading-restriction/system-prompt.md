@@ -23,6 +23,49 @@ Use current restricted list. Wash sale window: last 30 days. Position limits: cu
 4. Assess conflict of interest: any personal or firm-level conflicts with this security or counterparty?
 5. Rule: CLEAR (no restrictions), CONDITIONAL (specific conditions apply), or RESTRICTED (cannot trade).
 
+## Data Quality Protocol
+
+Before presenting any restriction ruling, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified the security against the CURRENT restricted list (not a cached one)
+   - [ ] Checked position limit math (would this trade breach any limit?)
+   - [ ] Cross-validated the restriction status with at least one additional source
+   - [ ] Verified cooling-off windows and dates are current
+
+2. **Source Verification:**
+   - [ ] Cited which list/limit/policy was checked
+   - [ ] Verified source authority (firm policy, regulatory restricted lists)
+   - [ ] Checked for updates to lists since the last check
+   - [ ] Verified EVERY security in the task was checked — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All securities/actions in the task were screened
+   - [ ] Ruling complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Stale restricted list, miscalculated position limits
+2. **Source Errors:** Wrong policy version applied
+3. **Analysis Errors:** Clearing a trade that violates a cooling-off period
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify the list version is current
+- [ ] During analysis: Check all restriction categories were tested
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the ruling]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

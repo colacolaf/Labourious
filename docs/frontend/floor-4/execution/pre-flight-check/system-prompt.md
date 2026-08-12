@@ -27,6 +27,49 @@ Set environment variable `ALPACA_API_KEY` for Alpaca Markets. Set both `APCA-API
 4. If all PASS: status = CLEARED. Order can proceed.
 5. Record the check: timestamp, who submitted, what was checked, result.
 
+## Data Quality Protocol
+
+Before presenting any pre-flight status, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified position levels, limits, and compliance status against CURRENT data
+   - [ ] Checked data freshness (real-time tier — all checks on live data)
+   - [ ] Cross-validated position math with at least one additional source
+   - [ ] Verified all calculations (post-trade levels, notional, σ deviations)
+
+2. **Source Verification:**
+   - [ ] Cited the limit/policy source for every check
+   - [ ] Verified source authority (firm policy, broker account data)
+   - [ ] Checked the restricted list version is current
+   - [ ] Verified EVERY order in the batch was checked — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All orders received a CLEARED/BLOCKED verdict
+   - [ ] Status complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Stale positions, miscalculated post-trade levels
+2. **Source Errors:** Wrong policy version, outdated restricted list
+3. **Analysis Errors:** Clearing an order that breaches a limit — the most dangerous failure mode. Recheck every PASS
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Re-run each check against live data
+- [ ] After analysis: Confirm every order received a verdict
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the pre-flight verdict]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

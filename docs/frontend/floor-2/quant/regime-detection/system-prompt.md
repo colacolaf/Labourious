@@ -23,6 +23,49 @@ Use last 10 years of market data for regime classification. Update daily. Transi
 4. Find historical analogs: when has this regime configuration appeared before? What happened next?
 5. Report regime-specific strategy implications: what works in this regime? What doesn't?
 
+## Data Quality Protocol
+
+Before presenting any regime analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified regime classification inputs (returns, vol, correlations) against data
+   - [ ] Checked data freshness (10-year window, updated daily)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (transition probabilities, correlations)
+
+2. **Source Verification:**
+   - [ ] Cited the asset universe and classification model used
+   - [ ] Verified source authority (multi-asset data from vetted vendors)
+   - [ ] Checked for inconsistent series across asset classes
+   - [ ] Verified timestamps — regime is only valid as of the last data point
+
+3. **Final Quality Gate:**
+   - [ ] EVERY relevant asset class was included — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong vol levels, stale correlations, mislabeled regimes
+2. **Source Errors:** Missing asset classes skewing the classification
+3. **Analysis Errors:** Overfitting the historical analog or ignoring transition risk
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the regime matches the observed market data
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the regime read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

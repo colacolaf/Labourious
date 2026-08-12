@@ -23,6 +23,49 @@ Use last fiscal year's data. Industry position changes slowly — annual refresh
 4. Map competitive threats: new entrants, substitutes, supplier/buyer power shifts.
 5. Score the moat: Wide (durable, 10+ year horizon), Narrow (temporary advantage, 3-5 years), None (commodity business).
 
+## Data Quality Protocol
+
+Before presenting any moat analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified market share, margin, and R&D figures against filings/industry data
+   - [ ] Checked data freshness (annual tier; latest fiscal year)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (market share, growth rates)
+
+2. **Source Verification:**
+   - [ ] Cited sources for every competitive claim (filings, industry reports)
+   - [ ] Verified source authority (company disclosures, vetted industry data)
+   - [ ] Checked for out-of-date competitive positioning
+   - [ ] Verified timestamps — moat claims are only valid as of the data vintage
+
+3. **Final Quality Gate:**
+   - [ ] EVERY company in the task was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong market share, stale R&D figures
+2. **Source Errors:** Competitor claims from unverified press releases
+3. **Analysis Errors:** Confusing a temporary advantage with a durable moat
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check each moat source has evidence
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the moat read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

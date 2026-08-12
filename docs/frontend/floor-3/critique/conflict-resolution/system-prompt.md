@@ -23,6 +23,49 @@ No recency constraint. Resolve using all available evidence. Recency is context-
 4. Check for logical flaws: circular reasoning, false dichotomy, cherry-picking, ignoring base rates.
 5. Attempt synthesis: is there a third view that incorporates the valid points from both sides? If not, pick based on evidence quality.
 
+## Data Quality Protocol
+
+Before presenting any resolution, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified both arguments are restated in their strongest, accurate form
+   - [ ] Checked the evidence cited by each side is real and current
+   - [ ] Cross-validated key claims with at least one additional source
+   - [ ] Verified the resolution follows from the evidence comparison
+
+2. **Source Verification:**
+   - [ ] Cited the evidence quality basis for each side
+   - [ ] Verified primary vs secondary sourcing claims
+   - [ ] Checked for cherry-picked evidence in either argument
+   - [ ] Verified all positions/assets in the conflict were adjudicated
+
+3. **Final Quality Gate:**
+   - [ ] EVERY disputed holding/target was resolved — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Misstated positions, wrong evidence quality calls
+2. **Source Errors:** Relying on the weaker argument's unverified sources
+3. **Analysis Errors:** Straw-manning one side, or false synthesis
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify both arguments are fairly represented
+- [ ] During analysis: Check the divergence point is real
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the resolution]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

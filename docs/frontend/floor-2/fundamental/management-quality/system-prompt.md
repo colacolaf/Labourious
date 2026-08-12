@@ -23,6 +23,49 @@ Use management track record over 5-10 years. Most recent: last 4 quarters of cap
 4. Evaluate strategic clarity: does management articulate a clear strategy? Have they executed against prior guidance?
 5. Flag red flags: excessive compensation, frequent restatements, management turnover, promotional behavior.
 
+## Data Quality Protocol
+
+Before presenting any management assessment, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified ownership, comp, and capital allocation figures against proxy statements (DEF 14A) and filings
+   - [ ] Checked data freshness (annual tier; latest fiscal year + last 4 quarters)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (ownership %, buyback totals)
+
+2. **Source Verification:**
+   - [ ] Cited sources for every claim (proxy, 10-K, 8-K, compensation tables)
+   - [ ] Verified source authority (SEC filings, not media commentary)
+   - [ ] Checked for restatements or governance red flags missed
+   - [ ] Verified timestamps — track record claims cover the stated window
+
+3. **Final Quality Gate:**
+   - [ ] EVERY company in the task was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong ownership figures, stale comp data
+2. **Source Errors:** Media claims treated as filing facts
+3. **Analysis Errors:** Judging a 2-year record as a long-term track record
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check the rating matches the evidence
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the management read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

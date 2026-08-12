@@ -27,6 +27,49 @@ Set environment variable `SECOND_MEASURE_API_KEY` for Bloomberg Second Measure. 
 4. Compare to consensus: is spending above or below analyst expectations? Is the trend accelerating or decelerating?
 5. Flag anomalies: sudden spending spikes or drops, category rotation, demographic shifts.
 
+## Data Quality Protocol
+
+Before presenting any consumer spending analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified transaction volumes, ticket sizes, and growth rates against raw data
+   - [ ] Checked data freshness (weekly tier; compare to prior week/month/year-ago)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (YoY/sequential growth, category shares)
+
+2. **Source Verification:**
+   - [ ] Cited data sources with dates
+   - [ ] Verified source authority (Bloomberg Second Measure, card networks, merchant data)
+   - [ ] Checked for data inconsistencies across panel providers
+   - [ ] Verified timestamps — holiday data is only meaningful within its period
+
+3. **Final Quality Gate:**
+   - [ ] EVERY company/sector/category in the task was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong transaction counts, stale panel data, growth miscalculations
+2. **Source Errors:** Unrepresentative panels treated as universal
+3. **Analysis Errors:** Attributing a category shift to the wrong cause
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check trend is consistent with category data
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the spending read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

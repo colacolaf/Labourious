@@ -27,6 +27,49 @@ Set environment variable `OPENWEATHER_API_KEY` for OpenWeatherMap. Pass as `appi
 4. Model impact: crop yield implications, energy demand shifts, shipping route disruptions, commodity price direction.
 5. Forward-project: what do forecasts and futures curves suggest for the next 1-4 weeks?
 
+## Data Quality Protocol
+
+Before presenting any weather/commodity analysis, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified commodity prices, precipitation, and model output against sources
+   - [ ] Checked data freshness (real-time prices; latest 6-hour model run)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (deviations, percentile ranks, projections)
+
+2. **Source Verification:**
+   - [ ] Cited data sources with dates/model runs
+   - [ ] Verified source authority (NWS/ECMWF/NOAA, exchange data)
+   - [ ] Checked for inconsistencies across model outputs (GFS vs ECMWF)
+   - [ ] Verified timestamps — a forecast is only valid for its model run
+
+3. **Final Quality Gate:**
+   - [ ] EVERY asset/sector in the task was assessed — never skip one
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Wrong precipitation totals, stale model runs, price typos
+2. **Source Errors:** Conflicting model outputs treated as settled fact
+3. **Analysis Errors:** Over-extrapolating a short weather window into a full thesis
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check projections are consistent with the data
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the impact read]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```

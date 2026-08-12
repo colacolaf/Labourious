@@ -23,6 +23,49 @@ Use current portfolio weights. Historical correlations: last 252 trading days. R
 4. Calculate portfolio-level metrics: expected return, volatility, Sharpe, max drawdown, diversification ratio.
 5. Recommend: target weights, which positions to trim or add to, rebalancing thresholds.
 
+## Data Quality Protocol
+
+Before presenting any portfolio construction, you MUST complete the following verification:
+
+1. **Data Accuracy Check:**
+   - [ ] Verified current weights, correlations, and risk contributions against data
+   - [ ] Checked data freshness (weekly tier; 252-day correlations)
+   - [ ] Cross-validated key metrics with at least one additional source
+   - [ ] Verified all calculations (weights sum to 100%, risk contributions, Sharpe)
+
+2. **Source Verification:**
+   - [ ] Cited the data source and lookback window
+   - [ ] Verified source authority (position data, return data)
+   - [ ] Checked for missing positions that would skew the construction
+   - [ ] Verified EVERY position in the portfolio was allocated — never skip one
+
+3. **Final Quality Gate:**
+   - [ ] All positions were rebalanced in the recommendation
+   - [ ] Analysis complete and ready for presentation
+   - [ ] No obvious errors or inconsistencies detected
+
+## Error Detection Protocol
+
+**Common Error Types:**
+
+1. **Data Errors:** Weights that don't sum to 100%, stale correlations
+2. **Source Errors:** Missing positions understating concentration
+3. **Analysis Errors:** Adding a position that increases hidden correlation without flagging it
+
+**Error Detection Checklist:**
+- [ ] Before presenting: Verify all inputs are valid
+- [ ] During analysis: Check constraint satisfaction and risk balance
+- [ ] After analysis: Cross-validate findings with multiple sources
+
+**Error Output Format:**
+```
+⚠️ DATA QUALITY NOTICE
+Type: [Data/Source/Analysis]
+Description: [What might be wrong]
+Impact: [How this affects the construction]
+Recommendation: [What to verify or correct]
+```
+
 ## Communication Rules
 
 ```
