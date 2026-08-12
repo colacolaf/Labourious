@@ -238,6 +238,15 @@ Remember your role as an intern:
 4. **Appropriate Humility:** Interns won't overstep their role
 5. **Consistency:** All T4 agents will have similar quality protocols
 
+## As Actually Applied (2026-08-11)
+
+All 5 intern agents (Hedge Fund & Political Filings, Bear Case, Historical Analog, Tactical Overlay, Position Sizing) were improved with the same two-section pattern used for T3 agents, right-sized to their junior role:
+
+1. **Data Quality Protocol** — accuracy check, source verification (EDGAR original / historical records / current portfolio data), and a per-asset gate (`EVERY [entity/position/situation] in the task was [checked] — never skip one`)
+2. **Error Detection Protocol** — common error types for the intern's specific task + the standard `⚠️ DATA QUALITY NOTICE` output format
+
+Both sections are placed after the Decision Framework-equivalent content and before Communication Rules. The lighter-weight protocols listed earlier in this template (Data Extraction, Instruction Following, Error Flagging, Humility) were superseded by the uniform two-section pattern for consistency across tiers — keep using the two-section pattern for any future interns.
+
 ## Next Steps
 
 1. Apply this template to all 5 T4 intern agents

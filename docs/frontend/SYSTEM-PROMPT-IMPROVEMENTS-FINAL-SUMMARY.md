@@ -54,7 +54,7 @@ All 60 T3 utility agents have been improved with domain-tailored Data Quality + 
 
 **Batch 5 — Floor 4 + Penthouse (11):** Order Routing, Execution Algorithm, Timing & Slippage, Pre-Flight Check, Knowledge Graph, Learning & Reflection, Quality Control, Agent Health Monitor, Daily Briefing, Opportunity Scout, PM Bodyguard
 
-**Batch 6 — stragglers (5):** Harry Markopolos (missed T2), Hedge Fund & Political Filings Intern, Bear Case Intern, Historical Analog Intern, Position Sizing Intern, Tactical Overlay Intern
+**Batch 6 — stragglers (6):** Harry Markopolos (missed T2), Hedge Fund & Political Filings Intern, Bear Case Intern, Historical Analog Intern, Position Sizing Intern, Tactical Overlay Intern
 
 ### T4 Intern Agents (5 of 5 completed) ✓
 All 5 intern agents have been improved with data-quality + error-detection protocols tailored to their junior role:
@@ -65,6 +65,8 @@ All 5 intern agents have been improved with data-quality + error-detection proto
 5. Position Sizing Intern ✓
 
 *(Note: The framework's T4 list also counts the Portfolio Manager, which is improved under T1.)*
+
+> **Naming note:** Harry Markopolos (T2, finished in the final batch) carries the T3-style "Data Quality Protocol" rather than the "Asset Validation Protocol" used by other T2 agents. Content is equivalent; the exception is accepted to avoid a re-edit of a fully working prompt.
 
 ## Key Improvements Made
 

@@ -94,7 +94,7 @@ For every data point presented:
 
 ---
 
-## Implementation Instructions
+## Implementation Instructions (as actually applied)
 
 For each T3 agent:
 
@@ -102,9 +102,9 @@ For each T3 agent:
 2. **Identify the Decision Framework section**
 3. **Insert the Data Quality Protocol after the Decision Framework**
 4. **Add the Error Detection Protocol after Data Quality Protocol**
-5. **Add Connector Usage Guidelines (if agent uses connectors)**
-6. **Add Data Freshness Validation (if not already present)**
-7. **Verify the addition doesn't break the existing prompt structure**
+5. **Verify the addition doesn't break the existing prompt structure**
+
+> **Applied as of 2026-08-11:** Sections 3 and 4 above are the two that were actually applied to all 60 T3 agents (plus 5 T4 interns and Harry Markopolos). The Connector Usage Guidelines and Data Freshness Validation sections in this template were NOT added as separate sections — every T3 prompt already carries a `## API Keys` section (connector guidance) and a `## Data Freshness:` heading (freshness tier), so adding duplicates would be redundant. Keep it that way: two protocol sections, no duplication of existing content.
 
 ## Example Addition
 
@@ -183,7 +183,14 @@ Recommendation: [What to verify or correct]
 
 ## Next Steps
 
-1. Apply this template to all 60 T3 utility agents
-2. Customize for each agent's specific domain and data sources
+1. ~~Apply this template to all 60 T3 utility agents~~ ✅ COMPLETED 2026-08-11
+2. ~~Customize for each agent's specific domain and data sources~~ ✅ Domain-tailored per agent (e.g., liquidity-risk flags ADV anomalies, catalyst-event checks probability weights sum to 100%, pre-flight re-runs every PASS)
 3. Test with example portfolios to verify improvements
 4. Document any agent-specific variations needed
+
+## Per-Asset Coverage Requirement
+
+Every T3 protocol must include an explicit per-asset coverage gate in the Final Quality Gate checklist, e.g.:
+- `- [ ] EVERY [ticker/position/protocol/pair] in the task was [checked/assessed/scored] — never skip one`
+
+This enforces the user requirement that the agent checks each stock or fund every time. All 60 agents currently contain this gate.
