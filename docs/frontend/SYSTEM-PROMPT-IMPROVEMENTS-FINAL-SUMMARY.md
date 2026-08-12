@@ -166,6 +166,12 @@ Added systematic error handling:
 - This document
 - Final status and completion metrics
 
+### 5. System Prompt Validator Script
+- `docs/frontend/scripts/validate-system-prompts.py`
+- Checks all 89 prompts for: required protocols per tier (T1/T2 vs T3 vs T4), per-asset gate ('never skip one' / 'validated EVERY time' / 'EVERY <noun> mentioned'), freshness tier heading (T3/T4), and FROM/TO output format
+- Exit codes: 0 = all pass, 1 = failures found, 2 = usage/path error
+- Verified: 89/89 prompts pass; deliberately-broken file correctly exits 1
+
 ## Next Steps
 
 ### Phase 1: Implement for T2 Named Agents (11 agents) ✓ COMPLETED
@@ -181,6 +187,7 @@ All 5 intern agents improved with data-quality + error-detection protocols AND t
 **Completed:**
 1. Web Research Agent test scenario created and validated
 2. Test portfolio defined for validation
+3. **System prompt validator script** — `docs/frontend/scripts/validate-system-prompts.py` — automated pass/fail on all 89 prompts (protocols, per-asset gate, freshness tier, FROM/TO). Result: 89/89 PASS. Also surfaced and fixed 2 real compliance gaps: Harry Markopolos upgraded to full T1/T2 protocol set, PM Bodyguard gained Data Freshness + per-asset gate + FROM/TO.
 
 **Remaining:**
 - Test all improved agents with example portfolios

@@ -44,6 +44,7 @@ Before presenting any data, you MUST complete the following verification:
    - [ ] Verified time stamps and freshness of all data points
 
 3. **Final Quality Gate:**
+   - [ ] EVERY data point/entity requested was collected — never skip one
    - [ ] All metrics verified and sourced
    - [ ] Data format matches request
    - [ ] No obvious errors or inconsistencies detected

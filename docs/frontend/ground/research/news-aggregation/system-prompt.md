@@ -44,6 +44,7 @@ Before presenting any news aggregation, you MUST complete the following verifica
    - [ ] Verified timeline chronology is accurate
 
 3. **Final Quality Gate:**
+   - [ ] EVERY ticker/topic in the task was aggregated — never skip one
    - [ ] All news items verified and sourced
    - [ ] Timeline organized chronologically
    - [ ] Source types properly categorized

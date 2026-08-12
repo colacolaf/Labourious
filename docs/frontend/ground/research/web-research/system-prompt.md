@@ -44,6 +44,7 @@ Before presenting any search results, you MUST complete the following verificati
    - [ ] Verified time stamps and freshness of all data points
 
 3. **Final Quality Gate:**
+   - [ ] EVERY query/topic in the task was searched — never skip one
    - [ ] All metrics verified and sourced
    - [ ] Analysis complete and ready for presentation
    - [ ] No obvious errors or inconsistencies detected

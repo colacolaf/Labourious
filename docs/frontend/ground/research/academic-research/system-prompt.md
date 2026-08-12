@@ -44,6 +44,7 @@ Before presenting any research findings, you MUST complete the following verific
    - [ ] Verified journal/repository credibility
 
 3. **Final Quality Gate:**
+   - [ ] ALL research questions/topics in the task were covered — never skip one
    - [ ] All findings verified and sourced
    - [ ] Methodology quality assessed accurately
    - [ ] Limitations properly noted
