@@ -1,195 +1,64 @@
-# Labourious Setup Guide
+# Labourious Setup (Planned)
 
-> **⚠️ Aspirational document.** This guide describes the planned setup process. The source code (backend/, frontend/, tests/) has not yet been rebuilt for the new architecture. Paths referenced below may not exist yet.
+> The app is not built yet. This documents the intended setup for the skeleton release.
 
-## Overview
+## 1. Install
 
-Labourious is a local-first Electron desktop app you install from GitHub. You bring your own LLM API keys (or local Ollama). The app runs entirely on your machine.
+Download the app (Electron) for your platform and open it — it runs like any desktop app. No server, no cloud account.
 
-**Requirements:**
-- macOS, Windows, or Linux
-- Node.js 18+
-- Python 3.10+ (for backend)
-- Git
-- ~2GB disk space
+## 2. Add your API keys
 
----
+Labourious uses **your** keys. Supported providers:
 
-## Installation
+| Provider | Kind | Example |
+|----------|------|---------|
+| OpenAI-compatible | Chat/completions API | OpenAI, OpenRouter, local servers, most cloud providers |
+| Anthropic | Claude API | claude-*-* models |
+| Ollama | Local | fully offline |
 
-### 1. Clone the Repository
+Keys are stored in the OS keychain (via Electron `safeStorage`) where available, with a plain local config file fallback. Keys never leave your machine and are never logged.
 
-```bash
-git clone https://github.com/colacolaf/Labourious.git
-cd Labourious
+## 3. Config file
+
+`~/.labourious/config.json` (or the app's data directory):
+
+```json
+{
+  "providers": {
+    "openai": { "baseUrl": "https://api.openai.com/v1" },
+    "anthropic": {},
+    "ollama": { "baseUrl": "http://localhost:11434" }
+  },
+  "connectors": {
+    "web_search": { "provider": "serper" },
+    "market_data": { "provider": "yfinance" },
+    "news": { "provider": "newsapi" }
+  },
+  "defaultModel": "openai/gpt-4o"
+}
 ```
 
-### 2. Backend Setup (Python)
+Secrets (API keys) are referenced by name, not stored in the config file, when keychain support is active.
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r backend/requirements.txt
-```
+## 4. Connectors
 
-### 3. Frontend Setup (Electron + React)
+Each connector is provider-configurable in the app's Settings:
 
-```bash
-cd frontend
-npm install
-cd ..
-```
+- **Web search:** Serper, Tavily, or Brave (each needs its own API key)
+- **Market data:** yfinance-style (no key), Polygon.io (key), Financial Modeling Prep (key)
+- **SEC EDGAR:** free, no key
+- **News:** NewsAPI (key) or provider feeds
 
-### 4. Configure Your LLM
+## 5. Agents
 
-Labourious requires at least one LLM connection. You have four options — use any or all.
+The app ships with 16 base leads. Everything about an agent — system prompt, model, connectors — is editable in the app and saved to files, so a roster is portable and shareable.
 
-#### Option A: Local Ollama (Free, Offline)
-```bash
-# Install Ollama
-curl https://ollama.ai/install.sh | sh
+## 6. Data locations
 
-# Pull a model (mistral, llama3, etc.)
-ollama pull mistral
-
-# Verify
-curl http://localhost:11434/api/tags
-```
-
-No API key needed. Works fully offline.
-
-#### Option B: Anthropic Claude
-Get your API key at [console.anthropic.com](https://console.anthropic.com).
-
-Set in `.env`:
-```
-CLAUDE_API_KEY=sk-ant-...
-```
-
-#### Option C: OpenAI (GPT)
-Get your API key at [platform.openai.com](https://platform.openai.com).
-
-Set in `.env`:
-```
-OPENAI_API_KEY=sk-...
-```
-
-#### Option D: Google Gemini
-Get your API key at [aistudio.google.com](https://aistudio.google.com).
-
-Set in `.env`:
-```
-GEMINI_API_KEY=...
-```
-
-### 5. Environment Configuration
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your settings:
-```
-# At least one of these:
-OLLAMA_ENABLED=true
-OLLAMA_MODEL=mistral
-CLAUDE_API_KEY=
-OPENAI_API_KEY=
-GEMINI_API_KEY=
-
-# Default model (which LLM the Portfolio Manager uses)
-DEFAULT_MODEL=ollama/mistral
-
-# Database (local SQLite)
-DB_PATH=./data/labourious.db
-
-# Vault encryption password (set on first run)
-VAULT_PASSWORD=
-```
-
-### 6. Launch
-
-**Terminal 1 — Backend:**
-```bash
-source .venv/bin/activate
-python -m backend.main
-```
-Runs on `http://localhost:8000`
-
-**Terminal 2 — Frontend (Electron):**
-```bash
-cd frontend
-npm run electron:dev
-```
-
-The Electron app opens as a native desktop window.
-
----
-
-## Model Flexibility
-
-The Portfolio Manager and all subagents can use the same model or different models:
-
-- **Same model (default):** PM routes all agents through your chosen LLM
-- **Per-agent models:** Advanced users can assign specific models to specific agents (e.g., Quant Room gets GPT-4, Sentiment Room gets Claude)
-- **Hybrid:** Use local Ollama for routine agents, cloud models for complex analysis
-
-Configure in Settings → LLM Configuration.
-
----
-
-## Broker Connections (Future)
-
-Broker integration will be configured through the encrypted vault. Supported brokers:
-- Interactive Brokers
-- Kraken
-- Coinbase
-- Alpaca
-- And more via ccxt
-
----
-
-## Verify Installation
-
-```bash
-# Backend health check
-curl http://localhost:8000/api/health
-
-# Should return:
-# { "status": "healthy", "version": "2.0.0", ... }
-```
-
----
-
-## Troubleshooting
-
-**"Port 8000 already in use"**
-```bash
-lsof -i :8000  # macOS/Linux
-# Change port in .env: BACKEND_PORT=8001
-```
-
-**"Ollama connection failed"**
-```bash
-ollama serve  # Start Ollama if not running
-ollama pull mistral  # Pull a model if none downloaded
-```
-
-**"ModuleNotFoundError"**
-```bash
-# Make sure venv is activated
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-```
-
----
-
-## Next Steps
-
-1. Read [AGENTS.md](AGENTS.md) — understand the 16 rooms and 30-40 agents
-2. Read [ARCHITECTURE.md](LABOURIOUS_ARCHITECTURE.md) — how the Portfolio Manager works
-3. Start chatting with your Portfolio Manager
-
----
-
-*Setup guide will be updated as the project is built out.*
+| What | Where |
+|------|-------|
+| Config | `~/.labourious/config.json` |
+| Secrets | OS keychain (safeStorage) / fallback file |
+| Chat history | `~/.labourious/history/` |
+| Agent notes | `~/.labourious/notes/<agent-id>/` |
+| Custom agents | `~/.labourious/agents/` |

@@ -5,48 +5,43 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                       USER                                       │
-│            (Chats with the Portfolio Manager)                     │
+│            (Chats with the orchestrator in the app)              │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                     Electron Desktop App
                          │
 ┌────────────────────────▼────────────────────────────────────────┐
-│                 PORTFOLIO MANAGER                                 │
-│              (Main Orchestrator Agent)                            │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │ System Prompt (2-5 pages)                                │    │
-│  │  ├─ Agent routing sections (when to call each agent)    │    │
-│  │  ├─ Rules & mandates (user-defined constraints)          │    │
-│  │  ├─ Personality definition (calm, collected, thorough)  │    │
-│  │  ├─ Synthesis & output format instructions              │    │
-│  │  └─ Time-sensitivity handling                           │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                                                                   │
+│                  ORCHESTRATOR (main agent)                       │
+│              Neutral — routes work, synthesizes answers          │
+│                                                                  │
 │  1. User sends request                                           │
-│  2. PM evaluates → selects rooms/agents                          │
-│  3. PM calls agents alive (parallel + sequential)                │
-│  4. PM collects outputs                                          │
-│  5. PM synthesizes → Detailed Report + Summary + Options         │
+│  2. Orchestrator evaluates → selects specialist agents           │
+│  3. Orchestrator sends each agent a task (briefing format)       │
+│  4. Agents run: own LLM call + own system prompt + connectors    │
+│  5. Orchestrator collects outputs, resolves conflicts            │
+│  6. Orchestrator synthesizes → one answer                        │
 └────────────────────────┬────────────────────────────────────────┘
-                         │
+                         │  hub-and-spoke — no direct agent-to-agent calls
          ┌───────────────┼───────────────┬──────────────┐
          ▼               ▼               ▼              ▼
     ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
-    │ Room 1  │    │ Room 2  │    │ Room 3  │    │ Room N  │
+    │ Agent 1 │    │ Agent 2 │    │ Agent 3 │    │ Agent N │
     │Research │    │  Risk   │    │  Macro  │    │  ...    │
-    │ (3-5    │    │ (2-4    │    │ (2-4    │    │         │
-    │ agents) │    │ agents) │    │ agents) │    │         │
+    │ lead    │    │  lead   │    │  lead   │    │         │
     └─────────┘    └─────────┘    └─────────┘    └─────────┘
          │               │               │              │
-         └───────────────┴───────────────┴──────────────┘
+    ┌────▼────┐     ┌────▼────┐     ┌────▼────┐   ┌─────▼────┐
+    │Connector│     │Connector│     │Connector│   │Connector │
+    │ web     │     │ market  │     │  SEC    │   │ news     │
+    │ search  │     │  data   │     │ EDGAR   │   │          │
+    └─────────┘     └─────────┘     └─────────┘   └──────────┘
                          │
          ┌───────────────┼───────────────┐
          ▼               ▼               ▼
     ┌─────────┐    ┌─────────┐    ┌─────────┐
-    │ Vector  │    │Knowledge│    │  User   │
-    │   DB    │    │  Graph  │    │  Rules  │
-    │(memory) │    │(memory) │    │(mandates│
+    │ Chat    │    │ Agent   │    │ Config  │
+    │ History │    │ Notes   │    │ Files   │
+    │ (files) │    │ (files) │    │ (files) │
     └─────────┘    └─────────┘    └─────────┘
 ```
 
@@ -54,178 +49,86 @@
 
 ## Core Components
 
-### 1. Portfolio Manager (Main Orchestrator)
+### 1. Orchestrator (Main Agent)
 
-The Portfolio Manager is the central agent — the only one the user interacts with directly. It is a single sophisticated LLM agent with a comprehensive system prompt.
+The orchestrator is the only agent the user interacts with. It is deliberately **neutral** — a routing and synthesis layer, not a persona (the persona is user-configurable later).
 
-**System Prompt Structure:**
-- **Personality section:** Defines tone — calm, collected, thorough, never rushed
-- **Agent routing section:** For each of the 30-40 subagents, defines:
-  - What the agent specializes in
-  - When to call it (trigger conditions)
-  - What kind of output to expect
-  - Whether it runs independently or needs input from other agents
-  - Typical research time (1-10 minutes)
-- **Rules & mandates section:** User-defined persistent constraints
-- **Synthesis section:** How to combine agent outputs into the unified report
-- **Time-sensitivity section:** How to handle urgent vs deep-dive requests
-- **Output format:** Detailed report → Summary → Options for next steps
+**System prompt structure (v2, advanced):**
+- **Routing protocol:** for each category/agent — what it specializes in, trigger conditions, what context to send, expected output contract
+- **Delegation rules:** how tasks are packaged (briefing format: TASK / CONTEXT / URGENCY / DEPTH), when to run agents in parallel vs sequentially
+- **Synthesis rules:** how to combine agent outputs into one answer, how to surface disagreement
+- **Structured output:** the orchestrator returns a defined schema the app renders
 
-**Calling Logic:**
-- PM evaluates user request against routing sections
-- Selects relevant agents (can call 3-15 agents for a complex request)
-- Runs independent agents in parallel, dependent ones sequentially
-- Collects all outputs, resolves conflicts via Execution Room's conflict agent
-- Synthesizes everything into one response
+**Calling logic (hub-and-spoke):**
+1. Orchestrator evaluates the user request against routing rules
+2. Selects relevant agents (1–15 for a complex request)
+3. Sends each agent a task briefing (independent agents in parallel, dependent ones sequentially)
+4. Collects outputs; resolves conflicts (e.g., via the Critique category's conflict-resolution agent)
+5. Synthesizes into one response
 
-### 2. Subagent System (30-40 Agents across 16 Rooms)
+### 2. Specialist Agents (Real Agents, Not Subagents)
 
-Each subagent is a fully independent LLM agent with its own multi-page system prompt.
+Each specialist is a **genuine agent**: its own LLM call with its own system prompt, its own configured model, and access to connectors.
 
-**Agent Architecture:**
-```
-Agent Lifecycle:
-┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│  IDLE    │───▶│  CALLED  │───▶│RESEARCHING│───▶│ RETURN   │
-│          │    │  ALIVE   │    │(1-10 min)│    │ RESULTS  │
-└──────────┘    └──────────┘    └──────────┘    └──────────┘
-                      │                               │
-                      ▼                               ▼
-               Intern agents                   Memory saved
-               (if overwhelmed)             (vector DB + KG)
+**Agent definition (config file):**
+
+```json
+{
+  "id": "web-research",
+  "name": "Web Research Agent",
+  "category": "research",
+  "model": "openai/gpt-4o",              // or anthropic/... , ollama/...
+  "systemPrompt": "docs/frontend/ground/research/web-research/system-prompt.md",
+  "connectors": ["web_search", "url_fetch"],
+  "maxSteps": 8,
+  "notesDir": "data/notes/web-research"
+}
 ```
 
-**System Prompt Contents (per agent):**
-- Personality/attitude definition
-- Domain expertise boundaries
-- Tool access (web search, APIs, file I/O, DB queries, code execution)
-- Citation requirements (must use fresh/recent data)
-- Output formatting rules
-- "Unknown" handling protocol
-- Fallback behavior (what to do if it can't complete research)
+**System prompt contents (per agent):**
+- Identity, role, and domain boundaries
+- Connector usage protocols (when to call each tool, output contracts, failure handling)
+- Data freshness & source verification rules
+- Structured output format the orchestrator consumes
+- "Unknown" handling and fallback behavior
 
-**Agent Types:**
-- **Primary agents:** Full multi-page system prompts, deep research, 1-10 minutes
-- **Intern agents:** Lighter-weight, used when primary is overwhelmed or for time-sensitive requests
+**Agent types:**
+- **Base leads (16):** one per category, shipped with the app
+- **Pluggable agents:** added by the user (via the in-app editor or by dropping a config file + prompt into the agents folder)
 
-**Memory:** Each agent has persistent state across calls via:
-- Vector DB for semantic search over past research
-- Knowledge graph for structured relationships between entities
+### 3. Connectors
 
-### 3. Memory System
+Connectors are real tool implementations the agents can call. Providers are **configurable** — the user picks the provider and enters a key in settings.
 
-**Vector Database:**
-- Stores conversation history, past research outputs, decisions
-- Enables semantic search: "What did we conclude about TSLA last quarter?"
-- PM and agents can query for context
+| Connector | Providers | Notes |
+|---|---|---|
+| `web_search` | Serper, Tavily, Brave (configurable) | Search results + snippets |
+| `url_fetch` | — | Read a page as text |
+| `market_data` | yfinance-style (keyless), Polygon, FMP (configurable) | Prices, fundamentals |
+| `sec_edgar` | SEC EDGAR (free, official) | 10-K, 10-Q, 8-K, 13F |
+| `news` | NewsAPI / provider feeds (configurable) | Article aggregation |
 
-**Knowledge Graph:**
-- Stores entities and relationships: companies, sectors, macro factors, trades, decisions
-- Tracks what worked/failed over time
-- Enables pattern recognition across decisions
+Every connector call is logged; agents are prompted to report `CONNECTOR STATUS: SUCCESS/PARTIAL/FAILED` and fall back gracefully.
 
-### 4. Rules & Mandates Engine
+### 4. Memory (Minimal, File-Based)
 
-User defines persistent constraints:
-- "Never invest in fossil fuels"
-- "Keep 20% cash minimum"
-- "No single position over 5%"
-- "Only trade during NYSE hours"
-- "Prioritize dividend yield > 2%"
+- **Chat history:** per-conversation JSON files
+- **Agent notes:** each agent can write notes to its own markdown/JSON file (persistent across sessions)
+- No vector DB in the skeleton — the interface is designed so a vector store can slot in later
 
-These are embedded in the PM's system prompt and checked against every recommendation.
+### 5. Config & Secrets
 
-### 5. Conflict Resolution
+- **Config file:** `~/.labourious/config.json` — providers, models, agent overrides, user mandates
+- **Secrets:** stored via Electron `safeStorage` (OS keychain) where available, with plain-file fallback; never logged
 
-When agents disagree (Quant says BUY, Critique says SELL), the Execution Room's dedicated conflict resolution agent:
-- Analyzes both arguments
-- Checks against user rules/mandates
-- Makes a final recommendation OR presents both sides
-- The resolution is logged in the memory system
+### 6. Customization (In-App Editor)
 
----
-
-## Room Architecture Details
-
-### Research Room
-- **Primary function:** Data gathering, web search, filing analysis
-- **Typical call pattern:** Called FIRST in most requests — feeds raw data to other rooms
-- **Tools:** Web search, SEC Edgar, academic databases, news APIs
-
-### Risk Room
-- **Primary function:** Portfolio risk analysis
-- **Typical call pattern:** Called after Research and Quant/Fundamental rooms
-- **Tools:** Statistical packages, Monte Carlo sims
-
-### Macro Room
-- **Primary function:** Global economic context
-- **Typical call pattern:** Called for any portfolio-level or sector-level request
-- **Tools:** FRED API, central bank data, economic calendars
-
-### Quant Room
-- **Primary function:** Statistical modeling, factor analysis
-- **Typical call pattern:** Called for portfolio analysis, strategy evaluation
-- **Tools:** Python/R for stats, ML libraries
-
-### Fundamental Room
-- **Primary function:** Company deep-dives, valuation
-- **Typical call pattern:** Called for individual stock/asset analysis
-- **Tools:** SEC filings, financial data APIs
-
-### Technical Room
-- **Primary function:** Price/volume/order flow analysis
-- **Typical call pattern:** Called for entry/exit timing, trade execution context
-- **Tools:** Market data APIs, charting libraries
-
-### Sentiment Room
-- **Primary function:** Market sentiment aggregation
-- **Typical call pattern:** Called alongside Technical or Fundamental rooms
-- **Tools:** NLP, social media APIs, news feeds
-
-### Strategy Room
-- **Primary function:** Portfolio construction recommendations
-- **Typical call pattern:** Called for allocation decisions, rebalancing
-- **Tools:** Optimization libraries, tax software APIs
-
-### Execution Room
-- **Primary function:** Trade execution + conflict resolution
-- **Typical call pattern:** Called when trades need to be placed or agents disagree
-- **Tools:** Broker APIs, order management systems
-
-### Memory/Knowledge Room
-- **Primary function:** Maintains persistent knowledge
-- **Typical call pattern:** Runs in background, queried by PM as needed
-- **Tools:** Vector DB, graph DB
-
-### Critique Room
-- **Primary function:** Devil's advocate analysis
-- **Typical call pattern:** Called for every major recommendation before final output
-- **Tools:** Same as the rooms it critiques
-
-### Compliance & Tax Room
-- **Primary function:** Regulatory and tax constraint checking
-- **Typical call pattern:** Called for every trade recommendation
-- **Tools:** Tax rule databases, regulatory APIs
-
-### Alternative Data Room
-- **Primary function:** Non-traditional data analysis
-- **Typical call pattern:** Called for deep-dive or edge-seeking requests
-- **Tools:** Satellite APIs, shipping data, credit card aggregators
-
-### Crypto/Digital Assets Room
-- **Primary function:** Crypto-specific analysis
-- **Typical call pattern:** Called when crypto assets are in scope
-- **Tools:** On-chain analytics APIs, DeFi protocol APIs
-
-### Control Room
-- **Primary function:** Quality control, agent health
-- **Typical call pattern:** Runs continuously, monitors agent outputs
-- **Tools:** Internal monitoring
-
-### Tasks/Automation Room
-- **Primary function:** Idle-mode research
-- **Typical call pattern:** Runs on schedule (daily, weekly), even without user prompt
-- **Tools:** Same as Research Room
+The app includes an agent editor:
+- Edit system prompts (rich text / markdown)
+- Change per-agent model & provider
+- Add/remove connectors
+- Add/duplicate/delete agents
+- All changes **persist to files** on disk so the roster is portable and git-able
 
 ---
 
@@ -234,58 +137,38 @@ When agents disagree (Quant says BUY, Critique says SELL), the Execution Room's 
 **User:** "Should I rotate my tech holdings given the macro environment?"
 
 ```
-1. PM evaluates request
-   → Relevant rooms: Macro, Fundamental, Risk, Critique, Strategy
-   
-2. PM calls agents in parallel (first wave):
-   ┌─ Macro Room: Central Bank Analyst, Geopolitical Risk Agent
-   └─ Research Room: News Aggregation Agent, SEC Research Agent
-   
-3. PM calls agents in parallel (second wave, uses first wave outputs):
-   ┌─ Fundamental Room: DCF & Valuation Agent, Moat Analysis Agent
-   └─ Technical Room: Chart & Pattern Agent
-   
-4. PM calls agents (third wave):
-   └─ Risk Room: VaR & Stress Test Agent, Correlation Agent
-   
-5. PM calls Critique Room:
-   └─ Devil's Advocate Agent, Blind Spot Detector
-   
-6. PM calls Execution Room:
-   └─ Conflict Resolution Agent (resolves any disagreements)
-   
-7. PM synthesizes:
-   ┌─ Detailed Report: Full analysis from all rooms
-   ├─ Summary: Key findings in 2-3 paragraphs
-   └─ Options: "Option A: Rotate 30% out of tech into bonds.
-               Option B: Hold but add protective hedges.
-               Option C: Wait for upcoming Fed meeting before rotating."
+1. Orchestrator evaluates request
+   → Relevant categories: Macro, Fundamental, Risk, Critique, Strategy
+
+2. Orchestrator calls agents in parallel (first wave):
+   ┌─ Macro lead: Central-bank & liquidity brief
+   └─ Research lead: News + filings brief
+
+3. Orchestrator calls agents in parallel (second wave, uses first-wave outputs):
+   ┌─ Fundamental lead: DCF & moat brief
+   └─ Technical lead: chart & pattern brief
+
+4. Orchestrator calls Risk lead: stress-test brief
+
+5. Orchestrator calls Critique lead (devil's advocate) on the assembled case
+
+6. Orchestrator resolves conflicts and synthesizes:
+   ┌─ The analysis (with citations from each agent)
+   ├─ Key takeaways
+   └─ Options: "A: rotate 30% out of tech into bonds.
+                B: hold but add protective hedges.
+                C: wait for the upcoming Fed meeting."
 ```
-
----
-
-## Tech Stack (Planned)
-
-| Layer | Technology |
-|-------|-----------|
-| Desktop Shell | Electron |
-| LLM Orchestration | User-provided API keys (Ollama, Claude, GPT, Gemini) |
-| Memory / Vector DB | TBD (likely Chroma or LanceDB) |
-| Knowledge Graph | TBD (likely in-app graph structure) |
-| Agent Framework | Custom orchestration layer |
-| Broker Integration | ccxt, broker-specific SDKs |
-| Encryption | AES-256, PBKDF2 (local vault) |
-| Database | SQLite (local-first) |
 
 ---
 
 ## Binding Constraints
 
-- **Local-first:** Everything runs on user's machine. No cloud dependency.
-- **User-provided LLM:** User brings their own API keys. App routes through them.
-- **Offline-capable:** Core functionality works without internet (using local Ollama models).
+- **Local-first:** everything runs on the user's machine. No cloud dependency.
+- **User-provided LLM:** user brings their own API keys; the app routes through them (provider-agnostic).
+- **Offline-capable:** works with local Ollama models.
 - **Open source:** MIT license.
 
 ---
 
-*This architecture document will be updated as implementation details are finalized.*
+*This architecture document will be updated as the skeleton is implemented.*

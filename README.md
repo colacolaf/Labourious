@@ -1,51 +1,52 @@
 # Labourious
 
-**A local-first AI portfolio manager designed as a research firm in a building.**
+**A local-first AI portfolio manager — one orchestrator agent, a team of specialist agents, real connectors, and your own API keys.**
 
-Labourious is designed around one calm Portfolio Manager that coordinates specialized agents across research, macro, quant, fundamental, technical, sentiment, risk, strategy, execution, memory, critique, compliance, alternative-data, crypto, control, and task-automation rooms. The intended experience is simple: ask the Portfolio Manager a question, let it delegate the relevant work, and receive one synthesized answer shaped by your rules and mandates.
+Labourious is an Electron desktop app. You chat with a neutral orchestrator agent; it decides which specialist agents to wake, sends each one a task, collects their outputs, and synthesizes one answer. The specialists are **real agents** — each runs its own model call with its own system prompt and has access to **real connectors** (web search, market data, SEC filings, news). Everything is local-first: your keys, your data, your machine.
 
-> **Current status:** the repository is in active design and frontend-prototype development. The multi-agent architecture, agent prompts, room taxonomy, and visual HQ are documented, but the backend orchestration, desktop shell, memory system, and broker integrations described in the design documents are not implemented yet.
+> **Current status:** the repository is mid-pivot. The pixel-art "building" frontend prototype was removed entirely (see [`docs/CONTEXT.md`](docs/CONTEXT.md) for the full story). What remains is the **agent prompt library** — 89 system prompts under [`docs/frontend/`](docs/frontend/) — plus a rewritten architecture. The Electron app skeleton itself is **planned, not yet built**.
 
-## What is implemented
+## What exists today
 
-The runnable work currently lives in [`frontend/ground/`](frontend/ground/):
+- **Agent prompt library** — 89 system prompts across 18 categories (research, sentiment, alt-data, macro, quant, fundamental, technical, crypto, risk, critique, compliance, strategy, execution, memory, control, tasks, perimeter, penthouse). These are the raw material for the app's agent roster.
+- **Prompt engineering framework** — validation scripts, audit frameworks, and test templates for upgrading prompts to v2 (tool protocols, routing rules, structured outputs).
+- **Design docs** — architecture, taxonomy, features, setup, and security model for the planned app.
 
-- A browser-based Phaser 3 Ground Floor lobby using a deskrpg-faithful pixel-art pipeline.
-- Agent roster pages for the building's rooms, plus a combined [`Agent Gallery`](frontend/ground/agent-gallery.html).
-- A Penthouse roster for the Portfolio Manager and PM Bodyguard.
-- Procedural and generated assets under [`frontend/ground/assets/`](frontend/ground/assets/), with room and building layout documentation under [`docs/frontend/`](docs/frontend/).
+## The planned app (skeleton)
 
-The current agent manifest contains **94 entries**, including example characters and the room roster. The documented HQ model organizes the operation across five levels: Ground / Intake, Floor 2 / Analysis, Floor 3 / Judgment, Floor 4 / Command, and the Penthouse / The Top.
-
-## Run the frontend prototype
-
-```bash
-cd frontend/ground
-python3 -m http.server 8080
-```
-
-Then open <http://localhost:8080/>. Use an HTTP server rather than opening the HTML files directly because the prototype uses ES modules and local assets.
+| Layer | Plan |
+|---|---|
+| Shell | Electron desktop app ("opens like Chrome") |
+| Chat UI | One chat window with the orchestrator; activity panel showing which agents were called |
+| Orchestrator | Neutral main agent — routes work to specialists (hub-and-spoke), synthesizes results |
+| Agents | 16 base leads (one per category) + pluggable agents; each agent = its own system prompt + model + connectors |
+| LLM layer | Provider-agnostic — OpenAI-compatible, Anthropic, Ollama (per-agent model choice) |
+| Connectors | Configurable providers: web search (Serper / Tavily / Brave), market data (yfinance-style / Polygon / FMP), SEC EDGAR (free), news |
+| Customization | In-app editor — system prompts, models, connectors, and roster, all saved to files on disk |
+| Memory | Chat history + agent notes (plain files) |
+| Keys | Local config file, OS-keychain-backed where available |
+| CLI | Later (after the app runtime is proven) |
 
 ## Repository map
 
 | Path | Purpose |
 |---|---|
-| [`frontend/ground/`](frontend/ground/) | Runnable pixel-art lobby, room pages, roster gallery, and asset generators |
-| [`docs/README.md`](docs/README.md) | Product overview, room taxonomy, and documentation index |
-| [`docs/LABOURIOUS_ARCHITECTURE.md`](docs/LABOURIOUS_ARCHITECTURE.md) | Planned Portfolio Manager and subagent architecture |
-| [`docs/AGENTS.md`](docs/AGENTS.md) | Agent hierarchy, room responsibilities, and calling flow |
-| [`docs/FEATURES.md`](docs/FEATURES.md) | Planned product capabilities |
-| [`docs/LABOURIOUS_SETUP.md`](docs/LABOURIOUS_SETUP.md) | Aspirational local-first setup guide |
-| [`docs/SECURITY.md`](docs/SECURITY.md) | Planned local-first security model |
-| [`docs/frontend/README.md`](docs/frontend/README.md) | Frontend floors, rooms, and agent profile index |
+| [`docs/README.md`](docs/README.md) | Product overview and documentation index |
+| [`docs/CONTEXT.md`](docs/CONTEXT.md) | **What changed and why** — the pivot log and decisions from the rework |
+| [`docs/LABOURIOUS_ARCHITECTURE.md`](docs/LABOURIOUS_ARCHITECTURE.md) | App architecture: orchestrator, agents, connectors, memory |
+| [`docs/AGENTS.md`](docs/AGENTS.md) | Agent taxonomy — categories, leads, and the calling model |
+| [`docs/FEATURES.md`](docs/FEATURES.md) | Feature set for the skeleton and beyond |
+| [`docs/LABOURIOUS_SETUP.md`](docs/LABOURIOUS_SETUP.md) | Planned setup: install, API keys, config file |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Local-first security model |
+| [`docs/frontend/`](docs/frontend/) | The agent prompt library (89 system prompts + framework docs) |
 
 ## Design principles
 
-- **Local-first:** the planned product keeps keys, data, and memory on the user's machine; cloud models are opt-in through the user's own credentials.
-- **Delegation over one-shot answers:** the Portfolio Manager routes work to domain specialists rather than relying on one generic response.
-- **Multiple perspectives:** research, modeling, risk, and critique agents intentionally overlap so recommendations can be challenged.
-- **Inspectable world:** the HQ makes the agent system tangible through rooms, rosters, layouts, and visual identities.
+- **Local-first:** keys, data, and memory stay on your machine; cloud models are opt-in through your own credentials.
+- **Orchestration over one-shot answers:** the orchestrator routes work to domain specialists rather than relying on one generic response.
+- **Real agents, real connectors:** every specialist is a genuine agent with tool access — not a simulated subagent.
+- **Customizable:** agents, prompts, models, and connectors are user-editable, persisted as files.
 
 ## License
 
-Labourious is intended to be released under the MIT License; the repository does not currently include a `LICENSE` file.
+MIT (no `LICENSE` file yet).

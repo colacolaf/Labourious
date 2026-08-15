@@ -1,96 +1,80 @@
 # Labourious Documentation
 
-This directory contains the product design, architecture, agent taxonomy, security model, and frontend documentation for Labourious. For the repository overview and the currently runnable frontend prototype, start with the [root README](../README.md).
+The product design, architecture, agent taxonomy, security model, and agent prompt library for Labourious. For the repository overview, start with the [root README](../README.md).
 
-> **Status note:** the backend orchestration and Electron application described below are planned architecture. The currently runnable implementation is the browser-based pixel-art HQ prototype in [`../frontend/ground/`](../frontend/ground/).
+> **Status note:** the Electron app described here is **planned architecture**. The runnable asset today is the agent prompt library under [`frontend/`](frontend/) (89 system prompts) — formerly "docs/frontend", kept as-is pending reorganization.
 
 **The AI portfolio manager designed to go deeper.**
 
-Labourious is designed as a local-first, GitHub-installable Electron desktop app. You connect your own API model, chat with a calm, collected Portfolio Manager, and it orchestrates specialized AI subagents across 16 rooms to produce deeper investment research.
+Labourious is a local-first Electron desktop app. You connect your own API keys, chat with a neutral orchestrator agent, and it delegates to real specialist agents — each with its own system prompt, model, and connectors — to produce deeper investment research.
 
 ---
 
 ## What It Is
 
-A single Portfolio Manager agent that you talk to directly. When you ask something — "analyze my tech holdings," "should I rotate into bonds given the macro environment?", "find me undervalued mid-cap healthcare stocks with strong moats" — the Portfolio Manager automatically calls the right subagents alive. Each subagent wakes up with its own multi-page system prompt, does deep research in its domain (1-10 minutes), cites fresh sources, and returns its findings.
+A single orchestrator agent that you talk to directly. When you ask something — "analyze my tech holdings," "should I rotate into bonds given the macro environment?", "find me undervalued mid-cap healthcare stocks with strong moats" — the orchestrator automatically wakes the right specialists. Each specialist runs as a genuine agent (its own LLM call, its own system prompt, its own tools) and returns findings with citations.
 
-The Portfolio Manager then synthesizes EVERYTHING into one unified report: a detailed deep-dive, a summary, and a set of clear options for what to do next.
-
----
+The orchestrator then synthesizes everything into one unified answer: the analysis, the key takeaways, and clear options for what to do next.
 
 ## How It's Different
 
 | Typical AI | Labourious |
 |---|---|
-| One model, one response | One orchestrator, 50+ specialized agents all contributing |
-| Surface-level analysis | Multi-room deep research — quant, fundamental, macro, sentiment, alternative data, and more |
-| No memory between sessions | Vector DB + knowledge graph that learns from every decision |
-| Generic | You write the rules, mandates, and constraints; PM always follows them |
+| One model, one response | One orchestrator, a team of specialist agents all contributing |
+| Simulated subagents | Real agents with real connectors (web search, market data, SEC filings, news) |
+| Fixed roster | Customizable — agents, prompts, models, and connectors editable in-app and saved to files |
 | Cloud-dependent | Runs locally. Your keys, your data, your machine |
 
----
+## The Agent Categories
 
-## The 16 Rooms
+There are no "rooms" and no building — agents are simply grouped into **categories** for organization. The skeleton ships **16 base leads, one per category**, and more agents can be plugged in:
 
-| # | Room | Purpose |
-|---|------|---------|
-| 1 | **Research** | Deep web research, SEC filings, news, academic papers, alternative data |
-| 2 | **Risk** | Portfolio stress testing, VaR, drawdown, correlation matrices, black swan detection |
-| 3 | **Macro** | Central bank policy, GDP, inflation, geopolitics, currency flows, sovereign debt |
-| 4 | **Quant** | Factor analysis, statistical arbitrage, momentum models, mean reversion, options pricing |
-| 5 | **Fundamental** | DCF models, competitive moat analysis, management quality, forensic accounting |
-| 6 | **Technical** | Chart patterns, volume profile, market microstructure, order flow, liquidity |
-| 7 | **Sentiment** | News sentiment, social media, analyst reports, insider trading, options flow, dark pool |
-| 8 | **Strategy** | Portfolio construction, asset allocation, tactical overlays, hedging, tax-loss harvesting |
-| 9 | **Execution** | Order routing, slippage, TWAP/VWAP, broker selection, timing optimization, conflict resolution |
-| 10 | **Memory/Knowledge** | Long-term memory, learns from past decisions, builds knowledge graph |
-| 11 | **Critique** | Devil's advocate — challenges every recommendation, finds blind spots |
-| 12 | **Compliance & Tax** | Wash sale rules, PDT, cross-border tax, concentration limits, regulatory changes |
-| 13 | **Alternative Data** | Satellite imagery, credit card data, supply chain tracking, shipping, weather/crop data |
-| 14 | **Crypto/Digital Assets** | On-chain analytics, DeFi, tokenomics, protocol risk, custody |
-| 15 | **Control** | Meta-agents that manage other agents, quality control, agent health |
-| 16 | **Tasks/Automation** | Idle-mode research, daily briefings, periodic insight surfacing |
+| # | Category | Lead | Purpose |
+|---|----------|------|---------|
+| 1 | Research | Michael Burry | Deep web research, SEC filings, news, academic papers |
+| 2 | Risk | Nassim Taleb | Stress testing, VaR, drawdown, black swan detection |
+| 3 | Macro | Larry Fink | Central bank policy, GDP, inflation, geopolitics, currency |
+| 4 | Quant | Jim Simons | Factor analysis, stat arb, momentum, options pricing |
+| 5 | Fundamental | Warren Buffett | DCF, moats, management quality, forensic accounting |
+| 6 | Technical | Mark Minervini | Chart patterns, volume profile, order flow, liquidity |
+| 7 | Sentiment | Cathie Wood | News sentiment, social media, analysts, insider moves |
+| 8 | Strategy | David Swensen | Asset allocation, tactical overlays, hedging, tax harvesting |
+| 9 | Execution | — | Order routing, timing, slippage, conflict resolution |
+| 10 | Memory | — | Long-term notes, learns from past decisions |
+| 11 | Critique | Charlie Munger | Devil's advocate — challenges every recommendation |
+| 12 | Compliance & Tax | Preet Bharara | Wash sales, PDT, cross-border tax, concentration limits |
+| 13 | Alternative Data | Matthew Granade | Satellite, credit-card, supply chain, weather data |
+| 14 | Crypto/Digital Assets | Vitalik Buterin | On-chain analytics, DeFi, tokenomics, protocol risk |
+| 15 | Control | — | Quality control, agent health |
+| 16 | Tasks/Automation | — | Daily briefings, periodic insight surfacing |
 
-Each room has 1-5 agents. Agents can overlap — Quant and Risk might both analyze the same data from different angles. Some agents have lightweight "intern" sub-agents for when the main agent is overwhelmed.
+Leads marked **—** are not yet assigned in the prompt library and will be filled during the skeleton build. The full taxonomy lives in [AGENTS.md](AGENTS.md).
 
----
+## Tech Stack (Planned)
 
-## Tech Stack
-
-- **Desktop shell:** Electron
-- **LLM:** User's own API model — Ollama (local), Claude, GPT, Gemini (any or all)
-- **Memory:** Vector DB + knowledge graph
-- **License:** MIT — open source
-- **Philosophy:** Local-first. Your keys, your machine, your data.
-
----
+| Layer | Technology |
+|-------|------------|
+| Desktop Shell | Electron |
+| Chat UI | Web-based renderer in Electron |
+| LLM Orchestration | Provider-agnostic: OpenAI-compatible, Anthropic, Ollama (user-provided keys) |
+| Agent Runtime | Custom lightweight runtime — one LLM call per agent, system prompt + connectors per agent |
+| Connectors | Web search (Serper/Tavily/Brave), market data (yfinance-style/Polygon/FMP), SEC EDGAR (free), news — all configurable |
+| Memory | Chat history + agent notes as plain files (JSON/markdown) |
+| Secrets | Local config file, OS-keychain-backed (Electron `safeStorage`) where available |
+| CLI | Later, after the app runtime is proven |
 
 ## Quick Links
 
-- [Architecture](LABOURIOUS_ARCHITECTURE.md) — How the Portfolio Manager and subagent system works
-- [Agents](AGENTS.md) — Complete 16-room, 50+ agent taxonomy
-- [Setup](LABOURIOUS_SETUP.md) — Install from GitHub and connect your API model
-- [Features](FEATURES.md) — Full feature set
-- [Security](SECURITY.md) — Local-first security model
-
----
-
-## The Portfolio Manager
-
-The Portfolio Manager is the only agent the user talks to. It is calm, collected, and deliberate. Its system prompt (2-5 pages) contains sections on every subagent and exactly when to call them. It automatically decides which agents to wake up based on the user's request, calls them in parallel or sequentially, and synthesizes their outputs.
-
-Users can set persistent rules/mandates: "Never invest in fossil fuels," "Keep 20% cash minimum," "Only trade during NYSE hours." The PM always follows them.
-
-If agents disagree, the Execution Room's conflict resolution agent makes the final call — or presents both arguments to the user.
-
----
+- [Context — what changed and why](CONTEXT.md)
+- [Architecture](LABOURIOUS_ARCHITECTURE.md) — orchestrator, agents, connectors, memory
+- [Agents](AGENTS.md) — complete category taxonomy
+- [Setup](LABOURIOUS_SETUP.md) — planned install and configuration
+- [Features](FEATURES.md) — full feature set
+- [Security](SECURITY.md) — local-first security model
+- [Agent Prompt Library](frontend/README.md) — the 89 system prompts
 
 ## Status
 
-**Phase: Frontend prototype and documentation** — the architecture and agent taxonomy are defined, and the browser-based Ground HQ, room pages, roster gallery, and Penthouse are implemented. Backend orchestration, persistent memory, desktop packaging, and broker integrations remain planned work.
-
-The current visual roster contains 94 manifest entries, including examples and the room roster. See the [frontend documentation](frontend/README.md) and [root README](../README.md) for the implemented surface area.
-
----
+**Phase: post-pivot, pre-build.** The pixel-art frontend prototype was deleted (Aug 2026). The agent prompt library (89 system prompts) was kept and cleaned up, and the architecture docs were rewritten for the skeleton app. The Electron app, agent runtime, connectors, and editor are planned work.
 
 *Labourious. The AI portfolio manager that goes deeper.*

@@ -1,66 +1,28 @@
-# Labourious Security
+# Labourious Security Model
 
-## Philosophy
+Local-first: your keys, your data, your machine.
 
-Local-first. Your machine, your keys, your data. Nothing leaves without your explicit configuration.
+## Principles
 
----
+1. **No cloud dependency.** The app runs entirely on the user's machine. LLM calls go directly from the app to the provider the user configured (or to local Ollama).
+2. **User-owned secrets.** API keys are entered by the user and stored in the OS keychain via Electron `safeStorage` where available, with a plain local file fallback. Keys are never logged, never sent anywhere except the provider they belong to, and never embedded in prompts sent to other providers.
+3. **Local data.** Chat history, agent notes, config, and custom agents live in the user's data directory. Nothing is telemetried.
 
-## What's Encrypted
+## Threat Notes
 
-| Data | Encryption | Location |
-|------|-----------|----------|
-| Broker API keys | AES-256, PBKDF2 | Encrypted vault on disk |
-| API secrets | AES-256, PBKDF2 | Encrypted vault on disk |
-| LLM API keys | AES-256, PBKDF2 | Encrypted vault on disk |
+| Concern | Mitigation |
+|---------|------------|
+| Key exfiltration | Keys stay in keychain/config; the app never transmits them to any endpoint except the configured provider |
+| Prompt injection from web content | Agents are prompted with source-verification and connector-failure protocols; fetched content is treated as untrusted data |
+| Connector abuse | Connector calls are logged locally; rate limits and provider keys are user-owned |
+| Malicious custom agents | User-added agents run under the same runtime as base agents — prompts are just text; connectors are the only capability surface |
+| Broker/trade actions | Execution category is out of skeleton scope; when added, it will require explicit user confirmation per order |
 
-## What's Local (Not Encrypted, Not Transmitted)
+## Encryption
 
-| Data | Notes |
-|------|-------|
-| Trade history | SQLite DB |
-| Agent configurations | Local files |
-| Conversation history | Local vector DB |
-| Knowledge graph | Local storage |
-| User rules/mandates | PM system prompt |
+- Secrets: OS keychain / `safeStorage` (AES-256 under the hood on supported platforms)
+- At-rest chat history and notes: plain files on the user's own disk (encrypted at rest is a post-skeleton option)
 
----
+## Offline Mode
 
-## LLM Data Flow
-
-- **Ollama (local):** All data stays on your machine. Zero external transmission.
-- **Claude/GPT/Gemini (cloud):** Your prompts and market data are sent to the provider's servers over HTTPS. Review their privacy policies. Labourious never sees this data — it routes directly.
-
----
-
-## Key Management
-
-- **Vault password:** Set on first run. Required to decrypt broker/API keys.
-- **Not stored anywhere.** Cannot be recovered if forgotten.
-- **Encrypted backup:** Optional. Store somewhere safe (external drive, not cloud).
-
-**Best practices:**
-- Use strong vault password (12+ chars, mix case, numbers, symbols)
-- Create broker API keys with limited permissions
-- Rotate keys every 6 months
-- Never share vault password
-
----
-
-## If Credentials Are Compromised
-
-1. Stop all agents immediately
-2. Revoke compromised API keys on broker/provider websites
-3. Generate new keys
-4. Update vault
-5. Check accounts for unauthorized activity
-
----
-
-## Open Source
-
-All encryption code is in the repository — auditable by anyone. Trust through transparency, not obscurity.
-
----
-
-*Security documentation will be expanded as implementation progresses.*
+Core functionality works offline with a local Ollama model. Connectors that need the internet degrade gracefully (agents report `CONNECTOR STATUS: FAILED` and fall back to what they have).
