@@ -13,38 +13,28 @@ User → Orchestrator → (task briefings, hub-and-spoke) → Specialist agents 
 - A task briefing carries: **TASK** (what to do), **CONTEXT** (relevant history/findings), **URGENCY** (routine/elevated/immediate), **DEPTH** (scan/standard/deep).
 - Every specialist returns a **structured output** the orchestrator can consume.
 
-## Categories & Base Leads
+## V1 Roster (the first product)
 
-16 base leads ship with the skeleton — one per category. The full prompt library holds 89 agents; any of them can be a base agent, and users can add their own.
+**26 core agents + 1 pluggable example** ship with v1, built for the Wharton Investment Competition workflow. The definitive list — every agent, its ID, job, source prompt, and connectors — lives in **[`V1-ROSTER.md`](V1-ROSTER.md)**.
 
-| # | Category | Lead | Lead prompt | Team (in library) |
-|---|----------|------|-------------|-------------------|
-| 1 | Research | Michael Burry | `ground/research/michael-burry/` | Web Research, SEC/Regulatory (John Hempton), Filings Intern, Academic Research, News Aggregation, Data Scout |
-| 2 | Risk | Nassim Taleb | `floor-3/risk/nassim-taleb/` | VaR & Stress Test, Correlation & Concentration, Black Swan (Didier Sornette), Drawdown Monitor, Liquidity Risk, Factor Risk |
-| 3 | Macro | Larry Fink | `floor-2/macro/larry-fink/` | Geopolitical Risk (Ian Bremmer), Central Bank & Liquidity, Currency & Sovereign Debt, Global Growth Tracker |
-| 4 | Quant | Jim Simons | `floor-2/quant/jim-simons/` | Statistical Arbitrage (Ed Thorp), Options & Volatility, Momentum & Trend, Machine Learning, Regime Detection, Risk Budgeting |
-| 5 | Fundamental | Warren Buffett | `floor-2/fundamental/warren-buffett/` | DCF & Valuation, Moat & Competitive Analysis, Management Quality, Forensic Accounting (Harry Markopolos), Catalyst & Event, Industry Structure |
-| 6 | Technical | Mark Minervini | `floor-2/technical/mark-minervini/` | Chart & Pattern, Volume & Order Flow, Market Microstructure, Technical Signal Engine |
-| 7 | Sentiment | Cathie Wood | `ground/sentiment/cathie-wood/` | Options Flow & Dark Pool (Jon Najarian), News Sentiment, Social Media & Retail, Insider & Institutional, Analyst & Earnings Revision |
-| 8 | Strategy | David Swensen | `floor-4/strategy/asset-allocation/` | Tactical Overlay Intern, Hedging & Protection, Tax Optimization, Portfolio Construction, Position Sizing Intern |
-| 9 | Execution | — (unassigned) | — | Order Routing, Execution Algorithm, Timing & Slippage, Pre-Flight Check |
-| 10 | Memory | — (unassigned) | — | Knowledge Graph, Learning & Reflection |
-| 11 | Critique | Charlie Munger | `floor-3/critique/charlie-munger/` | Devil's Advocate (Meredith Whitney), Bear Case Intern, Blind Spot Detector, Historical Analog Intern, Assumption Challenger, Conflict Resolution |
-| 12 | Compliance & Tax | Preet Bharara | `floor-3/compliance/preet-bharara/` | Regulatory Compliance, Cross-Border Tax (H. David Rosenbloom), Trading Restriction |
-| 13 | Alternative Data | Matthew Granade | `ground/alt-data/matthew-granade/` | Satellite & Geospatial (James Crawford), Supply Chain, Consumer Spending, Weather & Commodity, Web & App Traffic |
-| 14 | Crypto/Digital Assets | Vitalik Buterin | `floor-2/crypto/vitalik-buterin/` | On-Chain Analytics (Alex Svanevik), DeFi & Yield, Tokenomics, Protocol Risk |
-| 15 | Control | — (unassigned) | — | Quality Control, Agent Health Monitor |
-| 16 | Tasks/Automation | — (unassigned) | — | Daily Briefing, Opportunity Scout |
+At a glance:
 
-**Unassigned leads** (Execution, Memory, Control, Tasks) will be filled during the skeleton build — either from the existing library (their team agents are already prompted) or new prompts.
+- **12 leads** — Research, Fundamental, Macro, Technical, Sentiment, Quant, Risk, Strategy, Critique, Compliance, Alt Data, Execution
+- **13 specialists** — Web Research, SEC Filings & Regulatory, DCF & Valuation, Forensic Accounting, Central Bank & Liquidity, Geopolitical Risk, Chart & Pattern, Options Flow & Insider, Factor & Momentum, Stress & Concentration, Black Swan, Devil's Advocate, Position Sizing & Hedging
+- **1 cross-cutting** — Final Report Agent (IPS + report drafting)
+- **1 pluggable example** — Sector Analyst (per-sector knowledge packs; ships disabled)
+
+All core prompts are **functionalized** from the 89-prompt library (no celebrity personas); the persona agents ship as pluggable examples.
+
+Categories not in v1: Crypto, Memory, Control, Tasks/Automation (see the deferred table in [`V1-ROSTER.md`](V1-ROSTER.md)).
 
 ## Non-Category Agents
 
-| Agent | Category note |
-|-------|---------------|
+| Agent | Status in v1 |
+|-------|--------------|
 | Portfolio Manager | Former "penthouse" main agent — its routing/synthesis logic is the ancestor of the orchestrator prompt; the persona is retired (neutral orchestrator) |
-| PM Bodyguard | `penthouse/agents/pm-bodyguard/` — its monitoring/interrupt protocol is a candidate for a Control-category agent or an orchestrator safety layer |
-| Entrance Bodyguard | `ground/perimeter/entrance-bodyguard/` — perimeter agent; candidate for a request-vetting layer in front of the orchestrator |
+| PM Bodyguard | Pluggable example — its monitoring/interrupt protocol is a candidate for a Control-category agent or an orchestrator safety layer |
+| Entrance Bodyguard | Pluggable example — perimeter agent; candidate for a request-vetting layer in front of the orchestrator |
 
 ## Agent Levels
 

@@ -58,11 +58,29 @@ User chats → Neutral orchestrator agent
 
 Skeleton scope: Electron app + chat UI + orchestrator + 16 base leads + connectors (Serper/Tavily/Brave, yfinance/Polygon/FMP, SEC EDGAR, news) + file memory + config + in-app editor.
 
+## The V1 roster decision (second interview, same session)
+
+The first product targets the **Wharton Investment Competition** (teams of 4–6 students, virtual portfolio on WInS, judged on strategy quality and research strength — not returns; deliverables are the IPS and the Final Report). Research performed before this interview:
+
+- **Anthropic multi-agent research system** — multi-agent excels at breadth-first parallel research but burns ~15× chat tokens; each agent needs distinct tools/prompts or they duplicate work; effort must scale to query complexity (simple 1–3 agents, medium 3–6, deep up to 12).
+- **LangChain architecture guide** — hub-and-spoke = the "subagents" pattern (+1 model call per interaction, context isolation); domain/sector knowledge is better as loadable skills on one agent than as separate agents.
+
+Decisions (15–22):
+
+15. **Audience:** the Wharton Investment Comp. The roster maps to the comp workflow: client case → IPS → research → portfolio → Final Report.
+16. **Core jobs (all three):** deep company research, portfolio review, screening for ideas.
+17. **Roster shape:** function leads only — no per-sector agents as separate agents.
+18. **Markets:** US + global equities (matches WInS).
+19. **Personas:** fully functional core roster; persona agents (Burry, Buffett, Taleb, …) ship as pluggable examples.
+20. **Roster size:** 26 core agents (12 leads + 13 specialists + Final Report Agent) + 1 pluggable example (Sector Analyst with per-sector knowledge packs). **The definitive list is [`V1-ROSTER.md`](V1-ROSTER.md).**
+21. **Categories in v1:** Research, Fundamental, Macro, Technical, Sentiment, Quant, Risk, Strategy, Critique, Compliance, Alt Data, Execution. Deferred: Crypto, Tasks/Automation, Memory, Control.
+22. **Portfolio:** read-only portfolio awareness in v1. **Team roles:** single-user v1 (sector-owner features later). **Comp context layer:** declined — the app stays generic. **Effort:** scaling rules in the orchestrator prompt (not uncapped). **Automation (daily briefings):** v2.
+
 ## Known debt / next moves
 
 1. **Build the skeleton** (`app/` — Electron shell, runtime, connectors, editor). Nothing is implemented yet.
-2. **Reorganize the prompt tree** — `docs/frontend/floor-*` paths still say "floor"; move to `prompts/<category>/<agent>/` and rename room READMEs into category docs.
-3. **Unassigned leads** — Execution, Memory, Control, Tasks categories have team agents but no assigned lead; fill from the library or new prompts.
-4. **Orchestrator prompt** — write the v2 orchestrator prompt (routing protocol + synthesis + structured output) from the old Portfolio Manager prompt.
+2. **Write the 2 new prompts** — Final Report Agent (IPS + report drafting) and Sector Analyst (pluggable example), then functionalize the ~20 core prompts from the library (strip personas, add connector protocols + output contracts).
+3. **Write the v2 orchestrator prompt** — routing protocol (effort tiers), synthesis rules, structured output.
+4. **Reorganize the prompt tree** — `docs/frontend/floor-*` paths still say "floor"; move to `prompts/<category>/<agent>/` and rename room READMEs into category docs.
 5. **v2 prompt upgrade** — add connector protocols, routing rules, and output contracts to all 89 prompts using the existing framework docs.
-6. **Perimeter + penthouse prompts** — decide whether Entrance Bodyguard (request vetting) and PM Bodyguard (risk interrupt) become real agents in the app or are folded into the orchestrator.
+6. **Perimeter + penthouse prompts** — Entrance Bodyguard and PM Bodyguard become pluggable examples (already decided); no action needed beyond packaging.

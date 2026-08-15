@@ -8,7 +8,7 @@ Planned feature set for the skeleton app, ordered by build priority.
 - **Neutral orchestrator agent** — routes work to specialists (hub-and-spoke), synthesizes answers
 - **Real agent runtime** — each agent is a genuine LLM call with its own system prompt and connectors
 - **Provider-agnostic LLM layer** — OpenAI-compatible APIs, Anthropic, Ollama; per-agent model choice
-- **16 base lead agents** — one per category, prompted from the existing 89-prompt library
+- **26 core agents** — 12 category leads + 13 specialists + final-report agent, functionalized from the existing 89-prompt library (see [`V1-ROSTER.md`](V1-ROSTER.md))
 - **Connectors (configurable providers):**
   - Web search: Serper / Tavily / Brave
   - Market data: yfinance-style (keyless) / Polygon / FMP

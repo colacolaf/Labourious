@@ -2,6 +2,21 @@
 
 All notable changes to Labourious.
 
+## [Unreleased] — V1 roster decided (2026-08-15)
+
+### Added
+- **`docs/V1-ROSTER.md`** — the definitive first-product roster: **26 core agents** (12 leads, 13 specialists, Final Report Agent) + 1 pluggable example (Sector Analyst with per-sector knowledge packs), built for the Wharton Investment Competition workflow. Every agent specified with ID, job, source prompt (functionalized from the 89-prompt library), and connectors; includes the default delegation map for the flagship flows.
+
+### Changed
+- `docs/AGENTS.md` — superseded the 16-lead plan with a pointer to `V1-ROSTER.md`.
+- `docs/CONTEXT.md` — recorded the roster interview decisions (15–22) and research basis (Anthropic multi-agent lessons, LangChain patterns).
+- `README.md`, `docs/README.md`, `docs/FEATURES.md` — agent-count references synced to the 26-agent roster.
+
+### Decided (product)
+- Audience: Wharton Investment Comp; personas fully functionalized (persona agents become pluggable examples); US + global equities; read-only portfolio; single-user; effort scaling rules in the orchestrator prompt; no comp-rules context layer; Crypto/Tasks/Memory/Control deferred to v2.
+
+---
+
 ## [Unreleased] — Pivot: from pixel-art HQ to agent skeleton (2026-08-15)
 
 ### Removed

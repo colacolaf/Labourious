@@ -19,7 +19,7 @@ Labourious is an Electron desktop app. You chat with a neutral orchestrator agen
 | Shell | Electron desktop app ("opens like Chrome") |
 | Chat UI | One chat window with the orchestrator; activity panel showing which agents were called |
 | Orchestrator | Neutral main agent — routes work to specialists (hub-and-spoke), synthesizes results |
-| Agents | 16 base leads (one per category) + pluggable agents; each agent = its own system prompt + model + connectors |
+| Agents | 26 core agents (12 leads + 13 specialists + final-report agent) + pluggable examples; each agent = its own system prompt + model + connectors — see [`docs/V1-ROSTER.md`](docs/V1-ROSTER.md) |
 | LLM layer | Provider-agnostic — OpenAI-compatible, Anthropic, Ollama (per-agent model choice) |
 | Connectors | Configurable providers: web search (Serper / Tavily / Brave), market data (yfinance-style / Polygon / FMP), SEC EDGAR (free), news |
 | Customization | In-app editor — system prompts, models, connectors, and roster, all saved to files on disk |

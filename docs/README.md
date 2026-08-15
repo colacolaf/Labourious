@@ -27,7 +27,7 @@ The orchestrator then synthesizes everything into one unified answer: the analys
 
 ## The Agent Categories
 
-There are no "rooms" and no building — agents are simply grouped into **categories** for organization. The skeleton ships **16 base leads, one per category**, and more agents can be plugged in:
+There are no "rooms" and no building — agents are simply grouped into **categories** for organization. The v1 roster ships **26 core agents** (12 leads + 13 specialists + 1 final-report agent) plus pluggable examples — the definitive list is in **[V1-ROSTER.md](V1-ROSTER.md)**. The full category map:
 
 | # | Category | Lead | Purpose |
 |---|----------|------|---------|
@@ -48,7 +48,7 @@ There are no "rooms" and no building — agents are simply grouped into **catego
 | 15 | Control | — | Quality control, agent health |
 | 16 | Tasks/Automation | — | Daily briefings, periodic insight surfacing |
 
-Leads marked **—** are not yet assigned in the prompt library and will be filled during the skeleton build. The full taxonomy lives in [AGENTS.md](AGENTS.md).
+Categories marked with **—** are deferred from v1 (see the deferred table in [V1-ROSTER.md](V1-ROSTER.md)). The full taxonomy lives in [AGENTS.md](AGENTS.md).
 
 ## Tech Stack (Planned)
 
