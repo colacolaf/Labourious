@@ -54,6 +54,15 @@
 |---|----|-------|-----|---------------|
 | 26 | `final-report` | Final Report Agent | Turns the synthesized research into IPS + Final Report sections (investment policy, strategy narrative, sector breakdown, rationale) | **NEW** — style reference: `penthouse/agents/portfolio-manager/` synthesis format |
 
+## Pluggable-agent policy (when to add an agent outside the core)
+
+**Do not add more *analyst* agents. Specificity lives in knowledge packs, not agents.** This is the research-backed rule (Anthropic: multi-agent burns ~15× chat tokens and only pays off for genuinely parallelizable work; low-variance agents amplify each other's blind spots instead of diversifying them). A new agent earns its existence only if it passes one of two tests:
+
+1. **Distinct data/tool surface** — it reaches a data source the core 26 cannot (e.g. on-chain/DeFi data). If it differs only in *knowledge*, it's a knowledge pack on an existing agent, not a new agent.
+2. **Distinct control-flow role** — it gates or watches the pipeline rather than producing analysis (e.g. request vetting, risk interrupt, memory). These sit outside the hub-and-spoke, so they don't add routing surface.
+
+Anything else — sector-specific, asset-specific, persona variants — ships as a **knowledge pack or a prompt variant** on an existing agent. See the Sector Analyst below as the canonical example of the "one agent, loadable packs" pattern.
+
 ## Pluggable example (ships disabled, one-click to add)
 
 | ID | Agent | Job | Notes |
