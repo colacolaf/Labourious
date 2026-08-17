@@ -188,7 +188,11 @@ class MessageBubble(Vertical):
             self._body().write(f"\n⚠ {error}\n\nRe-run with Ctrl+R.")
         except Exception:
             self.call_after_refresh(self._flush_failed, error)
-        self._refresh_title()
+        try:
+            self._refresh_title()
+        except Exception:
+            # bubble-header Static not yet mounted; defer.
+            self.call_after_refresh(self._refresh_title)
         self.add_class("conf-low")
 
     def _flush_failed(self, error: str) -> None:

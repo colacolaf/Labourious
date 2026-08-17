@@ -112,8 +112,8 @@ def run_mock_flow_stream(
     it down to test streaming visualization.
     """
     from runtime.events import (
-        FlowStarted, ThesisPriorRead,
-        AgentStarted, AgentChunk, AgentFinished,
+        FlowStarted, FlowFailed, ThesisPriorRead,
+        AgentStarted, AgentChunk, AgentFinished, AgentFailed,
         CostDelta, ThesisWritten, FlowFinished,
     )
 
@@ -124,6 +124,13 @@ def run_mock_flow_stream(
     compressed = inputs.get("compressed", False)
     paid_for = paid_for or []
     per_agent_model = per_agent_model or {}
+    # Optional failure injection. Set inputs["_mock_fail_after"] to the index
+    # of an agent that should fail mid-flow (0=orchestrator, 1=senior,
+    # 2=forensic, 3=devils, 4=final). The mock yields AgentStarted → a
+    # short AgentChunk → AgentFailed → FlowFailed, then stops. Lets pilots +
+    # demos test the partial-envelope error path in the TUI.
+    fail_after = inputs.get("_mock_fail_after", None)
+    fail_reason = inputs.get("_mock_fail_reason", "mock-runtime injected failure")
 
     cumulative_in = 0
     cumulative_out = 0
@@ -150,11 +157,19 @@ def run_mock_flow_stream(
     yield ThesisPriorRead(ticker=ticker, prior_theses=prior_snapshot)
     if sleep_s: time.sleep(sleep_s * 0.05)
 
-    # --- 3. 5 × (agent_started → chunk → finished) ---------------------
+    # --- 3. N × (agent_started → chunk → finished) ---------------------
+    # Or fewer if `_mock_fail_after` triggers AgentFailed mid-flow.
     agents_seen = []
-    for agent_id in ("orchestrator", "senior-analyst", "forensic-accounting",
-                     "devils-advocate", "final-report"):
+    partial_envelopes: dict[str, dict[str, Any]] = {}
+
+    AGENT_IDS = ("orchestrator", "senior-analyst", "forensic-accounting",
+                 "devils-advocate", "final-report")
+    # If fail_after is an int, stop after that agent runs (inclusive).
+    stop_at = (fail_after + 1) if isinstance(fail_after, int) and 0 <= fail_after < len(AGENT_IDS) else len(AGENT_IDS)
+
+    for idx, agent_id in enumerate(AGENT_IDS[:stop_at]):
         agents_seen.append(agent_id)
+        should_fail = isinstance(fail_after, int) and idx == fail_after
         wc = _AGENT_LATENCY[agent_id]
         in_t, out_t = _AGENT_TOKENS[agent_id]
         # Resolve the effective model so the AgentStarted event surfaces
@@ -175,8 +190,28 @@ def run_mock_flow_stream(
         )
         if sleep_s: time.sleep(sleep_s * 0.05)
 
-        yield AgentChunk(agent_id=agent_id, delta=_AGENT_PROSE[agent_id])
+        # A truncated chunk so the chat shows something was streaming.
+        yield AgentChunk(
+            agent_id=agent_id,
+            delta=_AGENT_PROSE[agent_id][:120] + " …[interrupted by failure]"
+            if should_fail else _AGENT_PROSE[agent_id],
+        )
         if sleep_s: time.sleep(sleep_s * 0.05)
+
+        if should_fail:
+            # Yield AgentFailed for this agent, then return a FlowFailed
+            # carrying the partial_envelopes collected so far.
+            yield AgentFailed(
+                agent_id=agent_id,
+                error=fail_reason,
+            )
+            yield FlowFailed(
+                flow_id=flow_id,
+                reason=fail_reason,
+                failed_agent_id=agent_id,
+                partial_envelopes=partial_envelopes,
+            )
+            return
 
         # Build the per-agent envelope so the bubble can render
         # confidence + citation count + chip.
@@ -210,6 +245,9 @@ def run_mock_flow_stream(
             cumulative_cost=cumulative_cost,
         )
         if sleep_s: time.sleep(sleep_s * 0.05)
+
+        # Track for the partial_envelopes dict (used if a later agent fails).
+        partial_envelopes[agent_id] = envelope
 
     # --- 4. thesis_written ---------------------------------------------
     yield ThesisWritten(

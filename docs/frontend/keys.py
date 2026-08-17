@@ -72,6 +72,8 @@ BINDING_CATALOG: tuple[dict, ...] = (
         ("Esc / q",  "Back to chat",                 ""),
         ("⏎",        "Open URL in default browser",  ""),
         ("y",        "Copy selected URL",            ""),
+        ("O",        "Open all",                     "launch every URL via webbrowser.open with throttle"),
+        ("C",        "Copy all",                     "newline-joined list of every URL"),
         ("↑ / ↓",    "Navigate rows",                ""),
         ("1–9",      "Jump-and-open row",            ""),
     )},
@@ -138,6 +140,8 @@ STRIP_BY_SCREEN: dict[str, tuple] = {
         ("citation", (
             ("⏎",   "open"),
             ("y",   "copy"),
+            ("O",   "open-all"),
+            ("C",   "copy-all"),
             ("↑/↓", "row"),
             ("1–9", "jump"),
         )),

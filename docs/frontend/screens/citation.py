@@ -178,9 +178,14 @@ class CitationModalScreen(Screen):
         Binding("escape", "back_chat",  "Back"),
         Binding("enter",  "open_selected", "Open"),
         Binding("y",      "yank_url",   "Copy URL"),
+        Binding("upper_o",  "open_all",    "Open all"),
+        Binding("upper_c",  "copy_all",    "Copy all"),
         Binding("up",     "row_up",     "Prev"),
         Binding("down",   "row_down",   "Next"),
     ]
+
+
+
 
     def __init__(
         self,
@@ -264,9 +269,9 @@ class CitationModalScreen(Screen):
 
         head = (
             f"\x1b[{_BRAND}m  Labourious\x1b[0m"
-            f"\x1b[{_FG2}m  \u2014 Citations / {self._agent_id or '(unknown)'}\x1b[0m"
-            + (" " * max(1, 30 - len(self._agent_id)))
-            + badges_s
+            f"\x1b[{_FG2}m  \u2014 Citations / {self._agent_id or '(unknown)'}  \x1b[0m"
+            f"\x1b[{_BRAND};1m{n} {'source' if n == 1 else 'sources'}\x1b[0m"
+            + (badges_s if badges_s else "")
             + "          "
             + meta_s
         )
@@ -311,8 +316,10 @@ class CitationModalScreen(Screen):
             foot = f"\x1b[{_FG3}m  \x1b[{_BRAND}mEsc\x1b[0m\x1b[{_FG3}m back to chat\x1b[0m"
         elif n == 1:
             foot = (
-                f"\x1b[{_FG3}m  \x1b[{_BRAND}m1\x1b[0m\x1b[{_FG3}m open in browser \u00b7 "
-                f"\x1b[{_BRAND}my\x1b[0m\x1b[{_FG3}m copy URL \u00b7 "
+                f"\x1b[{_FG3}m  \x1b[{_BRAND}m\u23ce\x1b[0m\x1b[{_FG3}m open \u00b7 "
+                f"\x1b[{_BRAND}my\x1b[0m\x1b[{_FG3}m copy \u00b7 "
+                f"\x1b[{_BRAND}mO\x1b[0m\x1b[{_FG3}m open all \u00b7 "
+                f"\x1b[{_BRAND}mC\x1b[0m\x1b[{_FG3}m copy all \u00b7 "
                 f"\x1b[{_BRAND}mEsc\x1b[0m\x1b[{_FG3}m back\x1b[0m"
             )
         else:
@@ -323,10 +330,16 @@ class CitationModalScreen(Screen):
             )
             foot = (
                 f"\x1b[{_FG3}m  \x1b[{_BRAND}m\u2191/\u2193\x1b[0m\x1b[{_FG3}m navigate \u00b7 "
-                f"\x1b[{_BRAND}m\u23ce\x1b[0m\x1b[{_FG3}m open in browser \u00b7 "
-                f"\x1b[{_BRAND}my\x1b[0m\x1b[{_FG3}m copy URL \u00b7 {jumpkeys} \u00b7 "
+                f"\x1b[{_BRAND}m\u23ce\x1b[0m\x1b[{_FG3}m open \u00b7 "
+                f"\x1b[{_BRAND}my\x1b[0m\x1b[{_FG3}m copy \u00b7 "
+                f"\x1b[{_BRAND}mO\x1b[0m\x1b[{_FG3}m open-all \u00b7 "
+                f"\x1b[{_BRAND}mC\x1b[0m\x1b[{_FG3}m copy-all \u00b7 "
+                f"{jumpkeys} \u00b7 "
                 f"\x1b[{_BRAND}mEsc\x1b[0m\x1b[{_FG3}m back\x1b[0m"
             )
+        # Foot is now rendered by the universal StatusStrip below; the legacy
+        # #citation-foot Static is no longer queried (we still attempt the
+        # update defensively to avoid leaving stale text on a leftover mount).
         try:
             f = self.query_one("#citation-foot", Static)
             f.update(foot)
@@ -362,6 +375,60 @@ class CitationModalScreen(Screen):
         ok, msg = copy_to_clipboard(url)
         if ok:
             self._toast(f"\u2713 copied: {short_url(url)}", ok=True)
+        else:
+            self._toast(f"copy failed: {msg}", warn=True)
+
+    def action_open_all(self) -> None:
+        """Open every citation URL in the default browser.
+
+        Most desktops throttle multiple browser launches; we hand them out
+        with small spacing so the OS has a chance to focus / dedupe. The
+        toast reports the count actually accepted by the OS.
+        """
+        if not self._citations:
+            self._toast("nothing to open", warn=True)
+            return
+        import time as _time
+        opened = 0
+        failed: list[str] = []
+        for i, url in enumerate(self._citations):
+            try:
+                ok, _msg = open_in_browser(url)
+            except Exception as e:
+                ok, _msg = False, f"{type(e).__name__}: {e}"
+            if ok:
+                opened += 1
+            else:
+                failed.append(short_url(url))
+            # Generous spacing — many OSes queue browser launches and only
+            # honor every 0.05-0.1 s
+            _time.sleep(0.06)
+        if opened and not failed:
+            self._toast(f"\u2713 opened all {opened} of {len(self._citations)} in browser", ok=True)
+        elif opened and failed:
+            self._toast(
+                f"\u2713 opened {opened}, failed {len(failed)} (browser refused)",
+                warn=True,
+            )
+        else:
+            self._toast(f"browser refused all {len(self._citations)}", warn=True)
+
+    def action_copy_all(self) -> None:
+        """Copy every citation URL to the clipboard as a newline-joined list.
+
+        Useful when the user wants to paste the whole evidence list into a
+        chat or markdown doc without opening the modal multiple times.
+        """
+        if not self._citations:
+            self._toast("nothing to copy", warn=True)
+            return
+        joined = "\n".join(self._citations)
+        ok, msg = copy_to_clipboard(joined)
+        if ok:
+            self._toast(
+                f"\u2713 copied {len(self._citations)} URLs to clipboard",
+                ok=True,
+            )
         else:
             self._toast(f"copy failed: {msg}", warn=True)
 

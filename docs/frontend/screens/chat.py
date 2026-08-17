@@ -70,16 +70,27 @@ from frontend.config_io import load_config, save_config, Config  # type: ignore
 # --------------------------------------------------------------------------- #
 # Welcome screen (idle state — first launch)
 # --------------------------------------------------------------------------- #
-WELCOME_TEXT = """\
+WELCOME_TEMPLATE = """\
 # Welcome
+
+**{state_badge}** · model **·** `{model}` · depth **·** {depth} · compressed **·** {compressed} · paid-for **·** {paid_for}
 
 Run the flagship flow on a ticker to begin. Try:
 
 > `analyze NVDA`
 
-Or set up your model first with `/model ollama/llama3.3:70b`.
-Press **s** to open Settings, **h** for History, **?** for help.
+Or set up first:
+- `/model <provider/name>` — switch the default model
+- `/depth STANDARD|DEEP` — set the depth for the next run
+- `/paid-for <agents>` — toggle per-agent paid routing
+
+Quick actions:
+- `s` open Settings · `h` open History · `?` open Help
 """
+QUICK_ACTION_HINT = (
+    "(press `Tab` to focus the input — then type a prompt and press `Enter`)"
+)
+
 
 
 # --------------------------------------------------------------------------- #
@@ -154,6 +165,8 @@ class ChatScreen(Screen):
         # Forward initial model if set by the App at composition time.
         if self._initial_model:
             self.model = self._initial_model
+        # Read live config FIRST so welcome renders with up-to-date values.
+        self.reload_config_from_disk()
         # Show welcome card on first launch.
         self._show_welcome()
         self._update_footer_hint()
@@ -163,9 +176,6 @@ class ChatScreen(Screen):
             self.query_one(_SS).update_for(self)
         except Exception:
             pass
-        # Read live config so default_model / depth / compressed /
-        # paid_for / per_agent_model reflect the user's most recent edit.
-        self.reload_config_from_disk()
 
     # ------------------------------------------------------------- public hooks (called by parent App)
     def set_status_footer(self, msg: str) -> None:
@@ -533,9 +543,23 @@ class ChatScreen(Screen):
         if not force and log.children:
             return
         bubble = MessageBubble(role="agent", agent_id="orchestrator")
-        # Avoid a "0 citations" empty final; just use static text initially.
         log.mount(bubble)
-        bubble.append_delta(WELCOME_TEXT)
+        # Render the welcome using live session state + mock hint, so the
+        # user sees their actual model + flags without having to open
+        # settings to discover what's configured.
+        import os as _os
+        mock_on = bool(_os.environ.get("LABOURIOUS_MOCK"))
+        state_badge = "MOCK runtime — no LLM calls" if mock_on else "Ready"
+        paid = ",".join(self.paid_for) if self.paid_for else "none"
+        text = WELCOME_TEMPLATE.format(
+            state_badge=state_badge,
+            model=self.model,
+            depth=self.depth,
+            compressed="true" if self.compressed else "false",
+            paid_for=paid,
+        )
+        text += "\n" + QUICK_ACTION_HINT
+        bubble.append_delta(text)
 
     def _set_banner_warning(self, msg: str) -> None:
         self.query_one(ConnectionBanner).set_warning(msg)
