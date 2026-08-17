@@ -1,51 +1,88 @@
 # Labourious
 
-**A local-first AI portfolio manager — one orchestrator agent, a team of specialist agents, real connectors, and your own API keys.**
+**The Analyst's Bench — a citation-grounded, abstention-honest short-form research tool.**
 
-Labourious is an Electron desktop app. You chat with a neutral orchestrator agent; it decides which specialist agents to wake, sends each one a task, collects their outputs, and synthesizes one answer. The specialists are **real agents** — each runs its own model call with its own system prompt and has access to **real connectors** (web search, market data, SEC filings, news). Everything is local-first: your keys, your data, your machine.
+Labourious is a CLI-and-future-app research tool that runs analyst-quality short-form memos on public companies. You give it a ticker and a question; it gives you a memo with a bottom line, a bear case, and citations to primary sources — disassembled into evidence you can defend and gaps it couldn't fill.
 
-> **Current status:** the repository is mid-pivot. The pixel-art "building" frontend prototype was removed entirely (see [`docs/CONTEXT.md`](docs/CONTEXT.md) for the full story). What remains is the **agent prompt library** — 89 system prompts under [`docs/frontend/`](docs/frontend/) — plus a rewritten architecture. The Electron app skeleton itself is **planned, not yet built**.
+It is **the team you'd hire if you could afford one**, written into a 5-prompt library that any provider-agnostic runtime can execute.
 
-## What exists today
+> **Current status:** the repository is **post-restructure, pre-runtime-build**. The 26-agent roster and the 89-prompt prototype library have been replaced by a 5-prompt Analyst's Bench + an 8-flow recipe set + a runtime skeleton + an eval suite. See [`docs/CONTEXT.md`](docs/CONTEXT.md) for the framing and [`docs/RESTRUCTURING.md`](docs/RESTRUCTURING.md) for the audit trail.
 
-- **Agent prompt library** — 89 system prompts across 18 categories (research, sentiment, alt-data, macro, quant, fundamental, technical, crypto, risk, critique, compliance, strategy, execution, memory, control, tasks, perimeter, penthouse). These are the raw material for the app's agent roster.
-- **Prompt engineering framework** — validation scripts, audit frameworks, and test templates for upgrading prompts to v2 (tool protocols, routing rules, structured outputs).
-- **Design docs** — architecture, taxonomy, features, setup, and security model for the planned app.
+## What's here
 
-## The planned app (skeleton)
+- **5 system prompts** (`docs/prompts/`) — orchestrator + senior-analyst + forensic-accounting + devil's-advocate + final-report.
+- **8 named flows** (`docs/flows/`) — recipes that use the 5 prompts in different orders/rubrics. f1 (Analyze ticker) is the flagship.
+- **Runtime skeleton** (`docs/runtime/runtime.py`) — load prompts, call models, parse JSON envelopes, chain the 5 prompts, write thesis register, log cost.
+- **4 model adapters** (`docs/runtime/adapters/`) — Anthropic + Ollama + Groq + OpenAI-compat. Free-models supported; hybrid routing via `--paid-for`.
+- **4 tool adapters** (`docs/runtime/tools/`) — SEC EDGAR (free) + News RSS + yfinance market data + web fetch.
+- **Thesis register** (`docs/runtime/thesis_register/`) — SQLite memory across runs: theses + updates + catalysts.
+- **5-test eval suite** (`docs/runtime/evals/`) — fails when discipline breaks. A passing suite is the only evidence the system works.
+- **7 framing docs** (`docs/CONTEXT.md`, `ROADMAP.md`, `USER-JOBS.md`, `CANNOT-DO.md`, `DEFERRED.md`, `RESTRUCTURING.md`, `ARCHITECTURE.md`) — the why/what/how/where.
 
-| Layer | Plan |
-|---|---|
-| Shell | Electron desktop app ("opens like Chrome") |
-| Chat UI | One chat window with the orchestrator; activity panel showing which agents were called |
-| Orchestrator | Neutral main agent — routes work to specialists (hub-and-spoke), synthesizes results |
-| Agents | 26 core agents (12 leads + 13 specialists + final-report agent) + pluggable examples; each agent = its own system prompt + model + connectors — see [`docs/V1-ROSTER.md`](docs/V1-ROSTER.md) |
-| LLM layer | Provider-agnostic — OpenAI-compatible, Anthropic, Ollama (per-agent model choice) |
-| Connectors | Configurable providers: web search (Serper / Tavily / Brave), market data (yfinance-style / Polygon / FMP), SEC EDGAR (free), news |
-| Customization | In-app editor — system prompts, models, connectors, and roster, all saved to files on disk |
-| Memory | Chat history + agent notes (plain files) |
-| Keys | Local config file, OS-keychain-backed where available |
-| CLI | Later (after the app runtime is proven) |
+## How a user runs it (planned)
+
+```
+$ python docs/runtime/runtime.py --flow f1 --ticker NVDA --model ollama/llama3.3:70b
+# 5–10 minutes, free local model, one memo with bottom line + bear case + next questions + citations
+# thesis_register row written; cost.json updated
+```
+
+Hybrid mode with synthesis on Sonnet:
+
+```
+$ python docs/runtime/runtime.py --flow f1 --ticker NVDA \
+    --model ollama/llama3.3:70b --paid-for final-report
+```
+
+Compare 3 tickers:
+
+```
+$ python docs/runtime/runtime.py --flow f2 \
+    --tickers "NVDA,AMD,AVGO" --model groq/llama-3.3-70b-versatile
+```
+
+Dry-run (prints the wave plan, no model call):
+
+```
+$ python docs/runtime/runtime.py --dry-run --flow f1 --ticker NVDA \
+    --model ollama/llama3.3:70b
+```
 
 ## Repository map
 
 | Path | Purpose |
-|---|---|
-| [`docs/README.md`](docs/README.md) | Product overview and documentation index |
-| [`docs/CONTEXT.md`](docs/CONTEXT.md) | **What changed and why** — the pivot log and decisions from the rework |
-| [`docs/LABOURIOUS_ARCHITECTURE.md`](docs/LABOURIOUS_ARCHITECTURE.md) | App architecture: orchestrator, agents, connectors, memory |
-| [`docs/AGENTS.md`](docs/AGENTS.md) | Agent taxonomy — categories, leads, and the calling model |
-| [`docs/FEATURES.md`](docs/FEATURES.md) | Feature set for the skeleton and beyond |
-| [`docs/LABOURIOUS_SETUP.md`](docs/LABOURIOUS_SETUP.md) | Planned setup: install, API keys, config file |
-| [`docs/SECURITY.md`](docs/SECURITY.md) | Local-first security model |
-| [`docs/frontend/`](docs/frontend/) | The agent prompt library (89 system prompts + framework docs) |
+|------|---------|
+| [`docs/README.md`](docs/README.md) | Documentation index |
+| [`docs/CONTEXT.md`](docs/CONTEXT.md) | The Analyst's Bench — what the project is |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Build order — what to ship first |
+| [`docs/USER-JOBS.md`](docs/USER-JOBS.md) | What the project is for; the 5 user jobs + no-build list |
+| [`docs/CANNOT-DO.md`](docs/CANNOT-DO.md) | Honest boundary list |
+| [`docs/DEFERRED.md`](docs/DEFERRED.md) | What we cut and why (deferred ≠ deleted) |
+| [`docs/RESTRUCTURING.md`](docs/RESTRUCTURING.md) | The audit trail |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Components, calling model, memory model |
+| [`docs/prompts/`](docs/prompts/) | The 5 system prompts |
+| [`docs/flows/`](docs/flows/) | The 8 named flows |
+| [`docs/runtime/`](docs/runtime/) | The runtime skeleton + adapters + tools + thesis register + evals |
 
 ## Design principles
 
-- **Local-first:** keys, data, and memory stay on your machine; cloud models are opt-in through your own credentials.
-- **Orchestration over one-shot answers:** the orchestrator routes work to domain specialists rather than relying on one generic response.
-- **Real agents, real connectors:** every specialist is a genuine agent with tool access — not a simulated subagent.
-- **Customizable:** agents, prompts, models, and connectors are user-editable, persisted as files.
+- **Citation-grounded.** Every claim in a memo has a primary-source URL. No citation, no claim.
+- **Abstention-honest.** When the system can't verify, it says so. Never invents with "likely ~$X".
+- **Discipline-first.** Steelman-then-break in the bear case. Source-verification in every claim. Per-asset gate in every run.
+- **Free-models-first.** Qwen 2.5 72B and Llama 3.3 70B carry ~80% of the work. Hybrid routing closes the gap on synthesis.
+- **Evidence over text.** A passing eval suite, not "we wrote the prompt carefully," is what proves the system works.
+
+## Status
+
+**Phase: post-restructure, pre-runtime-build.** The audit-driven restructure is complete. Calibration (passing evals on actual f1 runs) is the next milestone.
+
+### What changed in the restructure
+- 89 frontend prompts → 0 (deleted, not deferred)
+- 28 v2 prompts → 5 (kept, edited)
+- 6 obsolete top-level docs → 7 framing docs (rewritten)
+- New: 8 flow recipes, runtime skeleton, 4 model adapters, 4 tool adapters, thesis register, 5-eval suite
+
+See [`docs/RESTRUCTURING.md`](docs/RESTRUCTURING.md) for the full audit trail.
 
 ## License
 

@@ -1,80 +1,120 @@
-# Labourious Documentation
+# Labourious — Documentation Index
 
-The product design, architecture, agent taxonomy, security model, and agent prompt library for Labourious. For the repository overview, start with the [root README](../README.md).
+> The project today: **the Analyst's Bench**. A 5-prompt library, an 8-flow recipe set, a runtime skeleton, and an eval suite. Phase: post-restructure, pre-runtime-build.
 
-> **Status note:** the Electron app described here is **planned architecture**. The runnable asset today is the agent prompt library under [`frontend/`](frontend/) (89 system prompts) — formerly "docs/frontend", kept as-is pending reorganization.
+If you read three files, read these in this order:
 
-**The AI portfolio manager designed to go deeper.**
+1. **[`CONTEXT.md`](CONTEXT.md)** — what the project is and why the restructure happened.
+2. **[`ROADMAP.md`](ROADMAP.md)** — what to build, in what order, with acceptance criteria.
+3. **[`USER-JOBS.md`](USER-JOBS.md)** — what the project is for; the litmus test for any feature.
 
-Labourious is a local-first Electron desktop app. You connect your own API keys, chat with a neutral orchestrator agent, and it delegates to real specialist agents — each with its own system prompt, model, and connectors — to produce deeper investment research.
+Then the rest, by role:
 
 ---
 
-## What It Is
+## Framing decisions
 
-A single orchestrator agent that you talk to directly. When you ask something — "analyze my tech holdings," "should I rotate into bonds given the macro environment?", "find me undervalued mid-cap healthcare stocks with strong moats" — the orchestrator automatically wakes the right specialists. Each specialist runs as a genuine agent (its own LLM call, its own system prompt, its own tools) and returns findings with citations.
+| File | Purpose |
+|------|---------|
+| [`CONTEXT.md`](CONTEXT.md) | The restructure log: what was cut, why, and what shape we ended up in |
+| [`ROADMAP.md`](ROADMAP.md) | Build order for the 6 P0 items, P1 follow-ups, P2 deferred-but-targeted |
+| [`USER-JOBS.md`](USER-JOBS.md) | The 5 user jobs the project serves; the litmus test for new features |
+| [`CANNOT-DO.md`](CANNOT-DO.md) | Honest boundary list — what the project will never do and why |
+| [`DEFERRED.md`](DEFERRED.md) | What was *parked* (not deleted) from the old 26-agent roster |
+| [`RESTRUCTURING.md`](RESTRUCTURING.md) | The full audit trail of the restructure |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Components, calling model, memory model, what's *not* here |
 
-The orchestrator then synthesizes everything into one unified answer: the analysis, the key takeaways, and clear options for what to do next.
+---
 
-## How It's Different
+## Code & artifacts
 
-| Typical AI | Labourious |
-|---|---|
-| One model, one response | One orchestrator, a team of specialist agents all contributing |
-| Simulated subagents | Real agents with real connectors (web search, market data, SEC filings, news) |
-| Fixed roster | Customizable — agents, prompts, models, and connectors editable in-app and saved to files |
-| Cloud-dependent | Runs locally. Your keys, your data, your machine |
+| Path | Purpose |
+|------|---------|
+| [`prompts/`](prompts/) | The **5 system prompts** — orchestrator, senior-analyst, forensic-accounting, devil's-advocate, final-report. Plus the V2-PROMPT-STANDARD template. |
+| [`flows/`](flows/) | **8 named flows** — recipes that reuse the 5 prompts in different order/rubric. f1 (Analyze ticker) is the flagship. |
+| [`runtime/runtime.py`](runtime/runtime.py) | The **runtime skeleton** — load prompt, call model, parse output, chain. |
+| [`runtime/adapters/`](runtime/adapters/) | Free-model + paid-model adapter layer (Anthropic, Ollama, Groq, OpenAI-compat). |
+| [`runtime/tools/`](runtime/tools/) | Free-tier tool adapters: SEC EDGAR, news, market data, web fetch. |
+| [`runtime/thesis_register/`](runtime/thesis_register/) | SQLite memory: theses + updates + catalysts. |
+| [`runtime/evals/`](runtime/evals/) | 5 tests that fail when discipline breaks (no prompt change ships without them passing). |
 
-## The Agent Categories
+---
 
-There are no "rooms" and no building — agents are simply grouped into **categories** for organization. The v1 roster ships **26 core agents** (12 leads + 13 specialists + 1 final-report agent) plus pluggable examples — the definitive list is in **[V1-ROSTER.md](V1-ROSTER.md)**. The full category map:
+## What's NOT here (by design)
 
-| # | Category | Lead | Purpose |
-|---|----------|------|---------|
-| 1 | Research | Michael Burry | Deep web research, SEC filings, news, academic papers |
-| 2 | Risk | Nassim Taleb | Stress testing, VaR, drawdown, black swan detection |
-| 3 | Macro | Larry Fink | Central bank policy, GDP, inflation, geopolitics, currency |
-| 4 | Quant | Jim Simons | Factor analysis, stat arb, momentum, options pricing |
-| 5 | Fundamental | Warren Buffett | DCF, moats, management quality, forensic accounting |
-| 6 | Technical | Mark Minervini | Chart patterns, volume profile, order flow, liquidity |
-| 7 | Sentiment | Cathie Wood | News sentiment, social media, analysts, insider moves |
-| 8 | Strategy | David Swensen | Asset allocation, tactical overlays, hedging, tax harvesting |
-| 9 | Execution | — | Order routing, timing, slippage, conflict resolution |
-| 10 | Memory | — | Long-term notes, learns from past decisions |
-| 11 | Critique | Charlie Munger | Devil's advocate — challenges every recommendation |
-| 12 | Compliance & Tax | Preet Bharara | Wash sales, PDT, cross-border tax, concentration limits |
-| 13 | Alternative Data | Matthew Granade | Satellite, credit-card, supply chain, weather data |
-| 14 | Crypto/Digital Assets | Vitalik Buterin | On-chain analytics, DeFi, tokenomics, protocol risk |
-| 15 | Control | — | Quality control, agent health |
-| 16 | Tasks/Automation | — | Daily briefings, periodic insight surfacing |
+- **No `frontend/`** — the 89-prompt pixel-art prototype library was deleted; the v1 library is a structurally-and-functionally-superset of it.
+- **No 26-agent roster documents** — `V1-ROSTER.md` and `AGENTS.md` were superseded and removed. The 5-prompt roster is in `prompts/`.
+- **No celebrity persona agents** — Burry / Buffett / Taleb / Bremmer / Fink / Simons / Minervini / etc. were V1's Plug examples; the project has now retired the roster-membership for personas.
+- **No "Senior PM" / "PM Bodyguard" prompts** — folded into orchestrator (synthesis discipline + critic).
+- **No per-agent freshness tiers / per-asset gates in prompt text** — runtime-enforced via the eval suite.
+- **No `validate-v2-prompts.py`** — the old linter checked the structure it was written to enforce (a structural tautology). The new eval suite replaces its role.
 
-Categories marked with **—** are deferred from v1 (see the deferred table in [V1-ROSTER.md](V1-ROSTER.md)). The full taxonomy lives in [AGENTS.md](AGENTS.md).
+---
 
-## Tech Stack (Planned)
+## Quick start (planned)
 
-| Layer | Technology |
-|-------|------------|
-| Desktop Shell | Electron |
-| Chat UI | Web-based renderer in Electron |
-| LLM Orchestration | Provider-agnostic: OpenAI-compatible, Anthropic, Ollama (user-provided keys) |
-| Agent Runtime | Custom lightweight runtime — one LLM call per agent, system prompt + connectors per agent |
-| Connectors | Web search (Serper/Tavily/Brave), market data (yfinance-style/Polygon/FMP), SEC EDGAR (free), news — all configurable |
-| Memory | Chat history + agent notes as plain files (JSON/markdown) |
-| Secrets | Local config file, OS-keychain-backed (Electron `safeStorage`) where available |
-| CLI | Later, after the app runtime is proven |
+```
+$ pip install -r docs/runtime/requirements.txt    # when the runtime ships
+$ python docs/runtime/runtime.py --flow f1 --ticker NVDA --model ollama/llama3.3:70b
+```
 
-## Quick Links
+Expected output: a memo with bottom line, bull case, bear case, "what an attacker would say," "next three questions," and citations to primary sources. Returned to stdout, written to `docs/runtime/.runs/<run_id>/`, and logged to `docs/.runs/cost.json`.
 
-- [Context — what changed and why](CONTEXT.md)
-- [Architecture](LABOURIOUS_ARCHITECTURE.md) — orchestrator, agents, connectors, memory
-- [Agents](AGENTS.md) — complete category taxonomy
-- [Setup](LABOURIOUS_SETUP.md) — planned install and configuration
-- [Features](FEATURES.md) — full feature set
-- [Security](SECURITY.md) — local-first security model
-- [Agent Prompt Library](frontend/README.md) — the 89 system prompts
+---
 
-## Status
+## The directory tree
 
-**Phase: post-pivot, pre-build.** The pixel-art frontend prototype was deleted (Aug 2026). The agent prompt library (89 system prompts) was kept and cleaned up, and the architecture docs were rewritten for the skeleton app. The Electron app, agent runtime, connectors, and editor are planned work.
-
-*Labourious. The AI portfolio manager that goes deeper.*
+```
+docs/
+├── CONTEXT.md              ← read first
+├── ROADMAP.md              ← read second
+├── USER-JOBS.md            ← read third
+├── CANNOT-DO.md
+├── DEFERRED.md
+├── RESTRUCTURING.md
+├── ARCHITECTURE.md
+├── README.md               ← you are here
+├── LICENSE
+├── prompts/
+│   ├── V2-PROMPT-STANDARD.md
+│   ├── orchestrator/system-prompt.md
+│   ├── leads/senior-analyst/system-prompt.md
+│   ├── specialists/
+│   │   ├── forensic-accounting/system-prompt.md
+│   │   └── devils-advocate/system-prompt.md
+│   └── cross-cutting/final-report/system-prompt.md
+├── flows/
+│   ├── README.md
+│   ├── f1-analyze-ticker.md      ← flagship
+│   ├── f2-compare-tickers.md
+│   ├── f3-earnings-preview.md
+│   ├── f4-earnings-review.md
+│   ├── f5-sector-deep-dive.md
+│   ├── f6-thematic-screen.md
+│   ├── f7-risk-event.md
+│   └── f8-macro-overlay.md
+└── runtime/
+    ├── README.md
+    ├── runtime.py                 ← the skeleton
+    ├── adapters/
+    │   ├── anthropic.py
+    │   ├── ollama.py
+    │   ├── groq.py
+    │   └── openai_compat.py
+    ├── tools/
+    │   ├── sec_edgar.py
+    │   ├── news.py
+    │   ├── market_data.py
+    │   └── web_fetch.py
+    ├── thesis_register/
+    │   ├── schema.sql
+    │   ├── register.py
+    │   └── README.md
+    └── evals/
+        ├── README.md
+        ├── test_hallucination.py
+        ├── test_source_verification.py
+        ├── test_per_asset_coverage.py
+        ├── test_freshness.py
+        └── test_abstention.py
+```

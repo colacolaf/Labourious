@@ -2,6 +2,47 @@
 
 All notable changes to Labourious.
 
+## [Unreleased] — Restructure (2026-08-16)
+
+### Summary
+Three adversarial audits (the prompt in `docs/prompts/ANALYZE-THE-PROJECT.md`, archived) found that the 26-agent roster was overbuilt for the actual job and relied on claims no prompt text can support. The repository is restructured into **the Analyst's Bench**: **5 system prompts** powering **8 named flows** with a **runtime skeleton** that can run on free models, validated by a **5-test eval suite**, and made durable by a **thesis register** that gives the system memory across runs. See `docs/RESTRUCTURING.md` for the full audit trail and `docs/CONTEXT.md` for the framing.
+
+### Removed
+- **`docs/frontend/`** — entire 89-prompt pixel-art prototype library (89 system prompts + 89 `look.md` + 5 floor READMEs). Persona-driven; structurally absorbed into the v2 library, then trimmed to 5 prompts.
+- **23 deferred v2 prompts** (12 lead prompts kept only the senior-analyst lead; 13 specialist prompts kept only forensic-accounting + devils-advocate; 1 pluggable prompt removed in favour of the knowledge-pack policy in `docs/DEFERRED.md`).
+- **`docs/prompts/scripts/validate-v2-prompts.py`** — structural linter that lints against the shape it was written to enforce (tautology); replaced by behaviour-based evals at `docs/runtime/evals/`.
+- **`docs/prompts/ANALYZE-THE-PROJECT.md`** — meta-prompt for the analysis that drove the restructure; the analysis is archived in `docs/RESTRUCTURING.md` and below.
+- **6 obsolete top-level docs** — `AGENTS.md`, `V1-ROSTER.md`, `LABOURIOUS_ARCHITECTURE.md`, `LABOURIOUS_SETUP.md`, `FEATURES.md`, `SECURITY.md`. Replaced by the docs listed below.
+
+### Added
+- **7 framing docs** at `docs/` — `CONTEXT.md` (the framing), `ARCHITECTURE.md` (components/calling model), `ROADMAP.md` (build order), `USER-JOBS.md` (the 5 user jobs + no-build list), `CANNOT-DO.md` (honest boundary list), `DEFERRED.md` (what's parked vs. deleted), `RESTRUCTURING.md` (the audit trail).
+- **`docs/prompts/leads/senior-analyst/system-prompt.md`** — NEW. Replaces 12 lead prompts. Single voice; owns the thesis; coordinates the 2 specialists.
+- **`docs/prompts/specialists/forensic-accounting/system-prompt.md`** — MOVED from `docs/prompts/fundamental/forensic-accounting/`. Rewritten to report to senior-analyst.
+- **`docs/prompts/specialists/devils-advocate/system-prompt.md`** — MOVED from `docs/prompts/critique/devils-advocate/`. Stricter: refuses if THESIS is too weak.
+- **`docs/prompts/cross-cutting/final-report/system-prompt.md`** — Rewritten with a strict 6-section memo template (Bottom line + Bull + Bear + What an attacker would say + Next three questions + Citations). Replaces the prior IPS + Final Report structure.
+- **`docs/flows/README.md`** + **8 flow files** (`f1-analyze-ticker.md` through `f8-macro-overlay.md`) — recipes that use the 5 prompts in different orders/rubrics. f1 is the flagship.
+- **`docs/runtime/runtime.py`** + **`docs/runtime/README.md`** — runtime skeleton. CLI shape: `python docs/runtime/runtime.py --flow f1 --ticker NVDA --model ollama/llama3.3:70b [--paid-for final-report]`. f1 is fully wired; f2-f8 raise `NotImplementedError` (P1).
+- **`docs/runtime/adapters/`** — `anthropic.py`, `ollama.py`, `groq.py`, `openai_compat.py`. Common `Response` interface.
+- **`docs/runtime/tools/`** — `sec_edgar.py`, `news.py`, `market_data.py`, `web_fetch.py`.
+- **`docs/runtime/thesis_register/`** — `schema.sql` + `register.py` + `README.md`. SQLite with 3 tables; CLI at `register.py` for ad-hoc inspection.
+- **`docs/runtime/evals/`** — 5 pytest files (`test_hallucination.py`, `test_source_verification.py`, `test_per_asset_coverage.py`, `test_freshness.py`, `test_abstention.py`) + README. The 5-test eval suite is the only evidence the system works.
+
+### Changed
+- **`docs/prompts/orchestrator/system-prompt.md`** — slimmed. Now reports the 5-agent roster and points to `docs/flows/` for per-flow recipes. Per-agent gate enforcement moved to runtime.
+- **`docs/prompts/V2-PROMPT-STANDARD.md`** — rewritten to scope to the 5-agent roster; per-agent-type schemas collapsed into a single shared envelope.
+- **`docs/README.md`** + **`README.md`** (root) — rewritten. Now describe the Analyst's Bench framing; no more 89-prompt references.
+
+### Net change
+- **−112 prompts deleted** (89 frontend + 23 v2 deferred; 5 rewritten/kept).
+- **−7 obsolete top-level docs** (replaced by 7 new framing docs + 1 README rewrite).
+- **+8 flow files, +4 model adapters, +4 tool adapters, +1 thesis register schema, +1 thesis register module, +5 eval tests, +1 runtime, +1 runtime README.**
+- **+~1500 lines of Python across the runtime (runtime.py + 4 adapters + 4 tools + register + 5 eval tests).**
+
+### Planned (next, per `docs/ROADMAP.md`)
+P0 items in order: runtime → f1 → evals → free-model adapter layer → tool adapters → thesis register. The first f1 end-to-end run on a calibrated baseline is the milestone that turns the restructure from "consistent paper analysis" into "verifiable system."
+
+---
+
 ## [Unreleased] — V1 roster decided (2026-08-15)
 
 ### Added

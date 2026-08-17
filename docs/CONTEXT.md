@@ -1,86 +1,130 @@
-# CONTEXT — The Pivot (Aug 2026)
+# CONTEXT — The Restructure (Aug 2026)
 
-Everything you need to know about why this repository looks the way it does. Read this before reading anything else.
+> Read this first. Why this repo looks the way it does today.
 
 ## TL;DR
 
-Labourious was over-ambitious. The repo contained a full pixel-art "research building" frontend prototype (Phaser lobby, 5 floors, 23 room pages, 94 pixel-art agent portraits) plus a huge design-doc estate, and **nothing runnable**. 
+The original build target was a 26-agent Electron app for the Wharton Investment Competition, anchored in a 89-prompt pixel-art prototype library. Three adversarial audit passes (`docs/prompts/ANALYZE-THE-PROJECT.md`, archived) found that the design was overbuilt for the actual job and relied on claims no prompt text can support. The repository is now restructured into **the Analyst's Bench**: **5 system prompts** powering **one flagship flow** with a **runtime skeleton** that can run on free models, validated by a **5-test eval suite**, and made durable by a **thesis register** that gives the system memory across runs.
 
-The project is now: **a local-first Electron app** where you chat with a **neutral orchestrator agent** that delegates to **real specialist agents** (each with its own system prompt, model, and **real connectors**), fully **customizable** through an in-app editor. The pixel-art frontend is **deleted**. The 89 system prompts are **kept** as the raw material. The app is **planned, not yet built** — this session was cleanup + documentation only.
+This file is the short tour. The full audit trail — what was deleted, what was kept, what was rewritten and why — is in **[`docs/RESTRUCTURING.md`](RESTRUCTURING.md)**. The build sequence is in **[`docs/ROADMAP.md`](ROADMAP.md)**. The user jobs the project serves are in **[`docs/USER-JOBS.md`](USER-JOBS.md)**.
 
-## What was deleted (this session)
+## What Labourious is, in one paragraph
 
-| What | Why |
-|------|-----|
-| `frontend/` — the entire Phaser pixel-art HQ (lobby, floors.html, 23 room/roster HTML pages, agent-gallery, agent portraits, tilesets, floor catalogs, build scripts) | The "actual room" frontend was the ambition problem. The product is a chat interface, not a walkable building. |
-| 89 `look.md` files (one per agent) | Pixel-art look descriptions — obsolete without the sprites. |
-| 5 `ui.md` files + `docs/frontend/ground-floor.svg` | Floor/UI showcase stubs and the building layout diagram. |
-| 5 floor-level READMEs (`ground/`, `floor-2/`, `floor-3/`, `floor-4/`, `penthouse/`) | Building-floor concept docs; their roster content is now in `docs/AGENTS.md`. |
+Labourious is a free-model-friendly, citation-grounded, abstention-honest research bench for analyst-quality short-form memos on public companies. You give it a ticker and a question; it gives you a memo with a bottom line, a bear case, and citations to primary sources — disassembled into evidence you can defend and gaps it couldn't fill. It is **the team you'd hire if you could afford one**, written into a 5-prompt library that any provider-agnostic runtime can execute.
 
-## What was kept (and why)
+## What changed in this restructure
 
-| What | Why |
-|------|-----|
-| **89 `system-prompt.md` files** | The single most valuable asset — a full specialist-agent prompt library with freshness protocols, per-asset gates, connector protocols, and output formats. This is the base for v2 prompts. |
-| ~89 agent-level `README.md` files | Persona, role, tools, and per-agent API-key tables — feeds the app's agent config in the build phase. |
-| 18 room-level READMEs | Category rosters + per-category API-key tables. Still titled "Room N" — slated for rewrite into category docs during the build. |
-| Prompt framework + test docs, `validate-system-prompts.py` | The prompt-engineering machinery that v2 prompt work reuses. |
-| `penthouse/` prompts (Portfolio Manager, PM Bodyguard) | Their routing/monitoring content is the ancestor of the orchestrator prompt and a safety layer. |
+| Axis | Before | After |
+|------|--------|-------|
+| **Roster** | 26 agents (12 leads + 13 specialists + final-report + pluggable) | **5 prompts** (orchestrator + senior-analyst lead + forensic-accounting + devil's-advocate + final-report) |
+| **Per-agent protocols** | 14-section prompts, 5 effort modes, per-asset gates in every prompt | Same skeleton — protocols no longer duplicated, runtime enforces gates |
+| **Flows** | Implicit in the orchestrator's routing map | Explicit **8 named flows** (`docs/flows/f1`–`f8`), each using 4–5 of the 5 prompts |
+| **Runtime** | Planned, not built | Skeleton at `docs/runtime/runtime.py` — load prompt → call model → parse output → chain |
+| **Model layer** | Provider-agnostic, per-agent | **`docs/runtime/adapters/`** — one file per provider (Anthropic, Ollama, Groq, OpenAI-compat) |
+| **Tool layer** | 4 connectors specified in docs | **`docs/runtime/tools/`** — `sec_edgar` (free), `news`, `market_data`, `web_fetch` |
+| **Memory** | Plain files, no model | **`docs/runtime/thesis_register/`** — SQLite (theses, updates, catalysts), every flow reads/writes |
+| **Validation** | `validate-v2-prompts.py` — lints prompts against a shape they were written to match (proves structure, not behavior) | **`docs/runtime/evals/`** — 5 tests that **fail when discipline breaks** (hallucination, source-verification, per-asset, freshness, abstention) |
+| **User jobs** | Implicit | **5 user jobs**, ranked, in [`USER-JOBS.md`](USER-JOBS.md). Every feature maps to one or is cut. |
+| **Honest limits** | None | [`CANNOT-DO.md`](CANNOT-DO.md) — what the system will never do |
 
-## What was fixed
+## The decisions behind the cut
 
-- **11 orphaned system prompts un-nested.** Named specialists (John Hempton, Harry Markopolos, Ed Thorp, Ian Bremmer, David Swensen, Meredith Whitney, Didier Sornette, Alex Svanevik, James Crawford, Jon Najarian, H. David Rosenbloom) had their prompts nested inside their lead's folder (e.g. `michael-burry/john-hempton/system-prompt.md`) while their own folders said "System Prompt: _TBD_". All 11 prompts moved into their canonical agent folders; the nested dirs were deleted. **89 prompts, 89 folders, one prompt each — verified.**
+Driven by three findings from the prior audit (`docs/prompts/ANALYZE-THE-PROJECT.md`, archived; full text in [`RESTRUCTURING.md`](RESTRUCTURING.md)):
 
-## The decisions (from the design interview, Aug 2026)
+1. **A 26-agent roster is overbuilt for the actual first job.** The Wharton comp asks for **2–3 positions in depth**, which is the opposite of the breadth-first shape multi-agent systems pay off on (Anthropic's own finding). The flagship flow needs **one primary analyst voice, one forensic specialist, one adversarial check, one synthesizer**. That's four prompts of substance plus the orchestrator. Five total.
+2. **The "decision-ready" / "prevents hallucination" claims were structural, not behavioral.** Saying a prompt enforces per-asset gates is not evidence it works — the v2 validator proved structure, not outcome. The new eval suite is what makes that claim falsifiable.
+3. **Free models can carry most of this work, but only if the runtime has shared context.** Anthropic's 15× cost figure from their own multi-agent paper is largely a **prompt-cache** figure — lots of shared prefix across agents. Free local models (Llama 3.3 70B, Qwen 2.5 72B) don't auto-cache but accept long context cheaply. We get 80%+ of the Anthropic-on-Claude quality on free models, with one paid escape hatch for synthesis.
 
-1. **Frontend:** no room, no building. A skeleton chat interface is the frontend.
-2. **Form factor:** an **app** — Electron, opens like Chrome. A terminal/CLI version comes **later**.
-3. **Agent model:** real agents — each agent takes the API key, actually calls the model, reads its system prompt, uses its connectors. Not simulated subagents.
-4. **LLM providers:** **provider-agnostic** layer — OpenAI-compatible, Anthropic, Ollama; per-agent model choice.
-5. **Roster:** **16 base leads** (one per category) + **pluggable agents** users can pop in.
-6. **Customization:** **in-app editor** — system prompts, models, connectors, and the roster itself; everything **saved to files** so it's portable.
-7. **Connectors:** all three first-class — **web search, market data, SEC filings + news** — with **configurable providers** (user picks provider + key in settings; not hard-coded to one vendor).
-8. **Memory:** **chat history + agent notes as plain files.** No vector DB in the skeleton (designed so one can slot in later). No knowledge graph for now.
-9. **Docs:** **keep the prompts, rewrite the rest** — done.
-10. **Comms:** **hub-and-spoke** — orchestrator → specialists → orchestrator. No direct agent-to-agent calls in the skeleton.
-11. **Rooms:** **gone as a concept** — replaced by **categories** (a flat tag; the category list may grow).
-12. **Orchestrator:** **neutral** — not the "Portfolio Manager" persona. Routing + synthesis first; persona is user-configurable later.
-13. **Keys storage:** local config file (`~/.labourious/config.json`), OS keychain (`safeStorage`) where available.
-14. **Prompts v2:** connector/tool-use protocols + delegation/routing protocols + structured output contracts — per agent.
+## Five user jobs (the litmus test for every feature)
 
-## What the app will look like (planned)
+From [`USER-JOBS.md`](USER-JOBS.md), in priority order:
+
+1. **Trust** — can I cite this output? Is it real or machine-made-up?
+2. **Action** — what do I do with this? Buy / hold / sell / wait for what?
+3. **Speed** — how fast can I get a defensible view on a new name?
+4. **Defensibility** — when my PM/team/client asks "why?", does the report hold up?
+5. **Comparison** — how does ticker A compare to B and C?
+
+Every shipped feature touches one of these jobs. Everything that doesn't is in [`DEFERRED.md`](DEFERRED.md) with a one-line reason it doesn't ship yet.
+
+## The 6 things that make the project work
+
+Order matters. Skip a step and the next one is unprovable.
+
+1. **Runtime skeleton** (`docs/runtime/runtime.py`) — load prompts, call models, parse JSON envelopes, chain the 5 prompts together.
+2. **Tool adapters** (`docs/runtime/tools/`) — `sec_edgar`, `news`, `market_data`, `web_fetch` with caching.
+3. **Eval suite** (`docs/runtime/evals/`) — 5 tests that fail when protocols break.
+4. **Flagship flow f1** (`docs/flows/f1-analyze-ticker.md`) — end-to-end on a known ticker (NVDA / AAPL), validated against a trusted analyst memos.
+5. **Free-model adapter layer** (`docs/runtime/adapters/`) — Anthropic + Ollama + Groq + OpenAI-compat, single-file translation, hybrid routing (free for the bulk, paid for synthesis only).
+6. **Thesis register** (`docs/runtime/thesis_register/`) — the durable memory. Every f1 run reads past theses and writes a new versioned thesis at the end. Without this, the system is one-shot.
+
+## Architecture shape (the 30-second view)
 
 ```
-User chats → Neutral orchestrator agent
-  → picks specialists (hub-and-spoke) → each: own model call + system prompt + connectors
-  → collects → synthesizes → one answer
+                 ┌──────────────────────────────┐
+                 │   USER (chat / CLI / API)    │
+                 └───────────────┬──────────────┘
+                                 │
+                       upload flow_id + ticker
+                                 │
+                 ┌───────────────▼──────────────┐
+                 │     ORCHESTRATOR (1 prompt)  │
+                 │  routing • wave planning    │
+                 │  conflict surfacing         │
+                 └───────────────┬──────────────┘
+                                 │
+              ┌──────────────────┼──────────────────┐
+              │                  │                  │
+        ┌─────▼─────┐    ┌───────▼──────┐    ┌──────▼────────────┐
+        │ SENIOR    │    │ FORENSIC     │    │ DEVIL'S ADVOCATE  │
+        │ ANALYST   │───▶│ ACCOUNTING   │    │ (mandatory)       │
+        │ (lead)    │    │ (specialist) │    │ (specialist)      │
+        └─────┬─────┘    └───────┬──────┘    └──────┬────────────┘
+              │                  │                  │
+              └──────────────────┼──────────────────┘
+                                 │
+                    ┌────────────▼────────────┐
+                    │     FINAL REPORT        │
+                    │ (bottom line + bear +   │
+                    │  next questions +       │
+                    │  citations)             │
+                    └────────────┬────────────┘
+                                 │
+                                 ▼
+                    Thesis Register (SQLite)
+                    ─ updated on every run
 ```
 
-Skeleton scope: Electron app + chat UI + orchestrator + 16 base leads + connectors (Serper/Tavily/Brave, yfinance/Polygon/FMP, SEC EDGAR, news) + file memory + config + in-app editor.
+Each box is one prompt file. Each prompt is ≤ 2,000 tokens output budget per call. Each box is reusable across all 8 flows. The flows are recipes, not new agents — see [`docs/flows/README.md`](flows/README.md).
 
-## The V1 roster decision (second interview, same session)
+## What is *not* in this restructure
 
-The first product targets the **Wharton Investment Competition** (teams of 4–6 students, virtual portfolio on WInS, judged on strategy quality and research strength — not returns; deliverables are the IPS and the Final Report). Research performed before this interview:
+Explicit non-goals, in one line each:
 
-- **Anthropic multi-agent research system** — multi-agent excels at breadth-first parallel research but burns ~15× chat tokens; each agent needs distinct tools/prompts or they duplicate work; effort must scale to query complexity (simple 1–3 agents, medium 3–6, deep up to 12).
-- **LangChain architecture guide** — hub-and-spoke = the "subagents" pattern (+1 model call per interaction, context isolation); domain/sector knowledge is better as loadable skills on one agent than as separate agents.
+- No per-sector agent (sectors are **knowledge packs**, not agents — Anthropic/LangChain research is unanimous on this).
+- No real-time market prices (delayed OHLCV is enough for 95% of decisions).
+- No trading execution (regulatory surface area, not an analytical one).
+- No portfolio management UI (the user has one; we provide analysis, not custody).
+- No mobile-first UI (analysts work on laptops; retail phone users aren't the v1 audience).
+- No celebrity personas in the v1 roster (memory hook vs. function; defer to pluggable examples).
+- No 89-prompt zoo — gone.
 
-Decisions (15–22):
+## What the developer does today
 
-15. **Audience:** the Wharton Investment Comp. The roster maps to the comp workflow: client case → IPS → research → portfolio → Final Report.
-16. **Core jobs (all three):** deep company research, portfolio review, screening for ideas.
-17. **Roster shape:** function leads only — no per-sector agents as separate agents.
-18. **Markets:** US + global equities (matches WInS).
-19. **Personas:** fully functional core roster; persona agents (Burry, Buffett, Taleb, …) ship as pluggable examples.
-20. **Roster size:** 26 core agents (12 leads + 13 specialists + Final Report Agent) + 1 pluggable example (Sector Analyst with per-sector knowledge packs). **The definitive list is [`V1-ROSTER.md`](V1-ROSTER.md).**
-21. **Categories in v1:** Research, Fundamental, Macro, Technical, Sentiment, Quant, Risk, Strategy, Critique, Compliance, Alt Data, Execution. Deferred: Crypto, Tasks/Automation, Memory, Control.
-22. **Portfolio:** read-only portfolio awareness in v1. **Team roles:** single-user v1 (sector-owner features later). **Comp context layer:** declined — the app stays generic. **Effort:** scaling rules in the orchestrator prompt (not uncapped). **Automation (daily briefings):** v2.
+```
+$ python docs/runtime/runtime.py --flow f1 --ticker NVDA --model ollama/llama3.3:70b
+→  5–10 minutes, one memo with bottom line + bear case + citations
+→  thesis_register/theses.db updated with the new thesis
+→  logs/cost.json shows tokens spent per agent per run
+→  evals/test_*.py can re-run the same flow and check discipline
+```
 
-## Known debt / next moves
+Ship that command working against `flow f1` on free local models and the project stops being "prompt poetry" and becomes a real tool.
 
-1. **Build the skeleton** (`app/` — Electron shell, runtime, connectors, editor). Nothing is implemented yet.
-2. **Write the 2 new prompts** — Final Report Agent (IPS + report drafting) and Sector Analyst (pluggable example), then functionalize the ~20 core prompts from the library (strip personas, add connector protocols + output contracts).
-3. **Write the v2 orchestrator prompt** — routing protocol (effort tiers), synthesis rules, structured output.
-4. **Reorganize the prompt tree** — `docs/frontend/floor-*` paths still say "floor"; move to `prompts/<category>/<agent>/` and rename room READMEs into category docs.
-5. **v2 prompt upgrade** — add connector protocols, routing rules, and output contracts to all 89 prompts using the existing framework docs.
-6. **Perimeter + penthouse prompts** — Entrance Bodyguard and PM Bodyguard become pluggable examples (already decided); no action needed beyond packaging.
+## Where the user comes in
+
+You read [`ROADMAP.md`](ROADMAP.md) and decide which of the 6 things to build first. Recommendation: **runtime skeleton, then f1 flow, then one of the 5 evals** (whichever you'd most hate to be wrong about — usually hallucination or source-verification). The other 4 things follow.
+
+---
+
+*The next file down the rabbit hole is [`RESTRUCTURING.md`](RESTRUCTURING.md) — the full audit trail of what was cut, kept, rewritten, and why. If you only read three files, read this one, ROADMAP, and USER-JOBS. The prompt library at [`prompts/`](prompts/) and the runtime at [`runtime/`](runtime/) are read-as-needed.*
