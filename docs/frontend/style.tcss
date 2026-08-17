@@ -370,3 +370,48 @@ Screen.-narrow     #sidebar { width: 18; }
 /* ---------- Setting row visual classes (used by inline ANSI text) ---------- */
 /* (Rendered inline as ANSI escape codes via SettingRow._build_main_row
    rather than separate widgets, to avoid the Static+str layout bug.) */
+
+/* =============================================================== */
+/* ============= History modal (P2 block) ======================== */
+/* =============================================================== */
+
+#history-head {
+    background: #0e1014;
+    color: #d4d4d4;
+    height: 1;
+    padding: 0 2;
+}
+
+#history-body {
+    layout: horizontal;
+    height: 1fr;
+}
+
+#history-list-pane {
+    width: 50;
+    background: #0e1014;
+    border-right: solid #2a3441;
+    padding: 1 1;
+}
+
+#history-list-pane RichLog { background: #0e1014; }
+
+#history-detail-pane {
+    width: 1fr;
+    padding: 1 2;
+}
+
+#history-detail-pane Static {
+    background: #0e1014;
+    color: #d4d4d4;
+    height: 1fr;
+}
+
+#history-foot {
+    background: #0e1014;
+    color: #6e7887;
+    height: 1;
+    padding: 0 2;
+    border-top: solid #2a3441;
+}
+

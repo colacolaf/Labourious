@@ -63,15 +63,9 @@ class LabouriousApp(App):
         self.push_screen(SettingsScreen())
 
     def action_open_history(self) -> None:
-        """P2: full History browser. For v1, show a notification banner."""
-        try:
-            chat = self.screen
-            assert isinstance(chat, ChatScreen)
-            chat._set_banner_warning(
-                "History modal is P2. Use `python docs/runtime/thesis_register/register.py show <TICKER>` for now."
-            )
-        except Exception:
-            pass
+        """Push the History modal on top of the current screen."""
+        from frontend.screens import HistoryScreen  # type: ignore
+        self.push_screen(HistoryScreen())
 
     def action_open_help(self) -> None:
         try:

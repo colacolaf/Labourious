@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Labourious — History preview (H2, card + diff)</title>
+<style>
+  :root {
+    --bg:        #0e1014;
+    --bg-2:      #14181f;
+    --fg:        #d4d4d4;
+    --fg2:       #a0a5af;
+    --fg3:       #6e7887;
+    --border:    #465262;
+    --border-2:  #2a3441;
+    --brand:     #8cdcdc;
+    --ok:        #8cd296;
+    --warn:      #e6c87e;
+    --err:       #e1918c;
+    --accent-r:  #a0d7a5;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #050608; color: var(--fg);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, "Courier New", monospace;
+    font-size: 13px; line-height: 1.5; }
+  .wrap { padding: 24px 18px; display: flex; flex-direction: column; gap: 28px; }
+  h2 { color: var(--fg2); font-weight: 600; font-size: 12px; letter-spacing: 0.08em;
+       text-transform: uppercase; margin: 0 0 6px 4px; }
+  .meta { color: var(--fg3); font-size: 12px; margin: 0 0 10px 4px; }
+
+  .b { color: var(--brand); font-weight: 700; }
+  .f { color: var(--fg); }
+  .f2 { color: var(--fg2); }
+  .f3 { color: var(--fg3); }
+  .ok { color: var(--ok); }
+  .warn { color: var(--warn); }
+  .err { color: var(--err); }
+
+  /* Terminal frame */
+  .term {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 0; width: 1100px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  /* Header bar */
+  .term-head {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border-2);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px;
+  }
+  /* Footer bar */
+  .term-foot {
+    padding: 6px 14px;
+    border-top: 1px solid var(--border-2);
+    font-size: 12px;
+  }
+  .kbd { color: var(--fg3); }
+  .kbd b { color: var(--fg2); font-weight: 600; }
+
+  /* Two-pane body: cards left + detail+diff right */
+  .body-grid {
+    display: grid;
+    grid-template-columns: 460px 1fr;
+    min-height: 480px;
+  }
+  .left-pane { padding: 12px 14px; border-right: 1px solid var(--border-2); }
+  .right-pane { padding: 12px 18px; }
+
+  /* Empty pane */
+  .pane-empty { color: var(--fg3); padding: 12px; }
+
+  /* Card list */
+  .card-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .card-row {
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 10px 14px;
+    background: var(--bg-2);
+    cursor: default;
+  }
+  .card-row .card-meta  { display: flex; justify-content: space-between; align-items: baseline;
+                          color: var(--fg3); font-size: 11px; margin-bottom: 4px; }
+  .card-row .ts        { color: var(--fg2); font-weight: 600; }
+  .card-row .ticker    { color: var(--brand); font-weight: 700; }
+  .card-row .placement { font-size: 11px; padding: 2px 6px; border-radius: 3px;
+                          font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .placement.buy   { color: var(--accent-r); background: rgba(160,215,165,0.10); }
+  .placement.hold  { color: var(--warn);    background: rgba(230,200,130,0.10); }
+  .placement.sell  { color: var(--err);     background: rgba(225,145,140,0.10); }
+  .card-row .line-price { color: var(--fg); margin-top: 4px; font-size: 13px; }
+  .card-row .line-secondary { color: var(--fg3); margin-top: 4px; font-size: 11px; }
+
+  /* Selected card row */
+  .card-row.sel {
+    border-color: var(--brand); border-left: 2px solid var(--brand);
+    background: rgba(140, 220, 220, 0.05);
+  }
+
+  /* Detail pane (right) — header + body */
+  .detail-head {
+    padding-bottom: 8px; margin-bottom: 12px;
+    border-bottom: 1px solid var(--border-2);
+  }
+  .detail-head .ts         { color: var(--fg2); font-size: 12px; }
+  .detail-head .ticker     { color: var(--brand); font-weight: 700; font-size: 14px; }
+  .detail-head .placement  { display: inline-block; padding: 2px 6px;
+                              font-size: 11px; font-weight: 600; text-transform: uppercase;
+                              margin-left: 8px; border-radius: 3px; }
+  .detail-head .sub        { color: var(--fg3); font-size: 11px; margin-top: 4px; }
+
+  /* Bottom line (the headline) */
+  .bottom-line {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+  }
+  .bottom-line .label {
+    color: var(--brand); font-weight: 700; font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .bottom-line .body   { color: var(--fg); margin-top: 6px; font-size: 13px; }
+  .bottom-line .price  { color: var(--brand); font-weight: 700; }
+
+  /* Diff section (above the full memo) */
+  .diff-card {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+  .diff-card .head {
+    color: var(--fg3); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
+    display: flex; justify-content: space-between; margin-bottom: 6px;
+  }
+  .diff-row { display: flex; gap: 0; padding: 3px 0; }
+  .diff-row .field { width: 130px; color: var(--fg3); }
+  .diff-row .prior { color: var(--fg2); }
+  .diff-row .arrow { color: var(--fg3); width: 24px; text-align: center; }
+  .diff-row .current { color: var(--fg); }
+  .diff-row .delta-up   { color: var(--ok); margin-left: 6px; }
+  .diff-row .delta-down { color: var(--err); margin-left: 6px; }
+  .diff-row .delta-eq   { color: var(--fg3); margin-left: 6px; }
+
+  /* Full memo (only visible in drill-in) */
+  .memo-section { margin: 12px 0; }
+  .memo-section .head {
+    color: var(--brand); font-weight: 700; font-size: 11px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .memo-section .body { color: var(--fg); font-size: 13px; }
+  .memo-section .body-2col {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .memo-section .body-2col .col h4 {
+    color: var(--fg2); font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 0 0 4px 0;
+  }
+  .memo-section .body-2col .col p { color: var(--fg); font-size: 13px; margin: 0; }
+
+  /* Citations */
+  .citation-row {
+    padding: 6px 0; border-top: 1px solid var(--border-2);
+    color: var(--fg2); font-size: 12px;
+  }
+  .citation-row .source { color: var(--brand); font-weight: 600; margin-right: 8px; }
+  .citation-row .url    { color: var(--fg3); }
+
+  /* Action bar (in drill-in) */
+  .action-bar {
+    padding: 10px 14px; margin-top: 16px;
+    background: rgba(140, 220, 220, 0.05);
+    border: 1px solid var(--brand); border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .action-bar .ask {
+    color: var(--fg); font-size: 13px;
+  }
+  .action-bar .key {
+    color: var(--brand); font-weight: 700; padding: 4px 10px;
+    border: 1px solid var(--brand); border-radius: 3px;
+  }
+
+  /* Tweak list at bottom */
+  details.tweaks {
+    background: #0c0f14; border: 1px solid var(--border-2); border-radius: 4px;
+    padding: 10px 14px; color: var(--fg2); max-width: 1100px; font-size: 12px;
+  }
+  details.tweaks summary { cursor: pointer; color: var(--brand); font-weight: 600; }
+  details.tweaks ol { margin: 8px 0 0 0; padding-left: 18px; }
+  details.tweaks li { margin-bottom: 4px; }
+  details.tweaks b { color: var(--fg); }
+
+  .divider { color: var(--border-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============================================================== -->
+  <div>
+    <h2>1 · History modal — main view, NVDA selected</h2>
+    <div class="meta">H2 layout: cards on the left (one per thesis), detail + diff-with-prior on the right. Card shows what was decided at a glance; right tells the full memo plus the diff.</div>
+
+    <div class="term">
+      <div class="term-head">
+        <div><span class="b">  Labourious</span>  <span class="f2">— History</span></div>
+        <div><span class="ok">● 12 theses · 4 tickers</span>          <span class="f3">~/.labourious/theses.db</span>          <span class="f3">latest 14:22</span></div>
+      </div>
+
+      <div class="body-grid">
+        <div class="left-pane">
+          <div class="card-list">
+
+            <div class="card-row sel">
+              <div class="card-meta">
+                <span><span class="ts">2026-04-12 14:22</span>  ·  <span class="ticker">NVDA</span></span>
+                <span class="placement hold">HOLD</span>
+              </div>
+              <div class="line-price">Price <span class="b">$890</span>  →  base <span class="f2">$820</span>  ·  confidence <span class="ok">78%</span></div>
+              <div class="line-secondary">claude-sonnet-4-5 · hybrid · 2.1k in / 1.1k out · $0.00</div>
+            </div>
+
+            <div class="card-row">
+              <div class="card-meta">
+                <span><span class="ts">2026-04-09 11:03</span>  ·  <span class="ticker">NVDA</span></span>
+                <span class="placement buy">BUY</span>
+              </div>
+              <div class="line-price">Price <span class="b">$847</span>  →  base <span class="f2">$820</span>  ·  confidence <span class="f2">65%</span></div>
+              <div class="line-secondary">ollama/llama3.3:70b · free · 4.0k in / 1.8k out · $0.00</div>
+            </div>
+
+            <div class="card-row">
+              <div class="card-meta">
+                <span><span class="ts">2026-04-05 09:51</span>  ·  <span class="ticker">NVDA</span></span>
+                <span class="placement hold">HOLD</span>
+              </div>
+              <div class="line-price">Price <span class="b">$798</span>  →  base <span class="f2">$820</span>  ·  confidence <span class="ok">71%</span></div>
+              <div class="line-secondary">claude-sonnet-4-5 · hybrid · 2.3k in / 1.0k out · $0.00</div>
+            </div>
+
+            <div class="card-row">
+              <div class="card-meta">
+                <span><span class="ts">2026-03-30 16:14</span>  ·  <span class="ticker">AAPL</span></span>
+                <span class="placement sell">SELL</span>
+              </div>
+              <div class="line-price">Price <span class="b">$224</span>  →  base <span class="f2">$250</span>  ·  confidence <span class="ok">82%</span></div>
+              <div class="line-secondary">groq/llama-3.3-70b · free · 1.9k in / 0.9k out · $0.00</div>
+            </div>
+
+            <div class="card-row">
+              <div class="card-meta">
+                <span><span class="ts">2026-03-22 10:11</span>  ·  <span class="ticker">AAPL</span></span>
+                <span class="placement hold">HOLD</span>
+              </div>
+              <div class="line-price">Price <span class="b">$218</span>  →  base <span class="f2">$250</span>  ·  confidence <span class="f2">68%</span></div>
+              <div class="line-secondary">ollama/llama3.3:70b · free · 3.6k in / 1.5k out · $0.00</div>
+            </div>
+
+            <div style="text-align:center; color:var(--fg3); padding:6px; font-size:12px;">
+              ⌄ 7 more theses (oldest) hidden — press <span class="kbd"><b>g</b></span> to jump to bottom
+            </div>
+
+          </div>
+        </div>
+
+        <div class="right-pane">
+
+          <div class="detail-head">
+            <div><span class="ticker">NVDA</span><span class="placement hold">HOLD</span></div>
+            <div class="ts">2026-04-12 14:22</div>
+            <div class="sub">flow f1 · claude-sonnet-4-5 (hybrid) · 2.1k input / 1.1k output · $0.00 · session 7</div>
+          </div>
+
+          <div class="diff-card">
+            <div class="head">
+              <span>diff with prior NVDA thesis (2026-04-09)</span>
+              <span>4 changed · 2 same</span>
+            </div>
+            <div class="diff-row"><span class="field">placement</span>
+              <span class="prior">BUY</span><span class="arrow">→</span><span class="current">HOLD</span>
+              <span class="delta-down">▼ flip</span>
+            </div>
+            <div class="diff-row"><span class="field">price</span>
+              <span class="prior">$847</span><span class="arrow">→</span><span class="current">$890</span>
+              <span class="delta-up">+5.1%</span>
+            </div>
+            <div class="diff-row"><span class="field">base case</span>
+              <span class="prior">$820</span><span class="arrow">→</span><span class="current">$820</span>
+              <span class="delta-eq">= same</span>
+            </div>
+            <div class="diff-row"><span class="field">confidence</span>
+              <span class="prior">65%</span><span class="arrow">→</span><span class="current">78%</span>
+              <span class="delta-up">▲ +13 pp</span>
+            </div>
+            <div class="diff-row"><span class="field">citations</span>
+              <span class="prior">3</span><span class="arrow">→</span><span class="current">6</span>
+              <span class="delta-up">+3</span>
+            </div>
+            <div class="diff-row"><span class="field">model</span>
+              <span class="prior">free</span><span class="arrow">→</span><span class="current">hybrid</span>
+              <span class="delta-up">▲ promoted</span>
+            </div>
+          </div>
+
+          <div class="bottom-line">
+            <div class="label">Bottom line</div>
+            <div class="body">Wide-moat franchise at <span class="price">$890</span> trades 22% above base-case intrinsic value of $820.
+              Re-entry band <span class="price">$680–$720</span> (30% margin of safety). Flip trigger:
+              ≤ $720 OR adjusted growth &gt;28% for 2 quarters in a row.</div>
+          </div>
+
+          <div class="memo-section">
+            <div class="head">Citations</div>
+            <div class="citation-row"><span class="source">sec_edgar</span><span class="url">10-Q FY26 Q3, p.42 (revenue recognition shift)</span></div>
+            <div class="citation-row"><span class="source">sec_edgar</span><span class="url">10-Q FY26 Q3, p.61 (segment disaggregation)</span></div>
+            <div class="citation-row"><span class="source">news</span><span class="url">reuters.com — "data-center demand durable" (Apr 11)</span></div>
+            <div class="citation-row"><span class="source">market_data</span><span class="url">FRED CSI: durable goods 3MMA YoY +4.1%</span></div>
+            <div class="citation-row"><span class="source">market_data</span><span class="url">yfinance — gross margin trajectory 12Q</span></div>
+            <div class="citation-row"><span class="source">market_data</span><span class="url">bloomberg — channel inventory 4.2 weeks (vs 6.8 norm)</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="term-foot">
+        <span class="kbd"><b>↑/↓</b> cards · <b>⏎</b> drill in · <b>/</b> search · <b>r</b> rerun · <b>d</b> diff direction · <b>Esc</b> back</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================== -->
+  <div>
+    <h2>2 · Drill-in view — what shows when ⏎ is pressed on a card</h2>
+    <div class="meta">Full final-report memo for that thesis. Identical body to what the user saw in the chat; diff with prior is now opt-in via <b>d</b>. Re-run stays one keypress away.</div>
+
+    <div class="term">
+      <div class="term-head">
+        <div><span class="b">  Labourious</span>  <span class="f2">— History</span>  <span class="f3">/</span>  <span class="f2">NVDA</span>  <span class="f3">/</span>  <span class="b">2026-04-12 14:22</span></div>
+        <div><span class="ok">● saved to theses.db</span>   <span class="f3">session 7</span></div>
+      </div>
+
+      <div style="padding: 12px 18px;">
+
+        <div class="detail-head">
+          <div><span class="ticker">NVDA</span><span class="placement hold">HOLD</span></div>
+          <div class="ts">2026-04-12 14:22 · flow f1</div>
+          <div class="sub">claude-sonnet-4-5 (hybrid) · confidence HIGH · 2.1k input / 1.1k output · $0.00</div>
+        </div>
+
+        <div class="bottom-line">
+          <div class="label">Bottom line — HOLD (4/5)</div>
+          <div class="body">Wide-moat franchise at <span class="price">$890</span> trades 22% above base-case intrinsic value of <span class="price">$820</span>.
+            Re-entry band $680–$720 (30% margin of safety). Flip trigger: ≤ $720 OR adjusted growth &gt;28% for 2 quarters in a row.</div>
+        </div>
+
+        <div class="memo-section">
+          <div class="head">Bull case</div>
+          <div class="body-2col">
+            <div class="col">
+              <p>CUDA lock-in produces a multi-decade moat — every major foundation-model lab has invested training pipelines to NVIDIA hardware. Switching cost is measured in years of engineering.</p>
+            </div>
+            <div class="col">
+              <h4>Bear case</h4>
+              <p>Late-cycle growth mean-reversion is asymmetric: 62% of late-cycle hardware names reverted &gt;20% within 4 quarters in the 2014-2024 analog set (n=14). Base-rate probability of a 20% drawdown in next 4Q: 1.38 (xiv-adjusted).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="memo-section">
+          <div class="head">What an attacker would say</div>
+          <div class="body">A short-seller frames the same thesis as "priced for perfection," points to GPU-cycle inventory data showing channel inventory at 4.2 weeks vs 6.8 norm, and argues the AI-monetization story discounts more revenue than ASP-supported math can support.</div>
+        </div>
+
+        <div class="memo-section">
+          <div class="head">Next three questions</div>
+          <div class="body">
+            1. What's the inventory-to-shipments ratio for the data-center segment next quarter, and how does it compare to the 2018 analog?<br>
+            2. Are hyperscaler capex commitments shifting to custom silicon (TPU, Trainium, MTIA) on a meaningful schedule?<br>
+            3. What does the 10-K Note 16 (contingencies) say about the export-control related parties and any unrecognized contractual positions?
+          </div>
+        </div>
+
+        <div class="memo-section">
+          <div class="head">Citations (6)</div>
+          <div class="citation-row"><span class="source">sec_edgar</span><span class="url">10-Q FY26 Q3, p.42 (revenue recognition shift)</span></div>
+          <div class="citation-row"><span class="source">sec_edgar</span><span class="url">10-Q FY26 Q3, p.61 (segment disaggregation)</span></div>
+          <div class="citation-row"><span class="source">news</span><span class="url">reuters.com — "data-center demand durable" (Apr 11)</span></div>
+          <div class="citation-row"><span class="source">market_data</span><span class="url">FRED CSI: durable goods 3MMA YoY +4.1%</span></div>
+          <div class="citation-row"><span class="source">market_data</span><span class="url">yfinance — gross margin trajectory 12Q</span></div>
+          <div class="citation-row"><span class="source">market_data</span><span class="url">bloomberg — channel inventory 4.2 weeks (vs 6.8 norm)</span></div>
+        </div>
+
+        <div class="action-bar">
+          <div class="ask">Re-run this analysis on the latest market data?</div>
+          <div><span class="key">r</span> <span style="color:var(--fg3);">re-run · it will become the new latest NVDA thesis</span></div>
+        </div>
+
+      </div>
+
+      <div class="term-foot">
+        <span class="kbd"><b>Esc</b> back to list · <b>d</b> diff with prior · <b>r</b> re-run · <b>c</b> citations modal</span>
+      </div>
+    </div>
+  </div>
+
+
+  <details open>
+    <summary style="cursor:pointer;color:var(--brand);font-weight:600;">12 things you can tweak — tell me which to change</summary>
+    <ol style="margin:8px 0 0 18px;color:var(--fg2);font-size:12px;max-width:1100px;">
+      <li><b style="color:var(--fg)">Placement badge style</b> — currently colored chip with bg. Could be just colored text (no bg).</li>
+      <li><b style="color:var(--fg)">Card width on left</b> — 460px. Roomier (560) or tighter (380)?</li>
+      <li><b style="color:var(--fg)">Card density</b> — each card 3 lines (meta + price + secondary). Could compress to 2 ("$890 → $820 · 78%" + footer).</li>
+      <li><b style="color:var(--fg)">Selected card marker</b> — currently 2px cyan left-border + tint bg. Could use inverse fg/bg.</li>
+      <li><b style="color:var(--fg)">Diff card on main screen</b> — currently shows 6 rows (placement, price, base, conf, citations, model). Drop rows we never use?</li>
+      <li><b style="color:var(--fg)">Bottom line position</b> — currently under the diff, above citations. Could be at the very top.</li>
+      <li><b style="color:var(--fg)">Citations row format</b> — currently one-liner "<source>: <snippet/url>". Could expand on click.</li>
+      <li><b style="color:var(--fg)">Footer</b> — currently 5 keys. Could drop '/ search' if it feels heavy.</li>
+      <li><b style="color:var(--fg)">Drill-in memo</b> — currently shows full final-report. Could fold sections (Bull / Bear / Attacker / Next-3 / Citations) — but that loses the "decision-ready" promise.</li>
+      <li><b style="color:var(--fg)">Re-run prompt copy</b> — "Re-run this analysis on the latest market data?". Other: "Re-run as new thesis", "Refresh".</li>
+      <li><b style="color:var(--fg)">Empty-database state</b> — currently nothing shows. Could add a welcome row "No theses yet — try /research NVDA in chat."</li>
+      <li><b style="color:var(--fg)">Color of placement badges</b> — HOLD=amber, BUY=sage, SELL=coral. Currently these read as severity not action. Could switch BUY=brand cyan, HOLD=fg2, SELL=coral.</li>
+    </ol>
+  </details>
+
+</div>
+</body>
+</html>
