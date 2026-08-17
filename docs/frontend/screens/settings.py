@@ -46,14 +46,40 @@ from frontend.config_io import (
     load_config,
     mtime_str,
     save_config,
+    validate_field as _validate_field_io,
 )
 from frontend.widgets.section_card import SectionCard
 from frontend.widgets.picker_overlay import PickerItem, PickerOverlay
 from frontend.widgets.setting_row import render_row as _render_row
+from frontend.widgets.inline_editor import (
+    InlineTextEditor,
+    InlineToggleEditor,
+    TextEditCommitted,
+    TextEditReverted,
+    ToggleEditCommitted,
+    ToggleEditDone,
+)
 
 
 # Six sections in canonical order. The order matches PROTOCOL.md Appendix A.
 SECTIONS = ("providers", "default", "per-agent", "hybrid", "connectors", "defaults")
+
+# Each editable section's inline-edit row schema. Order matters: rows
+# are walked in tuple order. A row is ("text", "model") or
+# ("toggle", "depth" | "compressed").
+_EDITABLE_ROWS: dict[str, tuple[tuple[str, str], ...]] = {
+    "default":   (("text", "model"),),
+    "per-agent": (("text", "model"),),
+    "defaults":  (("toggle", "depth"), ("toggle", "compressed")),
+}
+
+# Preset chip strip shown beneath the text editor input.
+_MODEL_PRESETS = [
+    "ollama/llama3.3:70b",
+    "anthropic/claude-sonnet-4-5",
+    "groq/llama-3.3-70b-versatile",
+    "openrouter/auto",
+]                                      
 
 
 class SettingsScreen(Screen):
@@ -63,11 +89,12 @@ class SettingsScreen(Screen):
     """
 
     BINDINGS = [
-        Binding("ctrl+s",  "save_close",  "Save & close"),
-        Binding("escape",   "back_chat",   "Back to chat"),
-        Binding("enter",    "confirm",     "Confirm"),
-        Binding("ctrl+d",   "remove",      "Remove"),
-        Binding("ctrl+n",   "open_picker", "+ Add"),
+        Binding("ctrl+s",    "save_close",   "Save & close"),
+        Binding("escape",     "back_chat",    "Back to chat"),
+        Binding("enter",      "confirm",      "Confirm"),
+        Binding("ctrl+d",     "remove",       "Remove"),
+        Binding("ctrl+n",     "open_picker",  "+ Add"),
+        Binding("e",          "start_edit",   "Edit"),
     ]
 
     # ---------------------------------------------------------- compose
@@ -81,6 +108,10 @@ class SettingsScreen(Screen):
         self._picker_overlay: PickerOverlay | None = None
         self._row_lines_cache: list[str] = []      # cached ANSI for current section
         self._row_index: int = 0                   # selected row in current card
+        # Inline-edit state
+        self._editing: bool = False                # editor is mounted?
+        self._edit_section: str | None = None      # which section we're editing
+        self._edit_row: int = 0                    # which row within that section
 
     def compose(self) -> ComposeResult:
         # Header strip
@@ -231,16 +262,23 @@ class SettingsScreen(Screen):
     def _render_default(self, card: SectionCard) -> None:
         body = card.body()
         body.clear()
-        # Inline single input
-        body.write("\x1b[38;2;110;120;135m  model\x1b[0m   "
-                   + _box(self._cfg.default_model, focused=True))
+        # Single editable row + edit hint.
+        body.write(_render_row(name="default", detail=self._cfg.default_model,
+                               health="set", removable=False))
         body.write("")
-        body.write("\x1b[38;2;110;120;135m  Examples (Tab to complete):\x1b[0m")
-        for ex in ("ollama/llama3.3:70b",
-                   "anthropic/claude-sonnet-4-5",
-                   "groq/llama-3.3-70b-versatile",
-                   "openrouter/auto"):
-            body.write("\x1b[38;2;160;165;175m  " + ex + "\x1b[0m")
+        body.write("\x1b[38;2;110;120;135m   \u23af press \x1b[1;38;2;140;220;220me"
+                   "\x1b[0m\x1b[38;2;110;120;135m or \x1b[1;38;2;140;220;220m\u23ce"
+                   "\x1b[0m\x1b[38;2;110;120;135m to edit this value\x1b[0m")
+        body.write("")
+        body.write("\x1b[38;2;110;120;135m   Examples: "
+                   "\x1b[38;2;160;165;175mollama/llama3.3:70b"
+                   "\x1b[38;2;110;120;135m  \u00b7  "
+                   "\x1b[38;2;160;165;175manthropic/claude-sonnet-4-5"
+                   "\x1b[38;2;110;120;135m  \u00b7  "
+                   "\x1b[38;2;160;165;175mgroq/llama-3.3-70b-versatile"
+                   "\x1b[38;2;110;120;135m  \u00b7  "
+                   "\x1b[38;2;160;165;175mopenrouter/auto"
+                   "\x1b[0m")
 
     def _render_per_agent(self, card: SectionCard) -> None:
         body = card.body()
@@ -254,6 +292,12 @@ class SettingsScreen(Screen):
         for agent, mid in self._cfg.per_agent_model.items():
             detail = f"\u2192  {mid}"
             body.write(_render_row(name=agent, detail=detail, health="set"))
+        body.write("")
+        body.write("\x1b[38;2;110;120;135m   \u23af press \x1b[1;38;2;140;220;220me"
+                   "\x1b[0m\x1b[38;2;110;120;135m or \x1b[1;38;2;140;220;220m\u23ce"
+                   "\x1b[0m\x1b[38;2;110;120;135m to edit \u00b7 "
+                   "\x1b[1;38;2;140;220;220mtab\x1b[0m"
+                   "\x1b[38;2;110;120;135m to advance to the next override\x1b[0m")
         body.write("")
         self._render_add_row(card, "+ add override",
                              "orchestrator · senior-analyst · forensic-accounting · devils-advocate · final-report")
@@ -293,9 +337,29 @@ class SettingsScreen(Screen):
     def _render_defaults(self, card: SectionCard) -> None:
         body = card.body()
         body.clear()
-        body.write(f"\x1b[38;2;110;120;135m  depth\x1b[0m      {_focused(self._cfg.defaults_depth == 'DEEP', 'DEEP')}   {_focused(self._cfg.defaults_depth == 'STANDARD', 'STANDARD')}")
+        # Two editable rows + edit hint.
+        body.write("\x1b[38;2;110;120;135m   depth\x1b[0m      "
+                   + "\x1b[1;38;2;140;220;220m│\x1b[0m"
+                   + "\x1b[48;2;26;32;38m\x1b[38;2;212;212;212m "
+                   + self._cfg.defaults_depth + " \x1b[0m\x1b[0m"
+                   + "    \x1b[38;2;110;120;135m"
+                   + ("DEEP" if self._cfg.defaults_depth == "STANDARD" else "STANDARD")
+                   + "\x1b[0m")
         body.write("")
-        body.write(f"\x1b[38;2;110;120;135m  compressed\x1b[0m   {_focused(self._cfg.defaults_compressed, 'true')}   {_focused(not self._cfg.defaults_compressed, 'false')}")
+        body.write("\x1b[38;2;110;120;135m   compressed\x1b[0m   "
+                   + "\x1b[1;38;2;140;220;220m│\x1b[0m"
+                   + "\x1b[48;2;26;32;38m\x1b[38;2;212;212;212m "
+                   + ("true" if self._cfg.defaults_compressed else "false")
+                   + " \x1b[0m\x1b[0m"
+                   + "    \x1b[38;2;110;120;135m"
+                   + ("false" if self._cfg.defaults_compressed else "true")
+                   + "\x1b[0m")
+        body.write("")
+        body.write("\x1b[38;2;110;120;135m   \u23af press \x1b[1;38;2;140;220;220me"
+                   "\x1b[0m\x1b[38;2;110;120;135m or \x1b[1;38;2;140;220;220m\u23ce"
+                   "\x1b[0m\x1b[38;2;110;120;135m to toggle between options"
+                   " \u00b7 \x1b[1;38;2;140;220;220mtab\x1b[0m"
+                   "\x1b[38;2;110;120;135m to advance\x1b[0m")
 
     def _render_add_row(self, card: SectionCard, label: str, hint: str) -> None:
         card.write_add_row(label, hint)
@@ -304,20 +368,38 @@ class SettingsScreen(Screen):
     def _refresh_head(self) -> None:
         section = SECTIONS[self._rail_index]
         saved_at = mtime_str()
-        # Compute 'saved' / 'unsaved' badge:
-        try:
+        if self._picker_open:
+            badge = "\x1b[38;2;230;200;130m● adding " + (self._picker_section or "") + "\x1b[0m"
+            crumb = f"Settings / {section} / add"
+        elif self._editing:
+            crumb = f"Settings / {section} / editing"
+            rows = _EDITABLE_ROWS.get(section, ())
+            if rows:
+                idx = min(self._edit_row, len(rows) - 1)
+                kind, key = rows[idx]
+                if kind == "text":
+                    label = key
+                elif key == "depth":
+                    label = "depth (STANDARD / DEEP)"
+                else:
+                    label = "compressed (true / false)"
+                badge = "\x1b[38;2;230;200;130m● " + label + "\x1b[0m"
+            else:
+                badge = "\x1b[38;2;230;200;130m● editing\x1b[0m"
+        else:
             badge = "\x1b[38;2;140;210;150m● saved\x1b[0m"
-        except Exception:
-            badge = "● saved"
+            crumb = f"Settings / {section}"
+
+        # Compact head: brand · crumb · badge · path · mtime
         head = (
-            f"\x1b[1;38;2;140;220;220m  Labourious\x1b[0m"
-            f"\x1b[38;2;160;165;175m  — Settings / {section}\x1b[0m"
-            f"{' ' * 30}"
-            f"{badge}"
-            f"          "
-            f"\x1b[38;2;110;120;135m{cfg_path_str()}\x1b[0m"
-            f"          "
-            f"\x1b[38;2;110;120;135m{saved_at}\x1b[0m"
+            "\x1b[1;38;2;140;220;220m  Labourious\x1b[0m"
+            "\x1b[38;2;160;165;175m  \u2014 " + crumb + "\x1b[0m"
+            + (" " * max(1, 30 - len(crumb)))
+            + badge
+            + "          "
+            + "\x1b[38;2;110;120;135m" + cfg_path_str() + "\x1b[0m"
+            + "          "
+            + "\x1b[38;2;110;120;135m" + saved_at + "\x1b[0m"
         )
         try:
             h = self.query_one("#settings-head", Static)
@@ -329,18 +411,40 @@ class SettingsScreen(Screen):
         section = SECTIONS[self._rail_index]
         if self._picker_open:
             foot = (
-                "\x1b[38;2;110;120;135m  ↑/↓ select · type to filter · "
-                "⏎ pick · Esc back · Ctrl+S save & close\x1b[0m"
+                "\x1b[38;2;110;120;135m  \u2191/\u2193 select \u00b7 type to filter \u00b7 "
+                "\x1b[1;38;2;140;220;220m\u23ce\x1b[0m\x1b[38;2;110;120;135m pick \u00b7 "
+                "Esc back \u00b7 Ctrl+S save & close\x1b[0m"
             )
+        elif self._editing:
+            rows = _EDITABLE_ROWS.get(section, ())
+            idx = min(self._edit_row, len(rows) - 1) if rows else 0
+            is_toggle = bool(rows and rows[idx][0] == "toggle")
+            if is_toggle:
+                foot = (
+                    "\x1b[38;2;110;120;135m  \x1b[1;38;2;140;220;220mtab\x1b[0m\x1b[38;2;110;120;135m "
+                    "cycle \u00b7 1 / 2 pick \u00b7 auto-saves \u00b7 Esc done\x1b[0m"
+                )
+            else:
+                foot = (
+                    "\x1b[38;2;110;120;135m  \x1b[1;38;2;140;220;220m\u23ce\x1b[0m\x1b[38;2;110;120;135m save \u00b7 "
+                    "Esc cancel \u00b7 \x1b[1;38;2;140;220;220mtab\x1b[0m\x1b[38;2;110;120;135m save & "
+                    "advance \u00b7 Ctrl+S save & close\x1b[0m"
+                )
         elif section == "providers" or section == "connectors" or section == "per-agent" or section == "hybrid":
             foot = (
-                "\x1b[38;2;110;120;135m  ↑/↓ rail · →/← switch section · "
-                "Ctrl+N + add · Ctrl+D remove · Ctrl+S save · Esc back\x1b[0m"
+                "\x1b[38;2;110;120;135m  \x1b[1;38;2;140;220;220m\u2191/\u2193\x1b[0m\x1b[38;2;110;120;135m rail \u00b7 "
+                "\u2192/\u2190 switch section \u00b7 "
+                "\x1b[1;38;2;140;220;220me\x1b[0m\x1b[38;2;110;120;135m edit (default/depth/compressed) \u00b7 "
+                "Ctrl+N + add \u00b7 Ctrl+D remove \u00b7 Ctrl+S save \u00b7 Esc back\x1b[0m"
             )
         else:
+            # default / defaults read-only view, when not editing
             foot = (
-                "\x1b[38;2;110;120;135m  ↑/↓ rail · →/← switch section · "
-                "Tab next action · Ctrl+S save · Esc back\x1b[0m"
+                "\x1b[38;2;110;120;135m  \x1b[1;38;2;140;220;220m\u2191/\u2193\x1b[0m\x1b[38;2;110;120;135m rail \u00b7 "
+                "\u2192/\u2190 switch section \u00b7 "
+                "\x1b[1;38;2;140;220;220me\x1b[0m or "
+                "\x1b[1;38;2;140;220;220m\u23ce\x1b[0m"
+                "\x1b[38;2;110;120;135m edit \u00b7 Ctrl+S save \u00b7 Esc back\x1b[0m"
             )
         try:
             f = self.query_one("#settings-foot", Static)
@@ -419,9 +523,255 @@ class SettingsScreen(Screen):
                 return
             self._apply_pick(sel)
             return
+        # While editing, Enter is owned by the InlineTextEditor's
+        # Input.Submitted handler. Don't preempt it.
+        if self._editing:
+            return
+        # No picker, not editing: Enter starts inline edit on editable sections.
+        if self._is_editable_section(SECTIONS[self._rail_index]):
+            self._enter_or_advance_edit()
+            return
 
-        # Otherwise confirm does nothing on this section in v1
-        # (Tab/Enter is the inline-edit trigger; future versions may add it.)
+    # ---------------------------------------------------------- inline-edit action
+    def action_start_edit(self) -> None:
+        """`e` key: enter edit mode for the focused row."""
+        if self._picker_open or self._editing:
+            return
+        if self._is_editable_section(SECTIONS[self._rail_index]):
+            self._enter_or_advance_edit()
+
+    def _is_editable_section(self, section: str) -> bool:
+        return section in _EDITABLE_ROWS
+
+    def _enter_or_advance_edit(self) -> None:
+        """Enter edit mode for the current row, or advance to the next row
+        if already editing a text section."""
+        section = SECTIONS[self._rail_index]
+        rows = _EDITABLE_ROWS[section]
+        if not self._editing:
+            self._editing = True
+            self._edit_section = section
+            self._edit_row = 0
+        else:
+            # Already editing — advance the row index (for per-agent only — others
+            # have a single editable row).
+            if section == "per-agent" and self._edit_row + 1 < len(self._cfg.per_agent_model):
+                self._exit_edit_mode_no_remount()
+                self._edit_row += 1
+                self._editing = True
+            else:
+                # Single-row sections (default, defaults row 0/1): commit + exit
+                self._exit_edit_mode()
+                return
+        self._render_or_mount_editor()
+
+    def _render_or_mount_editor(self) -> None:
+        """Mount (or re-mount) the editor for the current (_edit_section,
+        _edit_row) pair and update head/foot."""
+        section = self._edit_section
+        row_idx = self._edit_row
+        if section is None:
+            return
+        rows = _EDITABLE_ROWS[section]
+        # For per-agent there is one schema row but N data rows;
+        # `row_idx` is a data index, so clamp to schema size.
+        idx = min(row_idx, len(rows) - 1)
+        kind, key = rows[idx]
+        editor_id = f"{section}:{key}:{row_idx}"
+
+        if kind == "text":
+            initial = self._read_field(section, key)
+            editor = InlineTextEditor(
+                editor_id=editor_id,
+                initial=initial,
+                presets=_MODEL_PRESETS,
+                field_label=key,
+            )
+        else:  # toggle
+            if key == "depth":
+                current = self._cfg.defaults_depth
+                options = ("STANDARD", "DEEP")
+            else:  # compressed
+                current = "true" if self._cfg.defaults_compressed else "false"
+                options = ("true", "false")
+            editor = InlineToggleEditor(
+                editor_id=editor_id,
+                current=current,
+                options=options,
+            )
+
+        # Mount into the SectionCard.
+        try:
+            card = self.query_one(SectionCard)
+        except Exception:
+            return
+        card.mount_editor(editor)
+        self._refresh_head()
+        self._refresh_foot()
+
+    def _read_field(self, section: str, key: str) -> str:
+        if section == "default":
+            return self._cfg.default_model
+        if section == "per-agent":
+            agents = list(self._cfg.per_agent_model.keys())
+            if self._edit_row < len(agents):
+                return self._cfg.per_agent_model[agents[self._edit_row]]
+            return ""
+        if section == "defaults":
+            if key == "depth":
+                return self._cfg.defaults_depth
+            if key == "compressed":
+                return "true" if self._cfg.defaults_compressed else "false"
+        return ""
+
+    def _write_field(self, section: str, key: str, value: str) -> tuple[bool, str | None]:
+        """Apply value to the Config dataclass. Returns (ok, error_str)."""
+        if section == "default":
+            err = _validate_field_io("default", "model", value)
+            if err:
+                return False, err
+            self._cfg.default_model = value
+            return True, None
+        if section == "per-agent":
+            err = _validate_field_io("per-agent", "model", value)
+            if err:
+                return False, err
+            agents = list(self._cfg.per_agent_model.keys())
+            if self._edit_row >= len(agents):
+                return False, "row out of range"
+            agent = agents[self._edit_row]
+            self._cfg.per_agent_model[agent] = value
+            return True, None
+        if section == "defaults":
+            if key == "depth":
+                err = _validate_field_io("defaults", "depth", value)
+                if err:
+                    return False, err
+                self._cfg.defaults_depth = value
+                return True, None
+            if key == "compressed":
+                err = _validate_field_io("defaults", "compressed", value)
+                if err:
+                    return False, err
+                self._cfg.defaults_compressed = (value == "true")
+                return True, None
+        return False, "unknown section/key"
+
+    # ----- inline-edit message handlers -----
+    def on_text_edit_committed(self, message: TextEditCommitted) -> None:
+        section = self._edit_section
+        rows = _EDITABLE_ROWS.get(section, ())
+        if not rows:
+            return
+        kind, key = rows[self._edit_row]
+        ok, err = self._write_field(section, key, message.value)
+        if not ok:
+            self._set_status(err or "validation failed")
+            return
+        self._persist()
+        # Tab advances; Enter (and shift+tab at last row) exits.
+        if message.via == "tab":
+            # Advance to next row if any, else exit.
+            next_row = self._edit_row + 1
+            # For per-agent with N overrides, advance while next_row < len.
+            # For single-row sections (default / defaults row 0 or 1), exit.
+            if section == "per-agent":
+                agents = self._cfg.per_agent_model
+                if next_row < len(agents):
+                    self._exit_edit_mode_no_remount()
+                    self._edit_row = next_row
+                    self._editing = True
+                    self._edit_section = section
+                    self._render_or_mount_editor()
+                    return
+            # fall through to exit
+        self._exit_edit_mode()
+
+    def on_text_edit_reverted(self, message: TextEditReverted) -> None:
+        self._exit_edit_mode()
+
+    def on_toggle_edit_committed(self, message: ToggleEditCommitted) -> None:
+        section = self._edit_section
+        rows = _EDITABLE_ROWS.get(section, ())
+        if not rows:
+            return
+        kind, key = rows[self._edit_row]
+        ok, err = self._write_field(section, key, message.value)
+        if not ok:
+            self._set_status(err or "toggle write failed")
+            return
+        self._persist()
+        # Tab advances to next toggle row (only `defaults` has 2).
+        # 1/2 direct pick keeps current row open for further cycling.
+        if message.via == "tab":
+            next_row = self._edit_row + 1
+            if section == "defaults" and next_row < len(rows):
+                self._exit_edit_mode_no_remount()
+                self._edit_row = next_row
+                self._editing = True
+                self._edit_section = section
+                self._render_or_mount_editor()
+                return
+            # Last toggle row — exit.
+            self._exit_edit_mode()
+            return
+        # Refresh head meta; stay in edit mode for further cycling.
+        self._refresh_head()
+
+    def on_toggle_edit_done(self, message: ToggleEditDone) -> None:
+        self._exit_edit_mode()
+
+    def _exit_edit_mode_no_remount(self) -> None:
+        """Used by `_enter_or_advance_edit` to clean up the prior editor
+        without re-rendering the read-only view (we immediately remount)."""
+        try:
+            card = self.query_one(SectionCard)
+            for w in list(card.children):
+                cls = w.classes or ""
+                if "inline-editor" in cls or "inline-toggle-editor" in cls:
+                    w.remove()
+        except Exception:
+            pass
+        self._editing = False
+
+    def _exit_edit_mode(self) -> None:
+        """Exit edit mode and re-render the section's read-only view."""
+        section = self._edit_section
+        self._editing = False
+        self._edit_section = None
+        self._edit_row = 0
+        try:
+            card = self.query_one(SectionCard)
+            new_body = card.exit_edit_mode()
+        except Exception:
+            new_body = None
+        # Re-render the section's read-only body.
+        self._render_current_section_into(new_body)
+        self._refresh_head()
+        self._refresh_foot()
+
+    def _render_current_section_into(self, body) -> None:
+        """Same as `_render_current_section` but uses an explicit body."""
+        if body is None:
+            self._render_current_section()
+            return
+        section = SECTIONS[self._rail_index]
+        try:
+            body.clear()
+        except Exception:
+            pass
+        if section == "providers":
+            self._render_providers_body(body)
+        elif section == "default":
+            self._render_default_body(body)
+        elif section == "per-agent":
+            self._render_per_agent_body(body)
+        elif section == "hybrid":
+            self._render_hybrid_body(body)
+        elif section == "connectors":
+            self._render_connectors_body(body)
+        elif section == "defaults":
+            self._render_defaults_body(body)
 
     def action_remove(self) -> None:
         if self._picker_open:
@@ -474,6 +824,10 @@ class SettingsScreen(Screen):
         """Arrows + typing handled directly here so they don't depend on
         binding priority or focus. Bindings handle ctrl-* shortcuts only.
         """
+        # Edit mode: let the InlineEditor's on_key handlers drive everything.
+        # We do NOT touch rail nav or picker; keys flow into the editor.
+        if self._editing:
+            return
         # Picker mode: arrows + typing + backspace
         if self._picker_open and self._picker_overlay is not None:
             overlay = self._picker_overlay
@@ -582,6 +936,77 @@ class SettingsScreen(Screen):
             pass
 
 
+    # ---------------------------------------------------------- helpers for body re-rendering
+    def _render_providers_body(self, body):
+        if not self._cfg.providers:
+            body.write("\x1b[38;2;110;120;135m  No providers configured.\x1b[0m")
+            body.write("")
+            return
+        for name, p in self._cfg.providers.items():
+            detail = p.api_key_env if p.api_key_env else "(local)"
+            health = self._health.get(f"provider:{name}", "ok")
+            body.write(_render_row(name=name, detail=detail, health=health))
+        body.write("")
+        try:
+            self._render_add_row(self.query_one(SectionCard), "+ add provider",
+                                 "groq \u00b7 openrouter \u00b7 openai \u00b7 google \u00b7 mistral \u00b7 cohere")
+        except Exception:
+            pass
+
+    def _render_per_agent_body(self, body):
+        if not self._cfg.per_agent_model:
+            body.write("\x1b[38;2;110;120;135m  No per-agent overrides. Default applies to all agents.\x1b[0m")
+            body.write("")
+            return
+        for agent, mid in self._cfg.per_agent_model.items():
+            body.write(_render_row(name=agent, detail=f"\u2192  {mid}", health="set"))
+        body.write("")
+        try:
+            self._render_add_row(self.query_one(SectionCard), "+ add override",
+                                 "orchestrator \u00b7 senior-analyst \u00b7 forensic-accounting \u00b7 devils-advocate \u00b7 final-report")
+        except Exception:
+            pass
+
+    def _render_hybrid_body(self, body):
+        body.write("\x1b[38;2;160;165;175m  Agents running on a paid model:\x1b[0m")
+        body.write("")
+        if not self._cfg.hybrid_paid_for:
+            body.write("\x1b[38;2;110;120;135m  No paid-for agents.\x1b[0m")
+        else:
+            for agent in self._cfg.hybrid_paid_for:
+                mid = self._cfg.per_agent_model.get(agent, self._cfg.default_model)
+                body.write(_render_row(name=agent, detail=f"\u2192  {mid}", health="set", removable=False))
+        body.write("")
+        try:
+            self._render_add_row(self.query_one(SectionCard), "+ add agent",
+                                 "orchestrator \u00b7 senior-analyst \u00b7 forensic-accounting \u00b7 devils-advocate \u00b7 final-report")
+        except Exception:
+            pass
+
+    def _render_connectors_body(self, body):
+        if not self._cfg.connectors:
+            body.write("\x1b[38;2;110;120;135m  No connectors configured.\x1b[0m")
+            body.write("")
+            return
+        for name, c in self._cfg.connectors.items():
+            extra = " \u00b7 ".join(f"{k}: {v}" for k, v in c.extra.items())
+            detail = f"{c.provider}" + (f" / {extra}" if extra else "")
+            body.write(_render_row(name=name, detail=detail,
+                                   health=self._health.get(f"connector:{name}", "ok")))
+        body.write("")
+        try:
+            self._render_add_row(self.query_one(SectionCard), "+ add connector",
+                                 "sec_edgar \u00b7 google_rss \u00b7 fred \u00b7 polygon \u00b7 fmp \u2026")
+        except Exception:
+            pass
+
+    def _render_default_body(self, body):
+        self._render_default(self.query_one(SectionCard))
+
+    def _render_defaults_body(self, body):
+        self._render_defaults(self.query_one(SectionCard))
+
+
 # ------------------------------------------------------------- helpers
 def _box(text: str, focused: bool = False, caret: bool = True) -> str:
     bar = ("\x1b[1;38;2;140;220;220m│\x1b[0m" if focused
@@ -596,3 +1021,4 @@ def _focused(active: bool, label: str) -> str:
     if active:
         return "\x1b[1;38;2;140;220;220m│\x1b[0m\x1b[48;2;22;26;33m\x1b[38;2;212;212;212m " + label + " \x1b[0m\x1b[0m"
     return "\x1b[38;2;110;120;135m  " + label + "  \x1b[0m"
+

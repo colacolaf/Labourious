@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
@@ -135,7 +136,7 @@ def save_config(cfg: Config) -> None:
     _validate(cfg)
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     tmp = CONFIG_PATH.with_suffix(CONFIG_PATH.suffix + ".tmp")
-    data = json.dumps(asdict_safe(cfg), indent=2, sort_keys=True)
+    data = json.dumps(asdict_safe(cfg), indent=2, sort_keys=False)
     tmp.write_text(data, encoding="utf-8")
     # Atomic on POSIX; on Windows, replace() is also atomic for same-volume.
     os.replace(tmp, CONFIG_PATH)
@@ -178,6 +179,49 @@ def asdict_safe(cfg: Config) -> dict:
 # --------------------------------------------------------------- validation
 class ConfigValidationError(ValueError):
     """Raised when a config fails validation. Never wrap a generic Exception."""
+
+
+# _validate() uses these regexes; expose them so the inline editor can
+# validate one field at a time without running the full-config path.
+_VALID_NAME_RE  = re.compile(r"^[a-z][a-z0-9_-]{1,30}$")
+_VALID_MODEL_RE = re.compile(r"^[a-z0-9_-]+/[a-z0-9._:/-]{1,80}$", re.IGNORECASE)
+
+
+def validate_model_id(value: str) -> str | None:
+    """Per-field validator. Returns error string or None."""
+    v = (value or "").strip()
+    if not v:
+        return "empty"
+    if not _VALID_MODEL_RE.match(v):
+        return "expected provider/name (lowercase provider · slash · short id)"
+    return None
+
+
+def validate_field(section: str, key: str, value: str) -> str | None:
+    """Per-section, per-key validator.
+
+    sections: 'default' | 'per-agent' | 'defaults'
+    keys (for defaults): 'depth' | 'compressed'
+    """
+    if section == "default":
+        if key != "model":
+            return f"unknown key {key!r}"
+        return validate_model_id(value)
+    if section == "per-agent":
+        if key != "model":
+            return f"unknown key {key!r}"
+        return validate_model_id(value)
+    if section == "defaults":
+        if key == "depth":
+            if value not in ("STANDARD", "DEEP"):
+                return "depth must be STANDARD or DEEP"
+            return None
+        if key == "compressed":
+            if value not in ("true", "false"):
+                return "compressed must be true or false"
+            return None
+        return f"unknown key {key!r}"
+    return f"unknown section {section!r}"
 
 
 def _validate(cfg: Config) -> None:

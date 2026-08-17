@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Labourious — Settings Inline Edit (S1)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* ============================================================ tokens */
+    :root {
+      --brand:    #8cdcdc;
+      --ok:       #8cd296;
+      --warn:     #e6c87e;
+      --err:      #e1918c;
+      --fg:       #d4d4d4;
+      --fg-dim:   #a0a5af;
+      --fg-mute:  #6e7887;
+      --border:   #465262;
+      --border-soft: #2e3640;
+      --bg-page:  #050608;
+      --bg-card:  #0e1014;
+      --bg-sel:   #122024;
+      --bg-edit:  #1a1f26;
+      --bg-add:   rgba(140,220,220,0.06);
+      --rail-w:   280px;
+    }
+    /* ============================================================ base */
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--bg-page);
+      color: var(--fg);
+      font: 13px/1.45 ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+      padding: 24px 28px;
+    }
+    h1 {
+      font: 600 16px/1 ui-monospace, monospace;
+      color: var(--brand);
+      margin: 0 0 18px 0;
+      letter-spacing: 0.4px;
+    }
+    .desc {
+      color: var(--fg-mute);
+      margin: 0 0 24px 0;
+      max-width: 72ch;
+      line-height: 1.5;
+    }
+    .screen-stack { display: grid; gap: 32px; max-width: 1100px; }
+    .label {
+      color: var(--brand);
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      margin: 0 0 8px 0;
+    }
+    .sublabel {
+      color: var(--fg-mute);
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      margin-left: 10px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    /* ============================================================ screen shell */
+    .screen {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;        /* hard prevents any escape */
+      max-width: 100%;
+    }
+    /* ============================================================ header strip */
+    .head {
+      display: flex; align-items: center; gap: 16px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--fg-dim);
+    }
+    .head .brand  { color: var(--brand); font-weight: 700; }
+    .head .crumb  { color: var(--fg-dim); }
+    .head .sep    { flex: 1; }
+    .head .badge-ok    { color: var(--ok); }
+    .head .badge-warn  { color: var(--warn); }
+    .head .badge-err   { color: var(--err); }
+    .head .meta    { color: var(--fg-mute); }
+    /* ============================================================ rail + body */
+    .body-row { display: flex; min-height: 280px; }
+    .rail {
+      width: var(--rail-w);
+      flex: 0 0 var(--rail-w);
+      border-right: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    .rail-item {
+      display: flex; align-items: center;
+      padding: 6px 16px;
+      color: var(--fg-dim);
+      font-size: 12px;
+      cursor: default;
+      position: relative;
+    }
+    .rail-item.sel  {
+      color: var(--brand);
+      background: var(--bg-sel);
+      font-weight: 700;
+    }
+    .rail-item.sel::before {
+      content: ""; position: absolute; left: 0; top: 4px; bottom: 4px;
+      width: 2px; background: var(--brand);
+    }
+    .main {
+      flex: 1; min-width: 0;
+      padding: 18px 22px;
+      display: flex; flex-direction: column;
+      gap: 12px;
+    }
+    /* ============================================================ card (the SECTION body) */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: rgba(255,255,255,0.012);
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .card-head {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .card-head .title {
+      color: var(--brand); font-weight: 700; font-size: 12px;
+      letter-spacing: 0.4px; text-transform: uppercase;
+    }
+    .card-head .meta {
+      color: var(--fg-mute); font-size: 12px;
+      margin-left: auto;
+    }
+    .card-body {
+      padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    /* ============================================================ rows */
+    .row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 12px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      font-size: 13px;
+      min-width: 0;
+    }
+    .row.sel {
+      border-color: var(--brand);
+      background: var(--bg-sel);
+    }
+    .row .bullet {
+      color: var(--ok); font-weight: 700; min-width: 1ch;
+    }
+    .row .bullet.warn { color: var(--warn); }
+    .row .bullet.local { color: var(--fg-mute); }
+    .row .name {
+      color: var(--fg); font-weight: 600;
+      flex: 0 0 auto;
+    }
+    .row .hint {
+      color: var(--fg-mute); font-size: 12px;
+      margin-left: 6px;
+    }
+    .row .detail {
+      color: var(--fg-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .row .chip {
+      margin-left: auto;
+      color: var(--ok); font-size: 11px;
+      flex: 0 0 auto;
+    }
+    .row .chip.warn { color: var(--warn); }
+    .row .x {
+      color: var(--fg-mute); font-size: 11px;
+      cursor: default;
+      flex: 0 0 auto;
+    }
+    /* ============================================================ row-edit (transformed state) */
+    .row.edit {
+      padding: 6px 10px;
+      border: 1px solid var(--brand);
+      background: var(--bg-edit);
+      box-shadow: inset 3px 0 0 var(--brand);
+    }
+    .row.edit .bar-l, .row.edit .bar-r {
+      color: var(--brand); font-weight: 700; padding: 0 4px;
+    }
+    .row.edit .input-mock {
+      flex: 1;
+      padding: 4px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--fg);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .row.edit .caret {
+      display: inline-block;
+      width: 2px; height: 14px;
+      background: var(--brand); vertical-align: -3px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .row.edit .actions {
+      display: flex; gap: 8px;
+      color: var(--fg-mute); font-size: 11px;
+      flex: 0 0 auto;
+    }
+    .row.edit .actions .ok { color: var(--ok); font-weight: 700; }
+    .row.edit .actions .no { color: var(--err); font-weight: 700; }
+    /* ============================================================ add row (cyan tint) */
+    .row.add {
+      background: var(--bg-add);
+      border: 1px solid transparent;
+    }
+    .row.add .plus {
+      color: var(--brand); font-weight: 700;
+    }
+    .row.add .name   { color: var(--brand); }
+    .row.add .hint   { color: var(--fg-mute); }
+    /* ============================================================ toggle (radio-style) */
+    .toggle-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 6px 0;
+    }
+    .toggle-row .label {
+      color: var(--fg-dim); font-size: 12px;
+      flex: 0 0 110px;
+      text-transform: none; letter-spacing: 0;
+      margin: 0;
+    }
+    .toggle-row .opts { display: flex; gap: 8px; }
+    .opt {
+      padding: 4px 14px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--fg-dim);
+      font-size: 12px;
+      cursor: default;
+    }
+    .opt.sel {
+      color: var(--brand);
+      border-color: var(--brand);
+      background: var(--bg-sel);
+      font-weight: 700;
+      box-shadow: inset 2px 0 0 var(--brand);
+    }
+    /* ============================================================ footer strip */
+    .foot {
+      display: flex; align-items: center; gap: 16px;
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--fg-mute);
+    }
+    .foot .k { color: var(--brand); }
+    /* ============================================================ tweaks list */
+    details.tweaks {
+      margin-top: 36px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 18px;
+      background: var(--bg-card);
+      max-width: 1100px;
+    }
+    details.tweaks > summary {
+      cursor: pointer;
+      color: var(--brand); font-weight: 700;
+      font-size: 13px;
+      padding: 4px 0;
+    }
+    details.tweaks ul { padding-left: 18px; margin: 12px 0 0 0; }
+    details.tweaks li { padding: 4px 0; color: var(--fg-dim); }
+    details.tweaks li b { color: var(--brand); font-weight: 600; }
+    /* ============================================================ small chips */
+    .preset {
+      margin-top: 14px;
+      display: flex; flex-wrap: wrap; gap: 8px;
+      padding: 0 4px;
+    }
+    .preset .chip {
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 4px 10px;
+      color: var(--fg-mute);
+      font-size: 11px;
+      background: transparent;
+    }
+    .preset .chip:hover { color: var(--brand); border-color: var(--brand); }
+  </style>
+</head>
+<body>
+
+<h1>Labourious — Settings Inline Edit (S1)</h1>
+<p class="desc">
+  Pick a row → press <b style="color:var(--brand)">e</b> or <b style="color:var(--brand)">Enter</b> to transform
+  it into an Input in place. <b>Tab</b> commits. <b>Esc</b> cancels. <b>Ctrl+S</b> closes.
+  For toggles (depth, compressed), <b>Tab</b> cycles the radio selection.
+</p>
+
+<div class="screen-stack">
+
+  <!-- ============================================================ screen 1: default read-only -->
+  <div>
+    <div class="label">1 — default <span class="sublabel">read-only with edit hint</span></div>
+    <div class="screen">
+      <div class="head">
+        <span class="brand">Labourious</span>
+        <span class="crumb">— Settings / default</span>
+        <span class="sep"></span>
+        <span class="badge-ok">● saved</span>
+        <span class="meta">~/.labourious/config.json</span>
+        <span class="meta">14:22:08</span>
+      </div>
+      <div class="body-row">
+        <div class="rail">
+          <div class="rail-item">providers</div>
+          <div class="rail-item sel">default</div>
+          <div class="rail-item">per-agent</div>
+          <div class="rail-item">hybrid</div>
+          <div class="rail-item">connectors</div>
+          <div class="rail-item">defaults</div>
+        </div>
+        <div class="main">
+          <div class="card">
+            <div class="card-head">
+              <span class="title">default — current: ollama/llama3.3:70b</span>
+              <span class="meta">model</span>
+            </div>
+            <div class="card-body">
+
+              <div class="row sel">
+                <span class="bullet">●</span>
+                <span class="name">ollama/llama3.3:70b</span>
+                <span class="detail">default for every agent that doesn't have an override</span>
+                <span class="chip">free</span>
+              </div>
+
+              <div class="preset">
+                <span class="chip">anthropic/claude-sonnet-4-5</span>
+                <span class="chip">groq/llama-3.3-70b-versatile</span>
+                <span class="chip">openrouter/auto</span>
+                <span class="chip">ollama/qwen3:32b</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="foot">
+        <span><span class="k">↑/↓</span> rail</span>
+        <span><span class="k">→/←</span> switch section</span>
+        <span><span class="k">e / ⏎</span> edit</span>
+        <span><span class="k">Tab</span> confirm (when editing)</span>
+        <span><span class="k">Ctrl+S</span> save &amp; close</span>
+        <span><span class="k">Esc</span> back/cancel</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ screen 2: default editing -->
+  <div>
+    <div class="label">2 — default <span class="sublabel">after <b>e</b> press — row transformed in place</span></div>
+    <div class="screen">
+      <div class="head">
+        <span class="brand">Labourious</span>
+        <span class="crumb">— Settings / default</span>
+        <span class="sep"></span>
+        <span class="badge-warn">● editing</span>
+        <span class="meta">~/.labourious/config.json</span>
+        <span class="meta">14:22:11</span>
+      </div>
+      <div class="body-row">
+        <div class="rail">
+          <div class="rail-item">providers</div>
+          <div class="rail-item sel">default</div>
+          <div class="rail-item">per-agent</div>
+          <div class="rail-item">hybrid</div>
+          <div class="rail-item">connectors</div>
+          <div class="rail-item">defaults</div>
+        </div>
+        <div class="main">
+          <div class="card">
+            <div class="card-head">
+              <span class="title">default — editing</span>
+              <span class="meta">model</span>
+            </div>
+            <div class="card-body">
+
+              <div class="row edit">
+                <span class="bar-l">│</span>
+                <div class="input-mock">g<span class="caret"></span></div>
+                <div class="actions">
+                  <span class="ok">⏎ save</span>
+                  <span class="no">Esc cancel</span>
+                </div>
+                <span class="bar-r">│</span>
+              </div>
+
+              <div class="preset">
+                <span class="chip">anthropic/claude-sonnet-4-5</span>
+                <span class="chip">groq/llama-3.3-70b-versatile</span>
+                <span class="chip">openrouter/auto</span>
+                <span class="chip">ollama/qwen3:32b</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="foot">
+        <span><span class="k">typing</span> updates the value</span>
+        <span><span class="k">⏎</span> save</span>
+        <span><span class="k">Esc</span> cancel &amp; revert</span>
+        <span><span class="k">Ctrl+S</span> save &amp; close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ screen 3: per-agent editing -->
+  <div>
+    <div class="label">3 — per-agent <span class="sublabel">row transformed in place; other rows dim around it</span></div>
+    <div class="screen">
+      <div class="head">
+        <span class="brand">Labourious</span>
+        <span class="crumb">— Settings / per-agent</span>
+        <span class="sep"></span>
+        <span class="badge-warn">● editing</span>
+        <span class="meta">~/.labourious/config.json</span>
+        <span class="meta">14:22:34</span>
+      </div>
+      <div class="body-row">
+        <div class="rail">
+          <div class="rail-item">providers</div>
+          <div class="rail-item">default</div>
+          <div class="rail-item sel">per-agent</div>
+          <div class="rail-item">hybrid</div>
+          <div class="rail-item">connectors</div>
+          <div class="rail-item">defaults</div>
+        </div>
+        <div class="main">
+          <div class="card">
+            <div class="card-head">
+              <span class="title">per-agent — 2 overrides</span>
+              <span class="meta">2 configured</span>
+            </div>
+            <div class="card-body">
+
+              <div class="row">
+                <span class="bullet">●</span>
+                <span class="name">orchestrator</span>
+                <span class="detail">→  anthropic/claude-sonnet-4-5</span>
+                <span class="chip">set</span>
+                <span class="x">✕</span>
+              </div>
+
+              <div class="row edit">
+                <span class="bar-l">│</span>
+                <div class="input-mock">devils-advocate → groq/llama-3.<span class="caret"></span></div>
+                <div class="actions">
+                  <span class="ok">⏎ save</span>
+                  <span class="no">Esc cancel</span>
+                </div>
+                <span class="bar-r">│</span>
+              </div>
+
+              <div class="row">
+                <span class="bullet">●</span>
+                <span class="name">forensic-accounting</span>
+                <span class="detail">→  ollama/llama3.3:70b</span>
+                <span class="chip">set</span>
+                <span class="x">✕</span>
+              </div>
+
+              <div class="row add">
+                <span class="plus">+</span>
+                <span class="name">add override</span>
+                <span class="hint">senior-analyst · final-report · …</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="foot">
+        <span><span class="k">↑/↓</span> pick another row</span>
+        <span><span class="k">⏎</span> save current edit</span>
+        <span><span class="k">Tab</span> save &amp; advance to next row</span>
+        <span><span class="k">Esc</span> cancel</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ screen 4: defaults toggles -->
+  <div>
+    <div class="label">4 — defaults <span class="sublabel">Tab cycles the radio; auto-saves</span></div>
+    <div class="screen">
+      <div class="head">
+        <span class="brand">Labourious</span>
+        <span class="crumb">— Settings / defaults</span>
+        <span class="sep"></span>
+        <span class="badge-ok">● saved</span>
+        <span class="meta">~/.labourious/config.json</span>
+        <span class="meta">14:22:55</span>
+      </div>
+      <div class="body-row">
+        <div class="rail">
+          <div class="rail-item">providers</div>
+          <div class="rail-item">default</div>
+          <div class="rail-item">per-agent</div>
+          <div class="rail-item">hybrid</div>
+          <div class="rail-item">connectors</div>
+          <div class="rail-item sel">defaults</div>
+        </div>
+        <div class="main">
+          <div class="card">
+            <div class="card-head">
+              <span class="title">defaults — depth STANDARD · compressed false</span>
+              <span class="meta">2 fields</span>
+            </div>
+            <div class="card-body" style="gap:14px;">
+
+              <div class="toggle-row">
+                <div class="label">depth</div>
+                <div class="opts">
+                  <div class="opt">STANDARD</div>
+                  <div class="opt sel">DEEP</div>
+                </div>
+              </div>
+
+              <div class="toggle-row">
+                <div class="label">compressed</div>
+                <div class="opts">
+                  <div class="opt sel">true</div>
+                  <div class="opt">false</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="foot">
+        <span><span class="k">Tab</span> cycle option</span>
+        <span><span class="k">1 / 2</span> direct pick</span>
+        <span><span class="k">Ctrl+S</span> close (auto-saved)</span>
+        <span><span class="k">Esc</span> back</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ screen 5: validation error -->
+  <div>
+    <div class="label">5 — bad value <span class="sublabel">amber hint in head; input stays open so the user can fix it</span></div>
+    <div class="screen">
+      <div class="head">
+        <span class="brand">Labourious</span>
+        <span class="crumb">— Settings / default</span>
+        <span class="sep"></span>
+        <span class="badge-warn">● bad model id — needs provider/name form</span>
+        <span class="meta">~/.labourious/config.json</span>
+        <span class="meta">14:23:01</span>
+      </div>
+      <div class="body-row">
+        <div class="rail">
+          <div class="rail-item">providers</div>
+          <div class="rail-item sel">default</div>
+          <div class="rail-item">per-agent</div>
+          <div class="rail-item">hybrid</div>
+          <div class="rail-item">connectors</div>
+          <div class="rail-item">defaults</div>
+        </div>
+        <div class="main">
+          <div class="card">
+            <div class="card-head">
+              <span class="title">default — error</span>
+              <span class="meta">model</span>
+            </div>
+            <div class="card-body">
+
+              <div class="row edit" style="border-color:var(--err); box-shadow: inset 3px 0 0 var(--err);">
+                <span class="bar-l" style="color:var(--err);">│</span>
+                <div class="input-mock">just-some-name<span class="caret"></span></div>
+                <div class="actions">
+                  <span style="color:var(--err)">● invalid</span>
+                  <span style="color:var(--fg-mute)">expected <b style="color:var(--brand)">provider/name</b></span>
+                </div>
+                <span class="bar-r" style="color:var(--err);">│</span>
+              </div>
+
+              <div style="color:var(--warn); font-size:12px; padding:0 4px;">
+                → example fix: <b style="color:var(--ok)">ollama/llama3.3:70b</b> &nbsp;·&nbsp;
+                <b style="color:var(--ok)">anthropic/claude-sonnet-4-5</b> &nbsp;·&nbsp;
+                <b style="color:var(--ok)">groq/llama-3.3-70b-versatile</b>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="foot">
+        <span><span class="k">typing</span> updates</span>
+        <span><span class="k">⏎</span> re-validate</span>
+        <span><span class="k">Esc</span> revert to last saved value</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ tweaks -->
+<details class="tweaks" open>
+  <summary>12 tweakable choices — pick what to change</summary>
+  <ul>
+    <li><b>Edit key</b> — current: both <code>e</code> and <code>Enter</code>. Alternative: only Enter.</li>
+    <li><b>Active row caret</b> — current: blink on row border only (no cursor in value). Alternative: show ▶ glyph at row start.</li>
+    <li><b>Edit border style</b> — current: brand cyan + 3px inset bar. Alternative: 1px amber border + glow.</li>
+    <li><b>Caret width</b> — current: 2px brand-cyan. Alternative: invert color block ▌.</li>
+    <li><b>Header badge during edit</b> — current: amber "● editing". Alternative: brand cyan "● editing".</li>
+    <li><b>Preset chips</b> — current: shown below the input (TUI as inline hints). Alternative: hide during edit (less clutter).</li>
+    <li><b>Tab behavior in per-agent edit</b> — current: save &amp; advance to next row. Alternative: save &amp; close edit (stay on row).</li>
+    <li><b>Validation hint placement</b> — current: inline (right of input) + head banner. Alternative: only in head, keep input clean.</li>
+    <li><b>Toggle color</b> — current: cyan border + cyan tint. Alternative: sage (matches OK color).</li>
+    <li><b>Tab on toggle row</b> — current: cycles option + auto-saves. Alternative: cycles, but explicit ⏎ required to save.</li>
+    <li><b>Number keys for toggles</b> — current: footer mentions `1`/`2`. Alt: omit from footer (discoverability test).</li>
+    <li><b>Unsaved badge logic</b> — current: switches between "saved" / "editing" / "error". Alt: only show non-green.</li>
+  </ul>
+</details>
+
+</body>
+</html>

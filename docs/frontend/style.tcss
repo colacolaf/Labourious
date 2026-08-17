@@ -415,3 +415,71 @@ Screen.-narrow     #sidebar { width: 18; }
     border-top: solid #2a3441;
 }
 
+
+/* ============================================================ Inline editor
+   (Settings inline-edit widgets) */
+
+.inline-editor {
+    height: auto;
+    padding: 4 2 4 4;
+    border-left: solid #8cdcdc;
+    border-right: solid #8cdcdc;
+    border-top: none;
+    border-bottom: none;
+    background: #0a0c10;
+}
+
+.inline-editor.err {
+    border-left: solid #e1918c;
+    border-right: solid #e1918c;
+}
+
+.editor-help {
+    color: #6e7887;
+    height: 1;
+    padding: 0 0 1 0;
+}
+
+.editor-help Static {
+    color: #6e7887;
+}
+
+InlineTextEditor .editor-input,
+.inline-editor Input {
+    background: #0e1014;
+    color: #d4d4d4;
+    border: solid #465262;
+    height: 1;
+    margin: 0;
+}
+
+.editor-input:focus,
+.inline-editor Input:focus {
+    border: solid #8cdcdc;
+}
+
+.editor-presets {
+    color: #6e7887;
+    height: 1;
+    padding: 1 0 0 0;
+}
+
+/* ------------------------------------------------------------- Toggle editor */
+
+.inline-toggle-editor {
+    height: auto;
+    padding: 6 4;
+    border-left: solid #8cdcdc;
+    border-right: solid #8cdcdc;
+    background: #0a0c10;
+}
+
+.toggle-help {
+    color: #6e7887;
+    height: 1;
+}
+
+.toggle-display {
+    height: 1;
+    padding: 1 0;
+}

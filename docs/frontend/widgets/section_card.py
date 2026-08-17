@@ -102,3 +102,39 @@ class SectionCard(Vertical):
         b = self.body()
         if b is not None:
             b.write(line)
+
+    def mount_editor(self, editor_widget) -> None:
+        """Replace the RichLog body with an inline editor widget.
+
+        Used by SettingsScreen when entering edit mode for a section.
+        """
+        try:
+            body = self.query_one(RichLog)
+            body.remove()
+        except Exception:
+            pass
+        self.add_class("editing")
+        # Track the editor; do not give it our title slug — the editor
+        # assigns its own id.
+        self._editor = editor_widget
+        self.mount(editor_widget)
+
+    def exit_edit_mode(self):
+        """Remove the editor; remount a fresh RichLog body. Returns it."""
+        try:
+            for w in list(self.children):
+                # Remove any editor classes we mounted.
+                cls = w.classes or ""
+                if "inline-editor" in cls or "inline-toggle-editor" in cls:
+                    w.remove()
+        except Exception:
+            pass
+        slug = self._title.lower().replace("/", "-").replace(" ", "-")
+        body = RichLog(
+            wrap=False, highlight=False, markup=False,
+            classes="section-card-body",
+            id=f"body-{slug}",
+        )
+        self.mount(body)
+        self.remove_class("editing")
+        return body
