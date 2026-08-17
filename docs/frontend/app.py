@@ -58,15 +58,9 @@ class LabouriousApp(App):
 
     # ---------------------------------------------------------- actions
     def action_open_settings(self) -> None:
-        """P2: full Settings modal. For v1, show a notification banner."""
-        try:
-            chat = self.screen
-            assert isinstance(chat, ChatScreen)
-            chat._set_banner_warning(
-                "Settings modal is P2. Edit ~/.labourious/config.json directly. See PROTOCOL.md Appendix A."
-            )
-        except Exception:
-            pass
+        """Push the Settings modal on top of the current screen."""
+        from frontend.screens import SettingsScreen  # type: ignore
+        self.push_screen(SettingsScreen())
 
     def action_open_history(self) -> None:
         """P2: full History browser. For v1, show a notification banner."""

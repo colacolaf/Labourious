@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Labourious — Settings preview (S2 v3, CSS-bordered, active-only)</title>
+<style>
+  :root {
+    --bg:        #0e1014;
+    --bg-2:      #14181f;
+    --fg:        #d4d4d4;
+    --fg2:       #a0a5af;
+    --fg3:       #6e7887;
+    --border:    #465262;
+    --border-2:  #2a3441;
+    --brand:     #8cdcdc;
+    --ok:        #8cd296;
+    --warn:      #e6c87e;
+    --err:       #e1918c;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #050608; color: var(--fg);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, "Courier New", monospace;
+    font-size: 13px; line-height: 1.5; }
+  .wrap { padding: 24px 18px; display: flex; flex-direction: column; gap: 28px; }
+  h2 { color: var(--fg2); font-weight: 600; font-size: 12px; letter-spacing: 0.08em;
+       text-transform: uppercase; margin: 0 0 6px 4px; }
+  .meta { color: var(--fg3); font-size: 12px; margin: 0 0 10px 4px; }
+
+  .b { color: var(--brand); font-weight: 700; }
+  .f { color: var(--fg); }
+  .f2 { color: var(--fg2); }
+  .f3 { color: var(--fg3); }
+  .ok { color: var(--ok); }
+  .warn { color: var(--warn); }
+  .err { color: var(--err); }
+
+  /* The terminal frame around one screen */
+  .term {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 0; width: 1000px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  /* Header bar inside the terminal */
+  .term-head {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border-2);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px;
+  }
+  /* Footer bar inside the terminal */
+  .term-foot {
+    padding: 6px 14px;
+    border-top: 1px solid var(--border-2);
+    font-size: 12px;
+  }
+  .kbd { color: var(--fg3); }
+  .kbd b { color: var(--fg2); font-weight: 600; }
+  .saved-ok { color: var(--ok); }
+  .saved-warn { color: var(--warn); }
+
+  /* Main body grid: rail + body */
+  .body-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    min-height: 320px;
+  }
+  .rail { padding: 14px 12px 14px 14px; border-right: 1px solid var(--border-2); }
+  .body { padding: 14px 18px; }
+
+  .rail-item {
+    padding: 4px 8px;
+    display: flex; align-items: center;
+    border-radius: 3px;
+    color: var(--fg2);
+  }
+  .rail-item.sel {
+    color: var(--brand); font-weight: 700;
+    background: rgba(140, 220, 220, 0.07);
+    box-shadow: inset 2px 0 0 0 var(--brand);
+  }
+  .rail-blank { padding: 4px 8px; }
+
+  /* Section card */
+  .card { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .card-head {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border-2);
+    background: rgba(70, 82, 98, 0.10);
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--fg2); font-size: 12px; letter-spacing: 0.04em;
+  }
+  .card-head .left  { color: var(--fg2); }
+  .card-head .right { color: var(--fg3); font-weight: 400; letter-spacing: 0; }
+
+  /* Rows within a card */
+  .row {
+    display: flex; align-items: center;
+    padding: 10px 14px;
+    gap: 12px;
+  }
+  .row + .row { border-top: 1px solid var(--border-2); }
+  .row .bullet { color: var(--ok); width: 1ch; flex: 0 0 auto; }
+  .row .bullet.warn { color: var(--warn); }
+  .row .name  { color: var(--brand); font-weight: 600; min-width: 14ch; flex: 0 0 auto; }
+  .row .detail { color: var(--fg3); flex: 1 1 auto; }
+  .row .health { flex: 0 0 auto; }
+  .row .health.set   { color: var(--ok); }
+  .row .health.miss  { color: var(--warn); }
+  .row .health.local { color: var(--fg3); }
+  .row .x { color: var(--fg3); flex: 0 0 auto; padding-left: 8px; }
+
+  /* + add row */
+  .row-add {
+    display: flex; align-items: center;
+    padding: 10px 14px;
+    background: rgba(140, 220, 220, 0.04);
+    gap: 12px;
+  }
+  .row-add .plus { color: var(--brand); width: 1ch; flex: 0 0 auto; }
+  .row-add .name { color: var(--fg2); flex: 0 0 auto; }
+  .row-add .hint { color: var(--fg3); flex: 1 1 auto; font-size: 12px; }
+
+  /* Inline input (for default_model) */
+  .input-row {
+    display: flex; align-items: center;
+    padding: 10px 14px; gap: 12px;
+  }
+  .input-row label { color: var(--fg2); flex: 0 0 12ch; }
+  .input-box {
+    flex: 1 1 auto;
+    background: #161a21; border: 1px solid var(--brand); border-radius: 3px;
+    padding: 4px 10px; color: var(--fg); font-family: inherit;
+    display: flex; align-items: center; gap: 0;
+  }
+  .input-box .caret { color: var(--brand); }
+  .input-box .saved { color: var(--fg3); font-size: 12px; margin-left: auto; padding-left: 12px; }
+
+  /* Picker */
+  .picker-search {
+    display: flex; align-items: center;
+    padding: 10px 14px; gap: 12px;
+    border-bottom: 1px solid var(--border-2);
+  }
+  .picker-search .slash { color: var(--brand); }
+  .picker-search .input {
+    flex: 1 1 auto; color: var(--fg);
+    background: transparent; border: none; outline: none;
+    font-family: inherit; font-size: 13px;
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 1px;
+  }
+  .picker-search .meta { color: var(--fg3); font-size: 12px; }
+
+  .picker-row { padding: 8px 14px; color: var(--fg2); }
+  .picker-row.sel { color: var(--brand); font-weight: 700;
+    background: rgba(140, 220, 220, 0.07);
+    box-shadow: inset 2px 0 0 0 var(--brand);
+  }
+  .picker-row.sel .desc { color: var(--fg2); font-weight: 400; }
+
+  .picker-row .name { color: inherit; }
+  .picker-row .desc { color: var(--fg3); margin-left: 8px; }
+
+  details.tweaks {
+    background: #0c0f14; border: 1px solid var(--border-2); border-radius: 4px;
+    padding: 10px 14px; color: var(--fg2); max-width: 1000px; font-size: 12px;
+  }
+  details.tweaks summary { cursor: pointer; color: var(--brand); font-weight: 600; }
+  details.tweaks ol { margin: 8px 0 0 0; padding-left: 18px; }
+  details.tweaks li { margin-bottom: 4px; }
+  details.tweaks b { color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============================================================== -->
+  <div>
+    <h2>1 · Settings modal · providers — only configured items shown</h2>
+    <div class="meta">CSS border on the card → no character overflow, regardless of terminal width or font. 110 cols × ~24 rows.</div>
+
+    <div class="term">
+
+      <div class="term-head">
+        <div><span class="b">  Labourious</span>  <span class="f2">— Settings</span></div>
+        <div><span class="saved-ok">● saved</span>          <span class="f3">~/.labourious/config.json</span>          <span class="f3">14:02:11</span></div>
+      </div>
+
+      <div class="body-grid">
+
+        <div class="rail">
+          <div class="rail-item sel">│ providers</div>
+          <div class="rail-blank">&nbsp;</div>
+          <div class="rail-item">default</div>
+          <div class="rail-item">per-agent</div>
+          <div class="rail-item">hybrid</div>
+          <div class="rail-item">connectors</div>
+          <div class="rail-item">defaults</div>
+        </div>
+
+        <div class="body">
+
+          <div class="card">
+            <div class="card-head">
+              <div class="left">PROVIDERS</div>
+              <div class="right">2 of 4 configured</div>
+            </div>
+
+            <div class="row">
+              <span class="bullet">●</span>
+              <span class="name">anthropic</span>
+              <span class="detail">$ANTHROPIC_API_KEY</span>
+              <span class="health set">● set</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="row">
+              <span class="bullet">●</span>
+              <span class="name">ollama</span>
+              <span class="detail">(local)</span>
+              <span class="health local">● ok</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="row-add">
+              <span class="plus">+</span>
+              <span class="name">add provider</span>
+              <span class="hint">groq · openrouter · openai · google · mistral · cohere</span>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="term-foot">
+        <span class="kbd"><b>↑/↓</b> rail · <b>Tab/Shift+Tab</b> action · <b>⏎</b> confirm · <b>✕</b> remove · <b>Ctrl+S</b> save &amp; close · <b>Esc</b> back</span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================== -->
+  <div>
+    <h2>2 · default model — single input, no list overflow</h2>
+    <div class="meta">One field = one row. Hint info is captured in the card-head "last saved" meta on the right.</div>
+
+    <div class="term">
+
+      <div class="term-head">
+        <div><span class="b">  Labourious</span>  <span class="f2">— Settings</span></div>
+        <div><span class="saved-warn">● unsaved · 1 change</span>  <span class="f3">~/.labourious/config.json</span>          <span class="f3">14:02:38</span></div>
+      </div>
+
+      <div class="body-grid">
+
+        <div class="rail">
+          <div class="rail-item">providers</div>
+          <div class="rail-blank">&nbsp;</div>
+          <div class="rail-item sel">│ default</div>
+          <div class="rail-item">per-agent</div>
+          <div class="rail-item">hybrid</div>
+          <div class="rail-item">connectors</div>
+          <div class="rail-item">defaults</div>
+        </div>
+
+        <div class="body">
+
+          <div class="card">
+            <div class="card-head">
+              <div class="left">DEFAULT MODEL</div>
+              <div class="right">last saved 14:01:09</div>
+            </div>
+
+            <div class="input-row">
+              <label>model</label>
+              <div class="input-box"><span class="typed">ollama/llama3.3:70b</span><span class="caret">▌</span></div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="term-foot">
+        <span class="kbd"><b>⏎</b> accept · <b>Tab</b> auto-complete · <b>Esc</b> discard edit · <b>Ctrl+S</b> save &amp; close</span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================== -->
+  <div>
+    <h2>3 · connectors — only configured; missing chip kept amber</h2>
+    <div class="meta">Each connector = one clean row. ✕ on the right is consistent across all collection sections.</div>
+
+    <div class="term">
+
+      <div class="term-head">
+        <div><span class="b">  Labourious</span>  <span class="f2">— Settings</span></div>
+        <div><span class="saved-ok">● saved</span>          <span class="f3">~/.labourious/config.json</span>          <span class="f3">14:03:01</span></div>
+      </div>
+
+      <div class="body-grid">
+
+        <div class="rail">
+          <div class="rail-item">providers</div>
+          <div class="rail-blank">&nbsp;</div>
+          <div class="rail-item">per-agent</div>
+          <div class="rail-item">hybrid</div>
+          <div class="rail-item sel">│ connectors</div>
+          <div class="rail-item">defaults</div>
+          <div class="rail-blank">&nbsp;</div>
+        </div>
+
+        <div class="body">
+
+          <div class="card">
+            <div class="card-head">
+              <div class="left">CONNECTORS</div>
+              <div class="right">4 configured</div>
+            </div>
+
+            <div class="row">
+              <span class="bullet">●</span>
+              <span class="name">sec_edgar</span>
+              <span class="detail">sec_edgar / Labourious &lt;[email protected]&gt;</span>
+              <span class="health set">● ok</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="row">
+              <span class="bullet">●</span>
+              <span class="name">news</span>
+              <span class="detail">google_rss</span>
+              <span class="health set">● ok</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="row">
+              <span class="bullet warn">●</span>
+              <span class="name">market_data</span>
+              <span class="detail">yfinance · FRED_API_KEY</span>
+              <span class="health miss">● missing</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="row">
+              <span class="bullet">●</span>
+              <span class="name">web_fetch</span>
+              <span class="detail">web_fetch</span>
+              <span class="health set">● ok</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="row-add">
+              <span class="plus">+</span>
+              <span class="name">add connector</span>
+              <span class="hint">sec_edgar · google_rss · fred · polygon · fmp · …</span>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="term-foot">
+        <span class="kbd"><b>↑/↓</b> rail · <b>Tab/Shift+Tab</b> action · <b>⏎</b> confirm · <b>✕</b> remove · <b>Ctrl+S</b> save &amp; close · <b>Esc</b> back</span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================== -->
+  <div>
+    <h2>4 · picker — opened from <code>+ add provider</code></h2>
+    <div class="meta">A separate modal screen. Search filters live, the list is text-only &amp; scrollable, and the breadcrumb telegraphs where you are.</div>
+
+    <div class="term">
+
+      <div class="term-head">
+        <div><span class="b">  Labourious</span>  <span class="f2">— Settings</span>  <span class="f3">/</span>  <span class="f2">providers</span>  <span class="f3">/</span>  <span class="b">add</span></div>
+        <div><span class="f3">~  List of 6</span>       <span class="f3">14:03:18</span></div>
+      </div>
+
+      <div class="body-grid">
+
+        <div class="rail">
+          <div class="rail-item">providers</div>
+          <div class="rail-blank">&nbsp;</div>
+          <div class="rail-item">default</div>
+          <div class="rail-item">per-agent</div>
+          <div class="rail-item">hybrid</div>
+          <div class="rail-item">connectors</div>
+          <div class="rail-item">defaults</div>
+        </div>
+
+        <div class="body">
+
+          <div class="card">
+            <div class="card-head">
+              <div class="left">ADD PROVIDER</div>
+              <div class="right">pick one, then fill the env var</div>
+            </div>
+
+            <div class="picker-search">
+              <span class="slash">/</span>
+              <span class="input">ro</span>
+              <span class="meta">typed so far</span>
+            </div>
+
+            <div class="picker-row sel">
+              <span class="name">│  groq</span>
+              <span class="desc">— Groq Cloud (OpenAI-compatible, free tier, very fast)</span>
+            </div>
+            <div class="picker-row">
+              <span class="name">openrouter</span>
+              <span class="desc">— Multi-provider router with credit system</span>
+            </div>
+            <div class="picker-row">
+              <span class="name">+  custom provider</span>
+              <span class="desc">— define any OpenAI-compatible URL + key (advanced)</span>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="term-foot">
+        <span class="kbd"><b>↑/↓</b> select · <b>⏎</b> pick · <b>Esc</b> back</span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================== -->
+
+  <details open>
+    <summary style="cursor:pointer;color:var(--brand);font-weight:600;">12 things you can tweak — tell me which to change</summary>
+    <ol style="margin:8px 0 0 18px;color:var(--fg2);font-size:12px;max-width:1000px;">
+      <li><b style="color:var(--fg)">Card border on each section</b> — currently <code>1px solid</code>. Could go borderless (NYT vibe) or thicker (heavier).</li>
+      <li><b style="color:var(--fg)">Rail width</b> — 200px. Comfortable for "per-agent" + icon.</li>
+      <li><b style="color:var(--fg)">Row hover/focus style</b> — currently no hover. Add a subtle bg-color on focus? Currently rail selection has subtle cyan tint.</li>
+      <li><b style="color:var(--fg)">Health chip</b> — currently <code>● set / ● missing / ● ok</code>. Could be just a colored dot, no text.</li>
+      <li><b style="color:var(--fg)">Row density</b> — currently 10px top/bottom padding. Tighter (6px) or roomier (14px)?</li>
+      <li><b style="color:var(--fg)">+ add row hint</b> — currently shows the available list inline. Could just say <code>+ add provider</code> with the list in the picker.</li>
+      <li><b style="color:var(--fg)">Remove ✕ button</b> — visible all the time, or only on focused row?</li>
+      <li><b style="color:var(--fg)">Card-head label case</b> — currently UPPERCASE. Could be Title Case ("Providers").</li>
+      <li><b style="color:var(--fg)">Card-head right meta</b> — currently <code>2 of 4 configured</code>. Could be <code>2/4</code> or omitted.</li>
+      <li><b style="color:var(--fg)">Picker search style</b> — currently <code>/ro</code> with dashed underline. Could be no slash prefix or solid underline.</li>
+      <li><b style="color:var(--fg)">Picker selected row</b> — currently inset cyan bar + tint. Could be just the bar, or just bold.</li>
+      <li><b style="color:var(--fg)">Saved/unsaved badge position</b> — currently in header strip. Could move to inline next to file path only.</li>
+    </ol>
+  </details>
+
+</div>
+</body>
+</html>

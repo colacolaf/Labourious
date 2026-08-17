@@ -246,3 +246,127 @@ Collapsible Static {
 /* ---------- Narrow / wide ---------- */
 Screen.-widescreen #sidebar { width: 36; }
 Screen.-narrow     #sidebar { width: 18; }
+
+/* =============================================================== */
+/* ============= Settings modal (P2 block) ======================== */
+/* =============================================================== */
+
+/* Header strip — title + breadcrumb + saved badge + file path + mtime */
+#settings-head {
+    background: #0e1014;
+    color: #d4d4d4;
+    height: 1;
+    padding: 0 2;
+}
+
+.settings-head {
+    background: #0e1014;
+    color: #a0a5af;
+    height: 1;
+    padding: 0 2;
+}
+
+/* Body grid — rail (left) + main pane */
+#settings-body {
+    layout: horizontal;
+    height: 1fr;
+}
+
+/* Left rail */
+#settings-rail {
+    width: 22;
+    background: #11141a;
+    border-right: solid #2a3441;
+    padding: 1 1;
+}
+
+.rail-item {
+    color: #a0a5af;
+    height: 1;
+    padding: 0 1 0 2;
+}
+
+.rail-item.sel {
+    color: #8cdcdc;
+    text-style: bold;
+    background: #131c22;
+}
+
+/* Main pane — SectionCard lives here */
+#settings-main {
+    width: 1fr;
+    background: #0e1014;
+    padding: 1 2;
+}
+
+/* SectionCard — header + body */
+.section-card {
+    border: round #465262;
+    background: #0e1014;
+    height: auto;
+}
+
+.section-card-head {
+    background: #11141a;
+    color: #a0a5af;
+    height: 1;
+    padding: 0 1;
+    border-bottom: solid #2a3441;
+}
+
+.section-card-body {
+    background: #0e1014;
+    color: #d4d4d4;
+    height: auto;
+    padding: 0 1 1 1;
+}
+
+/* Footer strip — keybinding hints */
+#settings-foot {
+    background: #0e1014;
+    color: #6e7887;
+    height: 1;
+    padding: 0 2;
+    border-top: solid #2a3441;
+}
+
+.settings-foot {
+    background: #0e1014;
+    color: #6e7887;
+    height: 1;
+    padding: 0 2;
+    border-top: solid #2a3441;
+}
+
+/* ---------- Picker overlay (inline within settings) ---------- */
+.picker-overlay {
+    border: round #465262;
+    background: #0e1014;
+    height: auto;
+}
+
+.picker-breadcrumb {
+    background: #11141a;
+    color: #6e7887;
+    height: 1;
+    padding: 0 1;
+}
+
+.picker-search {
+    background: #0e1014;
+    color: #d4d4d4;
+    height: 1;
+    padding: 0 1;
+    border-bottom: solid #2a3441;
+}
+
+.picker-list {
+    background: #0e1014;
+    color: #d4d4d4;
+    height: auto;
+    padding: 0 1 1 1;
+}
+
+/* ---------- Setting row visual classes (used by inline ANSI text) ---------- */
+/* (Rendered inline as ANSI escape codes via SettingRow._build_main_row
+   rather than separate widgets, to avoid the Static+str layout bug.) */
