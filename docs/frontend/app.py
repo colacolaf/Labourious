@@ -68,12 +68,15 @@ class LabouriousApp(App):
         self.push_screen(HistoryScreen())
 
     def action_open_help(self) -> None:
-        try:
-            chat = self.screen
-            assert isinstance(chat, ChatScreen)
-            chat._show_welcome(force=True)
-        except Exception:
-            pass
+        """Toggle behavior: if the Help modal is on top, pop it; otherwise push."""
+        from frontend.screens import HelpModalScreen  # type: ignore
+        # If the top of stack IS the help modal, treat ? as toggle-close.
+        if isinstance(self.screen, HelpModalScreen):
+            self.pop_screen()
+            return
+        # Otherwise push a fresh one. Textual retains the new instance's
+        # state across pushes.
+        self.push_screen(HelpModalScreen())
 
 
 def main() -> int:

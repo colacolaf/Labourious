@@ -240,11 +240,17 @@ class HistoryScreen(Screen):
                               id="card-list")
             with Vertical(id="history-detail-pane"):
                 yield Static(self._render_index_detail(), markup=False, id="history-detail")
-        # Footer
-        yield Static(self._render_foot(), markup=False, id="history-foot")
+        # Footer strip — universal StatusStrip (replaces per-screen foot Static).
+        from frontend.widgets.status_strip import StatusStrip   # type: ignore
+        yield StatusStrip()
 
     def on_mount(self) -> None:
         self._render_list()
+        from frontend.widgets.status_strip import StatusStrip as _SS
+        try:
+            self.query_one(_SS).update_for(self)
+        except Exception:
+            pass
 
     # ---------------------------------------------------------- rendering
     def _render_head(self) -> str:

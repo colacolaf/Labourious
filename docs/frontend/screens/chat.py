@@ -138,7 +138,11 @@ class ChatScreen(Screen):
             placeholder="> analyze NVDA at $890  (try `/help` for commands)",
             id="prompt",
         )
-        yield Footer()
+        # StatusStrip replaces the default `Footer` because:
+        # - we want the `? help` right-corner tag as a consistent affordance
+        # - we want screen-aware key hints that swap when a modal pushes/pops
+        from frontend.widgets.status_strip import StatusStrip   # type: ignore
+        yield StatusStrip()
 
     # ----------------------------------------------------------------- on_mount
     def on_mount(self) -> None:
@@ -148,6 +152,12 @@ class ChatScreen(Screen):
         # Show welcome card on first launch.
         self._show_welcome()
         self._update_footer_hint()
+        # Refresh the screen-aware bottom strip to show chat keys.
+        from frontend.widgets.status_strip import StatusStrip as _SS
+        try:
+            self.query_one(_SS).update_for(self)
+        except Exception:
+            pass
 
     # ------------------------------------------------------------- public hooks (called by parent App)
     def set_status_footer(self, msg: str) -> None:

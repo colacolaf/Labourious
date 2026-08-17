@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Labourious — Help modal (dark, mirrors TUI)</title>
+<style>
+  :root {
+    /* Exact TUI palette from docs/frontend/style.tcss */
+    --bg:        #0e1014;
+    --bg-soft:   #11141a;
+    --bg-mid:    #161a20;
+    --bg-deep:   #050608;
+    --line:      #465262;
+    --line-soft: #2a3441;
+    --fg:        #d4d4d4;
+    --fg2:       #a0a5af;
+    --fg3:       #6e7887;
+    --brand:     #8cdcdc;
+    --sage:      #8cd296;
+    --amber:     #e6c87e;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    padding: 0;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  body { padding: 22px; }
+  h1 {
+    font-size: 15px; color: var(--brand); font-weight: 600;
+    margin: 0 0 4px; letter-spacing: -0.01em;
+  }
+  .lede { color: var(--fg3); margin: 0 0 22px; max-width: 760px; }
+  .stack > h2 {
+    font-size: 13px; font-weight: 600; margin: 0 0 2px;
+    color: var(--brand); letter-spacing: 0.02em;
+  }
+  .stack > .sub { font-size: 11.5px; color: var(--fg3); margin: 0 0 12px; max-width: 760px; }
+  .stack { display: grid; gap: 26px; margin-bottom: 28px; }
+
+  /* TUI-shaped frame, no rounded corners (TUI is rectangular). */
+  .frame {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    width: 920px;
+    max-width: 100%;
+  }
+
+  /* HEAD */
+  .head {
+    background: var(--bg);
+    color: var(--fg);
+    border-bottom: 1px solid var(--line);
+    padding: 0 8px;
+    height: 24px;
+    line-height: 24px;
+    font-size: 12px;
+  }
+  .head .brand { color: var(--brand); }
+  .head .sep   { color: var(--fg3); padding: 0 4px; }
+  .head .here  { color: var(--brand); }
+  .head .info  { color: var(--fg3); }
+  .head .info .k { color: var(--brand); }
+
+  /* INTRO */
+  .intro {
+    background: var(--bg-mid);
+    color: var(--fg2);
+    padding: 0 8px;
+    height: 24px;
+    line-height: 24px;
+    font-size: 12px;
+  }
+  .intro .big { color: var(--brand); }
+
+  /* BODY (cards) */
+  .body {
+    background: var(--bg-deep);
+    padding: 8px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .col { display: grid; gap: 4px; }
+  .col > * { margin: 0 4px; }
+
+  .card {
+    background: var(--bg-mid);
+    border: 1px solid var(--line);
+  }
+  .card-head {
+    background: var(--bg-soft);
+    color: var(--brand);
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 0 8px;
+    height: 22px;
+    line-height: 22px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .card-head .note { color: var(--fg3); font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 11px; }
+  .card-rows { padding: 2px 8px 6px; }
+  .row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 12px;
+    padding: 2px 0;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .row .k { color: var(--brand); font-weight: 600; }
+  .row .v { color: var(--fg); }
+  .row .v em { color: var(--fg3); font-style: normal; }
+  .row .v em::before { content: "— "; }
+
+  /* SIG (source-of-truth line) */
+  .sig {
+    background: var(--bg);
+    color: var(--fg3);
+    border-top: 1px solid var(--line-soft);
+    padding: 0 8px;
+    height: 22px;
+    line-height: 22px;
+    font-size: 11.5px;
+  }
+  .sig .source-label { color: var(--fg3); }
+  .sig .source-path  { color: var(--fg); }
+  .sig .path { color: var(--fg3); }
+
+  /* STRIP */
+  .strip {
+    background: var(--bg-soft);
+    color: var(--fg2);
+    border-top: 1px solid var(--line-soft);
+    height: 22px;
+    line-height: 22px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    font-size: 11.5px;
+    gap: 0;
+  }
+  .strip .group {
+    display: flex; align-items: center; gap: 8px;
+    padding-right: 10px;
+  }
+  .strip .group + .group {
+    border-left: 1px solid var(--line);
+    padding-left: 10px;
+  }
+  .strip .label {
+    color: var(--fg3);
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+  }
+  .strip .key { color: var(--brand); font-weight: 600; }
+  .strip .spacer { flex: 1; }
+  .strip .help {
+    color: var(--brand);
+    font-weight: 700;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    padding: 0 8px;
+    height: 18px;
+    line-height: 18px;
+    border-radius: 0;
+    font-size: 11.5px;
+  }
+
+  /* Dimmer overlay (modal atop chat) */
+  .stack-row { display: grid; gap: 16px; margin-bottom: 24px; }
+  .dimmed { background: var(--bg); filter: brightness(0.45); }
+  .dimmed .frame { border-color: var(--line-soft); }
+
+  details {
+    margin-top: 16px;
+    border: 1px solid var(--line);
+    background: var(--bg-soft);
+    padding: 0;
+  }
+  details summary {
+    cursor: pointer;
+    padding: 8px 12px;
+    font-weight: 600;
+    color: var(--brand);
+  }
+  details .inner { padding: 6px 14px 14px; }
+  details ol { margin: 6px 0 0; padding-left: 20px; }
+  details li { margin: 4px 0; }
+  code { background: var(--bg-deep); padding: 1px 4px; color: var(--brand); }
+</style>
+</head>
+<body>
+
+<h1>Help modal · dark · mirrors the live TUI palette exactly</h1>
+<p class="lede">
+  This preview uses <b>the same tokens</b> as <code>docs/frontend/style.tcss</code>:
+  <code>#0e1014</code> bg, <code>#8cdcdc</code> brand, <code>#d4d4d4</code> fg, <code>#465262</code> border.
+  No fake light/dark toggle — the live TUI is dark and stays dark. What's shown
+  here is what you'll actually see in your terminal.
+</p>
+
+<div class="stack stack-row">
+
+  <!-- Stack A — Help modal full bleed -->
+  <h2>Stack A · Help modal open · over a dimmed chat background</h2>
+  <p class="sub">Chat is dimmed behind the modal. Modal head + intro + 6 cards + sig + universal StatusStrip.</p>
+
+  <div class="dimmed">
+    <div class="frame">
+      <div class="head">
+        <span class="brand">●</span> Labourious <span class="sep">/</span> <span class="here">chat</span>
+      </div>
+      <div class="body">
+        <p style="color: var(--fg3); margin: 4px;">(chat dimmed beneath the modal — input field hidden behind)</p>
+      </div>
+      <div class="strip">
+        <span class="group">
+          <span class="label">chat</span>
+          <span><span class="key">⏎</span> send</span>
+          <span><span class="key">Ctrl+L</span> clear</span>
+          <span><span class="key">Ctrl+R</span> re-run</span>
+          <span><span class="key">/</span> commands</span>
+        </span>
+        <span class="group">
+          <span class="label">global</span>
+          <span><span class="key">s</span> settings</span>
+          <span><span class="key">h</span> history</span>
+        </span>
+        <span class="spacer"></span>
+        <span class="help">?  help</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- The actual modal sits on top -->
+  <div class="frame" style="border-color: var(--line);">
+    <div class="head">
+      <span class="brand">●</span> Labourious <span class="sep">/</span> <span class="here">help</span>
+      <span class="info">· <span class="k">?</span> toggle this modal · <span class="k">Esc</span> close</span>
+    </div>
+    <div class="intro">
+      Keyboard shortcuts — grouped by where they apply. <span class="big">6 groups · 30 keys</span>
+    </div>
+    <div class="body">
+      <div class="grid">
+        <!-- Col A -->
+        <div class="col">
+          <div class="card">
+            <div class="card-head"><span>Global</span><span class="note">4 keys · any focus</span></div>
+            <div class="card-rows">
+              <div class="row"><span class="k">s</span><span class="v">Settings</span></div>
+              <div class="row"><span class="k">h</span><span class="v">History</span></div>
+              <div class="row"><span class="k">?</span><span class="v">Help <em>toggle this modal</em></span></div>
+              <div class="row"><span class="k">Ctrl+Q</span><span class="v">Quit</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span>Chat</span><span class="note">input focused</span></div>
+            <div class="card-rows">
+              <div class="row"><span class="k">⏎</span><span class="v">Send the prompt</span></div>
+              <div class="row"><span class="k">Ctrl+L</span><span class="v">Clear input</span></div>
+              <div class="row"><span class="k">Ctrl+R</span><span class="v">Re-run last flow</span></div>
+              <div class="row"><span class="k">/</span><span class="v">Command palette <em>/flow /ticker /model /depth /compressed …</em></span></div>
+              <div class="row"><span class="k">↑</span><span class="v">Recall previous prompt</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span>Settings</span><span class="note">modal scope</span></div>
+            <div class="card-rows" style="font-size: 11.5px;">
+              <div class="row"><span class="k">Esc</span><span class="v">Back to chat <em>cancels pending</em></span></div>
+              <div class="row"><span class="k">⏎</span><span class="v">Confirm in picker</span></div>
+              <div class="row"><span class="k">Ctrl+S</span><span class="v">Save &amp; close</span></div>
+              <div class="row"><span class="k">Ctrl+N</span><span class="v">+ add <em>provider / connector / override</em></span></div>
+              <div class="row"><span class="k">Ctrl+D</span><span class="v">Remove selected row</span></div>
+              <div class="row"><span class="k">e / ⏎</span><span class="v">Edit field row</span></div>
+              <div class="row"><span class="k">Tab</span><span class="v">Save &amp; advance <em>to next row</em></span></div>
+              <div class="row"><span class="k">1 / 2</span><span class="v">Pick toggle <em>depth · compressed</em></span></div>
+              <div class="row"><span class="k">↑/↓</span><span class="v">Rail</span></div>
+              <div class="row"><span class="k">→/←</span><span class="v">Section</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col B -->
+        <div class="col">
+          <div class="card">
+            <div class="card-head"><span>History</span><span class="note">modal scope</span></div>
+            <div class="card-rows">
+              <div class="row"><span class="k">Esc</span><span class="v">Back to chat</span></div>
+              <div class="row"><span class="k">⏎</span><span class="v">Drill into memo</span></div>
+              <div class="row"><span class="k">/</span><span class="v">Search past runs</span></div>
+              <div class="row"><span class="k">r</span><span class="v">Re-run this flow</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span>Citation</span><span class="note">chip → modal</span></div>
+            <div class="card-rows">
+              <div class="row"><span class="k">Esc / q</span><span class="v">Back to chat</span></div>
+              <div class="row"><span class="k">⏎</span><span class="v">Open URL in default browser</span></div>
+              <div class="row"><span class="k">y</span><span class="v">Copy selected URL</span></div>
+              <div class="row"><span class="k">↑/↓</span><span class="v">Navigate rows</span></div>
+              <div class="row"><span class="k">1–9</span><span class="v">Jump-and-open row</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><span>Help</span><span class="note">this modal</span></div>
+            <div class="card-rows">
+              <div class="row"><span class="k">Esc</span><span class="v">Close this modal</span></div>
+              <div class="row"><span class="k">?</span><span class="v">Toggle this modal <em>open or close</em></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sig">
+      <span class="source-label">source:</span>
+      <span class="source-path">docs/frontend/keys.py</span>
+      <span class="path">·  /Users/coleadams/.labourious/config.json  ·  —</span>
+    </div>
+    <div class="strip">
+      <span class="group">
+        <span class="label">help</span>
+        <span><span class="key">Esc</span> close</span>
+        <span><span class="key">?</span> toggle</span>
+      </span>
+      <span class="group">
+        <span class="label">here</span>
+        <span style="color: var(--fg3);">5 screens · 25 keys · grouped by context</span>
+      </span>
+      <span class="spacer"></span>
+      <span class="help">?  close</span>
+    </div>
+  </div>
+
+</div>
+
+<details>
+  <summary>Palette mapping (live TUI → this preview)</summary>
+  <div class="inner">
+    <ol>
+      <li><code>--bg</code> = <code>#0e1014</code> — Screen background</li>
+      <li><code>--bg-soft</code> = <code>#11141a</code> — Head / card-head / strip background</li>
+      <li><code>--bg-mid</code> = <code>#161a20</code> — Card body background</li>
+      <li><code>--bg-deep</code> = <code>#050608</code> — Modal body &amp; dimmed wash</li>
+      <li><code>--line</code> = <code>#465262</code> — Primary border (cards / head)</li>
+      <li><code>--line-soft</code> = <code>#2a3441</code> — Secondary border (footers / strip)</li>
+      <li><code>--fg</code> = <code>#d4d4d4</code> — Default body text</li>
+      <li><code>--fg2</code> = <code>#a0a5af</code> — Pair labels in the strip</li>
+      <li><code>--fg3</code> = <code>#6e7887</code> — Dim text (group label · hints · sig)</li>
+      <li><code>--brand</code> = <code>#8cdcdc</code> — Keys · titles · right help-tag</li>
+      <li><code>--sage</code> = <code>#8cd296</code> — Reserved (used elsewhere)</li>
+      <li><code>--amber</code> = <code>#e6c87e</code> — Reserved (used elsewhere)</li>
+    </ol>
+    <p style="color: var(--fg3); margin-top: 8px;">If the live TUI renders differently from this preview, fix the tokens in <code>docs/frontend/style.tcss</code>, not here.</p>
+  </div>
+</details>
+
+</body>
+</html>

@@ -526,3 +526,99 @@ InlineTextEditor .editor-input,
     padding: 0 2;
     border-top: solid #2a3441;
 }
+
+/* ============================================================ Help modal + StatusStrip
+   The Help modal + the per-screen bottom StatusStrip. Both owned by
+   keys.py (single source of truth for every binding). */
+
+HelpModalScreen > .help-modal-head {
+    background: #0e1014;
+    color: #d4d4d4;
+    height: 1;
+    padding: 0 2;
+    border-bottom: solid #465262;
+}
+
+HelpModalScreen > .help-modal-intro {
+    background: #161a20;
+    color: #a0a5af;
+    height: 1;
+    padding: 0 2;
+}
+
+HelpModalScreen > .help-modal-body {
+    background: #050608;
+    height: 1fr;
+    padding: 1 2 0 2;
+}
+
+HelpModalScreen > .help-modal-grid {
+    layout: horizontal;
+    height: auto;
+}
+
+HelpModalScreen > .help-modal-grid > .col {
+    width: 1fr;
+    height: auto;
+    padding: 0 1;
+}
+
+HelpModalScreen > .help-modal-grid > .col:first-child {
+    padding-left: 0;
+}
+
+HelpModalScreen > .help-modal-grid > .col:last-child {
+    padding-right: 0;
+}
+
+HelpModalScreen > .help-modal-sig {
+    background: #0e1014;
+    color: #6e7887;
+    height: 1;
+    padding: 0 2;
+    border-top: solid #2a3441;
+}
+
+/* Help cards inside the modal */
+HelpCard {
+    background: #161a20;
+    border: solid #465262;
+    height: auto;
+    margin: 0 0 1 0;
+}
+
+HelpCard > .help-card-head {
+    background: #11141a;
+    color: #8cdcdc;
+    text-style: bold;
+    height: 1;
+    padding: 0 1;
+}
+
+HelpCard > .help-card-rows > .help-row {
+    height: 1;
+    padding: 0 1;
+    margin: 0;
+}
+
+/* StatusStrip — universal bottom strip on every screen. */
+StatusStrip {
+    background: #11141a;
+    color: #a0a5af;
+    height: 1;
+    border-top: solid #2a3441;
+}
+
+StatusStrip > StatusStripLeft {
+    width: 1fr;
+    height: 1;
+}
+
+StatusStrip > StatusStripRight {
+    width: auto;
+    height: 1;
+    background: #11141a;
+    color: #8cdcdc;
+    text-style: bold;
+    padding: 0 1;
+}

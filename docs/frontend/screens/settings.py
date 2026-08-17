@@ -131,14 +131,22 @@ class SettingsScreen(Screen):
                     title=SECTIONS[self._rail_index],
                     meta=self._section_meta(SECTIONS[self._rail_index]),
                 )
-        # Footer strip
-        yield Static("", markup=False, classes="settings-foot", id="settings-foot")
+        # Footer strip — universal StatusStrip, screen-aware key hints.
+        from frontend.widgets.status_strip import StatusStrip   # type: ignore
+        yield StatusStrip()
 
     def on_mount(self) -> None:
         self._refresh_head()
         self._refresh_rail_selection()
         self._render_current_section()
+        # _refresh_foot() still updates the legacy per-screen foot Static (if
+        # present) — the new StatusStrip below now drives the universal strip.
         self._refresh_foot()
+        from frontend.widgets.status_strip import StatusStrip as _SS
+        try:
+            self.query_one(_SS).update_for(self)
+        except Exception:
+            pass
 
     # ---------------------------------------------------------- rail
     def _rail_label(self, section: str) -> str:

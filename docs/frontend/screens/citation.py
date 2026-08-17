@@ -221,12 +221,19 @@ class CitationModalScreen(Screen):
                 )
         # Transient toast under the body.
         yield Static("", markup=False, classes="citation-toast", id="citation-toast")
-        yield Static("", markup=False, classes="modal-foot", id="citation-foot")
+        # Universal StatusStrip replaces the per-screen foot Static.
+        from frontend.widgets.status_strip import StatusStrip   # type: ignore
+        yield StatusStrip()
 
     def on_mount(self) -> None:
         self._refresh_head()
         self._refresh_body()
         self._refresh_foot()
+        from frontend.widgets.status_strip import StatusStrip as _SS
+        try:
+            self.query_one(_SS).update_for(self)
+        except Exception:
+            pass
 
     # ------------------------------------------------------------------ head / body / foot
     def _refresh_head(self) -> None:

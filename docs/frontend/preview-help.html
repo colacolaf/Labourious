@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Labourious — Help modal + bottom strip preview (H2)</title>
+<style>
+  :root {
+    --bg:           #f6f3ec;
+    --bg-soft:      #ecead9;
+    --line:         #d8d4c2;
+    --ink:          #2b2a26;
+    --ink-soft:     #6e7c84;
+    --brand:        #0d6e6e;
+    --brand-soft:   #d6ecec;
+    --sage:         #5a8a4f;
+    --sage-soft:    #e0ead8;
+    --amber:        #b07a18;
+    --amber-soft:   #f3e6c8;
+    --coral:        #b04a3a;
+    --coral-soft:   #f0d8d2;
+    --pastel-filing:#7c5fa3;
+    --pastel-news:  #b07a18;
+    --pastel-macro: #4a82a8;
+    --pastel-web:   #6e7c84;
+    --pad:          14px;
+    --gap:          10px;
+    --hairline:     1px solid var(--line);
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); margin: 0; padding: 0; }
+  body {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.45;
+    padding: 22px;
+  }
+  h1 {
+    font-size: 15px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em;
+  }
+  .lede { color: var(--ink-soft); margin: 0 0 22px; max-width: 720px; }
+  .stack { display: grid; gap: 28px; margin-bottom: 32px; }
+  .stack > h2 {
+    font-size: 13px; font-weight: 600; margin: 0 0 2px; color: var(--brand);
+    letter-spacing: 0.02em;
+  }
+  .stack > .sub { font-size: 11.5px; color: var(--ink-soft); margin: 0 0 12px; max-width: 720px; }
+
+  /* --- frame: terminal-shaped --- */
+  .frame {
+    background: #fbf9f1;
+    border: var(--hairline);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 0 #00000010, 0 6px 24px #2b2a2612;
+    width: 920px;
+    max-width: 100%;
+  }
+  /* --- head bar --- */
+  .head {
+    display: flex; align-items: center;
+    padding: 9px var(--pad);
+    border-bottom: var(--hairline);
+    background: #fbf9f1;
+    gap: 10px;
+  }
+  .brand-dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--brand);
+    box-shadow: inset 0 0 0 2px #fbf9f1, 0 0 0 1px var(--brand);
+  }
+  .crumb { color: var(--ink); }
+  .crumb .sep { color: var(--ink-soft); margin: 0 4px; }
+  .crumb .here { color: var(--brand); font-weight: 600; }
+  .head .spacer { flex: 1; }
+  .head .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--sage-soft);
+    color: var(--sage);
+    border: 1px solid #c4d3b4;
+  }
+  .head .badge.warn { background: var(--amber-soft); color: var(--amber); border-color: #d8c290; }
+  .head .badge.dot::before {
+    content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; margin-right: 6px; vertical-align: 1px;
+  }
+  .head .path {
+    font-size: 11.5px; color: var(--ink-soft);
+  }
+
+  /* --- body --- */
+  .body {
+    padding: var(--pad);
+    min-height: 380px;
+    background: #fbf9f1;
+  }
+
+  /* --- bottom strip (always visible) --- */
+  .strip {
+    display: flex; align-items: center;
+    gap: 4px;
+    padding: 6px var(--pad);
+    border-top: var(--hairline);
+    background: var(--bg-soft);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+  .strip .group {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 10px 0 0;
+  }
+  .strip .group + .group { border-left: var(--hairline); padding-left: 10px; }
+  .strip .group .label {
+    color: var(--ink-soft); font-weight: 600; letter-spacing: 0.04em;
+    font-size: 10.5px; text-transform: uppercase;
+  }
+  .strip .key {
+    color: var(--brand); font-weight: 600;
+  }
+  .strip .label-pair { color: var(--ink); }
+  .strip .help-tag {
+    margin-left: auto;
+    color: var(--brand);
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--brand-soft);
+    background: var(--brand-soft);
+    font-size: 11px;
+  }
+
+  /* === shortcuts grid for the help modal === */
+  .help-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .col {
+    display: grid; gap: 14px;
+  }
+  .card {
+    border: var(--hairline);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .card .card-head {
+    padding: 8px 12px;
+    background: var(--bg-soft);
+    border-bottom: var(--hairline);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand);
+    display: flex; align-items: center;
+    justify-content: space-between;
+  }
+  .card .card-head .count {
+    color: var(--ink-soft); font-weight: 500; text-transform: none; letter-spacing: 0;
+  }
+  .card .rows { display: grid; }
+  .card .row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 12px;
+    padding: 7px 12px;
+    align-items: baseline;
+    border-bottom: var(--hairline);
+  }
+  .card .row:last-child { border-bottom: 0; }
+  .card .row .k {
+    font-weight: 600;
+    color: var(--brand);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card .row .v { color: var(--ink); }
+  .card .row .v .hint { color: var(--ink-soft); font-size: 11px; }
+
+  /* === chat body content (so the strip makes sense in context) === */
+  .chat-stub {
+    display: grid; gap: 14px;
+  }
+  .input {
+    border: var(--hairline);
+    border-radius: 8px;
+    background: #fff;
+    padding: 9px var(--pad);
+    font-family: inherit;
+    color: var(--ink);
+  }
+  .input .caret {
+    display: inline-block; width: 1px; height: 14px;
+    background: var(--brand); vertical-align: -2px;
+    margin-left: 1px; animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .settings-cards {
+    display: grid; gap: 14px;
+  }
+  .s-card {
+    border: var(--hairline);
+    border-radius: 8px;
+    background: #fff;
+    padding: 10px 12px;
+  }
+  .s-card .title {
+    color: var(--brand); font-weight: 600; font-size: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .s-card .meta { color: var(--ink-soft); font-size: 11px; margin-top: 2px; }
+  .s-card .rows { margin-top: 8px; display: grid; gap: 4px; }
+  .s-card .row-line {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+  .s-card .row-line.sel {
+    border-color: var(--brand);
+    box-shadow: inset 3px 0 0 var(--brand);
+    background: var(--brand-soft);
+  }
+  .s-card .row-line .nm { color: var(--ink); }
+  .s-card .row-line .vl { color: var(--ink-soft); }
+  .s-card .row-line .tag {
+    font-size: 10px; padding: 1px 7px; border-radius: 999px;
+    background: var(--bg-soft); color: var(--ink-soft); border: 1px solid var(--line);
+  }
+
+  /* === tweaks === */
+  details {
+    margin-top: 14px;
+    border: var(--hairline);
+    border-radius: 8px;
+    background: #fff;
+  }
+  details summary {
+    cursor: pointer;
+    padding: 9px 12px;
+    font-weight: 600;
+    color: var(--brand);
+  }
+  details .inner { padding: 6px 12px 14px; }
+  details .inner ol { margin: 6px 0 0; padding-left: 20px; }
+  details .inner li { margin: 4px 0; }
+
+  /* Prose for the help modal "intro" panel */
+  .help-intro {
+    border: var(--hairline);
+    border-radius: 8px;
+    background: var(--bg-soft);
+    padding: 9px 12px;
+    color: var(--ink);
+    display: flex; gap: 12px; align-items: center;
+  }
+  .help-intro .keycap {
+    color: var(--brand); font-weight: 700;
+    background: #fff;
+    border: 1px solid var(--brand-soft);
+    padding: 1px 8px; border-radius: 6px;
+    font-size: 11.5px;
+  }
+
+  /* help modal: tiny "open in settings/history" signpost row */
+  .signpost {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .signpost .sp {
+    border: var(--hairline);
+    border-radius: 8px;
+    padding: 7px 10px;
+    background: #fff;
+    font-size: 11.5px;
+    color: var(--ink);
+  }
+  .signpost .sp .lbl {
+    font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 600;
+  }
+  .signpost .sp b { color: var(--brand); }
+</style>
+</head>
+<body>
+
+<h1>Help modal + bottom strip preview · H2</h1>
+<p class="lede">
+  Two complementary affordances:
+  <b>HelpModal</b> on <code>?</code> — full reference, grouped by screen.
+  <b>Strip</b> at the bottom of every screen — always shows the keys for the
+  view the user is on. <code>?</code> toggles the modal in/out; <code>Esc</code> closes.
+</p>
+
+<div class="stack">
+
+  <!-- ============ Stack A — Chat screen, help CLOSED ============ -->
+  <h2>Stack A1 · Chat screen · help closed · bottom strip shows chat keys</h2>
+  <p class="sub">What the user sees 99% of the time. The strip tells them what they can do in this view, and the right-corner "?" pill reminds them help exists.</p>
+
+<div class="frame">
+  <div class="head">
+    <span class="brand-dot"></span>
+    <span class="crumb">Labourious <span class="sep">/</span> <span class="here">chat</span></span>
+    <span class="spacer"></span>
+    <span class="badge dot">ready · ollama/llama3.3:70b</span>
+    <span class="path">session 14:22</span>
+  </div>
+  <div class="body">
+    <div class="chat-stub">
+      <div class="input">> Analyze NVDA thesis for the next comp cycle<span class="caret"></span></div>
+    </div>
+  </div>
+  <div class="strip">
+    <span class="group">
+      <span class="label">chat</span>
+      <span><span class="key">⏎</span> <span class="label-pair">send</span></span>
+      <span><span class="key">Ctrl+L</span> <span class="label-pair">clear</span></span>
+      <span><span class="key">Ctrl+R</span> <span class="label-pair">re-run</span></span>
+      <span><span class="key">/</span> <span class="label-pair">commands</span></span>
+    </span>
+    <span class="group">
+      <span class="label">global</span>
+      <span><span class="key">s</span> <span class="label-pair">settings</span></span>
+      <span><span class="key">h</span> <span class="label-pair">history</span></span>
+    </span>
+    <span class="help-tag">? &nbsp;help</span>
+  </div>
+</div>
+
+  <!-- ============ Stack A2 — Settings screen, help CLOSED ============ -->
+  <h2>Stack A2 · Settings screen · help closed · strip switches to settings keys</h2>
+  <p class="sub">Same strip; different keys. The screen-aware section updates without any user action.</p>
+
+<div class="frame">
+  <div class="head">
+    <span class="brand-dot"></span>
+    <span class="crumb">Labourious <span class="sep">/</span> chat <span class="sep">/</span> <span class="here">settings</span></span>
+    <span class="spacer"></span>
+    <span class="badge dot">saved · ~/.labourious/config.json · 14:22</span>
+  </div>
+  <div class="body">
+    <div class="settings-cards">
+      <div class="s-card">
+        <div class="title"><span>providers</span><span class="meta">3 configured</span></div>
+        <div class="rows">
+          <div class="row-line"><span class="nm">anthropic</span><span class="vl">default · claude-sonnet-4-5</span><span class="tag">env</span></div>
+          <div class="row-line sel"><span class="nm">ollama</span><span class="vl">default · llama3.3:70b</span><span class="tag">up</span></div>
+          <div class="row-line"><span class="nm">groq</span><span class="vl">default · llama-3.3-70b-versatile</span><span class="tag">env</span></div>
+        </div>
+      </div>
+      <div class="s-card">
+        <div class="title"><span>default</span><span class="meta">current model · ollama/llama3.3:70b</span></div>
+        <div class="rows">
+          <div class="row-line"><span class="nm">model</span><span class="vl">ollama/llama3.3:70b</span><span class="tag">e edit</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="strip">
+    <span class="group">
+      <span class="label">settings</span>
+      <span><span class="key">⏎</span> <span class="label-pair">confirm</span></span>
+      <span><span class="key">e</span> <span class="label-pair">edit row</span></span>
+      <span><span class="key">Ctrl+S</span> <span class="label-pair">save &amp; close</span></span>
+      <span><span class="key">Ctrl+N</span> <span class="label-pair">+ add</span></span>
+      <span><span class="key">Ctrl+D</span> <span class="label-pair">remove</span></span>
+      <span><span class="key">Tab</span> <span class="label-pair">save &amp; advance</span></span>
+    </span>
+    <span class="group">
+      <span class="label">nav</span>
+      <span><span class="key">↑/↓</span> <span class="label-pair">rail</span></span>
+      <span><span class="key">→/←</span> <span class="label-pair">section</span></span>
+    </span>
+    <span class="group">
+      <span class="label">exit</span>
+      <span><span class="key">Esc</span> <span class="label-pair">back</span></span>
+    </span>
+    <span class="help-tag">? &nbsp;help</span>
+  </div>
+</div>
+
+  <!-- ============ Stack B — Help modal OPEN ============ -->
+  <h2>Stack B · Help modal open · full reference · grouped by screen</h2>
+  <p class="sub">Same head bar; the existing chat is dimmed; the modal fills the body. Grouped by where the keys apply. The strip and "?" tag stay visible — the user knows how they got here and how to leave.</p>
+
+<div class="frame">
+  <div class="head">
+    <span class="brand-dot"></span>
+    <span class="crumb">Labourious <span class="sep">/</span> <span class="here">help</span></span>
+    <span class="spacer"></span>
+    <span class="badge warn dot">? &nbsp;open</span>
+  </div>
+  <div class="body">
+    <div class="help-intro">
+      <span>Keyboard shortcuts — grouped by where they apply. Press <span class="keycap">?</span> to toggle, <span class="keycap">Esc</span> to close.</span>
+    </div>
+    <div class="signpost" style="margin-top: 12px;">
+      <div class="sp">
+        <div class="lbl">scope</div>
+        <b>·</b> 5 screens · 25 keys
+      </div>
+      <div class="sp">
+        <div class="lbl">return</div>
+        <b>Esc</b> closes
+      </div>
+      <div class="sp">
+        <div class="lbl">format</div>
+        <b>?</b> key · label
+      </div>
+    </div>
+
+    <div class="help-grid">
+      <!-- Column 1 -->
+      <div class="col">
+        <div class="card">
+          <div class="card-head">
+            <span>Global</span>
+            <span class="count">4 keys · any focus</span>
+          </div>
+          <div class="rows">
+            <div class="row"><span class="k">s</span><span class="v">Settings</span></div>
+            <div class="row"><span class="k">h</span><span class="v">History</span></div>
+            <div class="row"><span class="k">?</span><span class="v">Help <span class="hint">(toggle this modal)</span></span></div>
+            <div class="row"><span class="k">Ctrl+Q</span><span class="v">Quit</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span>Chat</span>
+            <span class="count">input focused</span>
+          </div>
+          <div class="rows">
+            <div class="row"><span class="k">⏎</span><span class="v">Send the prompt</span></div>
+            <div class="row"><span class="k">Ctrl+L</span><span class="v">Clear input</span></div>
+            <div class="row"><span class="k">Ctrl+R</span><span class="v">Re-run last flow</span></div>
+            <div class="row"><span class="k">/</span><span class="v">Command palette <span class="hint">/flow /ticker /model /paid-for /depth /compressed /settings /history /help /clear /quit</span></span></div>
+            <div class="row"><span class="k">↑</span><span class="v">Recall previous prompt</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span>History</span>
+            <span class="count">modal scope</span>
+          </div>
+          <div class="rows">
+            <div class="row"><span class="k">Esc</span><span class="v">Back to chat</span></div>
+            <div class="row"><span class="k">⏎ /click</span><span class="v">Drill into memo</span></div>
+            <div class="row"><span class="k">/</span><span class="v">Search past runs</span></div>
+            <div class="row"><span class="k">r</span><span class="v">Re-run this flow</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2 -->
+      <div class="col">
+        <div class="card">
+          <div class="card-head">
+            <span>Settings</span>
+            <span class="count">modal scope</span>
+          </div>
+          <div class="rows">
+            <div class="row"><span class="k">Esc</span><span class="v">Back to chat <span class="hint">(cancels pending)</span></span></div>
+            <div class="row"><span class="k">⏎</span><span class="v">Confirm selection in picker</span></div>
+            <div class="row"><span class="k">Ctrl+S</span><span class="v">Save &amp; close</span></div>
+            <div class="row"><span class="k">Ctrl+N</span><span class="v">+ add (provider / connector / override)</span></div>
+            <div class="row"><span class="k">Ctrl+D</span><span class="v">Remove selected row</span></div>
+            <div class="row"><span class="k">e / Enter</span><span class="v">Edit field row</span></div>
+            <div class="row"><span class="k">Tab</span><span class="v">Save &amp; advance to next row</span></div>
+            <div class="row"><span class="k">1 / 2</span><span class="v">Pick toggle option (depth · compressed)</span></div>
+            <div class="row"><span class="k">↑/↓</span><span class="v">Rail</span></div>
+            <div class="row"><span class="k">→/←</span><span class="v">Section</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span>Citation modal</span>
+            <span class="count">chip → modal</span>
+          </div>
+          <div class="rows">
+            <div class="row"><span class="k">Esc / q</span><span class="v">Back to chat</span></div>
+            <div class="row"><span class="k">⏎</span><span class="v">Open URL in default browser</span></div>
+            <div class="row"><span class="k">y</span><span class="v">Yank (copy) selected URL</span></div>
+            <div class="row"><span class="k">↑/↓</span><span class="v">Navigate rows</span></div>
+            <div class="row"><span class="k">1–9</span><span class="v">Jump-and-open row</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span>Help (this)</span>
+            <span class="count">modal scope</span>
+          </div>
+          <div class="rows">
+            <div class="row"><span class="k">Esc</span><span class="v">Close this modal</span></div>
+            <div class="row"><span class="k">?</span><span class="v">Toggle this modal <span class="hint">(open or close)</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="strip">
+    <span class="group">
+      <span class="label">help</span>
+      <span><span class="key">Esc</span> <span class="label-pair">close</span></span>
+      <span><span class="key">?</span> <span class="label-pair">toggle</span></span>
+    </span>
+    <span class="group">
+      <span class="label">here</span>
+      <span>5 screens · 25 keys · grouped by context</span>
+    </span>
+    <span class="help-tag">? &nbsp;close</span>
+  </div>
+</div>
+
+  <!-- ============ Stack C — Citation modal + help modal stacked ============ -->
+  <h2>Stack C · Reference stack: citation modal + help available</h2>
+  <p class="sub">Every modal layer can answer "what can I do here?" by pressing <code>?</code>. The strip's right tag is the consistent affordance across every screen.</p>
+
+<div class="frame">
+  <div class="head">
+    <span class="brand-dot"></span>
+    <span class="crumb">Labourious <span class="sep">/</span> chat <span class="sep">/</span> <span class="here">citations · final-report</span></span>
+    <span class="spacer"></span>
+    <span class="badge">6 sources · thesis_id 41 · v3</span>
+  </div>
+  <div class="body" style="padding: 14px;">
+    <div style="border: var(--hairline); border-radius: 8px; background: #fff; padding: 6px 12px; display: grid; grid-template-columns: 32px 100px 1fr 110px; gap: 12px; align-items: center;">
+      <span style="color: var(--brand); font-weight: 700;">①</span>
+      <span style="background: #ece5f3; color: var(--pastel-filing); padding: 2px 8px; border-radius: 999px; font-size: 11px; text-align: center;">● filing</span>
+      <span style="color: var(--ink); overflow: hidden; text-overflow: ellipsis;">www.sec.gov/Archives/edgar/data/0001045810/...</span>
+      <span style="color: var(--brand); text-align: right; font-weight: 600;">⌘ ↗ open</span>
+    </div>
+    <div style="border: var(--hairline); border-radius: 8px; background: #fff; padding: 6px 12px; display: grid; grid-template-columns: 32px 100px 1fr 110px; gap: 12px; align-items: center; margin-top: 6px; border-color: var(--brand); box-shadow: inset 3px 0 0 var(--brand); background: var(--brand-soft);">
+      <span style="color: var(--brand); font-weight: 700;">②</span>
+      <span style="background: #f3e6c8; color: var(--pastel-news); padding: 2px 8px; border-radius: 999px; font-size: 11px; text-align: center;">● news</span>
+      <span style="color: var(--ink); overflow: hidden; text-overflow: ellipsis;">www.reuters.com/markets/companies/NVDA/...</span>
+      <span style="color: var(--brand); text-align: right; font-weight: 600;">⌘ ↗ open</span>
+    </div>
+  </div>
+  <div class="strip">
+    <span class="group">
+      <span class="label">citation</span>
+      <span><span class="key">⏎</span> <span class="label-pair">open</span></span>
+      <span><span class="key">y</span> <span class="label-pair">copy</span></span>
+      <span><span class="key">↑/↓</span> <span class="label-pair">row</span></span>
+      <span><span class="key">1–9</span> <span class="label-pair">jump</span></span>
+    </span>
+    <span class="group">
+      <span class="label">exit</span>
+      <span><span class="key">Esc</span> <span class="label-pair">back</span></span>
+    </span>
+    <span class="help-tag">? &nbsp;help</span>
+  </div>
+</div>
+
+</div><!-- /stack -->
+
+<details>
+  <summary>12 optional tweaks</summary>
+  <div class="inner">
+    <ol>
+      <li>Move the persistent strip to the <b>top</b> instead of bottom (some apps prefer it above the input).</li>
+      <li>Add an in-modal <b>search input</b> at the top — filter keys by typing `/nvda`.</li>
+      <li>Drop the strip entirely — modal-only mode (H1) for users who hate the row.</li>
+      <li>Show the strip's keys in `<b>solid</b>` style and labels in soft gray (current), or invert (keys gray, labels bold).</li>
+      <li>Replace the right-corner "?" pill with a fixed corner <code>&lt;kbd&gt;?&lt;/kbd&gt;</code> badge in absolute bottom-right.</li>
+      <li>Group `Help` first (since it's the key the user just pressed), or last (less special).</li>
+      <li>Add a tiny <b>"source of truth"</b> footer note: "Bindings live in <code>docs/frontend/keys.py</code> — this modal renders them."</li>
+      <li>Stack the columns differently for narrow terminals (&lt;90 cols): collapse to one column.</li>
+      <li>For very wide terminals (&gt;120 cols), spread across 3 columns instead of 2.</li>
+      <li>Use ASCII `<code>Enter</code>` instead of `⏎`, plain `^` instead of `⌘`, for terminals that don't render glyphs.</li>
+      <li>Show the <i>current screen's</i> keys faintly in bold (highlight in-modal) so the user knows where they are.</li>
+      <li>Add a `<b>/</b>` jump-to-section key while modal is open (e.g. press `g` to jump to Global).</li>
+    </ol>
+  </div>
+</details>
+
+</body>
+</html>
