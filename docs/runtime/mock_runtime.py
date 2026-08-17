@@ -102,6 +102,7 @@ def run_mock_flow_stream(
     inputs: dict | None = None,
     model: str = "ollama/llama3.3:70b",
     paid_for: list[str] | None = None,
+    per_agent_model: dict[str, str] | None = None,
 ) -> Iterator[Any]:
     """
     Yield FlowStarted → ThesisPriorRead → 5×(AgentStarted → AgentChunk + cost →
@@ -122,6 +123,7 @@ def run_mock_flow_stream(
     depth = inputs.get("depth", "STANDARD")
     compressed = inputs.get("compressed", False)
     paid_for = paid_for or []
+    per_agent_model = per_agent_model or {}
 
     cumulative_in = 0
     cumulative_out = 0
@@ -155,10 +157,19 @@ def run_mock_flow_stream(
         agents_seen.append(agent_id)
         wc = _AGENT_LATENCY[agent_id]
         in_t, out_t = _AGENT_TOKENS[agent_id]
+        # Resolve the effective model so the AgentStarted event surfaces
+        # what the runtime *actually* picked. Precedence matches call_agent:
+        # per_agent_model[agent_id] > paid_for hybrid > chat default.
+        effective_model = per_agent_model.get(agent_id, model)
+        if agent_id not in per_agent_model and paid_for and agent_id in paid_for:
+            if agent_id == "final-report":
+                effective_model = "anthropic/claude-sonnet-4-5"
+            elif agent_id == "senior-analyst" and "anthropic" not in model:
+                effective_model = "anthropic/claude-sonnet-4-5"
 
         yield AgentStarted(
             agent_id=agent_id,
-            model=model,
+            model=effective_model,
             depth=depth,
             compressed=compressed,
         )

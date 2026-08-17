@@ -782,38 +782,55 @@ class SettingsScreen(Screen):
             self._render_defaults_body(body)
 
     def action_remove(self) -> None:
+        """Remove the **selected** row in the current section (not the
+        last one in dict order). Falls back to last if no selection state
+        is tracked for that section.
+        """
         if self._picker_open:
             return
         section = SECTIONS[self._rail_index]
+
+        def _remove_by_index(names: list[str]) -> str | None:
+            if not names:
+                return None
+            idx = self._row_index
+            if idx < 0 or idx >= len(names):
+                idx = len(names) - 1
+            return names[idx]
+
         if section == "providers":
             names = list(self._cfg.providers.keys())
-            if names:
-                removed = names[-1]   # simple: remove last in current order
+            removed = _remove_by_index(names)
+            if removed:
                 del self._cfg.providers[removed]
+                self._row_index = max(0, self._row_index - 1) if self._row_index > 0 else 0
                 self._persist()
                 self._render_current_section()
                 self._refresh_head()
         elif section == "connectors":
             names = list(self._cfg.connectors.keys())
-            if names:
-                removed = names[-1]
+            removed = _remove_by_index(names)
+            if removed:
                 del self._cfg.connectors[removed]
+                self._row_index = max(0, self._row_index - 1) if self._row_index > 0 else 0
                 self._persist()
                 self._render_current_section()
                 self._refresh_head()
         elif section == "per-agent":
             names = list(self._cfg.per_agent_model.keys())
-            if names:
-                removed = names[-1]
+            removed = _remove_by_index(names)
+            if removed:
                 del self._cfg.per_agent_model[removed]
+                self._row_index = max(0, self._row_index - 1) if self._row_index > 0 else 0
                 self._persist()
                 self._render_current_section()
                 self._refresh_head()
         elif section == "hybrid":
             names = self._cfg.hybrid_paid_for[:]
-            if names:
-                removed = names[-1]
+            removed = _remove_by_index(names)
+            if removed:
                 self._cfg.hybrid_paid_for.remove(removed)
+                self._row_index = max(0, self._row_index - 1) if self._row_index > 0 else 0
                 self._persist()
                 self._render_current_section()
                 self._refresh_head()

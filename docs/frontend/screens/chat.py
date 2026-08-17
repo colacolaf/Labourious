@@ -64,6 +64,8 @@ from frontend.events import (  # type: ignore
 from runtime.runtime import run_flow_stream  # type: ignore
 from runtime.mock_runtime import run_mock_flow_stream, mock_runtime_available  # type: ignore
 
+from frontend.config_io import load_config, save_config, Config  # type: ignore
+
 
 # --------------------------------------------------------------------------- #
 # Welcome screen (idle state — first launch)
@@ -119,9 +121,11 @@ class ChatScreen(Screen):
         self.last_user_prompt: str = ""
         # In-memory transcript of bubble ids (so we can clear / re-run).
         self._bubble_index: dict[str, MessageBubble] = {}
+        # Per-agent model overrides — populated from Config on init; refreshed
+        # when the Settings modal saves (see reload_config_from_disk below).
+        self.per_agent_model: dict[str, str] = {}
         # Last ThesisWritten event captured (used to populate the
-        # citation chip with real data, not just a count).
-        self._last_thesis: dict | None = None
+        # citation chip with real data, not just a count).        self._last_thesis: dict | None = None
 
     # --------------------------------------------------------------- compose
     def compose(self) -> ComposeResult:
@@ -159,6 +163,9 @@ class ChatScreen(Screen):
             self.query_one(_SS).update_for(self)
         except Exception:
             pass
+        # Read live config so default_model / depth / compressed /
+        # paid_for / per_agent_model reflect the user's most recent edit.
+        self.reload_config_from_disk()
 
     # ------------------------------------------------------------- public hooks (called by parent App)
     def set_status_footer(self, msg: str) -> None:
@@ -173,10 +180,68 @@ class ChatScreen(Screen):
 
     def set_model(self, model: str) -> None:
         self.model = model
+        # Persist to the on-disk config so Settings honors it too.
+        try:
+            cfg = load_config()
+            cfg.default_model = model
+            save_config(cfg)
+        except Exception:
+            pass
         self._update_footer_hint()
 
     def set_paid_for(self, agents: list[str]) -> None:
         self.paid_for = list(agents)
+        # Persist to on-disk config (`hybrid_paid_for`) for the Settings UI.
+        try:
+            cfg = load_config()
+            cfg.hybrid_paid_for = list(agents)
+            save_config(cfg)
+        except Exception:
+            pass
+        self._update_footer_hint()
+
+    def set_depth(self, depth: str) -> None:
+        if depth not in ("SCAN", "STANDARD", "DEEP"):
+            return
+        self.depth = depth
+        try:
+            cfg = load_config()
+            cfg.defaults_depth = depth
+            save_config(cfg)
+        except Exception:
+            pass
+        self._update_footer_hint()
+
+    def set_compressed(self, on: bool) -> None:
+        self.compressed = bool(on)
+        try:
+            cfg = load_config()
+            cfg.defaults_compressed = bool(on)
+            save_config(cfg)
+        except Exception:
+            pass
+        self._update_footer_hint()
+
+    def reload_config_from_disk(self) -> None:
+        """Re-read ~/.labourious/config.json into this ChatScreen's session
+        state. Called on mount and after the Settings modal pops."""
+        try:
+            cfg: Config = load_config()
+        except Exception:
+            return
+        # Don't clobber a higher-precedence /model command from the input
+        # palette; only update from disk if the user hasn't overridden
+        # recently. We treat env var LABOURIOUS_MODEL as the only override
+        # that wins on top of disk.
+        import os
+        if not os.environ.get("LABOURIOUS_MODEL"):
+            if cfg.default_model:
+                self.model = cfg.default_model
+        self.depth = cfg.defaults_depth or "STANDARD"
+        self.compressed = bool(cfg.defaults_compressed)
+        self.paid_for = list(cfg.hybrid_paid_for or [])
+        # Per-agent overrides from disk (used by the runtime adapter).
+        self.per_agent_model = dict(cfg.per_agent_model or {})
         self._update_footer_hint()
 
     def set_flow(self, flow_id: str) -> None:
@@ -264,10 +329,10 @@ class ChatScreen(Screen):
             return
         if cmd == "depth":
             if arg.upper() in ("SCAN", "STANDARD", "DEEP"):
-                self.depth = arg.upper()
+                self.set_depth(arg.upper())
             return
         if cmd == "compressed":
-            self.compressed = not self.compressed
+            self.set_compressed(not self.compressed)
             return
         # Unrecognised — surface in a bubble.
         bubble = MessageBubble(role="agent", agent_id="devils-advocate")
@@ -294,7 +359,8 @@ class ChatScreen(Screen):
             """Inner generator. Consumes events in a thread; schedules UI updates."""
             # Pick the runtime: mock for pilots/demos, real for production.
             src = run_mock_flow_stream if mock_runtime_available() else run_flow_stream
-            for event in src(flow_id, inputs, self.model, self.paid_for):
+            for event in src(flow_id, inputs, self.model, self.paid_for,
+                             per_agent_model=self.per_agent_model or None):
                 if not is_known(event):
                     continue
                 # Marshal back to the UI thread.

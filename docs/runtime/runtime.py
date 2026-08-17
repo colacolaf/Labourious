@@ -106,6 +106,7 @@ def call_agent(
     model_name: str,
     paid_for: list[str] | None = None,
     emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Calls an agent by loading its prompt, calling the model, parsing the JSON envelope.
@@ -114,11 +115,18 @@ def call_agent(
     If `emit_event` is provided, emits AgentStarted and AgentFinished around the call.
     AgentFailed is emitted (and re-raised) on unrecoverable errors so the TUI can
     surface partial progress.
+
+    Model-routing precedence (highest first):
+      1. `per_agent_model[agent_id]` — explicit override from the user
+         (Settings > per-agent section, or `/model <id>=<model>` syntax).
+      2. `paid_for` hybrid rule — final-report → Sonnet, senior-analyst → Sonnet.
+      3. `model_name` — the chat's default model.
     """
     system_prompt = load_prompt(agent_id)
-    # If --paid-for is set and this agent is in the list, override model.
     effective_model = model_name
-    if paid_for and agent_id in paid_for:
+    if per_agent_model and agent_id in per_agent_model:
+        effective_model = per_agent_model[agent_id]
+    elif paid_for and agent_id in paid_for:
         # Hybrid: senior-analyst -> free; final-report -> Sonnet by convention
         if agent_id == "final-report":
             effective_model = "anthropic/claude-sonnet-4-5"
@@ -179,6 +187,7 @@ def execute_flow_f1(
     model: str,
     paid_for: list[str] | None,
     emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """
     Flagship f1 — analyze ticker. Returns the final envelope (final-report JSON)
@@ -189,6 +198,8 @@ def execute_flow_f1(
         emit_event: optional callable invoked with typed Event dataclasses around
             each agent call. main() passes None (flat output to stdout);
             run_flow_stream() passes a hook that re-yields events to the TUI.
+        per_agent_model: optional dict mapping agent_id → model string. Wins
+            over `paid_for` and the default `model` for any agent listed.
     """
     register = ThesisRegister()
     prior_thesis = register.read_thesis(ticker, since_days=14)
@@ -203,7 +214,8 @@ def execute_flow_f1(
         "compressed": False,
     })
     orch_env, orch_cost = call_agent("orchestrator", orch_brief, model,
-                                     paid_for=paid_for, emit_event=emit_event)
+                                     paid_for=paid_for, emit_event=emit_event,
+                                     per_agent_model=per_agent_model)
 
     # Wave 2: senior-analyst
     sr_brief = json.dumps({
@@ -216,7 +228,8 @@ def execute_flow_f1(
         "compressed": False,
     })
     sr_env, sr_cost = call_agent("senior-analyst", sr_brief, model,
-                                 paid_for=paid_for, emit_event=emit_event)
+                                 paid_for=paid_for, emit_event=emit_event,
+                                 per_agent_model=per_agent_model)
 
     # Wave 3: forensic-accounting + devils-advocate (sequential; future: parallel)
     fa_brief = json.dumps({
@@ -227,7 +240,8 @@ def execute_flow_f1(
         "compressed": False,
     })
     fa_env, fa_cost = call_agent("forensic-accounting", fa_brief, model,
-                                 paid_for=paid_for, emit_event=emit_event)
+                                 paid_for=paid_for, emit_event=emit_event,
+                                 per_agent_model=per_agent_model)
 
     da_brief = json.dumps({
         "from": "senior-analyst",
@@ -238,7 +252,8 @@ def execute_flow_f1(
         "compressed": False,
     })
     da_env, da_cost = call_agent("devils-advocate", da_brief, model,
-                                 paid_for=paid_for, emit_event=emit_event)
+                                 paid_for=paid_for, emit_event=emit_event,
+                                 per_agent_model=per_agent_model)
 
     # Wave 4: final-report
     fr_brief = json.dumps({
@@ -251,7 +266,8 @@ def execute_flow_f1(
         "compressed": False,
     })
     final_env, final_cost = call_agent("final-report", fr_brief, model,
-                                       paid_for=paid_for, emit_event=emit_event)
+                                       paid_for=paid_for, emit_event=emit_event,
+                                       per_agent_model=per_agent_model)
 
     # Persist to thesis register
     thesis_row = register.write_thesis(
@@ -301,6 +317,7 @@ def run_flow_stream(
     inputs: dict[str, Any],
     model: str,
     paid_for: list[str] | None = None,
+    per_agent_model: dict[str, str] | None = None,
 ) -> Iterator[Any]:
     """
     Yield typed `Event` dataclasses as a flow progresses.
@@ -311,6 +328,9 @@ def run_flow_stream(
     callback), so this function never diverges from the CLI behaviour. New flows
     should add a corresponding `execute_flow_<id>` first, then a thin generator
     wrapper here that emits FlowStarted/ThesisPriorRead → per-agent → FlowFinished.
+
+    `per_agent_model` (optional) maps agent_id → model string and is forwarded
+    into `call_agent` for per-agent model routing.
     """
     if flow_id != "f1":
         raise NotImplementedError(
@@ -371,6 +391,7 @@ def run_flow_stream(
             model=model,
             paid_for=paid_for,
             emit_event=emit,
+            per_agent_model=per_agent_model,
         )
     except Exception as exc:
         # Drain everything the agent emitted before the crash, then FlowFailed.
