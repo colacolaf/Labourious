@@ -175,47 +175,59 @@ Plus a `register.py` module exposing:
 - Every f1 run starts by calling `read_thesis(ticker)` and surfaces the prior thesis in its conclusion if one exists.
 - Every f1 run ends by calling `write_thesis(...)`. The previous thesis is preserved; the new one is versioned.
 - `diff_thesis(...)` against the previous version surfaces in the final report under "What changed since we last looked."
-- Catalysts are queryable in CLI: `python register.py catalysts AAPL`.
+- Catalysts are queryable in CLI: `python register.py catalysts AAPL`.**Unblocks:** jobs 1, 4, and the missing trait #6 from the prior report (updating views when facts change). Without this, the system never compounds.
 
-**Unblocks:** jobs 1, 4, and the missing trait #6 from the prior report (updating views when facts change). Without this, the system never compounds.
+### 7. The TUI (`docs/frontend/`)
+
+**Goal:** A Python TUI (Textual v4 + Rich) the user actually interacts with — chat bubbles streaming per agent, a left activity sidebar, inline diff when a prior thesis exists, modal screens for Settings + History. Research + decision in [`FRONTEND-DECISION.md`](FRONTEND-DECISION.md).
+
+**Deliverable:** `python docs/frontend/app.py` launches the TUI. The user's first experience is identical to `python docs/runtime/runtime.py --flow f1 ...` but with progressive disclosure as agents complete.
+
+**Cost:** ~1500 lines of Python + ~150 lines of CSS. No new dependencies beyond `textual>=4`, `rich>=13`, `keyring>=24`, `tomli>=2` (see [`IMPLEMENTATION.md`](IMPLEMENTATION.md)).
+
+**Acceptance:**
+- Each event type from [`PROTOCOL.md`](frontend/PROTOCOL.md) renders correctly in the TUI.
+- `--dry-run` mode also works in the TUI (the wave plan is shown instead of running).
+- Modal screens (Settings, History) round-trip through `~/.labourious/config.json` and `docs/runtime/thesis_register/theses.db`.
+- Falls back gracefully to a no-key / unreachable-tool state without crashing.
+
+**Unblocks:** the audit's missing trait #8 (anticipation — the TUI surfaces the next 3 questions inline so the user can pre-seed them), plus real adoption (a TUI on the user's laptop is what they actually use).
 
 ---
 
 ## P1 — Once P0 is green
 
-### 7. Flow f2 — `docs/flows/f2-compare-tickers.md`
+### 8. Flow f2 — `docs/flows/f2-compare-tickers.md`
 
-Same 5 prompts, different wrapper. Inputs: 2–5 tickers + optional sector. Output: side-by-side normalized comparison, ranked. Same evals apply; same thesis register usage. **The flow files are the only new artifact.**
+Same 5 prompts, different wrapper. Inputs: 2–5 tickers + optional sector. Output: side-by-side normalized comparison, ranked. Same evals apply; same thesis register usage. **The flow file is the only new artifact.**
 
-### 8. Flow f3/f4 — earnings preview / review
+### 9. Flow f3/f4 — earnings preview / review
 
 Same prompts, scope narrowed to the next (or last) earnings event. **Reuses f1's wrapper with a different rubric.**
 
-### 9. Eval suite v2
+### 10. Eval suite v2
 
 Add tests for: prompt-cache hit-rate, abstention rate by connector failure, citation coverage by section, devil's-advocate minimum coverage (the bear case must include at least one argument not in the bull case).
 
-### 10. Agent prompt v2 cycles
+### 11. Agent prompt v2 cycles
 
-With the eval suite green, the system now has a feedback loop. Agent prompts are versioned (`senior-analyst_v1.md`, ..., `_vN.md`); the eval harness runs both and diffs outputs. This is where the prompts *get better* over time. Wharton's prize isn't the v1 — it's the steady improvement graph.
+With the eval suite green, the system now has a feedback loop. Agent prompts are versioned (`senior-analyst_v1.md`, ..., `_vN.md`); the eval harness runs both and diffs outputs. This is where the prompts *get better* over time. The Wharton target isn't the v1 — it's the steady improvement graph.
 
 ---
 
 ## P2 — Once P1 ships and a thesis register has ≥ 30 entries
 
-### 11. Flows f5–f8 (sector deep-dive, thematic screen, risk event, macro overlay) — all flow-only artifacts, no new agent prompts.
+### 12. Flows f5–f8 (sector deep-dive, thematic screen, risk event, macro overlay)
 
-### 12. Web UI or CLI
+Flow-only artifacts. **No new agent prompts.** Each flow wires up its prompt sequence via `run_flow_stream` (post-TUI) or its own orchestrator function (pre-TUI).
 
-Whichever the user uses more. Either is cheap after the runtime exists.
-
-### 13. Pluggable agents (knowledge packs only, not more analyst agents)
-
-`docs/prompts/pluggable/<sector>-pack.md`, loaded as a `<system-prompt-fragment>` into the senior-analyst prompt at runtime. New agents earn existence only via the v1 pluggable policy in [`DEFERRED.md`](DEFERRED.md).
-
-### 14. The Wharton-comp deliverables as flows f9/f10
+### 13. The Wharton-comp deliverables as flows f9/f10
 
 IPS drafting as `f9-ips-draft`. Final handed-in report as `f10-final-pitch`. The Wharton comp becomes **a config of f1 + f9 + f10**, not a different system.
+
+### 14. Pluggable agents (knowledge packs only, not more analyst agents)
+
+`docs/prompts/pluggable/<sector>-pack.md`, loaded as a `<system-prompt-fragment>` into the senior-analyst prompt at runtime. New agents earn existence only via the v1 pluggable policy in [`DEFERRED.md`](DEFERRED.md).
 
 ---
 

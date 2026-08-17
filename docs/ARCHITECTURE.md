@@ -1,8 +1,8 @@
 # ARCHITECTURE
 
-> Today: 5 prompts, 4 model adapters, 4 tool adapters, 1 thesis register, 5 evals, 8 flows. Local-first. Free-model-friendly. Phase: post-restructure, pre-runtime-build.
+> Today: 5 prompts, 4 model adapters, 4 tool adapters, 1 thesis register, 5 evals, 8 flows, **a Python TUI (Textual v4 + Rich)**. Local-first. Free-model-friendly. Phase: post-restructure, pre-runtime-build.
 
-The architecture is what *runs* — runtime — once it ships. Right now, it's the shape the codebase is committed to. The decisions are derived in [`RESTRUCTURING.md`](RESTRUCTURING.md) and constrained by [`CANNOT-DO.md`](CANNOT-DO.md). Build order is in [`ROADMAP.md`](ROADMAP.md).
+The architecture is what *runs* — runtime — once it ships. Right now, it's the shape the codebase is committed to. The decisions are derived in [`RESTRUCTURING.md`](RESTRUCTURING.md) and constrained by [`CANNOT-DO.md`](CANNOT-DO.md). Build order is in [`ROADMAP.md`](ROADMAP.md). The user-facing surface is a **TUI**, not a browser or Electron app — see [`FRONTEND-DECISION.md`](FRONTEND-DECISION.md) for the research that picked it.
 
 ---
 
@@ -141,7 +141,18 @@ Flows are **recipes**, not agents. They're thin: which prompts in what order, wh
 | f7 — Risk event | `docs/flows/f7-risk-event.md` | All 5 prompts | Event-driven rubric |
 | f8 — Macro overlay | `docs/flows/f8-macro-overlay.md` | Lead + forensic | Macro-frame rubric |
 
-### 6. Eval suite — `docs/runtime/evals/`
+### 6. The user surface — `docs/frontend/`
+
+The user interacts with the bench via a **Python TUI (Textual v4 + Rich)** — see [`FRONTEND-DECISION.md`](FRONTEND-DECISION.md) for the research that chose it (over Electron, local web app, or plain CLI). The TUI:
+
+- **Consumes events** from `runtime.run_flow_stream()` per [`PROTOCOL.md`](frontend/PROTOCOL.md).
+- **Renders** chat-style streaming markdown bubbles per agent ([`SPEC.md`](frontend/SPEC.md)).
+- **Shows** a left activity sidebar with per-agent status + cost totals; a `Diff` collapsible when a prior thesis exists; an inline `What changed` line if `f4` is in flight.
+- **Exposes modals** for Settings (edit `~/.labourious/config.json`) and History (browses the thesis register).
+
+The TUI is built **in-process** with the runtime (one Python process, one event iterator). No HTTP/IPC bridge, no Node shim, no Electron. Local-first, period.
+
+### 7. Eval suite — `docs/runtime/evals/`
 
 Five tests that **fail when discipline breaks**:
 

@@ -84,3 +84,29 @@ P0 items in order: runtime → f1 → evals → free-model adapter layer → too
 
 ### Planned (not yet built)
 - Electron app skeleton: chat UI, neutral orchestrator, agent runtime, connectors (web search / market data / SEC / news), file memory, config + keychain, in-app agent editor. See `docs/CONTEXT.md` and `docs/LABOURIOUS_ARCHITECTURE.md`.
+## [Unreleased] — Frontend decision: Python TUI (Textual v4 + Rich) (2026-08-16)
+
+### Summary
+Replacing the planned Electron desktop app with a Python TUI built on
+Textual v4 + Rich. Decision rationale in
+[`docs/FRONTEND-DECISION.md`](docs/FRONTEND-DECISION.md). Constraint
+that drove it: "not in the browser" + "simplicity is best" + "advanced
+chat feel." TUI ships the chat experience directly in the terminal,
+consumes an event stream from the runtime (no Chromium, no Electron,
+no Node build step).
+
+### Added
+- **`docs/FRONTEND-DECISION.md`** — research summary + decision matrix
+  (TUI vs. web app vs. Tauri vs. plain CLI vs. Electron). TL;DR: TUI
+  wins on every constraint.
+- **`docs/frontend/README.md`** + **`docs/frontend/SPEC.md`** + **`docs/frontend/SCREENS.md`** + **`docs/frontend/PROTOCOL.md`** + **`docs/frontend/IMPLEMENTATION.md`** — the TUI's spec, screen state machine, runtime↔TUI event protocol, and file plan with line budgets (~1500 lines of Python + ~150 lines of CSS).
+- Two stub subdirectories under `docs/frontend/`: `screens/` and `widgets/` (reserved for the future Python implementation; specs live in the parent files).
+
+### Changed
+- **`docs/ARCHITECTURE.md`** §Components — added § 6 "The user surface" describing the TUI; CLI/TUI parity. Runtime + TUI are in-process (one Python interpreter, one event iterator).
+- **`docs/ROADMAP.md`** — added the TUI as P0 item 7 (`docs/frontend/`); reshuffled flow-f2/f3/f4 to P1, f5-f8 to P2, and Wharton deliverables (f9/f10) to P2.
+
+---
+
+EOF
+
