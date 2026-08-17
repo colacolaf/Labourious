@@ -149,6 +149,8 @@ ConnectionBanner.error { color: #e19194; background: #1f1416; }
     border-left: thick #465262;
     background: #11141a;
     height: auto;
+    width: 100%;
+    overflow: hidden;
 }
 
 .bubble-user { border-left: thick #8cdcdc; background: #11141a; }
@@ -165,7 +167,10 @@ ConnectionBanner.error { color: #e19194; background: #1f1416; }
 .bubble-header {
     color: #6e7887;
     text-style: bold;
-    height: 1;
+    height: auto;
+    text-wrap: wrap;
+    overflow: hidden;
+    padding: 0 1 0 2;
 }
 
 .bubble-body {

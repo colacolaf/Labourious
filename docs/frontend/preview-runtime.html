@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Labourious — runtime → TUI streaming preview</title>
+<style>
+  :root {
+    --bg:        #0e1014;
+    --bg-soft:   #11141a;
+    --bg-mid:    #161a20;
+    --bg-deep:   #050608;
+    --line:      #465262;
+    --line-soft: #2a3441;
+    --fg:        #d4d4d4;
+    --fg2:       #a0a5af;
+    --fg3:       #6e7887;
+    --brand:     #8cdcdc;
+    --sage:      #8cd296;
+    --amber:     #e6c87e;
+    --coral:     #e1918c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg); color: var(--fg);
+    margin: 0; padding: 0;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px; line-height: 1.45;
+  }
+  body { padding: 22px; }
+  h1 { font-size: 15px; color: var(--brand); margin: 0 0 4px; }
+  .lede { color: var(--fg3); margin: 0 0 22px; max-width: 760px; }
+
+  .stack > h2 { font-size: 13px; color: var(--brand); margin: 0 0 4px; }
+  .stack > .sub { font-size: 11.5px; color: var(--fg3); margin: 0 0 14px; max-width: 760px; }
+  .stack { display: grid; gap: 30px; margin-bottom: 30px; }
+
+  /* === FRAME === */
+  .frame {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    width: 1000px;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 30px 1fr 26px 30px;
+    grid-template-areas:
+      "head  head"
+      "side  chat"
+      "side  cost"
+      "foot  foot";
+  }
+  .head {
+    grid-area: head;
+    background: var(--bg); color: var(--fg);
+    border-bottom: 1px solid var(--line);
+    padding: 0 10px; height: 30px; line-height: 30px;
+    display: flex; gap: 12px; align-items: center;
+    font-size: 12px;
+  }
+  .head .crumb { color: var(--fg3); }
+  .head .crumb .here { color: var(--brand); }
+  .head .right { margin-left: auto; color: var(--sage); display: flex; gap: 12px; }
+  .head .right .pill { padding: 1px 8px; border: 1px solid #2f5e3a; background: #11241a; color: var(--sage); border-radius: 999px; font-size: 11px; }
+
+  .side {
+    grid-area: side;
+    background: var(--bg-soft);
+    border-right: 1px solid var(--line);
+    padding: 8px 10px;
+    font-size: 11.5px;
+    color: var(--fg2);
+  }
+  .side h4 {
+    margin: 0 0 4px; font-size: 10.5px; color: var(--fg3);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .agent-row { display: grid; grid-template-columns: 14px 1fr auto; gap: 8px; padding: 1px 0; }
+  .agent-row .glyph { font-weight: 700; }
+  .agent-row .nm { color: var(--fg); }
+  .agent-row .tm { color: var(--fg3); font-size: 11px; }
+  .agent-row.done .glyph { color: var(--sage); }
+  .agent-row.running .glyph { color: var(--amber); }
+  .agent-row.failed .glyph { color: var(--coral); }
+  .agent-row.queued .glyph  { color: var(--fg3); }
+  .cost-row { color: var(--fg3); font-size: 11px; padding: 1px 0; }
+  .cost-row b { color: var(--sage); }
+
+  .chat {
+    grid-area: chat;
+    background: var(--bg-deep);
+    padding: 10px 14px;
+    min-height: 460px;
+    font-size: 12.5px;
+  }
+  .user-bubble {
+    background: var(--bg-mid);
+    border: 1px solid var(--line);
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+  .user-bubble .who { color: var(--fg3); font-size: 11px; }
+  .user-bubble .body { color: var(--fg); white-space: pre-wrap; }
+
+  .agent-bubble {
+    border: 1px solid var(--line-soft);
+    background: var(--bg-mid);
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+  .agent-bubble .hdr {
+    display: flex; gap: 10px; align-items: center;
+    color: var(--fg2); font-size: 11px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 6px;
+  }
+  .agent-bubble .hdr .nm { color: var(--brand); font-weight: 600; }
+  .agent-bubble .hdr .st { color: var(--amber); }   /* running */
+  .agent-bubble .hdr .st.ok { color: var(--sage); }
+  .agent-bubble .hdr .st.fail { color: var(--coral); }
+  .agent-bubble .body { color: var(--fg); white-space: pre-wrap; }
+  .agent-bubble .meta { color: var(--fg3); font-size: 11px; padding-top: 4px; border-top: 1px solid var(--line-soft); margin-top: 6px; }
+
+  .thesis-bubble {
+    border: 1px solid var(--line);
+    background: var(--bg-mid);
+    padding: 8px 12px;
+    margin-bottom: 8px;
+  }
+  .thesis-bubble .hdr {
+    display: flex; gap: 10px; align-items: center;
+    color: var(--fg2); font-size: 11px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 6px;
+  }
+  .thesis-bubble .hdr .nm { color: var(--brand); font-weight: 700; }
+  .thesis-bubble .body b { color: var(--brand); }
+  .thesis-bubble hr { border: 0; border-top: 1px dashed var(--line-soft); margin: 8px 0; }
+
+  .chip {
+    display: inline-block; padding: 1px 8px; border-radius: 999px;
+    background: var(--bg-soft); border: 1px solid var(--line);
+    color: var(--brand); font-size: 11px; cursor: pointer;
+  }
+  .chip.add { background: #11241a; border-color: #2f5e3a; color: var(--sage); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
+
+  /* Cost strip below chat */
+  .cost {
+    grid-area: cost;
+    background: var(--bg-soft);
+    border-top: 1px solid var(--line-soft);
+    padding: 4px 14px;
+    color: var(--fg2);
+    font-size: 11.5px;
+    display: flex; gap: 14px; align-items: center;
+  }
+  .cost b { color: var(--sage); }
+  .cost .label { color: var(--fg3); }
+
+  .foot {
+    grid-area: foot;
+    background: var(--bg-soft);
+    border-top: 1px solid var(--line);
+    padding: 4px 14px;
+    color: var(--fg2); font-size: 11.5px;
+    display: flex; gap: 16px; align-items: center;
+  }
+  .foot .key { color: var(--brand); font-weight: 600; }
+  .foot .label { color: var(--fg3); text-transform: uppercase; font-size: 10.5px; font-weight: 600; }
+  .foot .spacer { flex: 1; }
+  .foot .help { color: var(--brand); font-weight: 700; padding: 2px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 0; font-size: 11px; }
+
+  /* Mini-status row (used by T3) */
+  .mini-row {
+    background: var(--bg-soft); border: 1px solid var(--line-soft);
+    padding: 4px 10px; margin-bottom: 8px;
+    display: flex; gap: 14px; align-items: center;
+    font-size: 11.5px;
+  }
+  .mini-row .step { display: flex; gap: 6px; align-items: center; color: var(--fg2); }
+  .mini-row .step b { color: var(--brand); }
+  .mini-row .step.running b { color: var(--amber); }
+  .mini-row .step.done b    { color: var(--sage); }
+  .mini-row .step .t { color: var(--fg3); font-size: 10.5px; }
+
+  /* Diff block (T1) */
+  .diff {
+    background: var(--bg-soft);
+    border: 1px solid var(--line-soft);
+    padding: 6px 10px;
+    margin: 6px 0;
+    font-size: 11.5px;
+    color: var(--fg2);
+  }
+  .diff .head {
+    color: var(--brand); font-weight: 700; font-size: 11px;
+    padding-bottom: 4px; border-bottom: 1px solid var(--line-soft);
+  }
+  .diff .row { padding: 1px 0; }
+  .diff .add { color: var(--sage); }
+  .diff .del { color: var(--coral); text-decoration: line-through; }
+  .diff .ctx { color: var(--fg2); }
+
+  details {
+    margin-top: 18px; border: 1px solid var(--line);
+    background: var(--bg-soft); padding: 0;
+  }
+  details summary { cursor: pointer; padding: 8px 12px; color: var(--brand); font-weight: 600; }
+  details .inner { padding: 6px 14px 14px; }
+  details ol { margin: 6px 0 0; padding-left: 20px; }
+  details li { margin: 4px 0; }
+  code { background: var(--bg-deep); color: var(--brand); padding: 1px 5px; }
+
+  /* Tag */
+  .verdict {
+    display: inline-block; padding: 2px 8px; border-radius: 0;
+    font-size: 11px; margin-left: 8px;
+    background: var(--bg-soft); color: var(--brand); border: 1px solid var(--line);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<h1>End-to-end runtime → TUI streaming preview</h1>
+<p class="lede">
+  Three templates for how streamed runtime events (<code>FlowStarted</code>,
+  <code>AgentStarted</code>, <code>AgentChunk</code>, <code>AgentFinished</code>,
+  <code>CostDelta</code>, <code>ThesisWritten</code>, <code>FlowFinished</code>) appear
+  in the chat pane. The TUI is dark; the templates are realistic width-1000 frames so
+  you can read what's actually on screen at the end of a flow.
+</p>
+
+<div class="stack">
+
+  <!-- =========================== STACK 1: Sequential bubbles =========================== -->
+  <h2>T1 — Sequential bubbles <span class="verdict">closest to current SPEC</span></h2>
+  <p class="sub">Every agent gets its own bubble. Streaming deltas append into a RichLog inside each bubble. Final-report = one big bubble. CitationChip + DiffPanel mounted under it. Sidebar tracks all 5 agents in tandem. This is what <code>chat._apply_event</code> already produces.</p>
+
+  <div class="frame">
+    <div class="head">
+      <span class="crumb">● Labourious / chat · <span class="here">f1 · ollama/llama3.3:70b</span></span>
+      <span class="right">
+        <span class="pill">connected</span>
+        <span class="pill">f1 · STANDARD</span>
+      </span>
+    </div>
+
+    <div class="side">
+      <h4>Activity</h4>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">orchestrator</span><span class="tm">0.4s</span></div>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">senior-analyst</span><span class="tm">2.1s</span></div>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">forensic-acc…</span><span class="tm">3.4s</span></div>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">devils-advocate</span><span class="tm">2.0s</span></div>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">final-report</span><span class="tm">1.5s</span></div>
+      <h4 style="margin-top:14px">Cost</h4>
+      <div class="cost-row">in  <b>4.2k</b> out <b>1.1k</b></div>
+      <div class="cost-row">est <b>$0.00</b> · all-local</div>
+      <h4 style="margin-top:14px">Thesis register</h4>
+      <div class="cost-row">▾ NVDA · v3 just written · <b>4/5</b></div>
+      <div class="cost-row">▸ v2 (3d ago) 4/5</div>
+    </div>
+
+    <div class="chat">
+      <div class="user-bubble">
+        <div class="who">▌12:34:51  user</div>
+        <div class="body">Analyze NVDA at $890 — is the moat holding up after the Q3 print?</div>
+      </div>
+
+      <div class="agent-bubble">
+        <div class="hdr">
+          <span class="nm">① orchestrator</span> <span class="st ok">✓ 0.4s · MEDIUM</span>
+        </div>
+        <div class="body">Routing to <b>f1</b> (Analyze ticker). Reading 4 prior theses for NVDA. Choosing STANDARD depth, free-model stack.</div>
+      </div>
+
+      <div class="agent-bubble">
+        <div class="hdr">
+          <span class="nm">② senior-analyst</span> <span class="st ok">✓ 2.1s · MEDIUM</span>
+        </div>
+        <div class="body">Wide-moat franchise intact at $890. Price 22% above base-case $728. Two identified legs: (1) data-center capex still ramping; (2) software-traction metrics (NIM) holding &gt;70%. <i>Confidence MEDIUM because the
+mid-cap peer set has compressed and earnings dispersion is wide this cycle.</i></div>
+      </div>
+
+      <div class="agent-bubble">
+        <div class="hdr">
+          <span class="nm">③ forensic-accounting</span> <span class="st ok">✓ 3.4s · MEDIUM</span>
+        </div>
+        <div class="body">Note 2(b) of the 10-Q: revenue recognition policy shifted in Q2 — multi-year license renewals now booked upfront. <b>Caveat:</b> owners' earnings ≠ reported earnings; the gap is ~$0.9B over TTM. None of this is fraud; flag as <i>transparency risk</i>.</div>
+      </div>
+
+      <div class="agent-bubble">
+        <div class="hdr">
+          <span class="nm">④ devils-advocate</span> <span class="st ok">✓ 2.0s · MEDIUM</span>
+        </div>
+        <div class="body">Steelmanned bull breaks on three legs: (1) China-export controls re-tightening Q4; (2) hyperscaler capex cut chatter; (3) Blackwell ramp slips beyond Q1. None are confirmed &mdash; all are <b>known unknowns</b>. Flip trigger: ≤ $720 OR confirmatory 10-Q.</div>
+      </div>
+
+      <div class="thesis-bubble">
+        <div class="hdr">
+          <span class="nm">⑤ final-report</span> <span class="st ok">✓ 1.5s · HIGH · 4/5</span>
+          <span class="pill" style="background: #11241a; border: 1px solid #2f5e3a; color: var(--sage); padding: 1px 8px; border-radius: 999px; font-size: 11px;">v3 · thesis_id 41</span>
+        </div>
+        <div class="body">
+          <b># Bottom line — HOLD (4/5)</b><br>
+          Wide-moat franchise at $890 carries 22% premium to base-case $728. The thesis
+          survives the Q3 print because earnings dispersion is wider than usual, not
+          because the fundamentals are weakening.<br>
+          <b>## Bull case</b> — DC capex still tailwinds; software-traction metrics holding NIM &gt;70%.<br>
+          <b>## Bear case</b> — revenue-recognition shift (Note 2(b)) erodes transparency; China-export controls re-tighten Q4.<br>
+          <b>## What an attacker would say</b> — pay 3.0×-4.5× sales on a stock whose franchise you can't isolate from the AI-cycle narrative.<br>
+          <b>## Flip trigger</b> — ≤ $720 OR confirmatory 10-Q shows owners' earnings &lt; reported.
+        </div>
+        <div class="meta">
+          Citations (6)  ·
+          <span class="chip">● sec.gov &nbsp;✕ 2</span>
+          <span class="chip">● reuters.com &nbsp;✕ 1</span>
+          <span class="chip">● ft.com &nbsp;✕ 1</span>
+          <span class="chip">● fred.stlouisfed.org &nbsp;✕ 1</span>
+          <span class="chip">● wsj.com &nbsp;✕ 1</span>
+          &nbsp;<span class="chip add">⌘ ↗ open all</span>
+          <div class="diff" style="margin: 8px 0 0;">
+            <div class="head">▾ Diff vs v2 (3d ago)</div>
+            <div class="row del">− price 28% above base-case</div>
+            <div class="row add">+ price 22% above base-case</div>
+            <div class="row ctx">  flip trigger &lt;= $720 OR confirmatory 10-Q</div>
+            <div class="row ctx">  conviction unchanged at 4/5</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cost">
+      <span class="label">cost</span>
+      <span>in <b>4.2k</b></span>
+      <span>out <b>1.1k</b></span>
+      <span>est <b>$0.00</b></span>
+      <span>cum <b>$0.00</b></span>
+      <span style="margin-left: auto; color: var(--fg3);">last cost-delta was CostDelta</span>
+    </div>
+
+    <div class="foot">
+      <span><span class="label">chat</span> <span class="key">⏎</span> send <span class="key">/</span> commands <span class="key">Ctrl+R</span> re-run <span class="key">Ctrl+L</span> clear</span>
+      <span><span class="label">global</span> <span class="key">s</span> settings <span class="key">h</span> history</span>
+      <span class="spacer"></span>
+      <span class="help">?  help</span>
+    </div>
+  </div>
+
+  <!-- =========================== STACK 2: Single merged log =========================== -->
+  <h2>T2 — Single merged log <span class="verdict">compact, chronological</span></h2>
+  <p class="sub">All agent output collapses into ONE RichLog "agent log" bubble. Each line is a timestamped signal: <code>12:34:58 senior-analyst: ...</code>. Final-report gets its own thick card at the bottom. Pros: tighter, easier to scan. Cons: harder to attribute single chunks to agents.</p>
+
+  <div class="frame">
+    <div class="head">
+      <span class="crumb">● Labourious / chat · <span class="here">f1 · ollama/llama3.3:70b</span></span>
+      <span class="right">
+        <span class="pill">connected</span>
+        <span class="pill">f1 · STANDARD</span>
+      </span>
+    </div>
+    <div class="side">
+      <h4>Activity</h4>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">orchestrator</span><span class="tm">0.4s</span></div>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">senior-analyst</span><span class="tm">2.1s</span></div>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">forensic-acc…</span><span class="tm">3.4s</span></div>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">devils-advocate</span><span class="tm">2.0s</span></div>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">final-report</span><span class="tm">1.5s</span></div>
+    </div>
+    <div class="chat">
+      <div class="user-bubble">
+        <div class="who">▌12:34:51  user</div>
+        <div class="body">Analyze NVDA at $890 — is the moat holding up after the Q3 print?</div>
+      </div>
+
+      <div class="agent-bubble">
+        <div class="hdr"><span class="nm">● agent log</span> <span class="st ok">12:34:51 → 12:35:24 — 14.0s wallclock · 5 agents</span></div>
+        <div class="body" style="font-size: 11.5px; color: var(--fg2);">
+          <b>12:34:51</b>  orchestrator    Routing to <b style="color:var(--brand);">f1</b>. Reading 4 prior theses for NVDA. Choosing STANDARD depth, free-model stack.<br>
+          <b>12:34:55</b>  orchestrator    ✓ 0.4s · MEDIUM · ~120 in · ~80 out · $0.00<br>
+          <b>12:34:56</b>  senior-analyst  Wide-moat franchise intact at $890. Price 22% above base-case $728 …<br>
+          <b>12:34:58</b>  senior-analyst  Confidence MEDIUM because mid-cap peer set compressed and earnings dispersion is wide …<br>
+          <b>12:35:00</b>  senior-analyst  ✓ 2.1s · MEDIUM · ~1180 in · ~210 out · $0.00<br>
+          <b>12:35:01</b>  forensic-acc    Note 2(b): revenue-recognition shift — multi-year license renewals booked upfront.<br>
+          <b>12:35:04</b>  devils-advocate Steelmanned bull breaks on three legs: (1) China-export controls re-tighten Q4 …<br>
+          <b>12:35:08</b>  devils-advocate ✓ 2.0s · MEDIUM · ~720 in · ~140 out · $0.00<br>
+          <b>12:35:09</b>  final-report    Bottom line: HOLD (4/5). Wide-moat franchise at $890 …<br>
+          <b>12:35:11</b>  final-report    ✓ 1.5s · HIGH · 4/5 · citation list (6) attached<br>
+        </div>
+      </div>
+
+      <div class="thesis-bubble">
+        <div class="hdr">
+          <span class="nm">▌ final-report · v3 · 4/5</span>
+          <span class="st ok">✔ HIGH</span>
+          <span class="pill" style="background: #11241a; border: 1px solid #2f5e3a; color: var(--sage); padding: 1px 8px; border-radius: 999px; font-size: 11px;">thesis_id 41</span>
+        </div>
+        <div class="body">
+          <b># Bottom line — HOLD (4/5)</b><br>
+          Wide-moat franchise at $890 carries 22% premium to base-case $728 …<br>
+          <b>## Bull case</b> — DC capex tailwinds; software NIM &gt;70%.<br>
+          <b>## Bear case</b> — Note 2(b) transparency risk; China-export controls re-tighten Q4.<br>
+          <b>## Flip trigger</b> — ≤ $720 OR confirmatory 10-Q<br>
+        </div>
+        <div class="meta">
+          <div class="chips">
+            <span class="chip">● sec.gov</span>
+            <span class="chip">● reuters.com</span>
+            <span class="chip">● ft.com</span>
+            <span class="chip">● fred.stlouisfed.org</span>
+            <span class="chip">● wsj.com</span>
+            <span class="chip add">⌘ ↗ open</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cost">
+      <span class="label">cost</span>
+      <span>in <b>4.2k</b></span>
+      <span>out <b>1.1k</b></span>
+      <span>est <b>$0.00</b></span>
+    </div>
+    <div class="foot">
+      <span><span class="label">chat</span> <span class="key">⏎</span> send <span class="key">Ctrl+R</span> re-run</span>
+      <span><span class="label">global</span> <span class="key">s</span> <span class="key">h</span> <span class="key">?</span></span>
+      <span class="spacer"></span>
+      <span class="help">?  help</span>
+    </div>
+  </div>
+
+  <!-- =========================== STACK 3: Mini-status row + recap-only bubbles =========================== -->
+  <h2>T3 — Mini-status row + recap-only bubbles <span class="verdict">cleanest chat</span></h2>
+  <p class="sub">A narrow mini-status row at the top of every run shows <b>all 5 agents as inline status pills</b> with their wallclock. Below it: only the final-report gets a full thesis bubble; other agents get one-line recap cards OR collapse into a single "agent recaps" rail. Chat reads like one memo, not five API dumps.</p>
+
+  <div class="frame">
+    <div class="head">
+      <span class="crumb">● Labourious / chat · <span class="here">f1 · ollama/llama3.3:70b</span></span>
+      <span class="right">
+        <span class="pill">connected</span>
+        <span class="pill">f1 · STANDARD</span>
+      </span>
+    </div>
+    <div class="side">
+      <!-- side mirrors the same as T1 but compact -->
+      <h4>Activity</h4>
+      <div class="agent-row done"><span class="glyph">✓</span><span class="nm">5 of 5 done</span><span class="tm">14.0s</span></div>
+      <h4 style="margin-top:14px">Cost</h4>
+      <div class="cost-row">in <b>4.2k</b> out <b>1.1k</b></div>
+      <div class="cost-row">est <b>$0.00</b></div>
+      <h4 style="margin-top:14px">Thesis register</h4>
+      <div class="cost-row">▾ NVDA · v3 · <b>4/5</b></div>
+    </div>
+    <div class="chat">
+      <div class="user-bubble">
+        <div class="who">▌12:34:51  user</div>
+        <div class="body">Analyze NVDA at $890 — is the moat holding up after the Q3 print?</div>
+      </div>
+
+      <!-- Mini status row at top of the chat -->
+      <div class="mini-row">
+        <span class="step done"><b>① orch</b> <span class="t">0.4s</span></span>
+        <span class="step done"><b>② senior</b> <span class="t">2.1s</span></span>
+        <span class="step done"><b>③ forensic</b> <span class="t">3.4s</span></span>
+        <span class="step done"><b>④ devils</b> <span class="t">2.0s</span></span>
+        <span class="step done"><b>⑤ final</b> <span class="t">1.5s</span></span>
+        <span style="margin-left:auto; color: var(--fg3);"><span class="t">14.0s wall · all MEDIUM</span></span>
+      </div>
+
+      <!-- Single consolidated "agent recaps" rail -->
+      <div class="agent-bubble">
+        <div class="hdr"><span class="nm">▌ agent recaps</span> <span class="st ok">5 agents · click ▸ to expand</span></div>
+        <div class="body" style="font-size: 11.5px;">
+          <b>① orchestrator · 0.4s</b> <span style="color:var(--fg3);">— Routing to f1. Reading 4 prior theses; STANDARD + free stack.</span><br>
+          <b>② senior-analyst · 2.1s</b> <span style="color:var(--fg3);">— Wide-moat intact at $890; 22% above $728 base. NIM &gt;70%, DC capex tailwinds.</span><br>
+          <b>③ forensic-accounting · 3.4s</b> <span style="color:var(--fg3);">— Note 2(b): rev-rec shift; owners' earnings &lt; reported by ~$0.9B TTM. Transparency risk.</span><br>
+          <b>④ devils-advocate · 2.0s</b> <span style="color:var(--fg3);">— Steelmanned bull breaks on three legs: China-export, hyperscaler cuts, Blackwell ramp.</span><br>
+        </div>
+      </div>
+
+      <div class="thesis-bubble">
+        <div class="hdr">
+          <span class="nm">▌ final-report · thesis_id 41</span>
+          <span class="st ok">4/5 · HIGH</span>
+        </div>
+        <div class="body">
+          <b># Bottom line — HOLD (4/5)</b><br>
+          Wide-moat franchise at $890 carries 22% premium to base-case $728. The thesis
+          survives the Q3 print because earnings dispersion is wider than usual, not
+          because the fundamentals are weakening.<br>
+          <b>## Bull case</b> — DC capex tailwinds; software-traction metrics holding NIM &gt;70%.<br>
+          <b>## Bear case</b> — Note 2(b) transparency risk; China-export controls re-tighten Q4.<br>
+          <b>## What an attacker would say</b> — pay 3.0×-4.5× sales on a franchise you can't isolate from the AI-cycle narrative.<br>
+          <b>## Flip trigger</b> — ≤ $720 OR confirmatory 10-Q shows owners' earnings &lt; reported.
+        </div>
+        <div class="meta">
+          <div class="chips">
+            <span class="chip">filing · 2</span>
+            <span class="chip">news · 2</span>
+            <span class="chip">macro · 1</span>
+            <span class="chip">web · 1</span>
+            <span class="chip add">⌘ ↗ open all 6</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cost">
+      <span class="label">cost</span>
+      <span>in <b>4.2k</b></span>
+      <span>out <b>1.1k</b></span>
+      <span>est <b>$0.00</b></span>
+    </div>
+
+    <div class="foot">
+      <span><span class="label">chat</span> <span class="key">⏎</span> send <span class="key">Ctrl+R</span> re-run <span class="key">Ctrl+L</span> clear</span>
+      <span><span class="label">global</span> <span class="key">s</span> settings <span class="key">h</span> history <span class="key">?</span></span>
+      <span class="spacer"></span>
+      <span class="help">?  help</span>
+    </div>
+  </div>
+
+</div>
+
+<details>
+  <summary>Choosing: which one is "this is the system working"?</summary>
+  <div class="inner">
+    <ol>
+      <li><b>T1 (sequential bubbles)</b> — every event becomes a visible widget. The richest audit trail; reviewers can point to a specific agent's bubble for a specific claim. Downside: chat gets long; final report competes with other output.</li>
+      <li><b>T2 (merged log)</b> — one timeline, hard to skim. The deliverable becomes one chronological wall. Good for "I want to see everything that happened."</li>
+      <li><b>T3 (mini-status + recap)</b> — chat reads like one memo. The recap rail collapses per-agent prose; only the final thesis is fully expanded. Mini-row at top always shows complete progress. This is closest to how <i>Claude Code</i> and <i>Gemini CLI</i> surface multi-agent runs.</li>
+      <li><b>Existing code matches T1 best.</b> <code>chat._apply_event</code> already mounts one <code>MessageBubble</code> per agent with streaming deltas. DiffPanel mounts under final-report. Cost widget updates incrementally.</li>
+      <li>For the Wharton comp where justification matters, T1 is the defensible choice: every claim has an attributable bubble + a citation chip. For a daily-driver tool, T3 is more pleasant.</li>
+      <li>Recommendation: ship T1 (the existing shape) — it's already wired and the pilot covers it. T2 and T3 are valid follow-ups if chat density becomes a complaint.</li>
+    </ol>
+  </div>
+</details>
+
+</body>
+</html>

@@ -62,6 +62,7 @@ from frontend.events import (  # type: ignore
     is_known,
 )
 from runtime.runtime import run_flow_stream  # type: ignore
+from runtime.mock_runtime import run_mock_flow_stream, mock_runtime_available  # type: ignore
 
 
 # --------------------------------------------------------------------------- #
@@ -161,8 +162,12 @@ class ChatScreen(Screen):
 
     # ------------------------------------------------------------- public hooks (called by parent App)
     def set_status_footer(self, msg: str) -> None:
+        """Publish a transient status into the StatusStrip (the universal
+        bottom strip). Used by _update_footer_hint to display flow status
+        ("✓ run complete", "⏳ running f1", "! flow failed")."""
         try:
-            self.query_one(Footer).update(msg)
+            from frontend.widgets.status_strip import StatusStrip
+            self.query_one(StatusStrip).set_status(msg)
         except Exception:
             pass
 
@@ -287,7 +292,9 @@ class ChatScreen(Screen):
 
         def _on_event_sync():
             """Inner generator. Consumes events in a thread; schedules UI updates."""
-            for event in run_flow_stream(flow_id, inputs, self.model, self.paid_for):
+            # Pick the runtime: mock for pilots/demos, real for production.
+            src = run_mock_flow_stream if mock_runtime_available() else run_flow_stream
+            for event in src(flow_id, inputs, self.model, self.paid_for):
                 if not is_known(event):
                     continue
                 # Marshal back to the UI thread.

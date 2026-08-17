@@ -92,8 +92,11 @@ class MessageBubble(Vertical):
             extras.append(f"{self._wallclock_s:.1f}s")
         if self._confidence is not None:
             extras.append(self._confidence)
-        if self._model is not None:
-            extras.append(self._model)
+        # NOTE: model is shown in ActivityPanel sidebar, not in the line
+        # bubble header — the line header is the audible "what just happened"
+        # (agent + timestamp + status) and should never overflow on narrow
+        # terminals. If you also need the model in the bubble, expose it as
+        # an expander key rather than inline.
         suffix = ("  ·  " + "  ·  ".join(extras)) if extras else ""
         return f"{self.AGENT_STATE_ICON[self.state]}  {header}  {ts}{suffix}"
 
@@ -108,7 +111,20 @@ class MessageBubble(Vertical):
     def mark_started(self, model: str | None = None) -> None:
         self.state = "started"
         self._model = model
-        self._refresh_title()
+        # If the bubble's compose() hasn't fully mounted yet (race condition
+        # when an AgentStarted event streams in faster than the prior mount),
+        # defer the header refresh until after the next refresh cycle.
+        try:
+            self._refresh_title()
+        except Exception:
+            # bubble-header Static isn't there yet; defer.
+            self.call_after_refresh(self._refresh_title)
+
+    def _refresh_title_late(self) -> None:
+        try:
+            self._refresh_title()
+        except Exception:
+            pass
 
     def append_delta(self, delta: str) -> None:
         """Append text to the body. Tolerates compose() not having mounted yet
@@ -154,7 +170,10 @@ class MessageBubble(Vertical):
             self._body().write(chip_text)
         except Exception:
             self.call_after_refresh(self._flush_finished, chip_text)
-        self._refresh_title()
+        try:
+            self._refresh_title()
+        except Exception:
+            self.call_after_refresh(self._refresh_title)
         self._apply_confidence_class()
 
     def _flush_finished(self, chip_text: str) -> None:

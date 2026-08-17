@@ -153,3 +153,32 @@ class StatusStrip(Horizontal):
             mode = "open"
         self._left.update_groups(groups)
         self._right.update_mode(mode)
+
+    def set_status(self, msg: str) -> None:
+        """Append a transient status to the LEFT side of the strip.
+
+        Format adds the message as a final pair: `... · <msg>`. Used by chat
+        to drop '✓ run complete', '! flow failed', '⏳ running f1', etc.
+        Resets to the screen's binding-based content when the next
+        update_for() runs.
+        """
+        from frontend.keys import strip_for
+        # Re-read the screen from app.screen and append msg to the right of
+        # whatever group is currently shown.
+        try:
+            groups = strip_for(self.app.screen) if self.app and self.app.screen else ()
+        except Exception:
+            groups = ()
+        if not groups:
+            self._left.update_groups(())
+            return
+        last_label, last_pairs = groups[-1]
+        # Treat the message as another pair in the last group.
+        msg_pair = ("✓", msg) if msg.startswith("✓") else ("●", msg)
+        augmented = list(groups)
+        augmented[-1] = (last_label, tuple(list(last_pairs) + [msg_pair]))
+        self._left.update_groups(tuple(augmented))
+
+    def clear_status(self) -> None:
+        """Drop any transient status pair and restore the screen's bindings."""
+        self.update_for(self.app.screen)
