@@ -118,6 +118,9 @@ class ChatScreen(Screen):
         self.last_user_prompt: str = ""
         # In-memory transcript of bubble ids (so we can clear / re-run).
         self._bubble_index: dict[str, MessageBubble] = {}
+        # Last ThesisWritten event captured (used to populate the
+        # citation chip with real data, not just a count).
+        self._last_thesis: dict | None = None
 
     # --------------------------------------------------------------- compose
     def compose(self) -> ComposeResult:
@@ -200,6 +203,7 @@ class ChatScreen(Screen):
     async def action_clear_chat(self) -> None:
         await self.query_one("#chat-log", VerticalScroll).remove_children()
         self._bubble_index.clear()
+        self._last_thesis = None
         self.query_one(ActivityPanel).reset()
         self.query_one(CostWidget).reset()
         self._set_banner_ok()
@@ -263,6 +267,7 @@ class ChatScreen(Screen):
         self.query_one(ActivityPanel).reset()
         self.query_one(CostWidget).reset()
         self._bubble_index.clear()
+        self._last_thesis = None
 
         inputs = {
             "ticker": ticker,
@@ -333,12 +338,48 @@ class ChatScreen(Screen):
         elif isinstance(event, ThesisWritten):
             snap = self.query_one("#thesis-snapshot")
             snap.update(f"v{event.version} just written · {event.conviction}/5")
+            # Stash the full event so FlowFinished can wire it into the chip.
+            self._last_thesis = {
+                "thesis_id":   event.thesis_id,
+                "version":     event.version,
+                "conviction":  event.conviction,
+                "evidence_urls": list(event.evidence_urls or []),
+            }
 
         elif isinstance(event, FlowFinished):
             # Mount a citation chip on the final-report bubble if citations > 0.
             fr = self._bubble_index.get("final-report")
-            if fr is not None and fr._citation_count:
-                log.mount(CitationChip(count=fr._citation_count, classes="final-chip"))
+            thesis = self._last_thesis or {}
+            chips_to_attach = []
+            if fr is not None and (thesis.get("evidence_urls") or fr._citation_count):
+                chip = CitationChip(
+                    citations=thesis.get("evidence_urls", []),
+                    agent_id="final-report",
+                    thesis_id=thesis.get("thesis_id"),
+                    version=thesis.get("version"),
+                    timestamp=None,
+                    classes="final-chip",
+                )
+                chips_to_attach.append(chip)
+            # Also let other agents (senior-analyst, devils-advocate, ...)
+            # mount their own chips if their envelope has citations. The
+            # runtime currently only emits citations_used on the thesis-
+            # wide envelope, but we forward the same list to the matching
+            # bubble if it has a non-zero count.
+            for agent_id, bubble in self._bubble_index.items():
+                if agent_id == "final-report":
+                    continue
+                if bubble._citation_count and thesis.get("evidence_urls"):
+                    chips_to_attach.append(CitationChip(
+                        citations=thesis["evidence_urls"],
+                        agent_id=agent_id,
+                        thesis_id=thesis.get("thesis_id"),
+                        version=thesis.get("version"),
+                        timestamp=None,
+                        classes="agent-chip",
+                    ))
+            for chip in chips_to_attach:
+                log.mount(chip)
             # Mount a DiffPanel above the final-report bubble if prior existed.
             if event.final_envelope:
                 try:
@@ -353,6 +394,7 @@ class ChatScreen(Screen):
                     log.mount(diff)
             self._update_footer_hint(suffix=" · run complete")
 
+
         elif isinstance(event, FlowFailed):
             banner.set_error(f"Flow failed at {event.failed_agent_id or '?'}: {event.reason}")
             # Show partial envelopes in an error bubble.
@@ -365,6 +407,41 @@ class ChatScreen(Screen):
                     f"{json.dumps(event.partial_envelopes, indent=2)[:1200]}\n```"
                 )
                 err_bubble.mark_failed(event.reason)
+
+    # ---------------------------------------------------------- chip press
+    def on_citation_chip_pressed(self, message) -> None:
+        """User pressed Enter on (or clicked) a CitationChip.
+
+        We resolve the chip by id (the chip carries the citation list and
+        metadata), grab the data, and push a ``CitationModalScreen`` on
+        top of this chat screen.
+        """
+        try:
+            chip = self.query_one(f"#{message.chip_id}", CitationChip)
+        except Exception:
+            return
+        if not chip.citations:
+            try:
+                self._set_banner_warning("This chip has no citation list attached.")
+            except Exception:
+                pass
+            return
+        # Tiny timestamp so the modal knows when the user opened it
+        # (useful for future "opened Xs ago" affordances if we add them).
+        try:
+            from datetime import datetime
+            ts = datetime.now().strftime("%H:%M:%S")
+        except Exception:
+            ts = None
+        from frontend.screens import CitationModalScreen
+        modal = CitationModalScreen(
+            agent_id=chip.agent_id or "(unknown)",
+            citations=list(chip.citations),
+            thesis_id=chip.thesis_id,
+            version=chip.version,
+            timestamp=ts,
+        )  # The screen sets its own id in __init__ (idempotent).
+        self.app.push_screen(modal)
 
     # ---------------------------------------------------------- internal helpers
     def _show_welcome(self, force: bool = False) -> None:

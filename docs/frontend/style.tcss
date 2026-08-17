@@ -483,3 +483,46 @@ InlineTextEditor .editor-input,
     height: 1;
     padding: 1 0;
 }
+
+/* ============================================================ Citation modal
+   (one-screen full-width modal opened from a CitationChip) */
+
+.modal-head {
+    background: #0e1014;
+    color: #d4d4d4;
+    height: 1;
+    padding: 0 2;
+    border-bottom: solid #465262;
+}
+
+.modal-foot {
+    background: #0e1014;
+    color: #6e7887;
+    height: 1;
+    padding: 0 2;
+    border-top: solid #2a3441;
+}
+
+.modal-body {
+    background: #050608;
+    padding: 1 2 0 2;
+    height: 1fr;
+}
+
+.modal-body-log {
+    background: #050608;
+    height: 1fr;
+    padding: 0 1;
+}
+
+#citation-body-row {
+    height: 1fr;
+}
+
+.citation-toast {
+    background: #0e1014;
+    color: #6e7887;
+    height: 1;
+    padding: 0 2;
+    border-top: solid #2a3441;
+}

@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Labourious — Citation Modal (C2)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --brand:    #8cdcdc;
+      --ok:       #8cd296;
+      --warn:     #e6c87e;
+      --err:      #e1918c;
+      --fg:       #d4d4d4;
+      --fg-dim:   #a0a5af;
+      --fg-mute:  #6e7887;
+      --border:   #465262;
+      --border-soft: #2e3640;
+      --bg-page:  #050608;
+      --bg-card:  #0e1014;
+      --bg-sel:   #122024;
+      --bg-edit:  #1a1f26;
+      --bg-add:   rgba(140,220,220,0.06);
+      --rail-w:   280px;
+      --news:     #c9a578;
+      --filing:   #88b4d4;
+      --macro:    #b4d488;
+      --web:      #b0a1c9;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; background: var(--bg-page); color: var(--fg);
+      font: 13px/1.45 ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+      padding: 24px 28px;
+    }
+    h1 {
+      font: 600 16px/1 ui-monospace, monospace;
+      color: var(--brand); margin: 0 0 18px 0; letter-spacing: 0.4px;
+    }
+    .desc {
+      color: var(--fg-mute); margin: 0 0 24px 0;
+      max-width: 72ch; line-height: 1.5;
+    }
+    .screen-stack { display: grid; gap: 32px; max-width: 1100px; }
+    .label {
+      color: var(--brand); font-size: 12px; letter-spacing: 0.4px;
+      text-transform: uppercase; margin: 0 0 8px 0;
+    }
+    .sublabel {
+      color: var(--fg-mute); font-size: 12px; letter-spacing: 0;
+      margin-left: 10px; text-transform: none;
+    }
+    .screen {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    /* ------------------------------------------------- header */
+    .head {
+      display: flex; align-items: center; gap: 16px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px; color: var(--fg-dim);
+    }
+    .head .brand  { color: var(--brand); font-weight: 700; }
+    .head .crumb  { color: var(--fg-dim); }
+    .head .badge-news   { color: var(--news); }
+    .head .badge-filing { color: var(--filing); }
+    .head .badge-macro  { color: var(--macro); }
+    .head .badge-web    { color: var(--web); }
+    .head .meta    { color: var(--fg-mute); }
+    .head .sep     { flex: 1; }
+    /* ------------------------------------------------- body */
+    .body { padding: 18px 22px; max-width: 100%; }
+    /* caption row */
+    .caption {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 0 12px 0;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--fg-mute); font-size: 11px;
+    }
+    .caption .col-idx    { width: 4ch;  }
+    .caption .col-source { width: 14ch; }
+    .caption .col-url    { flex: 1; }
+    .caption .col-action { width: 14ch; text-align: right; }
+    /* rows */
+    .row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      min-width: 0;
+    }
+    .row.sel {
+      background: var(--bg-sel);
+      border: 1px solid var(--brand);
+      box-shadow: inset 3px 0 0 var(--brand);
+    }
+    .row .idx {
+      width: 4ch; color: var(--fg-mute); font-weight: 600;
+    }
+    .row.sel .idx { color: var(--brand); }
+    .row .source-pill {
+      width: 14ch;
+      padding: 2px 8px; border-radius: 3px;
+      background: transparent; border: 1px solid var(--border);
+      font-size: 11px; color: var(--fg-dim);
+      text-align: center; min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .source-pill.filing { color: var(--filing); border-color: rgba(136,180,212,0.4); background: rgba(136,180,212,0.08); }
+    .source-pill.news   { color: var(--news);   border-color: rgba(201,165,120,0.4); background: rgba(201,165,120,0.08); }
+    .source-pill.macro  { color: var(--macro);  border-color: rgba(180,212,136,0.4); background: rgba(180,212,136,0.08); }
+    .source-pill.web    { color: var(--web);    border-color: rgba(176,161,201,0.4); background: rgba(176,161,201,0.08); }
+    .row .url {
+      flex: 1; min-width: 0;
+      color: var(--fg);
+      font-size: 12px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .row .action {
+      width: 14ch; text-align: right;
+      color: var(--fg-mute); font-size: 11px;
+    }
+    .row .action .glyph { color: var(--brand); font-weight: 700; }
+    .row.sel .action .glyph { color: var(--brand); }
+    /* ------------------------------------------------- footer */
+    .foot {
+      display: flex; align-items: center; gap: 16px;
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px; color: var(--fg-mute);
+    }
+    .foot .k { color: var(--brand); }
+    /* ------------------------------------------------- tweaks */
+    details.tweaks {
+      margin-top: 36px; border: 1px solid var(--border);
+      border-radius: 6px; padding: 14px 18px;
+      background: var(--bg-card); max-width: 1100px;
+    }
+    details.tweaks > summary {
+      cursor: pointer; color: var(--brand); font-weight: 700;
+      font-size: 13px; padding: 4px 0;
+    }
+    details.tweaks ul { padding-left: 18px; margin: 12px 0 0 0; }
+    details.tweaks li { padding: 4px 0; color: var(--fg-dim); }
+    details.tweaks li b { color: var(--brand); font-weight: 600; }
+
+    /* ------------------------------------------------- "open" success state */
+    .toast {
+      position: relative;
+      margin-top: 14px;
+      padding: 8px 14px;
+      border: 1px solid var(--ok);
+      background: rgba(140,210,150,0.08);
+      color: var(--ok);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .toast .glyph { color: var(--ok); font-weight: 700; margin-right: 8px; }
+  </style>
+</head>
+<body>
+
+<h1>Labourious — Citation Modal (C2)</h1>
+<p class="desc">
+  Click a citation chip on any agent bubble → the modal pops with the full list
+  of sources for that agent's envelope. Each row shows the index, a
+  host-derived source label (sec.gov→filing, reuters/wsj/ft→news, fred→macro,
+  else→web), the full URL, and an open-in-browser affordance. Same shape as
+  Settings / History — one screen, no drill-down.
+</p>
+
+<div class="screen-stack">
+
+  <!-- ============================================================ screen 1
+       6 citations typical case -->
+  <div>
+    <div class="label">1 — Citations / final-report <span class="sublabel">6 sources</span></div>
+    <div class="screen">
+      <div class="head">
+        <span class="brand">Labourious</span>
+        <span class="crumb">— Citations / final-report</span>
+        <span class="badge-news">news · 3</span>
+        <span class="badge-filing">filing · 2</span>
+        <span class="badge-macro">macro · 1</span>
+        <span class="sep"></span>
+        <span class="meta">thesis_id 41</span>
+        <span class="meta">v3</span>
+        <span class="meta">2026-04-12 14:22</span>
+      </div>
+      <div class="body">
+        <div class="caption">
+          <div class="col-idx">#</div>
+          <div class="col-source">source</div>
+          <div class="col-url">url</div>
+          <div class="col-action">action</div>
+        </div>
+
+        <div class="row sel">
+          <div class="idx">①</div>
+          <div class="source-pill filing">● SecFilings</div>
+          <div class="url">https://www.sec.gov/Archives/edgar/data/1045810/000104581026000123/nvda-10k_20260301.htm</div>
+          <div class="action"><span class="glyph">⌘</span> ↗ open</div>
+        </div>
+
+        <div class="row">
+          <div class="idx">②</div>
+          <div class="source-pill filing">● SecFilings</div>
+          <div class="url">https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=0001045810&amp;type=8-K</div>
+          <div class="action">⌘ ↗ open</div>
+        </div>
+
+        <div class="row">
+          <div class="idx">③</div>
+          <div class="source-pill news">● News</div>
+          <div class="url">https://www.reuters.com/markets/companies/NVDA-OQ/news</div>
+          <div class="action">⌘ ↗ open</div>
+        </div>
+
+        <div class="row">
+          <div class="idx">④</div>
+          <div class="source-pill macro">● Macro</div>
+          <div class="url">https://fred.stlouisfed.org/series/CPIAUCSL</div>
+          <div class="action">⌘ ↗ open</div>
+        </div>
+
+        <div class="row">
+          <div class="idx">⑤</div>
+          <div class="source-pill news">● News</div>
+          <div class="url">https://www.ft.com/content/2026/04/12/nvidia-q1-ai-demand</div>
+          <div class="action">⌘ ↗ open</div>
+        </div>
+
+        <div class="row">
+          <div class="idx">⑥</div>
+          <div class="source-pill web">● Web</div>
+          <div class="url">https://www.wsj.com/articles/nvidia-blackwell-supply-2026-04-12</div>
+          <div class="action">⌘ ↗ open</div>
+        </div>
+
+      </div>
+      <div class="foot">
+        <span><span class="k">↑/↓</span> navigate</span>
+        <span><span class="k">1</span>\u2013<span class="k">9</span> jump</span>
+        <span><span class="k">⏎</span> open in browser</span>
+        <span><span class="k">y</span> copy URL</span>
+        <span><span class="k">Esc</span> back</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ screen 2
+       After ⏎ pressed on row 1 — toast confirmation -->
+  <div>
+    <div class="label">2 — After ⏎ on row ① <span class="sublabel">browser-launch toast</span></div>
+    <div class="screen">
+      <div class="head">
+        <span class="brand">Labourious</span>
+        <span class="crumb">— Citations / final-report</span>
+        <span class="sep"></span>
+        <span class="meta">thesis_id 41</span>
+        <span class="meta">v3</span>
+      </div>
+      <div class="body">
+        <div class="caption">
+          <div class="col-idx">#</div>
+          <div class="col-source">source</div>
+          <div class="col-url">url</div>
+          <div class="col-action">action</div>
+        </div>
+
+        <div class="row sel">
+          <div class="idx">①</div>
+          <div class="source-pill filing">● SecFilings</div>
+          <div class="url">https://www.sec.gov/Archives/edgar/data/1045810/000104581026000123/nvda-10k_20260301.htm</div>
+          <div class="action"><span class="glyph">✓</span> opened</div>
+        </div>
+        <div class="row">
+          <div class="idx">②</div>
+          <div class="source-pill filing">● SecFilings</div>
+          <div class="url">https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=0001045810&amp;type=8-K</div>
+          <div class="action">⌘ ↗ open</div>
+        </div> ... 6 rows total
+
+        <div class="toast">
+          <span class="glyph">●</span> opened in default browser ·
+          <span style="color:var(--fg-dim)">row ①</span>
+          &nbsp;·&nbsp;
+          <span style="color:var(--fg-mute);font-size:11px">www.sec.gov/Archives/edgar/data/...</span>
+        </div>
+      </div>
+      <div class="foot">
+        <span><span class="k">↑/↓</span> navigate</span>
+        <span><span class="k">⏎</span> open in browser</span>
+        <span><span class="k">y</span> copy URL</span>
+        <span><span class="k">Esc</span> back</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ screen 3
+       Single-citation case (small / dusty trail) -->
+  <div>
+    <div class="label">3 — Single citation <span class="sublabel">rare case · 1 source</span></div>
+    <div class="screen">
+      <div class="head">
+        <span class="brand">Labourious</span>
+        <span class="crumb">— Citations / devils-advocate</span>
+        <span class="badge-filing">filing · 1</span>
+        <span class="sep"></span>
+        <span class="meta">thesis_id 41</span>
+        <span class="meta">v3</span>
+      </div>
+      <div class="body">
+        <div class="caption">
+          <div class="col-idx">#</div>
+          <div class="col-source">source</div>
+          <div class="col-url">url</div>
+          <div class="col-action">action</div>
+        </div>
+        <div class="row sel">
+          <div class="idx">①</div>
+          <div class="source-pill filing">● SecFilings</div>
+          <div class="url">https://www.sec.gov/Archives/edgar/data/789019/000078901926000045/msft-10q.htm</div>
+          <div class="action"><span class="glyph">⌘</span> ↗ open</div>
+        </div>
+      </div>
+      <div class="foot">
+        <span><span class="k">1</span> open in browser</span>
+        <span><span class="k">y</span> copy URL</span>
+        <span><span class="k">Esc</span> back</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ screen 4
+       Empty citation list (rare / error path) -->
+  <div>
+    <div class="label">4 — No citations <span class="sublabel">error path · shouldn't happen post-eval, but if it does</span></div>
+    <div class="screen">
+      <div class="head">
+        <span class="brand">Labourious</span>
+        <span class="crumb">— Citations / devils-advocate</span>
+        <span class="sep"></span>
+        <span class="meta">thesis_id 41</span>
+        <span class="meta">v3</span>
+      </div>
+      <div class="body">
+        <p style="color:var(--fg-mute); padding: 24px 0; border-bottom: 1px solid var(--border-soft);">
+          <span style="color:var(--warn)">● no citations recorded</span> &nbsp;·&nbsp;
+          this agent envelope did not include an evidence list.
+          <br><br>
+          <span style="color:var(--fg-dim); font-size:12px;">
+            That's a violation of the &nbsp;<i>citations-required</i>&nbsp; discipline.
+            The eval suite would block this run before it reaches this modal.
+          </span>
+        </p>
+        <div class="row" style="opacity:0.55;">
+          <div class="idx">①</div>
+          <div class="source-pill filing">● filing</div>
+          <div class="url" style="color:var(--fg-mute);">
+            <i>(empty list — see eval/test_hallucination.py · test_citation_required_for_every_claim)</i>
+          </div>
+          <div class="action">\u2014</div>
+        </div>
+      </div>
+      <div class="foot">
+        <span><span class="k">Esc</span> back to chat</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ tweaks -->
+<details class="tweaks" open>
+  <summary>12 tweakable choices — pick what to change</summary>
+  <ul>
+    <li><b>Source-label color set</b> — current: filing/news/macro/web with pastel backgrounds. Alternative: monospace labels only (no color coding).</li>
+    <li><b>URL truncation</b> — current: ellipsis on overflow only when row is selected. Alternative: always truncate on width.</li>
+    <li><b>Head badges</b> — current: counts by source-type on top (`news · 3`). Alternative: just total `6 sources`. Alternative: drop the badges entirely.</li>
+    <li><b>Footer keys</b> — current: ↑/↓, 1–9, ⏎, y, Esc. Alternative: add `/` for filter (only useful past N=15).</li>
+    <li><b>Toast after open</b> — current: green sage toast under the row. Alternative: header-side amber banner that fades after 2s.</li>
+    <li><b>Selected highlight</b> — current: cyan border + 3px inset bar + soft cyan tint. Alternative: just the soft tint (no border).</li>
+    <li><b>Empty state copy</b> — current: "no citations recorded · violation of citations-required discipline". Alternative: simpler "no citations for this agent".</li>
+    <li><b>URL display style</b> — current: full URL string. Alternative: hostname + path (`sec.gov/Archives/edgar/...`).</li>
+    <li><b>Numbering glyph</b> — current: ① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ (circled digits). Alternative: 1. 2. 3. ascii numbers.</li>
+    <li><b>Open affordance label</b> — current: `⌘ ↗ open` per row. Alternative: only on selected row (cleaner when not focused).</li>
+    <li><b>Copy feedback</b> — current: silent copy + ephemeral footer banner. Alternative: audible chime (no — terminal).</li>
+    <li><b>Back key</b> — current: Esc. Alternative: `q` (lazygit) or `b` (opencode).</li>
+  </ul>
+</details>
+
+</body>
+</html>
