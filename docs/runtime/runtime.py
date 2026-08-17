@@ -20,7 +20,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Iterator
 
 # Project root (this file lives at docs/runtime/runtime.py)
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -33,6 +33,12 @@ COST_LOG = PROJECT_ROOT / "docs" / "runtime" / ".runs" / "cost.json"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from adapters import get_adapter  # type: ignore
 from thesis_register.register import ThesisRegister  # type: ignore
+from events import (  # type: ignore  # noqa: E402  -- the event schema lives in events.py
+    FlowStarted, FlowFinished, FlowFailed,
+    AgentStarted, AgentChunk, AgentFinished, AgentFailed,
+    ThesisPriorRead, ThesisWritten,
+    CostDelta,
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -99,10 +105,15 @@ def call_agent(
     user_brief: str,
     model_name: str,
     paid_for: list[str] | None = None,
+    emit_event: "Callable[[Any], None] | None" = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Calls an agent by loading its prompt, calling the model, parsing the JSON envelope.
     Returns (envelope, cost_record).
+
+    If `emit_event` is provided, emits AgentStarted and AgentFinished around the call.
+    AgentFailed is emitted (and re-raised) on unrecoverable errors so the TUI can
+    surface partial progress.
     """
     system_prompt = load_prompt(agent_id)
     # If --paid-for is set and this agent is in the list, override model.
@@ -114,43 +125,70 @@ def call_agent(
         elif agent_id == "senior-analyst":
             if "anthropic" not in model_name:
                 effective_model = "anthropic/claude-sonnet-4-5"
-    adapter = get_adapter(effective_model)
-    t0 = time.monotonic()
-    response = adapter.call(
-        messages=[{"role": "user", "content": user_brief}],
-        system=system_prompt,
-        options={"temperature": 0.2},
-    )
-    wallclock = time.monotonic() - t0
-    # Parse envelope
+    if emit_event is not None:
+        emit_event(AgentStarted(agent_id=agent_id, model=effective_model,
+                                depth="STANDARD", compressed=False))
     try:
-        envelope = json.loads(response.text)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"{agent_id} returned non-JSON: {exc}\nRaw: {response.text[:500]}") from exc
-    ok, failures = validate_envelope(envelope, agent_id)
-    if not ok:
-        raise RuntimeError(f"{agent_id} envelope failed validation: {failures}")
-    cost = {
-        "agent_id": agent_id,
-        "model": effective_model,
-        "in_tokens": response.in_tokens,
-        "out_tokens": response.out_tokens,
-        "cache_hit_tokens": response.cache_hit_tokens,
-        "cost_usd_estimate": response.cost_usd_estimate,
-        "wallclock_s": round(wallclock, 2),
-        "as_of": dt.datetime.utcnow().isoformat() + "Z",
-    }
-    return envelope, cost
+        adapter = get_adapter(effective_model)
+        t0 = time.monotonic()
+        response = adapter.call(
+            messages=[{"role": "user", "content": user_brief}],
+            system=system_prompt,
+            options={"temperature": 0.2},
+        )
+        wallclock = time.monotonic() - t0
+        # v1: single AgentChunk per agent (the full body); future: per-token deltas.
+        if emit_event is not None:
+            emit_event(AgentChunk(agent_id=agent_id, delta=response.text))
+        # Parse envelope
+        try:
+            envelope = json.loads(response.text)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(f"{agent_id} returned non-JSON: {exc}\nRaw: {response.text[:500]}") from exc
+        ok, failures = validate_envelope(envelope, agent_id)
+        if not ok:
+            raise RuntimeError(f"{agent_id} envelope failed validation: {failures}")
+        cost = {
+            "agent_id": agent_id,
+            "model": effective_model,
+            "in_tokens": response.in_tokens,
+            "out_tokens": response.out_tokens,
+            "cache_hit_tokens": response.cache_hit_tokens,
+            "cost_usd_estimate": response.cost_usd_estimate,
+            "wallclock_s": round(wallclock, 2),
+            "as_of": dt.datetime.utcnow().isoformat() + "Z",
+        }
+        if emit_event is not None:
+            emit_event(AgentFinished(agent_id=agent_id, envelope=envelope,
+                                     wallclock_s=cost["wallclock_s"],
+                                     in_tokens=response.in_tokens,
+                                     out_tokens=response.out_tokens,
+                                     cost_usd_estimate=response.cost_usd_estimate))
+        return envelope, cost
+    except Exception as exc:
+        if emit_event is not None:
+            emit_event(AgentFailed(agent_id=agent_id, error=str(exc)))
+        raise
 
 
 # --------------------------------------------------------------------------- #
 # Per-flow orchestrators
 # --------------------------------------------------------------------------- #
-def execute_flow_f1(ticker: str, model: str, paid_for: list[str] | None) -> dict[str, Any]:
+def execute_flow_f1(
+    ticker: str,
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+) -> dict[str, Any]:
     """
-    Flagship f1 — analyze ticker. Returns the final envelope (final-report JSON).
-    Sequences: orchestrator → senior-analyst → (forensic-accounting || devils-advocate) → final-report.
-    Hybrid mode: senior-analyst + specialists on free; final-report on Sonnet.
+    Flagship f1 — analyze ticker. Returns the final envelope (final-report JSON)
+    and a list of per-agent cost records. Sequences:
+    orchestrator → senior-analyst → forensic-accounting → devils-advocate → final-report.
+
+    Args:
+        emit_event: optional callable invoked with typed Event dataclasses around
+            each agent call. main() passes None (flat output to stdout);
+            run_flow_stream() passes a hook that re-yields events to the TUI.
     """
     register = ThesisRegister()
     prior_thesis = register.read_thesis(ticker, since_days=14)
@@ -164,7 +202,8 @@ def execute_flow_f1(ticker: str, model: str, paid_for: list[str] | None) -> dict
         "depth": "STANDARD",
         "compressed": False,
     })
-    orch_env, orch_cost = call_agent("orchestrator", orch_brief, model, paid_for=paid_for)
+    orch_env, orch_cost = call_agent("orchestrator", orch_brief, model,
+                                     paid_for=paid_for, emit_event=emit_event)
 
     # Wave 2: senior-analyst
     sr_brief = json.dumps({
@@ -176,10 +215,10 @@ def execute_flow_f1(ticker: str, model: str, paid_for: list[str] | None) -> dict
         "depth": "STANDARD",
         "compressed": False,
     })
-    sr_env, sr_cost = call_agent("senior-analyst", sr_brief, model, paid_for=paid_for)
+    sr_env, sr_cost = call_agent("senior-analyst", sr_brief, model,
+                                 paid_for=paid_for, emit_event=emit_event)
 
-    # Wave 3: forensic-accounting + devils-advocate in parallel
-    # (in this skeleton they are sequential; parallelization is a future enhancement)
+    # Wave 3: forensic-accounting + devils-advocate (sequential; future: parallel)
     fa_brief = json.dumps({
         "from": "senior-analyst",
         "task": f"Earnings-quality review on {ticker}",
@@ -187,7 +226,8 @@ def execute_flow_f1(ticker: str, model: str, paid_for: list[str] | None) -> dict
         "depth": "STANDARD",
         "compressed": False,
     })
-    fa_env, fa_cost = call_agent("forensic-accounting", fa_brief, model, paid_for=paid_for)
+    fa_env, fa_cost = call_agent("forensic-accounting", fa_brief, model,
+                                 paid_for=paid_for, emit_event=emit_event)
 
     da_brief = json.dumps({
         "from": "senior-analyst",
@@ -197,7 +237,8 @@ def execute_flow_f1(ticker: str, model: str, paid_for: list[str] | None) -> dict
         "depth": "STANDARD",
         "compressed": False,
     })
-    da_env, da_cost = call_agent("devils-advocate", da_brief, model, paid_for=paid_for)
+    da_env, da_cost = call_agent("devils-advocate", da_brief, model,
+                                 paid_for=paid_for, emit_event=emit_event)
 
     # Wave 4: final-report
     fr_brief = json.dumps({
@@ -209,10 +250,11 @@ def execute_flow_f1(ticker: str, model: str, paid_for: list[str] | None) -> dict
         "depth": "STANDARD",
         "compressed": False,
     })
-    final_env, final_cost = call_agent("final-report", fr_brief, model, paid_for=paid_for)
+    final_env, final_cost = call_agent("final-report", fr_brief, model,
+                                       paid_for=paid_for, emit_event=emit_event)
 
     # Persist to thesis register
-    register.write_thesis(
+    thesis_row = register.write_thesis(
         ticker=ticker,
         thesis_text=sr_env.get("thesis", {}).get("one_sentence", ""),
         conviction=sr_env.get("bottom_line", {}).get("conviction", 0),
@@ -221,10 +263,140 @@ def execute_flow_f1(ticker: str, model: str, paid_for: list[str] | None) -> dict
         flow_id="f1",
     )
 
+    # Emit the thesis-write event AFTER the final-report agent so the TUI sees
+    # agents → final result → register update in the natural order.
+    if emit_event is not None:
+        bl = sr_env.get("bottom_line", {})
+        citations = [c.get("url") for c in sr_env.get("citations", []) if c.get("url")]
+        emit_event(ThesisWritten(
+            ticker=ticker,
+            thesis_id=thesis_row["thesis_id"],
+            version=thesis_row["version"],
+            thesis_text=sr_env.get("thesis", {}).get("one_sentence", ""),
+            conviction=bl.get("conviction", 0) if isinstance(bl, dict) else 0,
+            bottom_line=bl if isinstance(bl, dict) else {},
+            evidence_urls=citations,
+        ))
+
     return {
         "final_envelope": final_env,
         "costs": [orch_cost, sr_cost, fa_cost, da_cost, final_cost],
+        "envelopes": {
+            "orchestrator": orch_env,
+            "senior-analyst": sr_env,
+            "forensic-accounting": fa_env,
+            "devils-advocate": da_env,
+            "final-report": final_env,
+        },
+        "prior_thesis": prior_thesis,
+        "thesis_row": thesis_row,
     }
+
+
+# --------------------------------------------------------------------------- #
+# Streaming entrypoint — what the TUI consumes (PROTOCOL.md §1)
+# --------------------------------------------------------------------------- #
+def run_flow_stream(
+    flow_id: str,
+    inputs: dict[str, Any],
+    model: str,
+    paid_for: list[str] | None = None,
+) -> Iterator[Any]:
+    """
+    Yield typed `Event` dataclasses as a flow progresses.
+
+    Currently only `f1` is implemented; other flows raise NotImplementedError.
+
+    The same business logic in `execute_flow_f1` runs (we pass it an `emit_event`
+    callback), so this function never diverges from the CLI behaviour. New flows
+    should add a corresponding `execute_flow_<id>` first, then a thin generator
+    wrapper here that emits FlowStarted/ThesisPriorRead → per-agent → FlowFinished.
+    """
+    if flow_id != "f1":
+        raise NotImplementedError(
+            f"run_flow_stream: flow '{flow_id}' is not implemented yet. "
+            f"For v1 only 'f1' is wired; add execute_flow_<flow_id> then a generator wrapper."
+        )
+
+    ticker = inputs["ticker"]
+    paid_for = paid_for or []
+    cumulative_in = 0
+    cumulative_out = 0
+    cumulative_cost = 0.0
+
+    yield FlowStarted(
+        flow_id=flow_id,
+        tickers=[ticker],
+        ticker_join=ticker,
+        thesis_register_snapshot=[],  # filled in below before the next yield
+        depth=inputs.get("depth", "STANDARD"),
+        compressed=inputs.get("compressed", False),
+    )
+
+    # Persist a snapshot of prior theses for the TUI's history diff.
+    register = ThesisRegister()
+    prior = register.read_thesis(ticker, since_days=14)
+    yield ThesisPriorRead(ticker=ticker, prior_theses=prior)
+
+    partial: dict[str, dict[str, Any]] = {}
+
+    def emit(ev: Any) -> None:
+        """Hook passed into execute_flow_f1 → call_agent. Wraps AgentFinished
+        with a CostDelta so the TUI sidebar updates as each agent completes."""
+        nonlocal cumulative_in, cumulative_out, cumulative_cost
+        if isinstance(ev, AgentFinished):
+            cumulative_in += ev.in_tokens
+            cumulative_out += ev.out_tokens
+            cumulative_cost += ev.cost_usd_estimate
+            events_out.append(ev)
+            events_out.append(CostDelta(
+                agent_id=ev.agent_id,
+                in_tokens=ev.in_tokens,
+                out_tokens=ev.out_tokens,
+                cost_usd_estimate=ev.cost_usd_estimate,
+                cumulative_in=cumulative_in,
+                cumulative_out=cumulative_out,
+                cumulative_cost=cumulative_cost,
+            ))
+            partial[ev.agent_id] = ev.envelope
+        else:
+            events_out.append(ev)
+
+    # Use a list + drain pattern so generator semantics stay simple.
+    events_out: list[Any] = []
+
+    try:
+        result = execute_flow_f1(
+            ticker=ticker,
+            model=model,
+            paid_for=paid_for,
+            emit_event=emit,
+        )
+    except Exception as exc:
+        # Drain everything the agent emitted before the crash, then FlowFailed.
+        while events_out:
+            yield events_out.pop(0)
+        failed_agent = None
+        # Best-effort: peek at the most recent AgentStarted we still haven't finished
+        # (it's not in partial yet). The AgentFailed was already appended by call_agent.
+        # We don't have it; partial carries everything that DID complete before failure.
+        yield FlowFailed(
+            flow_id=flow_id,
+            reason=str(exc),
+            failed_agent_id=failed_agent,
+            partial_envelopes=partial,
+        )
+        return
+
+    # Drain buffered events in emit order.
+    while events_out:
+        yield events_out.pop(0)
+
+    yield FlowFinished(
+        flow_id=flow_id,
+        final_envelope=result["final_envelope"],
+        total_cost_usd_estimate=cumulative_cost,
+    )
 
 
 # --------------------------------------------------------------------------- #

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Labourious — TUI screen preview</title>
+<style>
+  /* === design tokens (same names as the runtime Python) === */
+  :root {
+    --bg:        #0e1014;
+    --fg:        #d4d4d4;
+    --fg2:       #a0a5af;
+    --fg3:       #6e7887;
+    --border:    #465262;
+    --brand:     #8cdcdc;
+    --ok:        #8cd296;
+    --warn:      #e6c87e;
+    --accent-o:  #8cdcdc;  /* orchestrator    */
+    --accent-s:  #dcbe82;  /* senior-analyst  */
+    --accent-f:  #82b4e6;  /* forensic        */
+    --accent-d:  #e1918c;  /* devils-advocate */
+    --accent-r:  #a0d7a5;  /* final-report    */
+    --err:       #e08782;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: Menlo, Monaco, "Courier New", Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.45;
+    margin: 0;
+    padding: 32px 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; }
+
+  h1 { font-size: 18px; font-weight: 600; color: var(--brand); margin: 0 0 8px 0; letter-spacing: 0.5px; }
+  h2 { font-size: 13px; font-weight: 600; color: var(--fg2); margin: 32px 0 8px 0; text-transform: uppercase; letter-spacing: 1px; }
+  p, li { color: var(--fg); font-size: 13px; line-height: 1.6; }
+  p.note { color: var(--fg3); font-size: 12px; }
+
+  /* tokens strip */
+  .tokens { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; margin: 12px 0 24px 0; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .token { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .swatch { width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+
+  /* the screen frames */
+  .screen { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; margin-bottom: 24px; }
+  .screen-label { color: var(--fg3); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  pre.tui { font-family: inherit; font-size: inherit; color: var(--fg); background: transparent; margin: 0; white-space: pre; line-height: 1.35; }
+
+  /* === class colors === */
+  .brand { color: var(--brand); font-weight: 700; }
+  .fg    { color: var(--fg); }
+  .fg2   { color: var(--fg2); }
+  .fg3   { color: var(--fg3); }
+  .border-line { color: var(--border); }
+  .ok    { color: var(--ok); }
+  .warn  { color: var(--warn); }
+  .err   { color: var(--err); }
+  .accent-o { color: var(--accent-o); }
+  .accent-s { color: var(--accent-s); }
+  .accent-f { color: var(--accent-f); }
+  .accent-d { color: var(--accent-d); }
+  .accent-r { color: var(--accent-r); }
+  .bold  { font-weight: 700; }
+  .dim   { opacity: 0.75; }
+
+  /* annotation / explainer */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+  .legend > span { font-size: 11px; color: var(--fg3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Labourious — TUI screen preview</h1>
+<p class="note">
+  These are the actual colors Textual will paint once the implementation lands under
+  <code>docs/frontend/screens/</code> + <code>docs/frontend/widgets/</code>. Hex values are the
+  ones documented in <code>docs/frontend/SPEC.md</code> §5.
+</p>
+
+<div class="tokens">
+  <div class="token"><div class="swatch" style="background:#8cdcdc"></div>BRAND · <span class="fg3">#8cdcdc</span></div>
+  <div class="token"><div class="swatch" style="background:#d4d4d4"></div>FG · <span class="fg3">#d4d4d4</span></div>
+  <div class="token"><div class="swatch" style="background:#a0a5af"></div>FG2 · <span class="fg3">#a0a5af</span></div>
+  <div class="token"><div class="swatch" style="background:#6e7887"></div>FG3 · <span class="fg3">#6e7887</span></div>
+  <div class="token"><div class="swatch" style="background:#465262"></div>BORDER · <span class="fg3">#465262</span></div>
+  <div class="token"><div class="swatch" style="background:#8cd296"></div>OK · <span class="fg3">#8cd296</span></div>
+  <div class="token"><div class="swatch" style="background:#e6c87e"></div>WARN · <span class="fg3">#e6c87e</span></div>
+  <div class="token"><div class="swatch" style="background:#dcbe82"></div>accent-s · <span class="fg3">#dcbe82</span></div>
+  <div class="token"><div class="swatch" style="background:#82b4e6"></div>accent-f · <span class="fg3">#82b4e6</span></div>
+  <div class="token"><div class="swatch" style="background:#e1918c"></div>accent-d · <span class="fg3">#e1918c</span></div>
+  <div class="token"><div class="swatch" style="background:#a0d7a5"></div>accent-r · <span class="fg3">#a0d7a5</span></div>
+</div>
+
+<!-- ====================================================== SCREEN 1 -->
+<h2>Screen 1 — first-launch idle</h2>
+<p class="note">Template C. Single chat pane. Welcome card teaches; sidebar would be
+clutter when there's nothing to summarize.</p>
+<div class="screen">
+<div class="screen-label">Template C — first-launch idle</div>
+<pre class="tui"><span class="border-line">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span class="brand">  Labourious</span>   <span class="fg3">f1</span>   <span class="fg">ollama/llama3.3:70b</span>   <span class="ok">● connected</span>   <span class="fg2">/Users/coleadams/Labourious</span>   <span class="fg3">12:34:56</span>
+<span class="border-line">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+
+
+<span class="brand">  ▌</span>  <span class="brand">Welcome to Labourious.</span>
+
+
+      <span class="fg2">Five prompts.</span> <span class="fg3">Eight flows.</span> <span class="fg2">Citation-grounded,</span> <span class="fg3">abstention-honest.</span>
+
+
+      <span class="fg">Try one</span>
+
+            <span class="fg2">analyze NVDA at $890</span>
+            <span class="fg2">compare AAPL, MSFT, GOOG</span>
+            <span class="fg2">earnings preview for AAPL</span>
+
+      <span class="fg3">? keybindings  ·  s settings  ·  h history  ·  / commands</span>
+
+
+
+
+      <span class="brand">&gt;</span>  <span class="fg">_analyze NVDA at $890</span>
+      <span class="border-line">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</span>
+        <span class="fg3">f1 · STANDARD · paid-for: none · 0 in / 0 out · est $0.00</span>
+</pre>
+</div>
+
+<!-- ====================================================== SCREEN 2 -->
+<h2>Screen 2 — returning session, mid-run (sidebar visible)</h2>
+<p class="note">Template B. Sidebar earns its place because there's now something to
+summarize: agents in flight, prior theses, accumulating tokens. Cursor on senior-analyst
+(mid-f1). Devil's-advocate and final-report queued.</p>
+<div class="screen">
+<div class="screen-label">Template B — mid f1 (≥ 110 cols)</div>
+<pre class="tui"><span class="border-line">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+<span class="brand">  Labourious</span>   <span class="fg3">f1</span>   <span class="fg">ollama/llama3.3:70b</span>   <span class="ok">● connected</span>   <span class="fg2">/Users/coleadams/Labourious</span>   <span class="fg3">12:34:58</span>
+<span class="border-line">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</span>
+ <span class="fg2">Activity</span>                            <span class="fg2">Last memo</span> <span class="fg3">·</span> <span class="fg">NVDA</span> <span class="fg3">· 11:48 · 0d ago</span>
+
+<span class="accent-o"> ⌬</span> <span class="fg">orchestr.</span>   <span class="border-line">✓</span> <span class="fg3">0.4s</span>                <span class="brand">  ▌</span> <span class="fg3">11:48:22  user</span>
+<span class="accent-s"> ◑</span> <span class="fg">senior-an</span>   <span class="border-line">●</span> <span class="fg3">running</span>             <span class="fg2">  Analyze NVDA at $890</span>
+<span class="accent-f"> ⚠</span> <span class="fg">forensic</span>     <span class="border-line">–</span> <span class="fg3">queued</span>
+<span class="accent-d"> ◐</span> <span class="fg">devil-adv</span>    <span class="border-line">–</span>                       <span class="brand">  ▌</span> <span class="fg3">11:48:26  </span><span class="accent-o">⌬</span> <span class="fg">orchestr. · 0.4s · HIGH</span>
+<span class="accent-r"> ✓</span> <span class="fg">final-rpt</span>    <span class="border-line">–</span>                       <span class="fg2">  Routing to f1. Reading prior thesis (3 versions).</span>
+<span class="border-line">                                         ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</span>
+<span class="fg2"> tokens</span>
+  <span class="fg3">in</span>  <span class="fg">4.2k</span>                                    <span class="brand">  ▌</span> <span class="fg3">11:48:32  </span><span class="accent-s">◑</span> <span class="fg">senior-an · 2.1s · HIGH</span>
+  <span class="fg3">out</span> <span class="fg">1.1k</span>                                    <span class="fg">  Thesis one-liner: wide-moat franchise; price</span>
+  <span class="fg3">$</span>    <span class="fg">0.00</span>                                    <span class="fg">  22% above base-case ($820). HOLD 4/5.</span>
+<span class="border-line">                                         Fragile: adjusted growth &gt;25% through FY27.</span>
+<span class="fg2"> thesis register</span>
+<span class="fg"> ▾</span> <span class="fg">NVDA</span>                                         <span class="brand">  ▌</span> <span class="fg3">11:48:38  </span><span class="accent-f">⚠</span> <span class="fg">forensic · 3.4s · MODERATE_HIGH</span>
+   <span class="fg2">v3 </span><span class="fg3">4/5</span> <span class="fg2">today</span>                       <span class="fg">  Note 2(b): rev-rec shift inflates growth 8–12pp.</span>
+   <span class="fg2">v2 </span><span class="fg3">4/5</span> <span class="fg2">-7d</span>                          <span class="fg">  M-Score −1.21 (grey zone; DSRI driver).</span>
+   <span class="fg2">v1 </span><span class="fg3">3/5</span> <span class="fg2">-14d</span>
+<span class="border-line">                                         ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</span>
+<span class="fg3"> s settings    / commands</span>                                       <span class="fg">      ▌ waiting for Devils-advocate response... ▐</span>
+<span class="border-line">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</span>
+                                                                          <span class="brand">&gt;</span>  <span class="fg">_</span>
+                                                                          <span class="border-line">─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</span>
+                                                                            <span class="fg3">f1 · STANDARD · paid-for: none · 4.2k in / 1.1k out · est $0.00</span>
+</pre>
+</div>
+
+<h2>What you'd tweak</h2>
+<p>
+Tell me which of these to apply (or describe your own):
+</p>
+<ul>
+  <li>Density of the header bar (currently: brand · flow · model · connection · cwd · clock — 6 fields)</li>
+  <li>Whether the "▌" chat-border character is the right choice at 1-col (vs. "│" or no border)</li>
+  <li>Sidebar heading labels (currently: "Activity", "tokens", "thesis register")</li>
+  <li>Whether to drop the "Last memo · NVDA · ..." secondary header in Screen 2</li>
+  <li>Whether coral on devil's-advocate reads as "warning" unintentionally</li>
+  <li>The font size and the line-height (currently 14px / 1.35) - try 13px / 1.30 for tighter</li>
+  <li>Sage green OK vs. a brighter green — readable on the dark background as-is?</li>
+</ul>
+
+</div>
+</body>
+</html>

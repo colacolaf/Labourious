@@ -141,7 +141,7 @@ Both read the same `~/.labourious/config.json`. Both write the same `docs/runtim
 Add to a single `docs/runtime/requirements.txt`:
 
 ```
-textual>=4.0
+textual>=3.7
 rich>=13
 keyring>=24        # for the OS-keychain Settings flow
 tomli>=2           # config.json schema validation

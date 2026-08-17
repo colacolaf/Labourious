@@ -1,0 +1,15 @@
+# runtime + TUI dependencies
+#
+# The runtime needs httpx-equivalents via urllib (stdlib) + json; this file
+# therefore only lists the *TUI* deps plus utility layers.
+
+# --- TUI ---
+textual>=3.7        # TUI framework; provides streaming Markdown widget
+rich>=13            # rich-text rendering (Textual depends on it transitively)
+
+# --- Config + secrets ---
+tomli>=2            # config.json schema validation (stdlib for py>=3.11 has tomllib)
+keyring>=24         # OS keychain for API-key storage (Settings screen "Secrets" button)
+
+# --- Future connectivity (already-in-process via adapters/) ---
+# yfinance for market_data — install in your env when you wire the market_data connector.

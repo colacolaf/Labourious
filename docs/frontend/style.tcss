@@ -1,0 +1,248 @@
+/* style.tcss — Labourious theme
+ *
+ * Palette anchors to the colors from `preview.html` (the SPEC.md `Theme` section):
+ *   Brand   cyan #8cdcdc
+ *   FG      warm gray #d4d4d4
+ *   FG2     soft gray #a0a5af
+ *   FG3     dim gray #6e7887
+ *   Border  hairline gray #465262
+ *   OK      sage #8cd296
+ *   WARN    amber #e6c87e
+ *
+ * Widget structure (after the RichLog pivot):
+ *   - MessageBubble  → Container with .bubble-header Static + .bubble-body RichLog
+ *   - ActivityPanel  → Container with 5 _AgentRows (Container: .row-header + .row-body)
+ *   - CostWidget     → Static (header label) wrapping a small RichLog cost-body
+ *   - ConnectionBanner → Static with state classes (warn/error/hide)
+ *   - DiffPanel      → Container with a Collapsible wrapping a Static body
+ */
+
+Screen {
+    background: #0e1014;
+    color: #d4d4d4;
+}
+
+/* ---------- Header ---------- */
+Header {
+    background: #0e1014;
+    color: #d4d4d4;
+    border-bottom: solid #465262;
+}
+
+Header > .header--title  { color: #8cdcdc; text-style: bold; }
+Header > .header--subtitle { color: #6e7887; }
+
+/* ---------- Footer ---------- */
+Footer {
+    background: #0e1014;
+    color: #6e7887;
+}
+
+Footer > .footer--key { color: #8cdcdc; }
+
+/* ---------- Body (Sidebar | Chat) ---------- */
+#body {
+    height: 1fr;
+    layout: horizontal;
+}
+
+/* ---------- Sidebar ---------- */
+#sidebar {
+    width: 30;
+    background: #11141a;
+    border-right: solid #465262;
+    padding: 1 1;
+}
+
+.sidebar-heading {
+    color: #8cdcdc;
+    text-style: bold;
+    margin: 1 0 0 0;
+}
+
+.sidebar-meta {
+    color: #6e7887;
+    margin: 0 0 1 0;
+}
+
+/* ---------- Activity panel ---------- */
+ActivityPanel {
+    background: #11141a;
+    height: auto;
+    margin: 0 0 1 0;
+}
+
+.activity-row {
+    height: auto;
+    color: #a0a5af;
+}
+
+ActivityPanel > .sidebar-heading {
+    margin: 1 0 0 0;
+}
+
+.activity-row .row-header {
+    color: #6e7887;
+    text-style: bold;
+    height: 1;
+}
+
+.activity-row .row-body {
+    background: #11141a;
+    color: #a0a5af;
+    height: 1;
+    margin: 0 0 1 0;
+}
+
+.row-orchestrator         .row-body { color: #8cdcdc; }
+.row-senior-analyst       .row-body { color: #d4b485; }
+.row-forensic-accounting  .row-body { color: #82b4e6; }
+.row-devils-advocate      .row-body { color: #e19194; }
+.row-final-report         .row-body { color: #a0d7a5; }
+
+/* ---------- Cost widget ---------- */
+CostWidget {
+    background: #11141a;
+    color: #a0a5af;
+    height: auto;
+    border: round #465262;
+    padding: 0 1;
+    margin: 0 0 1 0;
+}
+
+CostWidget > .sidebar-heading { margin: 0 0 0 0; }
+
+CostWidget .cost-body {
+    background: #11141a;
+    color: #a0a5af;
+    height: 3;
+}
+
+/* ---------- Chat pane ---------- */
+#chat-pane {
+    width: 1fr;
+    layout: vertical;
+}
+
+#chat-log {
+    height: 1fr;
+    background: #0e1014;
+    padding: 1 1 0 1;
+    scrollbar-size: 1 1;
+}
+
+/* ---------- Connection banner ---------- */
+ConnectionBanner {
+    height: 1;
+    background: #0e1014;
+    color: #d4d4d4;
+}
+
+ConnectionBanner.hide { display: none; }
+ConnectionBanner.warn  { color: #e6c87e; background: #1c1810; }
+ConnectionBanner.error { color: #e19194; background: #1f1416; }
+
+/* ---------- Bubbles (Container with .bubble-header + .bubble-body) ---------- */
+.bubble {
+    margin: 0 0 1 0;
+    padding: 0 1;
+    border-left: thick #465262;
+    background: #11141a;
+    height: auto;
+}
+
+.bubble-user { border-left: thick #8cdcdc; background: #11141a; }
+.bubble-agent { border-left: thick #465262; }
+
+.bubble-accent-o    { border-left: thick #8cdcdc !important; }
+.bubble-accent-s    { border-left: thick #d4b485 !important; }
+.bubble-accent-f    { border-left: thick #82b4e6 !important; }
+.bubble-accent-d    { border-left: thick #e19194 !important; }
+.bubble-accent-r    { border-left: thick #a0d7a5 !important; }
+.bubble-accent-user { border-left: thick #8cdcdc !important; }
+.bubble-accent-default { border-left: thick #6e7887 !important; }
+
+.bubble-header {
+    color: #6e7887;
+    text-style: bold;
+    height: 1;
+}
+
+.bubble-body {
+    background: #11141a;
+    color: #d4d4d4;
+    height: auto;
+    padding: 0 0 0 2;
+}
+
+/* Confidence classes — applied to the bubble container. */
+.conf-high           { background: #14201c; }
+.conf-moderate-high  { background: #161c1f; }
+.conf-moderate       { background: #11141a; }
+.conf-moderate-low   { background: #1c1810; }
+.conf-low            { background: #1f1416; }
+.conf-abstain        { background: #11141a; }
+
+/* ---------- Input ---------- */
+#prompt {
+    background: #11141a;
+    color: #d4d4d4;
+    border-top: solid #465262;
+    border-bottom: solid #465262;
+}
+
+#prompt Input {
+    background: #11141a;
+    color: #d4d4d4;
+}
+
+#prompt > .input--prompt { color: #8cdcdc; }
+
+/* ---------- Citation chip ---------- */
+CitationChip {
+    background: #11141a;
+    color: #a0a5af;
+    border: round #465262;
+    padding: 0 1;
+    margin: 0 0 1 2;
+    height: 1;
+    width: auto;
+}
+
+CitationChip:hover {
+    background: #1a1f29;
+    color: #8cdcdc;
+}
+
+CitationChip.chip-empty {
+    color: #6e7887;
+    border: round #465262;
+}
+
+.final-chip { text-style: italic; }
+
+/* ---------- Diff panel ---------- */
+DiffPanel {
+    background: #11141a;
+    border: round #465262;
+    padding: 0 1;
+    margin: 0 0 1 0;
+}
+
+Collapsible {
+    background: #11141a;
+}
+
+Collapsible > .collapsible--title {
+    color: #d4b485;
+    text-style: bold;
+}
+
+Collapsible Static {
+    background: #0e1014;
+    color: #a0a5af;
+}
+
+/* ---------- Narrow / wide ---------- */
+Screen.-widescreen #sidebar { width: 36; }
+Screen.-narrow     #sidebar { width: 18; }
