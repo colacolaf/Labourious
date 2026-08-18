@@ -59,10 +59,30 @@ from frontend.widgets.inline_editor import (
     ToggleEditCommitted,
     ToggleEditDone,
 )
+from frontend.widgets.providers_panel import (
+    ProvidersPanel, render_empty_state,
+)
+from frontend.providers import (
+    ALL_PROVIDERS, by_tier, TIER_ORDER, total_count,
+    status_for, ProviderEntry,
+)
 
 
 # Six sections in canonical order. The order matches PROTOCOL.md Appendix A.
 SECTIONS = ("providers", "default", "per-agent", "hybrid", "connectors", "defaults")
+
+# Filter chip order matches the L3 preview (Free first → recommendation).
+_FILTER_CHIPS: tuple[tuple[str, str | None], ...] = (
+    ("All", None),
+    ("Free", "free"),
+    ("Local", "local"),
+    ("Paid", "paid"),
+    ("Custom", "custom"),
+)
+_CHIP_BY_KEY: dict[str | None, str] = {
+    None: "All", "free": "Free", "local": "Local",
+    "paid": "Paid", "custom": "Custom",
+}
 
 # Each editable section's inline-edit row schema. Order matters: rows
 # are walked in tuple order. A row is ("text", "model") or
@@ -95,6 +115,8 @@ class SettingsScreen(Screen):
         Binding("ctrl+d",     "remove",       "Remove"),
         Binding("ctrl+n",     "open_picker",  "+ Add"),
         Binding("e",          "start_edit",   "Edit"),
+        Binding("tab",        "next_filter",  "Next chip"),
+        Binding("shift+tab",  "prev_filter",  "Prev chip"),
     ]
 
     # ---------------------------------------------------------- compose
@@ -112,6 +134,10 @@ class SettingsScreen(Screen):
         self._editing: bool = False                # editor is mounted?
         self._edit_section: str | None = None      # which section we're editing
         self._edit_row: int = 0                    # which row within that section
+        # Providers L3 state (only valid when section == "providers")
+        self._provider_filter: str | None = None   # current chip key
+        self._provider_expanded: str | None = None # current expanded provider name
+        self._provider_focus_idx: int = 0          # focused row within visible list
 
     def compose(self) -> ComposeResult:
         # Header strip
@@ -134,6 +160,52 @@ class SettingsScreen(Screen):
         # Footer strip — universal StatusStrip, screen-aware key hints.
         from frontend.widgets.status_strip import StatusStrip   # type: ignore
         yield StatusStrip()
+
+    # ---------------------------------------------------------- L3 providers helpers
+    def _visible_providers(self) -> tuple[ProviderEntry, ...]:
+        if self._provider_filter is None:
+            return ALL_PROVIDERS
+        return by_tier(self._provider_filter)  # type: ignore[arg-type]
+
+    def _refresh_providers_panel(self, *, flash: str | None = None) -> None:
+        """Re-paint the L3 panel from current state."""
+        try:
+            panel = self.query_one(ProvidersPanel)
+        except Exception:
+            return  # not mounted yet (e.g., another section active)
+        panel.update(
+            filter_tier=self._provider_filter,
+            expanded=self._provider_expanded,
+            configured_names=set(self._cfg.providers.keys()),
+            key_present={},
+            focus_idx=self._provider_focus_idx,
+            flash=flash,
+        )
+        self._update_strip()
+
+    def _mount_providers_panel(self) -> None:
+        """Mount the L3 panel inside #settings-main, replacing any card."""
+        try:
+            main = self.query_one("#settings-main")
+            main.remove_children()
+        except Exception:
+            pass
+        panel = ProvidersPanel(id="settings-providers-panel")
+        try:
+            main.mount(panel)
+        except Exception:
+            pass
+        self._refresh_providers_panel()
+        # The strip picks L3_PROVIDERS_STRIP on update_for() if rail_index==0
+        self._update_strip()
+
+    def _update_strip(self) -> None:
+        """Refresh the bottom-strip bindings to match current screen state."""
+        from frontend.widgets.status_strip import StatusStrip as _SS
+        try:
+            self.query_one(_SS).update_for(self)
+        except Exception:
+            pass
 
     def on_mount(self) -> None:
         self._refresh_head()
@@ -169,6 +241,75 @@ class SettingsScreen(Screen):
         self._swap_card(SECTIONS[self._rail_index])
         self._refresh_head()
 
+    # ---------------------------------------------------------- L3 chip navigation
+    def action_next_filter(self) -> None:
+        """`tab` key cycles the chip filter when on the providers section."""
+        if self._picker_open or self._editing:
+            return
+        if SECTIONS[self._rail_index] != "providers":
+            return
+        idx = next(
+            (i for i, (_, k) in enumerate(_FILTER_CHIPS) if k == self._provider_filter),
+            0,
+        )
+        new_idx = (idx + 1) % len(_FILTER_CHIPS)
+        self._provider_filter = _FILTER_CHIPS[new_idx][1]
+        # Collapsing everything when filter changes
+        self._provider_expanded = None
+        self._provider_focus_idx = 0
+        self._refresh_providers_panel()
+
+    def action_prev_filter(self) -> None:
+        """`shift+tab` cycles the chip filter backward."""
+        if self._picker_open or self._editing:
+            return
+        if SECTIONS[self._rail_index] != "providers":
+            return
+        idx = next(
+            (i for i, (_, k) in enumerate(_FILTER_CHIPS) if k == self._provider_filter),
+            0,
+        )
+        new_idx = (idx - 1) % len(_FILTER_CHIPS)
+        self._provider_filter = _FILTER_CHIPS[new_idx][1]
+        self._provider_expanded = None
+        self._provider_focus_idx = 0
+        self._refresh_providers_panel()
+
+    def action_toggle_expand(self) -> None:
+        """Enter on the providers section toggles expand on the focused row."""
+        if self._picker_open or self._editing:
+            return
+        if SECTIONS[self._rail_index] != "providers":
+            return
+        visible = self._visible_providers()
+        if not visible:
+            return
+        idx = max(0, min(self._provider_focus_idx, len(visible) - 1))
+        entry = visible[idx]
+        if self._provider_expanded == entry.name:
+            self._provider_expanded = None  # collapse
+        else:
+            self._provider_expanded = entry.name
+        self._refresh_providers_panel(flash=None)
+
+    def action_provider_focus_next(self) -> None:
+        if SECTIONS[self._rail_index] != "providers":
+            return
+        visible = self._visible_providers()
+        if not visible:
+            return
+        self._provider_focus_idx = (self._provider_focus_idx + 1) % len(visible)
+        self._refresh_providers_panel()
+
+    def action_provider_focus_prev(self) -> None:
+        if SECTIONS[self._rail_index] != "providers":
+            return
+        visible = self._visible_providers()
+        if not visible:
+            return
+        self._provider_focus_idx = (self._provider_focus_idx - 1) % len(visible)
+        self._refresh_providers_panel()
+
     def _refresh_rail_selection(self) -> None:
         for i, s in enumerate(SECTIONS):
             try:
@@ -180,8 +321,9 @@ class SettingsScreen(Screen):
     # ---------------------------------------------------------- sections
     def _section_meta(self, section: str) -> str:
         if section == "providers":
-            n = len(self._cfg.providers)
-            return f"{n} configured"
+            chip = _CHIP_BY_KEY.get(self._provider_filter, "All")
+            n_visible = len(self._visible_providers())
+            return f"{chip} · {n_visible} visible · {total_count()} total"
         if section == "default":
             return f"current: {self._cfg.default_model}"
         if section == "per-agent":
@@ -207,6 +349,10 @@ class SettingsScreen(Screen):
             main.remove_children()  # clears only children of this container
         except Exception:
             pass
+        # The "providers" section gets the L3 panel; others get SectionCard.
+        if section == "providers":
+            self._mount_providers_panel()
+            return
         try:
             card = SectionCard(
                 title=section,
@@ -534,6 +680,10 @@ class SettingsScreen(Screen):
         # While editing, Enter is owned by the InlineTextEditor's
         # Input.Submitted handler. Don't preempt it.
         if self._editing:
+            return
+        # On providers section, Enter toggles expand on the focused row.
+        if SECTIONS[self._rail_index] == "providers":
+            self.action_toggle_expand()
             return
         # No picker, not editing: Enter starts inline edit on editable sections.
         if self._is_editable_section(SECTIONS[self._rail_index]):
@@ -871,6 +1021,21 @@ class SettingsScreen(Screen):
                     return
             return  # picker is up; don't pass arrow to rail
         # Rail mode: arrows drive rail nav (bindings are focus-flaky in 3.7)
+        # Providers section: ↑/↓ move the focused row, →/← move rail sections.
+        # Use Tab / Shift+Tab to cycle provider filter chips.
+        if SECTIONS[self._rail_index] == "providers":
+            if event.key == "up":
+                self.action_provider_focus_prev()
+                return
+            if event.key == "down":
+                self.action_provider_focus_next()
+                return
+            if event.key == "tab":
+                self.action_next_filter()
+                return
+            if event.key == "shift+tab":
+                self.action_prev_filter()
+                return
         if event.key == "right":
             self.action_rail_next()
             return
@@ -946,6 +1111,14 @@ class SettingsScreen(Screen):
         self.app.pop_screen()
 
     def action_back_chat(self) -> None:
+        # On providers L3, Esc collapses the expanded row first.
+        if (not self._picker_open
+            and not self._editing
+            and SECTIONS[self._rail_index] == "providers"
+            and self._provider_expanded is not None):
+            self._provider_expanded = None
+            self._refresh_providers_panel()
+            return
         # Auto-saves already wrote to disk; closing is safe.
         self.app.pop_screen()
 

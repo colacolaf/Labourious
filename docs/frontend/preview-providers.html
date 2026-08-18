@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Labourious · Settings · Providers · preview</title>
+<style>
+  :root{
+    --bg:#0e1014; --surface:#14171d; --surface-2:#1a1f28;
+    --border:#252b36; --border-strong:#323b4a;
+    --fg:#d4d4d4; --fg-dim:#8b94a6; --fg-faint:#5a6373;
+    --brand:#8cdcdc; --brand-dim:#5fa5a5;
+    --ok:#7ec07a; --warn:#e0c060; --err:#e08878;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--fg);
+    font:14px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 24px 80px}
+  h1{font-size:14px;font-weight:600;color:var(--fg-dim);
+    letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+  h2{font-size:12px;font-weight:600;color:var(--fg-dim);
+    letter-spacing:.08em;text-transform:uppercase;margin:32px 0 8px}
+  .sub{color:var(--fg-faint);font-size:12px;margin-bottom:24px}
+
+  /* TUI frame: 100×36 simulation, ~9px per row */
+  .tui-frame{
+    background:var(--surface);border:1px solid var(--border-strong);
+    border-radius:6px;padding:18px 22px 22px;margin:8px 0;
+    min-height:280px;
+    font-size:13px;line-height:1.5;
+    box-shadow:0 4px 24px rgba(0,0,0,.3);
+  }
+  .crumb{color:var(--fg-faint);font-size:11px;margin-bottom:14px;
+    letter-spacing:.06em;text-transform:uppercase}
+  .crumb .sep{color:var(--border-strong);margin:0 8px}
+  .crumb .here{color:var(--brand)}
+
+  /* chip row */
+  .chips{display:flex;gap:6px;margin:0 0 6px 0;flex-wrap:wrap}
+  .chip{
+    padding:3px 10px;border-radius:10px;font-size:11px;
+    border:1px solid var(--border-strong);color:var(--fg-dim);
+    background:transparent;cursor:pointer;
+  }
+  .chip.active{background:var(--brand-dim);color:var(--bg);
+    border-color:var(--brand);font-weight:600}
+  .chip:hover{border-color:var(--fg-dim)}
+  .meta{color:var(--fg-faint);font-size:11px;margin-left:auto;align-self:center}
+
+  /* accordion rows */
+  .row{
+    display:flex;align-items:center;gap:10px;
+    padding:6px 8px;border-radius:4px;cursor:pointer;
+    border:1px solid transparent;
+  }
+  .row:hover{background:var(--surface-2)}
+  .row.open{background:var(--surface-2);border-color:var(--border)}
+  .row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .row .dot.ok{background:var(--ok)}
+  .row .dot.miss{background:var(--warn)}
+  .row .dot.no{background:var(--err)}
+  .row .name{font-weight:600}
+  .row .name.muted{color:var(--fg-dim);font-weight:400}
+  .row .status-text{color:var(--fg-dim);font-size:12px;margin-left:8px}
+
+  .expanded{margin:6px 0 14px 18px;padding:10px 14px;
+    background:var(--surface-2);border:1px solid var(--border);
+    border-radius:4px}
+  .field{display:flex;align-items:center;gap:10px;
+    padding:3px 0;color:var(--fg-dim);font-size:12px}
+  .field .label{width:110px;color:var(--fg-faint);font-size:11px;letter-spacing:.04em}
+  .field .val{color:var(--fg);flex:1}
+  .field .val.brand{color:var(--brand)}
+  .field .btn{
+    padding:2px 10px;border:1px solid var(--border-strong);
+    border-radius:3px;color:var(--fg-dim);font-size:11px;
+    background:transparent;cursor:pointer
+  }
+  .field .btn:hover{border-color:var(--brand);color:var(--brand)}
+  .field .btn.primary{background:var(--brand-dim);color:var(--bg);border-color:var(--brand)}
+  .sep-line{height:1px;background:var(--border);margin:8px -14px}
+
+  /* tag pills next to provider name */
+  .tag{font-size:10px;color:var(--fg-faint);
+    padding:1px 6px;border:1px solid var(--border-strong);
+    border-radius:8px;margin-left:6px;letter-spacing:.04em}
+
+  /* section divider */
+  .tier-divider{
+    color:var(--fg-faint);font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;margin:14px 8px 4px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .tier-divider::after{
+    content:"";flex:1;height:1px;background:var(--border);
+  }
+  .tier-divider .count{color:var(--fg-faint);font-weight:400}
+
+  /* footnotes & tweaks */
+  details.tweaks{margin-top:32px;background:var(--surface);
+    border:1px solid var(--border);border-radius:6px;padding:14px 18px}
+  details.tweaks summary{cursor:pointer;color:var(--brand);
+    font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    margin-bottom:8px}
+  details.tweaks[open] summary{margin-bottom:14px}
+  details.tweaks ol{padding-left:20px;line-height:1.7}
+  details.tweaks li{color:var(--fg-dim);margin:2px 0}
+  details.tweaks li b{color:var(--brand);font-weight:500}
+
+  /* footer status strip */
+  .status-strip{
+    margin-top:14px;padding:6px 10px;
+    background:var(--surface-2);border-top:1px solid var(--border);
+    border-radius:0 0 5px 5px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;color:var(--fg-faint);
+    margin-left:-22px;margin-right:-22px;margin-bottom:-22px;
+    padding-left:22px;padding-right:22px;
+  }
+  .status-strip kbd{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:3px;padding:1px 5px;color:var(--fg-dim);
+    font:10px/1 ui-monospace,monospace
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Labourious · preview</h1>
+<div class="sub">Settings → Providers · L3 accordion + chip filter · dark mode · pixel-accurate match to <code>style.tcss</code></div>
+
+<!-- ================================ -->
+<h2>1 · Default view · 21 providers, no filter</h2>
+<!-- ================================ -->
+<div class="tui-frame">
+  <div class="crumb">settings/ <span class="sep">/</span> <span class="here">providers</span></div>
+
+  <div class="chips">
+    <span class="chip active">All · 21</span>
+    <span class="chip">Free · 7</span>
+    <span class="chip">Local · 5</span>
+    <span class="chip">Paid · 4</span>
+    <span class="chip">Custom · 5</span>
+    <span class="meta">— 21 visible —</span>
+  </div>
+
+  <div class="tier-divider">Local <span class="count">5</span></div>
+  <div class="row open"><div class="dot ok"></div><div class="name">Ollama</div><span class="tag">local</span><div class="status-text">● connected · llama3.3:70b loaded</div></div>
+  <div class="expanded">
+    <div class="field"><div class="label">base URL</div><div class="val">http://localhost:11434</div></div>
+    <div class="field"><div class="label">model</div><div class="val brand">▾ llama3.3:70b <span style="color:var(--fg-faint);font-size:11px">  · 128K ctx</span></div></div>
+    <div class="field"><div class="label">auth</div><div class="val">none <span class="tag">no-key</span></div></div>
+    <div class="field"><div class="label">status</div><div class="val" style="color:var(--ok)">● connected · 12 models available</div></div>
+    <div class="sep-line"></div>
+    <div class="field"><div class="label">per-agent</div><div class="val" style="color:var(--fg-dim)">orchestrator ▸ <span class="tag">groq</span>  senior-analyst ▸ <span class="tag">groq</span>  final-report ▸ <span class="tag">default</span></div></div>
+    <div class="field"><div class="label">&nbsp;</div><div><span class="btn">Test connection</span> &nbsp; <span class="btn">Reset to default</span> &nbsp; <span class="btn primary">Save</span></div></div>
+  </div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">LM Studio</div><span class="tag">local</span><div class="status-text">— not running</div></div>
+  <div class="row"><div class="dot no"></div><div class="name muted">OmniRoute</div><span class="tag">local</span><div class="status-text">— not installed</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">vLLM / llama.cpp</div><span class="tag">local</span><div class="status-text">— config not set</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Custom OpenAI-compat</div><span class="tag">local</span><div class="status-text">— config not set</div></div>
+
+  <div class="tier-divider">Free cloud <span class="count">7</span></div>
+  <div class="row"><div class="dot ok"></div><div class="name">OpenRouter</div><span class="tag">free</span><div class="status-text">● ready · key in keychain</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Groq</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot ok"></div><div class="name">Google AI Studio</div><span class="tag">free</span><div class="status-text">● ready · 1M ctx</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Mistral</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Hugging Face</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Cerebras</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Cohere</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+
+  <div class="tier-divider">Paid <span class="count">4</span></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Anthropic Claude</div><span class="tag">paid</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">OpenAI</div><span class="tag">paid</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Google Gemini</div><span class="tag">paid</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">xAI Grok</div><span class="tag">paid</span><div class="status-text">— no API key</div></div>
+
+  <div class="tier-divider">Custom <span class="count">5</span></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Perplexity</div><span class="tag">custom</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Fireworks AI</div><span class="tag">custom</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Together AI</div><span class="tag">custom</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">DeepSeek (direct)</div><span class="tag">custom</span><div class="status-text">— no API key</div></div>
+
+  <div class="status-strip">
+    <span><kbd>e</kbd> edit · <kbd>Enter</kbd> expand · <kbd>Esc</kbd> back · <kbd>Ctrl+S</kbd> save</span>
+    <span><kbd>?</kbd> help</span>
+  </div>
+</div>
+
+<!-- ================================ -->
+<h2>2 · Filter: Free only · 7 rows</h2>
+<!-- ================================ -->
+<div class="tui-frame">
+  <div class="crumb">settings/ <span class="sep">/</span> <span class="here">providers · free</span></div>
+  <div class="chips">
+    <span class="chip">All · 21</span>
+    <span class="chip active">Free · 7</span>
+    <span class="chip">Local · 5</span>
+    <span class="chip">Paid · 4</span>
+    <span class="chip">Custom · 5</span>
+    <span class="meta">— 7 visible —</span>
+  </div>
+  <div class="row"><div class="dot ok"></div><div class="name">OpenRouter</div><span class="tag">free</span><div class="status-text">● ready · key in keychain</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Groq</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot ok"></div><div class="name">Google AI Studio</div><span class="tag">free</span><div class="status-text">● ready · 1M ctx</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Mistral</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Hugging Face</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Cerebras</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Cohere</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="status-strip"><span><kbd>Tab</kbd> next chip · <kbd>e</kbd> edit</span><span><kbd>Esc</kbd> back</span></div>
+</div>
+
+<!-- ================================ -->
+<h2>3 · Expanded row — different provider (Hugging Face), showing API-key entry state</h2>
+<!-- ================================ -->
+<div class="tui-frame">
+  <div class="crumb">settings/ <span class="sep">/</span> <span class="here">providers · huggingface</span></div>
+  <div class="chips">
+    <span class="chip">All · 21</span>
+    <span class="chip active">Free · 7</span>
+    <span class="chip">Local · 5</span>
+    <span class="chip">Paid · 4</span>
+    <span class="chip">Custom · 5</span>
+  </div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">OpenRouter</div><span class="tag">free</span></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Groq</div><span class="tag">free</span></div>
+  <div class="row"><div class="dot ok"></div><div class="name">Google AI Studio</div><span class="tag">free</span></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Mistral</div><span class="tag">free</span></div>
+  <div class="row open"><div class="dot miss"></div><div class="name muted">Hugging Face</div><span class="tag">free</span><div class="status-text">— no API key</div></div>
+  <div class="expanded">
+    <div class="field"><div class="label">auth</div><div class="val" style="color:var(--warn)">⚠ no key — <span class="btn primary">+ add key</span> &nbsp; <span style="color:var(--fg-faint);font-size:11px">stored in OS keychain</span></div></div>
+    <div class="field"><div class="label">env var</div><div class="val">HF_TOKEN</div></div>
+    <div class="field"><div class="label">base URL</div><div class="val">https://router.huggingface.co <span style="color:var(--fg-faint)">  · openai-compat</span></div></div>
+    <div class="field"><div class="label">default model</div><div class="val brand">▾ meta-llama/Llama-3.3-70B-Instruct</div></div>
+    <div class="sep-line"></div>
+    <div class="field"><div class="label">free tier</div><div class="val">serverless · rate-limited per model</div></div>
+    <div class="field"><div class="label">&nbsp;</div><div><span class="btn">Cancel</span> &nbsp; <span class="btn primary" style="opacity:.5">Save (key required)</span></div></div>
+  </div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Cerebras</div><span class="tag">free</span></div>
+  <div class="row"><div class="dot miss"></div><div class="name muted">Cohere</div><span class="tag">free</span></div>
+
+  <div class="status-strip"><span><kbd>Enter</kbd> paste key · <kbd>Ctrl+V</kbd> from clipboard · <kbd>Esc</kbd> cancel</span><span><kbd>?</kbd> help</span></div>
+</div>
+
+<!-- ================================ -->
+<h2>4 · Empty state · first-ever launch, no providers configured</h2>
+<!-- ================================ -->
+<div class="tui-frame">
+  <div class="crumb">settings/ <span class="sep">/</span> <span class="here">providers · welcome</span></div>
+  <div style="padding:18px 8px 8px">
+    <div style="color:var(--brand);font-size:14px;margin-bottom:6px">Set up your first provider</div>
+    <div style="color:var(--fg-dim);font-size:12px;line-height:1.6;margin-bottom:14px">
+      Pick a provider to begin. <b style="color:var(--ok)">Ollama</b> runs locally on your machine with no key required.
+      <b style="color:var(--brand)">OpenRouter</b> gives you one key to 500+ models (free tier rotates daily).
+      <b style="color:var(--brand)">Groq</b> is the fastest free cloud inference.
+    </div>
+    <div class="row"><div class="dot ok"></div><div class="name">Ollama</div><span class="tag">local</span><div class="status-text">● recommended · zero config</div></div>
+    <div class="row"><div class="dot miss"></div><div class="name">OpenRouter</div><span class="tag">free</span><div class="status-text">○ recommended · 1 signup unlocks 500+ models</div></div>
+    <div class="row"><div class="dot miss"></div><div class="name">Groq</div><span class="tag">free</span><div class="status-text">○ ultra-fast inference</div></div>
+    <div class="row"><div class="dot miss"></div><div class="name">OmniRoute</div><span class="tag">local</span><div class="status-text">○ npm install -g omniroute · 237 providers</div></div>
+  </div>
+  <div class="status-strip"><span><kbd>Enter</kbd> open · <kbd>Esc</kbd> back</span><span><kbd>?</kbd> help</span></div>
+</div>
+
+<!-- ============================================================== -->
+<details class="tweaks">
+<summary>12 optional tweaks to iterate on</summary>
+<ol>
+  <li>Move <b>chip row</b> to the right side instead of left (compact feel)</li>
+  <li>Drop <b>section divider headers</b> when only one tier is visible after filter</li>
+  <li>Add a small <b>cyan ↗ icon</b> next to <i>recommended</i> rows so they stand out more</li>
+  <li>Show <b>last-used relative time</b> in collapsed row instead of just status text</li>
+  <li>Replace per-row <b>status text</b> with a tiny <code>↑ k tpd / ↓ k tpd</code> usage meter</li>
+  <li>Add an <b>inline search box</b> above chips for power users with 50+ providers</li>
+  <li>Group <b>per-agent overrides</b> inside the expanded pane as iconified "+ add"</li>
+  <li>Switch <b>collapsed state</b> to single line width — show <i>first failing row</i> underneath in dim</li>
+  <li>Move <b>Save / Save+close / Cancel</b> to a <i>sticky</i> footer-bar instead of inside the expanded card</li>
+  <li>Add a <b>↻ test</b> button next to each row's dot (test connection without expanding)</li>
+  <li>Show <b>$ est. cost</b> for paid rows next to the rate info (when key present)</li>
+  <li>Drop <b>filter chip "Custom · 5"</b> entirely — Custom is everything that isn't in Tier 1-3</li>
+</ol>
+</details>
+
+</div>
+</body>
+</html>

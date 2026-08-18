@@ -109,23 +109,6 @@ STRIP_BY_SCREEN: dict[str, tuple] = {
             ("h", "history"),
         )),
     ),
-    "settingsscreen": (
-        ("settings", (
-            ("⏎",            "confirm"),
-            ("e",             "edit row"),
-            ("Ctrl+S",        "save & close"),
-            ("Ctrl+N",        "+ add"),
-            ("Ctrl+D",        "remove"),
-            ("Tab",           "save & advance"),
-        )),
-        ("nav", (
-            ("↑/↓", "rail"),
-            ("→/←", "section"),
-        )),
-        ("exit", (
-            ("Esc", "back"),
-        )),
-    ),
     "historyscreen": (
         ("history", (
             ("⏎", "drill"),
@@ -136,6 +119,22 @@ STRIP_BY_SCREEN: dict[str, tuple] = {
             ("Esc", "back"),
         )),
     ),
+    "settingsscreen": (
+        ("settings", (
+            ("⏎",            "confirm"),
+            ("e",             "edit row"),
+            ("Ctrl+S",        "save & close"),
+            ("Ctrl+N",        "+ add"),
+            ("Ctrl+D",        "remove"),
+            ("Tab",           "save & advance"),
+            ("↑/↓", "rail"),
+            ("→/←", "section"),
+        )),
+        ("exit", (
+            ("Esc", "back"),
+        )),
+    ),
+
     "citationmodalscreen": (
         ("citation", (
             ("⏎",   "open"),
@@ -157,6 +156,25 @@ STRIP_BY_SCREEN: dict[str, tuple] = {
         ("here", ()),
     ),
 }
+
+
+# -------------------------------------------------- L3 providers strip override
+# Used by StatusStrip.update_for when the user is on SettingsScreen's
+# providers section AND not in picker/edit mode.
+L3_PROVIDERS_STRIP: tuple = (
+    ("providers", (
+        ("Tab",   "filter"),
+        ("↑/↓",   "row"),
+        ("⏎",     "expand"),
+        ("e",     "edit"),
+    )),
+    ("global", (
+        ("Ctrl+S", "save & close"),
+    )),
+    ("exit", (
+        ("Esc", "collapse"),
+    )),
+)
 
 
 # --------------------------------------------- Input-mode command palette

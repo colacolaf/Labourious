@@ -143,8 +143,19 @@ class StatusStrip(Horizontal):
 
     def update_for(self, screen) -> None:
         """Refresh for the given (top of stack) screen."""
-        from frontend.keys import strip_for
+        from frontend.keys import strip_for, L3_PROVIDERS_STRIP
         groups = strip_for(screen)
+        # If we're on SettingsScreen AND the L3 providers panel is active,
+        # swap to the L3-specific binding set.
+        try:
+            if (screen is not None
+                and type(screen).__name__ == "SettingsScreen"
+                and screen._rail_index == 0  # providers = first rail
+                and not screen._picker_open
+                and not screen._editing):
+                groups = L3_PROVIDERS_STRIP
+        except Exception:
+            pass
         cls = type(screen).__name__.lower() if screen is not None else ""
         # Default: ? open. Flip on the help modal itself.
         if cls == "helpmodalscreen":
