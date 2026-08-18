@@ -73,6 +73,15 @@ class Config:
     connectors: dict[str, ConnectorConfig] = field(default_factory=dict)
     defaults_depth: Literal["STANDARD", "DEEP"] = "STANDARD"
     defaults_compressed: bool = False
+    # Streaming UX — when stream_chunks=True the runtime iterates each
+    # adapter's .stream() and emits one AgentChunk per text delta. The
+    # TUI's chat bubble grows incrementally instead of waiting for the
+    # full body. typewriter_ms is an artificial delay (in milliseconds)
+    # applied between AgentChunk dispatches so the visual effect mimics
+    # typing even on providers whose streaming is faster than humans
+    # can read (Groq, Cerebras, etc). 0 = no delay.
+    stream_chunks: bool = True
+    stream_typewriter_ms: int = 0
 
     # --------------------------------------------------------------- I/O
     def to_dict(self) -> dict:
@@ -94,6 +103,10 @@ class Config:
             "defaults": {
                 "depth": self.defaults_depth,
                 "compressed": self.defaults_compressed,
+            },
+            "streaming": {
+                "chunks": self.stream_chunks,
+                "typewriter_ms": self.stream_typewriter_ms,
             },
             "thesis_register_db_path": "docs/runtime/thesis_register/theses.db",
             "memory": {"history_dir": "~/.labourious/history/"},
@@ -125,6 +138,7 @@ def load_config() -> Config:
             "providers", "default_model", "per_agent_model",
             "hybrid_paid_for", "connectors",
             "defaults_depth", "defaults_compressed",
+            "stream_chunks", "stream_typewriter_ms",
         )})
     with CONFIG_PATH.open("r", encoding="utf-8") as f:
         raw = json.load(f)
@@ -160,6 +174,7 @@ def _from_dict(d: dict) -> Config:
         for n, v in d.get("connectors", {}).items()
     }
     defaults = d.get("defaults", {})
+    streaming = d.get("streaming", {})
     return Config(
         providers=providers,
         default_model=d.get("default_model", _DEFAULTS.default_model),
@@ -168,6 +183,9 @@ def _from_dict(d: dict) -> Config:
         connectors=connectors,
         defaults_depth=defaults.get("depth", _DEFAULTS.defaults_depth),
         defaults_compressed=defaults.get("compressed", _DEFAULTS.defaults_compressed),
+        stream_chunks=streaming.get("chunks", _DEFAULTS.stream_chunks),
+        stream_typewriter_ms=streaming.get(
+            "typewriter_ms", _DEFAULTS.stream_typewriter_ms),
     )
 
 
@@ -198,10 +216,12 @@ def validate_model_id(value: str) -> str | None:
 
 
 def validate_field(section: str, key: str, value: str) -> str | None:
-    """Per-section, per-key validator.
+    """
+    Per-section, per-key validator.
 
-    sections: 'default' | 'per-agent' | 'defaults'
-    keys (for defaults): 'depth' | 'compressed'
+    sections:  'default' | 'per-agent' | 'defaults' | 'streaming'
+    keys (defaults):  'depth' | 'compressed'
+    keys (streaming): 'chunks' | 'typewriter_ms'
     """
     if section == "default":
         if key != "model":
@@ -219,6 +239,20 @@ def validate_field(section: str, key: str, value: str) -> str | None:
         if key == "compressed":
             if value not in ("true", "false"):
                 return "compressed must be true or false"
+            return None
+        return f"unknown key {key!r}"
+    if section == "streaming":
+        if key == "chunks":
+            if value not in ("true", "false"):
+                return "chunks must be true or false"
+            return None
+        if key == "typewriter_ms":
+            try:
+                v = int(value)
+            except ValueError:
+                return "typewriter_ms must be an integer (0-500 ms)"
+            if v < 0 or v > 500:
+                return "typewriter_ms must be 0 (off) .. 500"
             return None
         return f"unknown key {key!r}"
     return f"unknown section {section!r}"
@@ -244,6 +278,16 @@ def _validate(cfg: Config) -> None:
             raise ConfigValidationError(f"Invalid connector name: {n!r}")
     if cfg.defaults_depth not in ("STANDARD", "DEEP"):
         raise ConfigValidationError(f"Invalid depth: {cfg.defaults_depth!r}")
+    if cfg.stream_typewriter_ms < 0 or cfg.stream_typewriter_ms > 500:
+        raise ConfigValidationError(
+            f"Invalid typewriter_ms: {cfg.stream_typewriter_ms!r} "
+            f"(must be 0..500)"
+        )
+    if not isinstance(cfg.stream_chunks, bool):
+        raise ConfigValidationError(
+            f"Invalid stream_chunks: {cfg.stream_chunks!r} "
+            f"(must be bool)"
+        )
 
 
 # --------------------------------------------------------------- health

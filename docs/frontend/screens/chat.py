@@ -141,6 +141,9 @@ class ChatScreen(Screen):
         # body (cheaper, but no perceived typing effect). Default ON for
         # the real runtime; the mock runtime ignores this flag.
         self.stream_chunks: bool = True
+        # Typewriter delay in ms between AgentChunk dispatches. 0 = no delay.
+        # Configurable via Settings → streaming → typewriter_ms.
+        self.stream_typewriter_ms: int = 0
         # Last ThesisWritten event captured (used to populate the
         # citation chip with real data, not just a count).        self._last_thesis: dict | None = None
 
@@ -258,6 +261,10 @@ class ChatScreen(Screen):
         self.paid_for = list(cfg.hybrid_paid_for or [])
         # Per-agent overrides from disk (used by the runtime adapter).
         self.per_agent_model = dict(cfg.per_agent_model or {})
+        # Streaming UX — read from disk so Settings saves propagate here.
+        self.stream_chunks = bool(getattr(cfg, "stream_chunks", True))
+        self.stream_typewriter_ms = int(
+            getattr(cfg, "stream_typewriter_ms", 0) or 0)
         self._update_footer_hint()
 
     def set_flow(self, flow_id: str) -> None:
@@ -421,6 +428,13 @@ class ChatScreen(Screen):
         elif isinstance(event, AgentChunk):
             bubble = self._bubble_index.get(event.agent_id)
             if bubble is not None:
+                # Apply user-configured typewriter delay (ms) before the
+                # delta lands, so the bubble grows at a human-readable pace
+                # even on providers whose streamed throughput exceeds reading
+                # speed (Groq, Cerebras, etc). 0 = instant.
+                if self.stream_typewriter_ms > 0:
+                    import time as _time
+                    _time.sleep(self.stream_typewriter_ms / 1000.0)
                 bubble.append_delta(event.delta)
 
         elif isinstance(event, AgentFinished):

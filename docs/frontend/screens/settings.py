@@ -69,7 +69,7 @@ from frontend.providers import (
 
 
 # Six sections in canonical order. The order matches PROTOCOL.md Appendix A.
-SECTIONS = ("providers", "default", "per-agent", "hybrid", "connectors", "defaults")
+SECTIONS = ("providers", "default", "per-agent", "hybrid", "connectors", "defaults", "streaming")
 
 # Filter chip order matches the L3 preview (Free first → recommendation).
 _FILTER_CHIPS: tuple[tuple[str, str | None], ...] = (
@@ -91,6 +91,7 @@ _EDITABLE_ROWS: dict[str, tuple[tuple[str, str], ...]] = {
     "default":   (("text", "model"),),
     "per-agent": (("text", "model"),),
     "defaults":  (("toggle", "depth"), ("toggle", "compressed")),
+    "streaming": (("toggle", "chunks"), ("text", "typewriter_ms")),
 }
 
 # Preset chip strip shown beneath the text editor input.
@@ -390,6 +391,8 @@ class SettingsScreen(Screen):
             self._render_connectors(card)
         elif section == "defaults":
             self._render_defaults(card)
+        elif section == "streaming":
+            self._render_streaming(card)
 
     # ---------------------------------------------------------- per-section renders
     def _render_providers(self, card: SectionCard) -> None:
@@ -487,6 +490,32 @@ class SettingsScreen(Screen):
         body.write("")
         self._render_add_row(card, "+ add connector",
                              "sec_edgar · google_rss · fred · polygon · fmp · …")
+
+    def _render_streaming(self, card: SectionCard) -> None:
+        body = card.body()
+        body.clear()
+        # Two editable rows: stream_chunks (toggle), typewriter_ms (text).
+        # The toggle is laid out like defaults_depth / defaults_compressed for muscle-memory parity.
+        body.write("\x1b[38;2;110;120;135m   chunks\x1b[0m        "
+                   + "\x1b[1;38;2;140;220;220m│\x1b[0m"
+                   + "\x1b[48;2;26;32;38m\x1b[38;2;212;212;212m "
+                   + ("true" if self._cfg.stream_chunks else "false")
+                   + " \x1b[0m\x1b[0m"
+                   + "    \x1b[38;2;110;120;135m"
+                   + ("false" if self._cfg.stream_chunks else "true")
+                   + "\x1b[0m")
+        body.write("")
+        # Typewriter delay (ms) — 0 means "no artificial delay" (provider speed wins).
+        body.write("\x1b[38;2;110;120;135m   typewriter_ms\x1b[0m "
+                   + "\x1b[1;38;2;140;220;220m│\x1b[0m"
+                   + "\x1b[48;2;26;32;38m\x1b[38;2;212;212;212m "
+                   + str(self._cfg.stream_typewriter_ms) + " ms \x1b[0m\x1b[0m"
+                   + "    \x1b[38;2;110;120;135m0 = off · 80 ≈ human typing speed\x1b[0m")
+        body.write("")
+        body.write("\x1b[38;2;110;120;135m   \u23af press \x1b[1;38;2;140;220;220me"
+                   "\x1b[0m\x1b[38;2;110;120;135m or \x1b[1;38;2;140;220;220m\u23ce"
+                   "\x1b[0m\x1b[38;2;110;120;135m to edit · toggles flip, "
+                   "typewriter_ms is a number 0..500\x1b[0m")
 
     def _render_defaults(self, card: SectionCard) -> None:
         body = card.body()
@@ -739,16 +768,26 @@ class SettingsScreen(Screen):
 
         if kind == "text":
             initial = self._read_field(section, key)
+            # typewriter_ms is an integer ms field — don't show the model presets
+            # so the user isn't tempted to type a model id; show a few delays
+            # (0, 10, 30, 80, 150) for quick pick instead.
+            if section == "streaming" and key == "typewriter_ms":
+                presets = ["0", "10", "30", "80", "150"]
+            else:
+                presets = _MODEL_PRESETS
             editor = InlineTextEditor(
                 editor_id=editor_id,
                 initial=initial,
-                presets=_MODEL_PRESETS,
+                presets=presets,
                 field_label=key,
             )
         else:  # toggle
             if key == "depth":
                 current = self._cfg.defaults_depth
                 options = ("STANDARD", "DEEP")
+            elif key == "chunks":
+                current = "true" if self._cfg.stream_chunks else "false"
+                options = ("true", "false")
             else:  # compressed
                 current = "true" if self._cfg.defaults_compressed else "false"
                 options = ("true", "false")
@@ -780,6 +819,11 @@ class SettingsScreen(Screen):
                 return self._cfg.defaults_depth
             if key == "compressed":
                 return "true" if self._cfg.defaults_compressed else "false"
+        if section == "streaming":
+            if key == "chunks":
+                return "true" if self._cfg.stream_chunks else "false"
+            if key == "typewriter_ms":
+                return str(self._cfg.stream_typewriter_ms)
         return ""
 
     def _write_field(self, section: str, key: str, value: str) -> tuple[bool, str | None]:
@@ -812,6 +856,20 @@ class SettingsScreen(Screen):
                 if err:
                     return False, err
                 self._cfg.defaults_compressed = (value == "true")
+                return True, None
+        if section == "streaming":
+            if key == "chunks":
+                err = _validate_field_io("streaming", "chunks", value)
+                if err:
+                    return False, err
+                self._cfg.stream_chunks = (value == "true")
+                return True, None
+            if key == "typewriter_ms":
+                err = _validate_field_io("streaming", "typewriter_ms", value)
+                if err:
+                    return False, err
+                # Already validated to be 0..500 by validate_field.
+                self._cfg.stream_typewriter_ms = int(value)
                 return True, None
         return False, "unknown section/key"
 
