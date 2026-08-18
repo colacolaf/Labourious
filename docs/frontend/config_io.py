@@ -334,14 +334,40 @@ KNOWN_PROVIDERS: list[tuple[str, str, str, str | None]] = [
 
 KNOWN_CONNECTORS: list[tuple[str, str, dict[str, str]]] = [
     # (name, label, extra)
-    ("sec_edgar",   "SEC filings (sec_edgar)",   {"provider": "sec_edgar", "user_agent": "Labourious <[email protected]>"}),
-    ("news",        "News (Google RSS)",         {"provider": "google_rss"}),
-    ("market_data", "Market data (yfinance + FRED)", {"provider": "yfinance", "fred_api_key_env": "$FRED_API_KEY"}),
-    ("web_fetch",   "Web page fetcher",          {"provider": "web_fetch"}),
-    ("fred",        "FRED macro series",         {"provider": "fred", "fred_api_key_env": "$FRED_API_KEY"}),
-    ("polygon",     "Polygon equities/options",  {"provider": "polygon", "polygon_api_key_env": "$POLYGON_API_KEY"}),
-    ("fmp",         "Financial Modeling Prep",   {"provider": "fmp", "fmp_api_key_env": "$FMP_API_KEY"}),
+    #  Derived from frontend.connectors_catalog.ALL_CONNECTORS so the picker,
+    #  strip widget, and runtime share one source of truth. The mapping is:
+    #    entry.provider     -> extra["provider"]
+    #    entry.key_env      -> extra[f"{entry.provider}_key_env"] = f"${entry.key_env}"
+    #                          when set; suppresses extra for keyless entries.
+    #    entry.description  -> label (used in picker)
+    #    entry.label (long) -> preserved for the settings list display
+    # Kept as a `@property` style tuple list, computed at import.
 ]
+
+
+def _build_known_connectors() -> list[tuple[str, str, dict[str, str]]]:
+    """Build the picker list from `frontend.connectors_catalog`.
+
+    Done lazily so we don't introduce an import-time cycle when this module
+    is imported before the catalog (e.g. from CLI smoke-test code).
+    """
+    try:
+        from frontend.connectors_catalog import ALL_CONNECTORS
+    except ImportError:
+        return []
+    out: list[tuple[str, str, dict[str, str]]] = []
+    for entry in ALL_CONNECTORS:
+        extra: dict[str, str] = {"provider": entry.provider}
+        if entry.key_env and not entry.keyless:
+            extra[f"{entry.provider}_key_env"] = f"${entry.key_env}"
+        description = entry.description
+        if entry.recommended:
+            description = f"\u2605 recommended \u00b7 {description}"
+        out.append((entry.name, description, extra))
+    return out
+
+
+KNOWN_CONNECTORS = _build_known_connectors()
 
 
 # --------------------------------------------------------------- display helpers

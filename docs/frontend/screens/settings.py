@@ -474,22 +474,43 @@ class SettingsScreen(Screen):
         self._render_add_row(card, "+ add agent", "orchestrator · senior-analyst · forensic-accounting · devils-advocate · final-report")
 
     def _render_connectors(self, card: SectionCard) -> None:
+        from frontend.connectors_catalog import by_name, TIER_LABEL  # type: ignore
         body = card.body()
         body.clear()
+        # Render-only handlers for side-channel indicators.
+        def _key_chip(entry) -> str:
+            if entry.keyless or entry.key_env is None:
+                return "\x1b[38;2;140;210;150mkeyless\x1b[0m"
+            return "\x1b[38;2;230;200;130m$" + entry.key_env + "\x1b[0m"
+        # Empty state — surface the MVP-5 count to invite first-run setup.
         if not self._cfg.connectors:
-            body.write("\x1b[38;2;110;120;135m  No connectors configured.\x1b[0m")
+            from frontend.connectors_catalog import recommended  # type: ignore
+            n_rec = len(recommended())
+            body.write(
+                "\x1b[38;2;110;120;135m  No connectors configured — "
+                f"{n_rec} ship on by default. Press \x1b[1;38;2;140;220;220m"
+                "Ctrl+N\x1b[0m\x1b[38;2;110;120;135m below, then "
+                "\x1b[1;38;2;140;220;220m↑/↓\x1b[0m\x1b[38;2;110;120;135m "
+                "to pick.\x1b[0m"
+            )
             body.write("")
             self._render_add_row(card, "+ add connector",
-                                 "sec_edgar · google_rss · fred · polygon · fmp · …")
+                                 "sec_edgar · quotes · transcripts · insider · 13F · …")
             return
+        # One row per configured connector, with the catalog's long label as
+        # the help text instead of the raw provider name (the old render showed
+        # `"provider": "edgar_rest"` — meaningless to users).
         for name, c in self._cfg.connectors.items():
-            extra = " · ".join(f"{k}: {v}" for k, v in c.extra.items())
-            detail = f"{c.provider}" + (f" / {extra}" if extra else "")
+            entry = by_name(name)
+            long_label = entry.label if entry else c.provider
+            star = "\x1b[1;38;2;140;220;220m\u2605\x1b[0m " if (entry and entry.recommended) else ""
+            key_text = _key_chip(entry) if entry else ""
+            detail = f"{star}{long_label} \u00b7 {key_text}"
             health = self._health.get(f"connector:{name}", "ok")
             body.write(_render_row(name=name, detail=detail, health=health))
         body.write("")
         self._render_add_row(card, "+ add connector",
-                             "sec_edgar · google_rss · fred · polygon · fmp · …")
+                             "sec_edgar · quotes · transcripts · insider · 13F · …")
 
     def _render_streaming(self, card: SectionCard) -> None:
         body = card.body()

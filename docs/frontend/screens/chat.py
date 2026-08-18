@@ -57,6 +57,7 @@ from frontend.keys import COMMAND_PALETTE_PREFIX  # type: ignore
 from frontend.events import (  # type: ignore
     FlowStarted, FlowFinished, FlowFailed,
     AgentStarted, AgentFinished, AgentFailed, AgentChunk,
+    ConnectorRequested, ConnectorCompleted, ConnectorFailed,
     ThesisPriorRead, ThesisWritten,
     CostDelta,
     is_known,
@@ -437,6 +438,37 @@ class ChatScreen(Screen):
                     _time.sleep(self.stream_typewriter_ms / 1000.0)
                 bubble.append_delta(event.delta)
 
+        elif isinstance(event, ConnectorRequested):
+            # Acknowledged but no UI yet — the strip's chips light up on
+            # the matching ConnectorCompleted / ConnectorFailed.
+            pass
+
+        elif isinstance(event, ConnectorCompleted):
+            # Route the strip entry to the most recent agent bubble. The runtime
+            # event currently doesn't carry `requested_by_agent` — when it does,
+            # we can route precisely. For now the fallback gives every tool call
+            # the bubble that last started, so the user sees what fired.
+            bubble = self._last_bubble() or self._bubble_index.get("final-report")
+            if bubble is not None:
+                bubble.record_connector_fired(
+                    tool=event.tool,
+                    status=event.status,
+                    as_of=event.as_of,
+                    note=event.note,
+                    data_summary=event.data_summary,
+                )
+            # Refresh the footer counter (cumulative across bubbles).
+            self._update_footer_hint()
+
+        elif isinstance(event, ConnectorFailed):
+            bubble = self._last_bubble() or self._bubble_index.get("final-report")
+            if bubble is not None:
+                bubble.record_connector_failed(
+                    tool=event.tool,
+                    error=event.error,
+                )
+            self._update_footer_hint()
+
         elif isinstance(event, AgentFinished):
             bubble = self._bubble_index.get(event.agent_id)
             if bubble is not None:
@@ -594,5 +626,38 @@ class ChatScreen(Screen):
 
     def _update_footer_hint(self, suffix: str = "") -> None:
         paid = ",".join(self.paid_for) if self.paid_for else "none"
-        base = f"{self.flow_id} · {self.model} · paid-for: {paid} · depth: {self.depth}"
+        connector_prefix = self._connector_footer_segment()
+        base = f"{connector_prefix}{self.flow_id} · {self.model} · paid-for: {paid} · depth: {self.depth}"
         self.set_status_footer(base + suffix)
+
+    def _connector_footer_segment(self) -> str:
+        """Roll up the connector state across every bubble that's mounted and
+        prepend a compact '3/9 active (1 stale)' counter into the footer.
+
+        Empty string when nothing has fired yet — keeps the cold-start footer clean.
+        """
+        from frontend.widgets.connector_strip import (
+            ConnectorStripState,
+            connectors_footer_segment,
+        )
+        agg = ConnectorStripState()
+        # Walk every mounted bubble; merge its chip map.
+        for bubble in (self._bubble_index or {}).values():
+            try:
+                st = bubble.connector_state()
+            except Exception:
+                continue
+            agg.chips.update(st.chips)
+        if not agg.chips:
+            return ""  # cold start
+        return connectors_footer_segment(agg) + "  \u00b7  "
+
+    def _last_bubble(self):
+        """The bubble that was most recently started — where connector
+        firings land while agent routing is undetermined."""
+        if not getattr(self, "_bubble_index", None):
+            return None
+        try:
+            return list(self._bubble_index.values())[-1]
+        except Exception:
+            return None

@@ -82,6 +82,11 @@ class MessageBubble(Vertical):
         yield Static(self._title_text(), classes="bubble-header")
         # Body is a RichLog. Wrap=True for visual flow; highlight=False for plain text rendering speed.
         yield RichLog(wrap=True, highlight=False, markup=False, classes="bubble-body")
+        # Connector strip (third child) — the '▾ via: A · B · C' line that
+        # shows which data sources this agent pulled. Defaults to '(none fired)'
+        # and gets updated by chat.py on ConnectorCompleted / ConnectorFailed.
+        from frontend.widgets.connector_strip import BubbleConnectorStrip  # local import
+        yield BubbleConnectorStrip(classes="bubble-connectors")
 
     # -- private helpers ------------------------------------------------- #
     def _title_text(self) -> str:
@@ -209,3 +214,37 @@ class MessageBubble(Vertical):
             cls = self.CONFIDENCE_CLASS.get(self._confidence)
             if cls is not None:
                 self.add_class(cls)
+
+    # -- connector strip -------------------------------------------------- #
+    def _strip(self):
+        """Resolve the embedded BubbleConnectorStrip widget (lazy import safe)."""
+        try:
+            from frontend.widgets.connector_strip import BubbleConnectorStrip  # type: ignore
+            return self.query_one(BubbleConnectorStrip)
+        except Exception:
+            return None
+
+    def record_connector_fired(self, **kw) -> None:
+        """Forward a success-side ConnectorCompleted event into the strip."""
+        strip = self._strip()
+        if strip is None:
+            return
+        strip.record_fired(**kw)
+
+    def record_connector_failed(self, **kw) -> None:
+        """Forward a ConnectorFailed event into the strip."""
+        strip = self._strip()
+        if strip is None:
+            return
+        strip.record_failed(**kw)
+
+    def connector_state(self):
+        """Read the current ConnectorStripState; used by chat.py to roll up footer counts.
+
+        Returns an empty state if the strip widget isn't mounted yet (race condition)."""
+        from frontend.widgets.connector_strip import ConnectorStripState  # type: ignore
+        strip = self._strip()
+        if strip is None:
+            return ConnectorStripState()
+        # The strip widget owns its state privately; expose a snapshot copy.
+        return ConnectorStripState(chips=dict(strip._state.chips))
