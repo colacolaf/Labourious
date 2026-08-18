@@ -193,3 +193,69 @@ list above. Items are ordered roughly by:
 If a future task adds something to the **What works today** snapshot, update
 this file in the same commit as the code change, so the snapshot stays
 current.
+
+---
+
+## Connectors — build order (see [`CONNECTORS.md`](CONNECTORS.md) for the deep research)
+
+Every connector = one new file in `docs/runtime/tools/<name>.py` (single
+dataclass, ToolResult railing) + one pilot + one commit. Pattern proven.
+
+### Tier 1 — free, no key, ship first
+
+| ID | Connector file | What it does | Why this slot |
+|---|---|---|---|
+| `conn-1` | `sec_edgar_fulltext.py` | EFTS `efts.sec.gov` query across all filings | Cross-filing pattern search: "all NVDA 8-Ks since 2024 mentioning 'guidance'." Kang/Liu's #1 fix for factuality on filings. |
+| `conn-2` | `insider.py` | OpenInsider scrape + EDGAR Form 4 fallback | Cluster buys + CEO-CFO direct buys = sentiment chart's first signal |
+| `conn-3` | `institutional.py` | WhaleWisdom scrape + EDGAR 13F fallback | Smart-money shift = strategy + sentiment's second signal |
+| `conn-4` | `transcripts.py` | SeekingAlpha public scrape + local cache | Management voice — fundamental's primary qualitative source |
+| `conn-5` | `news_8k.py` | Filter `news.py` to material-event 8-K filings | The legally-mandated event wire; freshness-tier upgrade |
+
+### Tier 2 — free w/ key, ship when tier 1 lands
+
+| ID | Connector file | Provider | Free tier |
+|---|---|---|---|
+| `conn-6` | `quotes_realtime.py` | Finnhub | 60 req/min |
+| `conn-7` | `fundamentals.py` | Financial Modeling Prep | 250 req/day |
+| `conn-8` | `consensus.py` | Finnhub | part of free |
+| `conn-9` | `calendars.py` | Finnhub | part of free |
+| `conn-10` | `newsapi.py` | NewsAPI.org | 100 req/day |
+| `conn-11` | `macro.py` | FRED | free w/ key (extract from `market_data.py`) |
+
+### Tier 3 — defer until flow f7 ships
+
+| ID | Connector file | Provider | Reason deferred |
+|---|---|---|---|
+| `conn-12` | `options_realtime.py` | Polygon/Massive | $29+/mo + only useful for f7 |
+| `conn-13` | `intraday.py` | Polygon/Massive | Tick data, out of memo cadence |
+| `conn-14` | `sentiment_quant.py` | Unusual Whales, Menthor Q | Paid; US-only |
+
+### Killed
+
+- `factset`, `bloomberg`, `lseg`, `capital_iq`, `pitchbook`, `morningstar_direct`
+  — enterprise-only, six-figure contracts. Out of free-model mission.
+- `alpha_sense`, `sentieo`, `daloopa` — premium terminals, same reason.
+- `esg_sustainalytics`, `msci_esg` — paid, accuracy disputed, v1 doesn't ask for it.
+- `global_equities` (non-US) — adds 4× complexity for tiny v1 leverage.
+
+### MVP-5 (lazy path)
+
+If we can only ship 5 connectors: `sec_edgar` + `sec_edgar_fulltext` + `quotes` + (`news_rss` + `news_8k`) + `insider`. Every memo has primary-filing traceability + a price anchor + material-event wire + Form 4 cluster buys. The other tiers are quality-of-life, not structure.
+
+### Pilot pattern (proven — copy verbatim from `tools/market_data.py`)
+
+```python
+# docs/runtime/tools/insider.py
+@dataclass
+class InsiderTool:
+    user_agent: str = ""  # for SEC fallback
+    cache_dir: str = "~/.labourious/cache/insider"
+
+    def cluster_buys(self, ticker: str, since: str, min_value: float) -> ToolResult:
+        # 1. try OpenInsider scrape (free, faster)
+        # 2. fall back to EDGAR /submissions/CIK*.json Form 4 walk
+        # 3. cache both, by as_of
+        # 4. return ToolResult(SUCCESS, data, as_of, source, note)
+```
+
+Pilot asserts: success/failure paths · cache hit on second call · as_of present · source URL present · 4-step freshness grant (T1: filings date, T2: 30d, T3: 90d, T4: never).
