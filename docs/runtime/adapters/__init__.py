@@ -18,10 +18,13 @@ class Response:
 def get_adapter(model_name: str):
     """
     Decide which adapter to use based on the model_name prefix:
-      - 'anthropic/...'  → Anthropic adapter
-      - 'ollama/...'     → Ollama adapter
-      - 'groq/...'       → Groq adapter
-      - anything else    → OpenAI-compat adapter (OpenRouter, Together, etc.)
+      - 'anthropic/...'      → Anthropic adapter (Messages API + SSE)
+      - 'ollama/...'         → Ollama adapter (local)
+      - 'groq/...'           → Groq adapter (its own speed-tuned SDK path)
+      - 'cohere/...'         → Cohere v2/chat adapter (command-r family)
+      - 'google_ai_studio/', 'gemini_vertex/'
+                              → Gemini adapter (:generateContent SSE)
+      - anything else        → OpenAI-compat adapter (covers 14 providers)
     """
     prefix = model_name.split("/", 1)[0].lower()
     if prefix == "anthropic":
@@ -33,5 +36,11 @@ def get_adapter(model_name: str):
     if prefix == "groq":
         from .groq import GroqAdapter
         return GroqAdapter(model=model_name)
+    if prefix == "cohere":
+        from .cohere import CohereAdapter
+        return CohereAdapter(model=model_name)
+    if prefix in ("google_ai_studio", "gemini_vertex"):
+        from .gemini import GeminiAdapter
+        return GeminiAdapter(model=model_name)
     from .openai_compat import OpenAICompatAdapter
     return OpenAICompatAdapter(model=model_name)

@@ -67,8 +67,8 @@ _OPENAI_COMPAT_SPECS: dict[str, _Spec] = {
     "mistral":     _Spec("mistral",     "https://api.mistral.ai/v1",               "MISTRAL_API_KEY",         streaming=True),
     "huggingface": _Spec("huggingface", "https://router.huggingface.co/v1",        "HF_TOKEN",                streaming=True),
     "cerebras":    _Spec("cerebras",    "https://api.cerebras.ai/v1",              "CEREBRAS_API_KEY",        streaming=True),
-    "google_ai_studio": _Spec("google_ai_studio", "https://generativelanguage.googleapis.com/v1beta/openai",
-                                                                "GOOGLE_API_KEY",            streaming=True),
+    # NB: google_ai_studio + gemini_vertex both routed through GeminiAdapter;
+    # their OpenAI-compat path is supported but slower than the native one.
     # tier 3 — paid
     "openai":      _Spec("openai",      "https://api.openai.com/v1",               "OPENAI_API_KEY",          streaming=True),
     "grok":        _Spec("grok",        "https://api.x.ai/v1",                     "XAI_API_KEY",             streaming=True),
