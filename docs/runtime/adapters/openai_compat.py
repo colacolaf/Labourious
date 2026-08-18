@@ -39,6 +39,7 @@ except ImportError:  # pragma: no cover — runtime requires httpx; tests inject
     httpx = None  # type: ignore
 
 from . import Response
+from ._streaming import StreamChunk, AuthMissing, AdapterHTTPError, merge_usage
 
 
 # ---------------------------------------------------------- registry
@@ -93,26 +94,7 @@ class ProviderNotSupported(Exception):
         )
 
 
-@dataclass(frozen=True)
-class AuthMissing(Exception):
-    provider: str
-
-    def __str__(self) -> str:
-        return (
-            f"No API key for '{self.provider}'. "
-            f"Add one in Settings → Providers, or set "
-            f"{self.provider.upper()}_API_KEY in your environment."
-        )
-
-
-@dataclass(frozen=True)
-class AdapterHTTPError(Exception):
-    provider: str
-    status: int
-    body: str
-
-    def __str__(self) -> str:
-        return f"{self.provider} HTTP {self.status}: {self.body[:200]}"
+# (AuthMissing + AdapterHTTPError are imported above from _streaming.)
 
 
 # ---------------------------------------------------------- keychain helpers
@@ -170,13 +152,9 @@ def _cost(in_tok: int, out_tok: int) -> float:
     return (in_tok / 1000.0) * cin + (out_tok / 1000.0) * cout
 
 
-# ---------------------------------------------------------- StreamChunk
-@dataclass
-class StreamChunk:
-    delta: str = ""
-    finish_reason: str | None = None
-    usage: dict[str, int] | None = None       # set only on the final chunk
-    raw: dict[str, Any] | None = field(default=None, repr=False)
+# (StreamChunk, AuthMissing, AdapterHTTPError, merge_usage are imported from
+#  runtime.adapters._streaming so AnthropicAdapter and future adapters share
+#  the same shapes.)
 
 
 # ---------------------------------------------------------- SSE helpers
