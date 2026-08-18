@@ -89,7 +89,11 @@ class ThesisRegister:
     # ---------------------------------------------------------------- #
     def write_thesis(self, ticker: str, thesis_text: str, conviction: int,
                      bottom_line: dict, evidence_urls: list[str],
-                     flow_id: str) -> int:
+                     flow_id: str) -> dict:
+        """Insert a new thesis row and return {thesis_id, version} so callers
+        can both identify the row (id) and surface the human-readable version
+        (1, 2, 3, …) to the TUI's thesis-snapshot chip.
+        """
         if isinstance(bottom_line, dict):
             bottom_line = json.dumps(bottom_line)
         if isinstance(evidence_urls, list):
@@ -117,7 +121,7 @@ class ThesisRegister:
             ),
         )
         self._conn.commit()
-        return cur.lastrowid
+        return {"thesis_id": cur.lastrowid, "version": max_v + 1}
 
     # ---------------------------------------------------------------- #
     # update

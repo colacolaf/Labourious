@@ -173,9 +173,13 @@ def call_agent(
                 system=system_prompt,
                 options={"temperature": 0.2},
             ):
-                if chunk.delta and emit_event is not None:
-                    text += chunk.delta
-                    emit_event(AgentChunk(agent_id=agent_id, delta=chunk.delta))
+                if chunk.delta is not None:
+                    # Always accumulate the delta into the envelope source —
+                    # even if no emitter is hooked (e.g. a CLI pilot).
+                    if chunk.delta:
+                        text += chunk.delta
+                    if emit_event is not None:
+                        emit_event(AgentChunk(agent_id=agent_id, delta=chunk.delta))
                 if chunk.usage:
                     in_tok = chunk.usage.get("prompt_tokens", 0)
                     out_tok = chunk.usage.get("completion_tokens", 0)
@@ -234,6 +238,7 @@ def execute_flow_f1(
     paid_for: list[str] | None,
     emit_event: "Callable[[Any], None] | None" = None,
     per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
 ) -> dict[str, Any]:
     """
     Flagship f1 — analyze ticker. Returns the final envelope (final-report JSON)
@@ -246,6 +251,12 @@ def execute_flow_f1(
             run_flow_stream() passes a hook that re-yields events to the TUI.
         per_agent_model: optional dict mapping agent_id → model string. Wins
             over `paid_for` and the default `model` for any agent listed.
+        stream_chunks: when True, each call_agent emits one AgentChunk per
+            streamed text delta (instead of one AgentChunk with the full body).
+            Backed by the adapter's `.stream()` method when available;
+            AnthropicAdapter, OpenAICompatAdapter, CohereAdapter and
+            GeminiAdapter all stream natively. Default False preserves the
+            pre-streaming CLI contract.
     """
     register = ThesisRegister()
     prior_thesis = register.read_thesis(ticker, since_days=14)
@@ -260,6 +271,7 @@ def execute_flow_f1(
         "compressed": False,
     })
     orch_env, orch_cost = call_agent("orchestrator", orch_brief, model,
+                                     stream_chunks=stream_chunks,
                                      paid_for=paid_for, emit_event=emit_event,
                                      per_agent_model=per_agent_model)
 
@@ -275,7 +287,8 @@ def execute_flow_f1(
     })
     sr_env, sr_cost = call_agent("senior-analyst", sr_brief, model,
                                  paid_for=paid_for, emit_event=emit_event,
-                                 per_agent_model=per_agent_model)
+                                 per_agent_model=per_agent_model,
+                                 stream_chunks=stream_chunks)
 
     # Wave 3: forensic-accounting + devils-advocate (sequential; future: parallel)
     fa_brief = json.dumps({
@@ -287,7 +300,8 @@ def execute_flow_f1(
     })
     fa_env, fa_cost = call_agent("forensic-accounting", fa_brief, model,
                                  paid_for=paid_for, emit_event=emit_event,
-                                 per_agent_model=per_agent_model)
+                                 per_agent_model=per_agent_model,
+                                 stream_chunks=stream_chunks)
 
     da_brief = json.dumps({
         "from": "senior-analyst",
@@ -299,7 +313,8 @@ def execute_flow_f1(
     })
     da_env, da_cost = call_agent("devils-advocate", da_brief, model,
                                  paid_for=paid_for, emit_event=emit_event,
-                                 per_agent_model=per_agent_model)
+                                 per_agent_model=per_agent_model,
+                                 stream_chunks=stream_chunks)
 
     # Wave 4: final-report
     fr_brief = json.dumps({
@@ -313,7 +328,8 @@ def execute_flow_f1(
     })
     final_env, final_cost = call_agent("final-report", fr_brief, model,
                                        paid_for=paid_for, emit_event=emit_event,
-                                       per_agent_model=per_agent_model)
+                                       per_agent_model=per_agent_model,
+                                       stream_chunks=stream_chunks)
 
     # Persist to thesis register
     thesis_row = register.write_thesis(
@@ -364,6 +380,7 @@ def run_flow_stream(
     model: str,
     paid_for: list[str] | None = None,
     per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
 ) -> Iterator[Any]:
     """
     Yield typed `Event` dataclasses as a flow progresses.
@@ -377,6 +394,13 @@ def run_flow_stream(
 
     `per_agent_model` (optional) maps agent_id → model string and is forwarded
     into `call_agent` for per-agent model routing.
+
+    `stream_chunks` (optional) propagates down to `execute_flow_f1` → each
+    `call_agent`. When True, every streamed text delta becomes its own
+    AgentChunk event in the yield stream — the TUI consumes them and
+    updates each agent's bubble incrementally. Default False preserves
+    the pre-streaming CLI contract where each agent emits ONE chunk with
+    the full body.
     """
     if flow_id != "f1":
         raise NotImplementedError(
@@ -438,6 +462,7 @@ def run_flow_stream(
             paid_for=paid_for,
             emit_event=emit,
             per_agent_model=per_agent_model,
+            stream_chunks=stream_chunks,
         )
     except Exception as exc:
         # Drain everything the agent emitted before the crash, then FlowFailed.

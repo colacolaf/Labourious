@@ -135,6 +135,12 @@ class ChatScreen(Screen):
         # Per-agent model overrides — populated from Config on init; refreshed
         # when the Settings modal saves (see reload_config_from_disk below).
         self.per_agent_model: dict[str, str] = {}
+        # Streaming mode — when True, each adapter's `.stream()` feeds the
+        # bubble with one AgentChunk per text delta (incremental). When
+        # False, the runtime emits one AgentChunk per agent with the full
+        # body (cheaper, but no perceived typing effect). Default ON for
+        # the real runtime; the mock runtime ignores this flag.
+        self.stream_chunks: bool = True
         # Last ThesisWritten event captured (used to populate the
         # citation chip with real data, not just a count).        self._last_thesis: dict | None = None
 
@@ -369,8 +375,13 @@ class ChatScreen(Screen):
             """Inner generator. Consumes events in a thread; schedules UI updates."""
             # Pick the runtime: mock for pilots/demos, real for production.
             src = run_mock_flow_stream if mock_runtime_available() else run_flow_stream
+            # stream_chunks=True routes through each adapter's .stream() and
+            # emits one AgentChunk per text delta — the TUI bubbles update
+            # incrementally instead of waiting for the full body. Set False
+            # only if the user prefers the cheaper bundled-emission path.
             for event in src(flow_id, inputs, self.model, self.paid_for,
-                             per_agent_model=self.per_agent_model or None):
+                             per_agent_model=self.per_agent_model or None,
+                             stream_chunks=self.stream_chunks):
                 if not is_known(event):
                     continue
                 # Marshal back to the UI thread.

@@ -103,6 +103,7 @@ def run_mock_flow_stream(
     model: str = "ollama/llama3.3:70b",
     paid_for: list[str] | None = None,
     per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
 ) -> Iterator[Any]:
     """
     Yield FlowStarted → ThesisPriorRead → 5×(AgentStarted → AgentChunk + cost →
@@ -110,7 +111,11 @@ def run_mock_flow_stream(
 
     Honors the `sleep` keyword in inputs (default 0.0) so the pilot can slow
     it down to test streaming visualization.
+
+    Accepts `stream_chunks` for parity with `run_flow_stream` — the mock
+    runtime ignores the flag because it always emits one chunk per agent.
     """
+    del stream_chunks  # noqa: F841 — accepted for kwarg parity, not used
     from runtime.events import (
         FlowStarted, FlowFailed, ThesisPriorRead,
         AgentStarted, AgentChunk, AgentFinished, AgentFailed,
