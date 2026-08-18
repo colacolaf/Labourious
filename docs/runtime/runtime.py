@@ -29,16 +29,31 @@ FLOWS_DIR = PROJECT_ROOT / "docs" / "flows"
 RUNS_DIR = PROJECT_ROOT / "docs" / "runtime" / ".runs"
 COST_LOG = PROJECT_ROOT / "docs" / "runtime" / ".runs" / "cost.json"
 
-# Import local modules
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from adapters import get_adapter  # type: ignore
-from thesis_register.register import ThesisRegister  # type: ignore
-from events import (  # type: ignore  # noqa: E402  -- the event schema lives in events.py
-    FlowStarted, FlowFinished, FlowFailed,
-    AgentStarted, AgentChunk, AgentFinished, AgentFailed,
-    ThesisPriorRead, ThesisWritten,
-    CostDelta,
-)
+# Import local modules. Prefer relative (so the agents/events classes
+# resolve as `runtime.events.AgentChunk` rather than as a duplicate
+# `events.AgentChunk` from a sys.path-loaded copy of the same file —
+# that duplicate was the source of an isinstance-mismatch bug). Fall
+# back to absolute when the script is run directly as
+# `python3 docs/runtime/runtime.py ...` (no parent package).
+try:
+    from .adapters import get_adapter  # type: ignore
+    from .thesis_register.register import ThesisRegister  # type: ignore
+    from .events import (  # type: ignore  # noqa: E402  -- the event schema lives in events.py
+        FlowStarted, FlowFinished, FlowFailed,
+        AgentStarted, AgentChunk, AgentFinished, AgentFailed,
+        ThesisPriorRead, ThesisWritten,
+        CostDelta,
+    )
+except (ImportError, ValueError):
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from adapters import get_adapter  # type: ignore
+    from thesis_register.register import ThesisRegister  # type: ignore
+    from events import (  # type: ignore
+        FlowStarted, FlowFinished, FlowFailed,
+        AgentStarted, AgentChunk, AgentFinished, AgentFailed,
+        ThesisPriorRead, ThesisWritten,
+        CostDelta,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -107,6 +122,7 @@ def call_agent(
     paid_for: list[str] | None = None,
     emit_event: "Callable[[Any], None] | None" = None,
     per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Calls an agent by loading its prompt, calling the model, parsing the JSON envelope.
@@ -115,6 +131,13 @@ def call_agent(
     If `emit_event` is provided, emits AgentStarted and AgentFinished around the call.
     AgentFailed is emitted (and re-raised) on unrecoverable errors so the TUI can
     surface partial progress.
+
+    If `stream_chunks` is True AND the adapter exposes a `.stream()` method
+    (i.e., OpenAICompatAdapter for openrouter / openai / grok / cerebras /
+    mistral / deepseek / etc), the connector's per-token deltas are emitted as
+    individual AgentChunk events so the TUI can stream text into the bubble
+    incrementally. The full text is still accumulated for envelope parsing, so
+    downstream callers see the same return shape.
 
     Model-routing precedence (highest first):
       1. `per_agent_model[agent_id]` — explicit override from the user
@@ -139,39 +162,62 @@ def call_agent(
     try:
         adapter = get_adapter(effective_model)
         t0 = time.monotonic()
-        response = adapter.call(
-            messages=[{"role": "user", "content": user_brief}],
-            system=system_prompt,
-            options={"temperature": 0.2},
-        )
+        text = ""
+        in_tok = 0
+        out_tok = 0
+        cost_usd = 0.0
+        if stream_chunks and hasattr(adapter, "stream"):
+            # Streaming path — emit one AgentChunk per delta.
+            for chunk in adapter.stream(
+                messages=[{"role": "user", "content": user_brief}],
+                system=system_prompt,
+                options={"temperature": 0.2},
+            ):
+                if chunk.delta and emit_event is not None:
+                    text += chunk.delta
+                    emit_event(AgentChunk(agent_id=agent_id, delta=chunk.delta))
+                if chunk.usage:
+                    in_tok = chunk.usage.get("prompt_tokens", 0)
+                    out_tok = chunk.usage.get("completion_tokens", 0)
+                    cost_usd = chunk.usage.get("cost_usd_estimate", 0.0)
+        else:
+            # Standard (single-shot) path — emit one AgentChunk with the full body.
+            response = adapter.call(
+                messages=[{"role": "user", "content": user_brief}],
+                system=system_prompt,
+                options={"temperature": 0.2},
+            )
+            text = response.text
+            in_tok = response.in_tokens
+            out_tok = response.out_tokens
+            cost_usd = response.cost_usd_estimate
+            if emit_event is not None:
+                emit_event(AgentChunk(agent_id=agent_id, delta=response.text))
         wallclock = time.monotonic() - t0
-        # v1: single AgentChunk per agent (the full body); future: per-token deltas.
-        if emit_event is not None:
-            emit_event(AgentChunk(agent_id=agent_id, delta=response.text))
         # Parse envelope
         try:
-            envelope = json.loads(response.text)
+            envelope = json.loads(text)
         except json.JSONDecodeError as exc:
-            raise RuntimeError(f"{agent_id} returned non-JSON: {exc}\nRaw: {response.text[:500]}") from exc
+            raise RuntimeError(f"{agent_id} returned non-JSON: {exc}\nRaw: {text[:500]}") from exc
         ok, failures = validate_envelope(envelope, agent_id)
         if not ok:
             raise RuntimeError(f"{agent_id} envelope failed validation: {failures}")
         cost = {
             "agent_id": agent_id,
             "model": effective_model,
-            "in_tokens": response.in_tokens,
-            "out_tokens": response.out_tokens,
-            "cache_hit_tokens": response.cache_hit_tokens,
-            "cost_usd_estimate": response.cost_usd_estimate,
+            "in_tokens": in_tok,
+            "out_tokens": out_tok,
+            "cache_hit_tokens": 0,
+            "cost_usd_estimate": cost_usd,
             "wallclock_s": round(wallclock, 2),
             "as_of": dt.datetime.utcnow().isoformat() + "Z",
         }
         if emit_event is not None:
             emit_event(AgentFinished(agent_id=agent_id, envelope=envelope,
                                      wallclock_s=cost["wallclock_s"],
-                                     in_tokens=response.in_tokens,
-                                     out_tokens=response.out_tokens,
-                                     cost_usd_estimate=response.cost_usd_estimate))
+                                     in_tokens=in_tok,
+                                     out_tokens=out_tok,
+                                     cost_usd_estimate=cost_usd))
         return envelope, cost
     except Exception as exc:
         if emit_event is not None:
