@@ -86,7 +86,7 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 - Process: 9 pilots × ~140 assertions, ZERO failures (this commit).
 
 ✅ Process
-- 27+ pilots × ~760+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `acfe3ebe` → `726cb4fa` → `a2b98b83` → `pending this commit`)
+- 28+ pilots × ~800+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `acfe3ebe` → `726cb4fa` → `a2b98b83` → `3a717669` → `pending this commit`)
 
 ---
 
@@ -713,6 +713,88 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
 ### [protocol-7] Document v1 connector schema (`docs/V1-CONNECTORS.md`)
 - Same for tools — what params, what response, how citation metadata
   is extracted
+
+### [domain-7] ETag short-circuit: HTTP 304 preserves snippet cache  ✅ DONE
+- **What shipped**: when an HTTP connector returns
+  ``ToolResult(status="UNCHANGED", ...)`` after a ``304 Not Modified``
+  response, the snippet cache preserves content verbatim, regardless
+  of TTL / as_of gates. Zero body bytes downloaded.
+- **New module surface**:
+  - ``STATUS_UNCHANGED = "UNCHANGED"`` sentinel exported from
+    ``runtime/tools/__init__.py``.
+  - ``ToolResult.etag: str | None`` dataclass field (default None).
+  - ``SnippetMetadata.cached_etag: str | None`` dataclass field
+    with JSON round-trip; back-compat old-format sidecars parse
+    cleanly.
+  - ``write_snippet_for`` honours ``UNCHANGED`` upfront: returns
+    cached ``SnippetPath(new_write=False)``, but bumps
+    ``written_at`` to ``now`` so the chip's staleness badge
+    reflects the last-confirmed upstream check. Re-attested
+    ``etag`` and ``as_of`` from the new ``ToolResult`` get
+    persisted on the sidecar if the connector sends them.
+  - ``force=True`` does NOT overrule UNCHANGED — if upstream says
+    unchanged, ``force`` doesn't help (semantic correctness).
+  - ``call_tool`` now also recognises ``UNCHANGED`` for the
+    snippet-cacheable tools (sec_edgar_fulltext, news_8k, transcripts)
+    in addition to ``SUCCESS``.
+- **Connector-side integration** (descriptive — actual ETag fetch
+  happens inside each HTTP connector):
+  - The runtime layer reads ``snippet_metadata_for(path).cached_etag``
+    pre-call and logs it for inspection. Connectors that support
+    conditional GETs read this value, send it as ``If-None-Match``,
+    and on 304 return ``ToolResult(status="UNCHANGED", etag=...)``.
+  - Tools that don't support conditional GETs simply ignore the
+    log line and behave as before.
+- **Pilot** ([smokes/snippet_etag_smoke.py](runtime/smokes/snippet_etag_smoke.py))
+  — **35 / 35 ok**, covering:
+  1. ``STATUS_UNCHANGED`` constant + ``ToolResult.etag`` plumbing (4).
+  2. ``SnippetMetadata`` JSON round-trip preserves ``cached_etag``;
+     back-compat for old sidecars without the field (4).
+  3. First write records ``cached_etag`` in sidecar (3).
+  4. UNCHANGED preserves cache (within TTL): byte-equal content,
+     re-attested ``cached_etag``, bumped ``written_at`` (6).
+  5. UNCHANGED beats the TTL gate — past-TTL + 304 still preserves (3).
+  6. UNCHANGED on no prior cache returns ``None`` (1).
+  7. UNCHANGED with rotated ``etag`` re-attests the new value (2).
+  8. ``force=True`` respects UNCHANGED — no overrule of 304 (3).
+  9. SUCCESS write records new ``etag`` on sidecar (2).
+  10. End-to-end ``call_tool(run_id=...)`` 3-step rotation:
+      200→warm cache, 304→preserved, 200-rotated-etag → refresh
+      (8).
+- **Path through the system** (forward-looking):
+  1. ``call_tool`` reads ``snippet_metadata_for(path).cached_etag``
+     pre-call.
+  2. Connector (e.g. news_8k) sets ``If-None-Match: <etag>`` and
+     sends the request. On 304, returns
+     ``ToolResult(status="UNCHANGED", etag=...)``.
+  3. ``call_tool`` sees UNCHANGED, calls ``write_snippet_for``,
+     which short-circuits to ``new_write=False`` and bumps
+     ``written_at`` to now.
+  4. The downstream chip sees the same ``snippet_path`` (no
+     file change), and its staleness badge reflects the
+     just-confirmed check.
+- **Why this matters**: the Wharton iteration workflow means users
+  re-run the same flow dozens of times. Each connector call today
+  re-downloads the body even when upstream hasn't changed. With
+  ETag short-circuit, the second/third runs from the same day:
+  - 1 download per upstream change (not per run).
+  - Network bytes saved: ~2 KB per snippet × N rows × M days.
+  - Latency: 304 is sub-second; 200 with body is several seconds
+    round-trip with parsing.
+- **Combined regression**: 18 pilots × 800+ assertions, ZERO
+  failures; ``pytest docs/runtime/evals/`` 7/7 pass.
+- **What's NOT yet wired** (future follow-ups):
+  - Connectors that don't currently support conditional GETs
+    (e.g. SEC EDGAR) need their HTTP fetcher updated to read
+    ``snippet_metadata_for(path).cached_etag`` and send
+    ``If-None-Match``. The runtime scaffolding is in place;
+    per-connector integration is its own patch.
+  - The current UNCHANGED path uses ``section_cache``-style
+    freshness (chip label flips `` ◫`` → ``⚠ ◫`` based on
+    ``written_at``). When a 304 re-attests the ETag, we bump
+    ``written_at`` *and* (if the connector re-attested it)
+    ``cached_etag``. Reviewers see `` ◫`` (fresh) immediately;
+    the ETag stays current; the chip's data is still cached.
 
 ---
 

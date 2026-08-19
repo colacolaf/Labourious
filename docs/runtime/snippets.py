@@ -52,6 +52,16 @@ strict ``>`` so an equal ``as_of`` falls back to the TTL check.
 We deliberately do NOT downgrade the cache when ``as_of`` regresses
 (a stale response with an older timestamp doesn't lose what we have).
 
+ETag short-circuit ([domain-7]): HTTP connectors that support
+conditional GETs read ``snippet_metadata_for(path).cached_etag``
+*before* calling the connector and pass it as ``If-None-Match``
+on the upstream request. If the upstream returns 304 Not Modified,
+the connector returns ``ToolResult(status="UNCHANGED", ...)`` and
+``write_snippet_for`` recognises UNCHANGED and preserves the cached
+content with ``new_write=False`` regardless of TTL or as_of gates.
+Net effect: zero body bytes downloaded when upstream confirms the
+cache is current.
+
 Two responsibilities kept here, none elsewhere:
 
 1. Excerpt construction from arbitrary ToolResult.data shapes (capped).
@@ -254,6 +264,7 @@ class SnippetMetadata:
     ttl_seconds: int
     truncated: bool = False
     cached_as_of: str | None = None            # upstream's as_of at last write
+    cached_etag: str | None = None              # upstream's ETag at last write
 
     def age_seconds(self, now_s: float | None = None) -> float:
         return (now_s if now_s is not None else _now_s()) - self.written_at
@@ -272,6 +283,7 @@ class SnippetMetadata:
             "ttl_seconds": self.ttl_seconds,
             "truncated": self.truncated,
             "cached_as_of": self.cached_as_of,
+            "cached_etag": self.cached_etag,
         }, indent=2)
 
     @staticmethod
@@ -284,6 +296,7 @@ class SnippetMetadata:
             ttl_seconds=int(d["ttl_seconds"]),
             truncated=bool(d.get("truncated", False)),
             cached_as_of=d.get("cached_as_of"),
+            cached_etag=d.get("cached_etag"),
         )
 
 
@@ -426,10 +439,60 @@ def write_snippet_for(tr: Any, run_id: str, idx: int,
     Either gate firing → refresh. Neither firing → return cached
     SnippetPath with ``new_write=False``. ``force=True`` skips both
     gates entirely (used by tests + ops).
+
+    ETag (\"Not Modified\") handling: when ``tr.status == \"UNCHANGED\"``—
+    the connector's signal that the upstream returned 304 Not Modified—
+    the cache is preserved with ``new_write=False`` regardless of
+    TTL/as_of gates. ``force=True`` still respects UNCHANGED: if the
+    upstream confirms the cache is current, ``force`` doesn't overrrule
+    that (the only correct semantics). On UNCHANGED with no cached
+    snippet yet, we return ``None`` (nothing to preserve).
     """
     if tr is None:
         return None
     status = getattr(tr, "status", "")
+
+    # === UNCHANGED (304 Not Modified) ===
+    # The cache is preserved verbatim. We DO update ``written_at`` to
+    # ``now`` so the chip's staleness badge reflects the last-confirmed
+    # upstream check, but the cached content stays the same. We refresh
+    # ``cached_as_of`` and ``cached_etag`` only if the connector
+    # *did* re-attest them on the 304 (some connectors return the
+    # original headers, others don't). When the new ToolResult
+    # carries ``etag`` and ``as_of``, we keep them current; otherwise
+    # we preserve the sidecar's existing values.
+    if status == "UNCHANGED":
+        source = getattr(tr, "source", "") or "unknown"
+        safe = _safe_source(source)
+        base = Path(base_dir) if base_dir else RUNS_DIR
+        path = base / run_id / "snippets" / f"{safe}_{idx}.txt"
+        if not path.exists():
+            return None
+        meta = snippet_metadata_for(path)
+        size = path.stat().st_size
+        # Bump written_at to now if the 304 came with newer meta;
+        # otherwise keep the existing meta verbatim.
+        new_etag = getattr(tr, "etag", None) or (meta.cached_etag if meta else None)
+        new_as_of = getattr(tr, "as_of", "") or (meta.cached_as_of if meta else None)
+        new_meta = SnippetMetadata(
+            written_at=_now_s(),
+            source=source,
+            bytes_written=size,
+            ttl_seconds=(meta.ttl_seconds if meta else _resolve_ttl(source)),
+            truncated=(meta.truncated if meta else False),
+            cached_as_of=new_as_of,
+            cached_etag=new_etag,
+        )
+        meta_path = _meta_path_for(path)
+        meta_path.write_text(new_meta.to_json(), encoding="utf-8")
+        return SnippetPath(
+            path=path,
+            bytes_written=size,
+            truncated=new_meta.truncated,
+            new_write=False,
+            metadata=new_meta,
+        )
+
     if status != "SUCCESS":
         return None
     source = getattr(tr, "source", "") or "unknown"
@@ -477,6 +540,7 @@ def write_snippet_for(tr: Any, run_id: str, idx: int,
         ttl_seconds=ttl,
         truncated=truncated,
         cached_as_of=getattr(tr, "as_of", "") or None,
+        cached_etag=getattr(tr, "etag", None),
     )
     meta_path.write_text(metadata.to_json(), encoding="utf-8")
     return SnippetPath(

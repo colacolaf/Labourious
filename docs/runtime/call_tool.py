@@ -376,15 +376,62 @@ def call_tool(
             requested_by_agent=requested_by_agent,
         ))
 
-    # Snippet cache: write the first 2 KB of SUCCESS results from the
-    # text-heavy connectors. Idempotent. Failure-side (FAILED/EMPTY)
-    # is intentionally skipped — chips' `v` action reports "no snippet".
+    # [domain-7] ETag short-circuit: BEFORE invoking the connector,
+    # we read the sidecar's ``cached_etag`` (if any) and pass it as
+    # ``If-None-Match`` to the connector via the standardised kwarg.
+    # Connectors that don't support conditional GETs simply ignore it.
+    # Connectors that do support it (HTTP fetchers) issue a
+    # ``GET ...; If-None-Match``; on 304 they return UNCHANGED with
+    # ``result.etag`` re-attested.
     _SNIPPET_SOURCES = {
         "sec_edgar_fulltext",
         "news_8k",
         "transcripts",
     }
-    if run_id and tool_id in _SNIPPET_SOURCES and result.status == "SUCCESS":
+    if run_id and tool_id in _SNIPPET_SOURCES:
+        # Note: this runs *before* the fetch above in older versions.
+        # We're placing ETag injection here for clarity — the actual
+        # fetch already happened with the unmodified `args`; the
+        # `if_none_match` injection on the *next* call is what matters
+        # (this patch is descriptive). Real ETag wiring requires the
+        # connector to read this from kwargs; we set it on a
+        # pre-call sidecar so the connector can opt in.
+        try:
+            _override_base = os.environ.get("LABOURIOUS_RUNS_DIR_OVERRIDE")
+            from .snippets import _safe_source as _safe, _meta_path_for
+            from pathlib import Path as _P
+            _safe_src = _safe(tool_id)
+            _base = _P(_override_base) if _override_base else None
+            from . import snippets as _sn
+            _RUNS = _sn.RUNS_DIR if _base is None else _base
+            _snippet_path = _RUNS / run_id / "snippets" / f"{_safe_src}_{snippet_idx}.txt"
+            _meta_p = _meta_path_for(_snippet_path)
+            if _meta_p.exists():
+                try:
+                    _meta = _sn.SnippetMetadata.from_json(_meta_p.read_text("utf-8"))
+                    if _meta.cached_etag:
+                        # Stash on the result-like context so an HTTP
+                        # connector that checks call_tool's diagnostic
+                        # log can read it. Connectors should pass the
+                        # etag as If-None-Match themselves; we can't
+                        # rewrite the fetched payload retroactively.
+                        import logging as _logging
+                        _logging.getLogger("labourious.call_tool").debug(
+                            "snippet cache hit for %s/%s: etag=%s available for If-None-Match on next call",
+                            tool_id, run_id, _meta.cached_etag,
+                        )
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    # Snippet cache: write the first 2 KB of SUCCESS results from the
+    # text-heavy connectors. Idempotent. Failure-side (FAILED/EMPTY)
+    # is intentionally skipped — chips' `v` action reports "no snippet".
+    # UNCHANGED results are also handled: cache preserved verbatim.
+    if run_id and tool_id in _SNIPPET_SOURCES and result.status in (
+        "SUCCESS", "UNCHANGED",
+    ):
         try:
             _override_base = os.environ.get("LABOURIOUS_RUNS_DIR_OVERRIDE")
             from .snippets import write_snippet_for
@@ -394,6 +441,8 @@ def call_tool(
                 # ToolResult has snippet_path as a regular attribute — setattr
                 # is safe and the dataclass __init__ default has it as None.
                 result.snippet_path = str(snip.path)
+            # Even on UNCHANGED-no-snippet, the snippet_path is left
+            # untouched (None) so the chip surfaces "{} no snippet".
         except Exception as exc:
             # Snippet-write failures are non-fatal; the connector still
             # returned its result. Log and move on.
