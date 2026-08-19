@@ -145,15 +145,62 @@ class CitationChip(Static):
             return "[no citations] ↵"
         word = "citation" if self.count == 1 else "citations"
         snippet_count = sum(1 for p in self.snippet_paths if p)
-        snippet_badge = " ◫" if snippet_count else ""
+        # Whole-chip snippet badge: shows ◫ if any cached snippet is
+        # fresh, ⚠ ◫ if at least one is past its TTL, and nothing if
+        # no snippets at all. We pick the *worst* state — a stale
+        # badge always wins over a fresh one — so reviewers can't miss it.
+        if snippet_count:
+            snippet_badge = " ⚠ ◫" if self._any_snippet_stale() else " ◫"
+        else:
+            snippet_badge = ""
         if self.count == 1 or self._current_idx < 0:
             return f"[{self.count} {word}{snippet_badge}] ↵"
         host = self._short_host(self._current_url()) or "?"
         # Per-citation snippet mini-badge if THIS idx has a cached snippet.
-        per_idx_snip = " ◫" if (self._current_idx < len(self.snippet_paths)
-                                and self.snippet_paths[self._current_idx]) else ""
+        per_idx_stale, per_idx_present = self._idx_snippet_stale()
+        if per_idx_present:
+            per_idx_snip = " ⚠ ◫" if per_idx_stale else " ◫"
+        else:
+            per_idx_snip = ""
         # Show "idx/n · host" so the user knows which one `o` will fire.
         return f"[{self._current_idx + 1}/{self.count} {host}{per_idx_snip}] ↵"
+
+    def _any_snippet_stale(self) -> bool:
+        """True if at least one snippet's cache TTL has elapsed.
+
+        Reads the sidecar metadata on disk each time, so a re-rendered
+        chip picks up freshness changes without needing a remount.
+        Failure to read sidecar is treated as fresh (the conservative
+        choice — better than flashing ⚠ on a malformed meta file).
+        """
+        try:
+            from runtime.snippets import snippet_metadata_for
+        except Exception:
+            # Best-effort: pure-frontend label rendering shouldn't
+            # crash when runtime import is unavailable.
+            return False
+        for p in self.snippet_paths:
+            if not p:
+                continue
+            meta = snippet_metadata_for(p)
+            if meta is not None and meta.is_stale():
+                return True
+        return False
+
+    def _idx_snippet_stale(self) -> tuple[bool, bool]:
+        """Return ``(is_stale, has_snippet)`` for the current idx."""
+        if (self._current_idx < 0
+            or self._current_idx >= len(self.snippet_paths)
+            or not self.snippet_paths[self._current_idx]):
+            return (False, False)
+        try:
+            from runtime.snippets import snippet_metadata_for
+        except Exception:
+            return (False, True)
+        meta = snippet_metadata_for(self.snippet_paths[self._current_idx])
+        if meta is None:
+            return (False, True)
+        return (meta.is_stale(), True)
 
     def _current_url(self) -> str:
         if not self.citations or self._current_idx < 0:

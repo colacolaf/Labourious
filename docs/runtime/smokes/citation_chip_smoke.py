@@ -56,10 +56,13 @@ def step(label, cond):
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
-def make_chip(citations: List[str]) -> chip_mod.CitationChip:
+def make_chip(citations: List[str], snippet_paths: List[str | None] | None = None) -> chip_mod.CitationChip:
     """Build a CitationChip outside a real app context for unit-style checks."""
     chip_id = f"test-chip-{len(citations)}"
-    chip = chip_mod.CitationChip(citations=citations, id=chip_id)
+    chip_kwargs = {"citations": citations, "id": chip_id}
+    if snippet_paths is not None:
+        chip_kwargs["snippet_paths"] = snippet_paths
+    chip = chip_mod.CitationChip(**chip_kwargs)
     # `Static.__init__` requires `renderable=` or text arg; the chip's
     # constructor already passes self._label() — so the widget is ready
     # but cannot be mounted without an app. We work around this by
@@ -282,6 +285,84 @@ banner.set_info("✓ opened https://www.sec.gov/edgar/y")
 step("after set_info: info-active again", banner._is_info_active() is True)
 step("renderable shows opened, not the warn text",
      "opened" in str(banner.render()) and "blocked network" not in str(banner.render()))
+
+# ---------------------------------------------------------------------------
+# 10. snippet cache freshness — chip label flips to ⚠ ◫ when snippets
+#     are past their TTL.  We exercise the runtime.snippets writer in a
+#     temp dir, then verify the chip's ``_label()`` reads the sidecar
+#     correctly. The chip imports runtime.snippets lazily at label
+#     render time, so a real filesystem round-trip is the most
+#     realistic end-to-end check we can do without the full Textual app.
+# ---------------------------------------------------------------------------
+print("\n=== 10. chip label reads snippet TTL freshness ===")
+import tempfile, shutil as _shutil, os
+import runtime.snippets as snip_mod          # type: ignore
+from runtime.tools import ToolResult          # type: ignore
+snip_tmp = pathlib.Path(tempfile.mkdtemp(prefix="chip-stale-"))
+try:
+    # Pin fake clock so we have a deterministic written_at
+    os.environ["SNIPPET_NOW_OVERRIDE_S"] = "50000.0"
+    # Force a tiny TTL so we can advance past it quickly.
+    os.environ["SNIPPET_TTL_NEWS_8K_S"] = "60"
+    _il = importlib if False else __import__("importlib")
+    _il.reload(snip_mod); snip_mod = sys.modules["runtime.snippets"]
+
+    tr_fresh = ToolResult(
+        status="SUCCESS",
+        data=[{"adsh": "FRESH-1", "company": "Acme", "ticker": "ACME"}],
+        as_of="2026-08-19T18:00:00Z",
+        source="news_8k",
+        note="x",
+    )
+    sp_fresh = snip_mod.write_snippet_for(tr_fresh, "pilot", 0, base_dir=snip_tmp)
+    chip_fresh = make_chip(
+        ["https://www.reuters.com/x"],
+        snippet_paths=[str(sp_fresh.path)],
+    )
+    label_fresh = chip_fresh._label()
+    step("fresh snippet: label has ◫ (no ⚠)", "◫" in label_fresh and "⚠ ◫" not in label_fresh)
+
+    # Advance the clock past 60s.  Same ToolResult path: the chip
+    # reads sidecar at label time, so we don't need to re-write.
+    os.environ["SNIPPET_NOW_OVERRIDE_S"] = "50061.0"   # +1s past 60s TTL
+    label_stale = chip_fresh._label()
+    step("after TTL elapses: label flips to ⚠ ◫", "⚠ ◫" in label_stale)
+    # Multi-citation chip with mixed freshness: ☆ one fresh, one stale.
+    tr_stale = ToolResult(
+        status="SUCCESS",
+        data=[{"adsh": "STALE-1", "company": "Stale", "ticker": "ZZZ"}],
+        as_of="2026-08-19T18:00:00Z",
+        source="news_8k",
+        note="x",
+    )
+    os.environ["SNIPPET_NOW_OVERRIDE_S"] = "50100.0"
+    sp_stale = snip_mod.write_snippet_for(tr_stale, "pilot", 1, base_dir=snip_tmp)
+    # Backdate the second snippet so it's stale even at the chip's
+    # current clock.
+    import json as _json
+    meta_p = pathlib.Path(sp_stale.path).with_suffix(
+        pathlib.Path(sp_stale.path).suffix + ".meta.json"
+    )
+    meta_obj = _json.loads(meta_p.read_text("utf-8"))
+    meta_obj["written_at"] = 40000.0   # very old
+    meta_obj["ttl_seconds"] = 60
+    meta_p.write_text(_json.dumps(meta_obj, indent=2), encoding="utf-8")
+    # Re-set the clock to "now" (50100) so the freshness check
+    # clearly distinguishes idx=0 (fresh) from idx=1 (stale).
+    os.environ["SNIPPET_NOW_OVERRIDE_S"] = "50100.0"
+    chip_mixed = make_chip(
+        ["https://www.reuters.com/0", "https://www.reuters.com/1"],
+        snippet_paths=[str(sp_fresh.path), str(sp_stale.path)],
+    )
+    label_mixed = chip_mixed._label()
+    step("mixed chip: at least one stale → whole-chip badge is ⚠ ◫",
+         "⚠ ◫" in label_mixed)
+
+finally:
+    os.environ.pop("SNIPPET_NOW_OVERRIDE_S", None)
+    os.environ.pop("SNIPPET_TTL_NEWS_8K_S", None)
+    _shutil.rmtree(snip_tmp, ignore_errors=True)
+    _il.reload(snip_mod); snip_mod = sys.modules["runtime.snippets"]
 
 # ---------------------------------------------------------------------------
 # Final

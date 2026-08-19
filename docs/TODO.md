@@ -86,7 +86,7 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 - Process: 9 pilots × ~140 assertions, ZERO failures (this commit).
 
 ✅ Process
-- 25+ pilots × ~520+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `acfe3ebe` → `pending this commit`)
+- 26+ pilots × ~720+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `acfe3ebe` → `726cb4fa` → `pending this commit`)
 
 ---
 
@@ -535,10 +535,74 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
   immediately; ``less`` holds the screen but it's independent).
   When SEC EDGAR fails-soft under our Securly MITM proxy, the
   snippet is whatever we already cached from a previous run.
-- **Deferred**: HTTP cache for snippets themselves (so a re-run of
-  the same connector refreshes the file with newer data); for now
-  the cache uses run_id + source + idx so each run gets fresh
-  snippets *on first call* and re-uses them on idempotent retries.
+- **Deferred**: TTL on the cache — shipped in `[domain-5]`, see below.
+
+### [domain-5] Snippet cache TTL: refresh after window elapses  ✅ DONE
+- **What shipped**: snippet writes are now TTL-gated. Within the
+  source-specific freshness window, re-running the same connector
+  on the same run_id is a no-op (no rewrite). Past the TTL, the
+  next call refreshes the snippet. Sidecar metadata (``.meta.json``
+  next to the ``.txt``) tracks ``written_at``, ``ttl_seconds``,
+  and the chip reads it to surface a ``⚠ ◫`` badge when stale.
+- **Per-source TTL defaults** (in `runtime.snippets.SOURCE_TTL`):
+  - ``news_8k`` — **1 h** (8-Ks are time-sensitive — earnings,
+    guidance, exec changes happen within an hour of EDGAR publish).
+  - ``sec_edgar_fulltext`` — **24 h** (amendments settle within a day).
+  - ``transcripts`` — **7 d** (call transcripts only refresh Q-on-Q).
+  - default — **24 h**.
+  - Override per source: ``SNIPPET_TTL_NEWS_8K_S=10``.
+  - Override globally: ``SNIPPET_DEFAULT_TTL_S=10``.
+- **New module surface** (in `docs/runtime/snippets.py`):
+  - ``SnippetMetadata``: frozen dataclass — ``written_at``,
+    ``source``, ``bytes_written``, ``ttl_seconds``, ``truncated``.
+    JSON round-trip; ``is_stale(now)``, ``ttl_remaining_s(now)``,
+    ``age_seconds(now)``.
+  - ``SnippetPath.is_stale`` (property) — True when metadata's
+    ``age >= ttl``; False when no sidecar (conservative: reviewer's
+    "unknown freshness" treated as fresh so we don't false-flag).
+  - ``snippet_metadata_for(path)`` — read-only sidecar parse.
+  - ``force_refresh(path, new_excerpt_text=..., new_metadata_overrides=...)``
+    — bypass TTL; bump ``written_at`` to current; useful when the
+    caller knows the upstream changed and wants to skip the wait.
+  - ``_now_s()`` — overridable via ``SNIPPET_NOW_OVERRIDE_S=float``
+    so pilots can fast-forward time without sleeping.
+  - ``_resolve_ttl(source)`` — precedence: per-source env →
+    SOURCE_TTL → global env → DEFAULT_TTL_S.
+- **Chip label stale-ness**: ``CitationChip._label()`` now reads the
+  sidecar lazily on every render and shows:
+  - `` ◫`` (fresh) — when ALL snippets are within TTL.
+  - ``⚠ ◫`` (stale) — when AT LEAST ONE snippet has expired; this is
+    a whole-chip indicator so reviewers can't miss it during scroll.
+  - Per-idx badge in the indexed form: ``[2/3 reuters.com ⚠ ◫] ↵``
+    points to which citation is stale.
+  - Fail-soft: runtime import failure / corrupt sidecar is treated
+    as fresh so the chip never crashes during a label render.
+- **Pilot** ([smokes/snippet_ttl_smoke.py](runtime/smokes/snippet_ttl_smoke.py))
+  — **62 / 62 ok**, covering:
+  1. Per-source TTL defaults + env precedence (8 assertions).
+  2. ``SNIPPET_DEFAULT_TTL_S`` / ``SNIPPET_TTL_NEWS_8K_S`` overrides.
+  3. ``SnippetMetadata`` JSON round-trip (5 assertions).
+  4. Sidecar ``<path>.meta.json`` written on first call.
+  5. Within-window second call → ``new_write=False``, content
+     unchanged (byte-equal verified).
+  6. After-TTL second call → ``new_write=True``, content refreshed.
+  7. ``force=True`` rewrites regardless of TTL.
+  8. ``ttl_remaining_s`` returns positive within, 0 after.
+  9. ``snippet_for`` (read-only) carries metadata + ``is_stale``.
+  10. Per-source TTL via env override (news_8k 5s override).
+  11. ``force_refresh`` replaces content + bumps ``written_at``.
+  12. End-to-end ``call_tool(run_id=...)`` re-runs: within window
+      keeps snippet path + content; after window same path but
+      refreshed content.
+  13. Corrupt sidecar → ``snippet_metadata_for`` returns ``None``;
+      next write treats it as no-cache and rewrites.
+- **Pilot [smokes/citation_chip_smoke.py](runtime/smokes/citation_chip_smoke.py) §10 — 3 assertions**: chip label flips `` ◫`` → ``⚠ ◫`` after TTL elapses on a real filesystem snippet; mixed-freshness chip shows the worst-state badge.
+- **Combined regression**: 16 pilots × 720+ assertions, ZERO failures;
+  ``pytest docs/runtime/evals/`` 7/7 pass.
+- **Net effect**: re-running the same connector today within
+  24 h *will not* re-download. Re-running tomorrow *will*. Reviewers
+  will see ``⚠ ◫`` on the chip first if they re-render before the
+  TTL fires (so the badge refreshes on every chip re-render).
 
 ---
 ### [protocol-1] Live provider health probes
