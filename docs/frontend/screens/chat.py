@@ -444,11 +444,14 @@ class ChatScreen(Screen):
             pass
 
         elif isinstance(event, ConnectorCompleted):
-            # Route the strip entry to the most recent agent bubble. The runtime
-            # event currently doesn't carry `requested_by_agent` — when it does,
-            # we can route precisely. For now the fallback gives every tool call
-            # the bubble that last started, so the user sees what fired.
-            bubble = self._last_bubble() or self._bubble_index.get("final-report")
+            # Route the strip entry to the bubble registered to the agent that
+            # requested the tool. Falls back to `_last_bubble()` (the most
+            # recently started agent) for older emitters that omit the field.
+            bubble = None
+            if event.requested_by_agent is not None:
+                bubble = self._bubble_index.get(event.requested_by_agent)
+            if bubble is None:
+                bubble = self._last_bubble() or self._bubble_index.get("final-report")
             if bubble is not None:
                 bubble.record_connector_fired(
                     tool=event.tool,
@@ -461,7 +464,12 @@ class ChatScreen(Screen):
             self._update_footer_hint()
 
         elif isinstance(event, ConnectorFailed):
-            bubble = self._last_bubble() or self._bubble_index.get("final-report")
+            # Same routing rule as ConnectorCompleted.
+            bubble = None
+            if event.requested_by_agent is not None:
+                bubble = self._bubble_index.get(event.requested_by_agent)
+            if bubble is None:
+                bubble = self._last_bubble() or self._bubble_index.get("final-report")
             if bubble is not None:
                 bubble.record_connector_failed(
                     tool=event.tool,

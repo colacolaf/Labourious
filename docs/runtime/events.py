@@ -110,6 +110,10 @@ class ConnectorCompleted(Event):
     note: str
     as_of: str
     data_summary: str
+    # NEW (additive, non-breaking) — the chat routes the strip entry to the
+    # bubble registered to this agent id. Older emitters omit it; the chat
+    # falls back to `_last_bubble()` in that case.
+    requested_by_agent: str | None = None
 
 
 @dataclass(frozen=True)
@@ -117,6 +121,8 @@ class ConnectorFailed(Event):
     kind: ClassVar[str] = "connector_failed"
     tool: str
     error: str
+    # NEW (additive, non-breaking) — see ConnectorCompleted.
+    requested_by_agent: str | None = None
 
 
 # --------------------------------------------------------------------------- #
