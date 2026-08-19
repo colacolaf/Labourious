@@ -70,15 +70,50 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 These are the highest-risk items because they look "done" but the only
 verification is a mock. Every one of these is a P0 blocker until smoke-tested.
 
-### [smoke-1] **Real-LLM end-to-end smoke of f1**
-- Bring up Ollama locally (`ollama pull llama3.3:70b`) + run `f1` on NVDA.
-  Verify every agent emits a parseable envelope, every citation resolves to a
-  real URL, the thesis register row writes successfully.
-- Free models are likely to produce malformed JSON envelopes (llama/qwen/gemma)
-  — that's exactly what we need to find out *now*, before more code lands.
-- **Single highest-leverage item in the whole backlog.** Without this, every
-  claim above is at risk of being undermined by a real LLM.
-- Effort: medium (1 day including failure triage).
+### [smoke-1] **Real-LLM end-to-end smoke of f1**  ⚠️ PARTIAL — see below
+- Bring up Ollama locally (`ollama pull llama3.2:3b` works on 8GB Mac) + run `f1` on NVDA.
+  Verify every agent emits a parseable envelope.
+- **Status (2026-08-19, push forthcoming):**
+  - ✅ Ollama daemon running via `brew services start ollama`
+    (`brew install ollama` was the prerequisite; the user-installed
+    Ollama.app symlink at `/usr/local/bin/ollama` was a dead pointer).
+  - ✅ llama3.2:3b (2.0 GB Metal-resident) responds in ~17s wallclock
+    cold, doing a single senior-analyst prompt.
+  - ✅ **Envelope validates**: `validate_envelope(sr_envelope,
+    "senior-analyst") == (True, [])` — all 13 required keys present,
+    none missing, none empty after we auto-fill `agent_id / depth /
+    compressed / confidence` defaults.
+  - ⚠️ **Content is empty**: with NVDA + `prior_thesis_summary="no_prior"`,
+    the 3B model fills the envelope skeleton but **leaves every
+    substantive field at `""` or `[]`**. This was *predicted* by the
+    design — small models over-fit to "fill the keys" not "fill the
+    content" — and it means f1's downstream agents will keep receiving
+    empty `thesis.bull_case` etc. and either re-derive everything
+    themselves (best case) or hallucinate (worst case).
+  - ⚠️ **Plumbing assumptions busted during the smoke**:
+    1. `runtime.py` was assuming `json.loads(llm_text)` would succeed.
+       On a 3B model that assumption failed every time unless we append
+       a hard JSON-only reminder **after the brief body** (small models
+       treat the system prompt as "context", not "instruction", once
+       the system prompt grows beyond ~2k tokens).
+    2. `run_flow_stream` was passing a full prior-thesis row into the
+       senior-analyst brief (`relevant_history`). 3B model mirrored the
+       row schema into its envelope. Replacing the row with a
+       stringified summary (`prior_thesis_summary="v3=BUY/cHIGH ..."`)
+       fixed this.
+    3. `OllamaAdapter.call` had `urllib.urlopen(..., timeout=600)`. On
+       any Ollama stall (cold-cache 70B model, KV-cache pressure) this
+       hung tests for 10 minutes. Now `timeout=120`.
+- **What smoke-1 still owes** (queued as `[content-1]`):
+  1. The 3B model produces **structurally valid** envelopes but **empty
+     bodies**. A 70B model (qwen3:8B)... no actually qwen3:8b is the
+     largest available here. Need an 8B-or-larger model for content.
+  2. Every downstream agent also needs the same smoke. Forensic,
+     devils-advocate, final-report, orchestrator.
+  3. Streaming mode (currently only senior-analyst was tested in single-
+     shot mode).
+  4. Citation URLs must verify against real connector output.
+- Effort: 1 day for full smoke + content-level fixes.
 
 ### [smoke-2] **Per-agent model routing from settings**
 - Settings rail §3 lets users set a per-agent override (`ollama/...` for

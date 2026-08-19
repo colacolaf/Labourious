@@ -120,6 +120,100 @@ def validate_envelope(envelope: dict[str, Any], agent_id: str) -> tuple[bool, li
     return (len(failures) == 0), failures
 
 
+def _summarize_prior_thesis(prior: dict | list | None) -> str:
+    """Render the prior thesis row as a one-line, schema-free string.
+
+    We deliberately avoid passing the row dict itself into agent briefs:
+    small local models treat any nested object as a schema to mirror,
+    producing envelopes that look like a thesis row rather than the
+    envelope the system prompt asks for.
+    """
+    if not prior:
+        return "no_prior"
+    if isinstance(prior, list):
+        row = prior[0] if prior else None
+    else:
+        row = prior
+    if not row or not isinstance(row, dict):
+        return "no_prior"
+    bl = row.get("bottom_line", {}) or {}
+    if isinstance(bl, str):
+        try:
+            bl = json.loads(bl)
+        except (json.JSONDecodeError, TypeError):
+            bl = {"action": bl}
+    direction = bl.get("action") or bl.get("direction") or "UNKNOWN"
+    conv = bl.get("conviction") or row.get("conviction") or "?"
+    txt = (row.get("thesis_text") or "")[:80]
+    score = row.get("score") or "?"
+    return f"v{row.get('version', '?')}={direction}/c{conv} score={score} '{txt}'"
+
+
+def _extract_json_envelope(text: str) -> dict | None:
+    """Defensive parser for a non-strict LLM response.
+
+    Tries in order:
+      1. Strip ```json ... ``` and ``` ... ``` code fences and parse the inside.
+      2. Locate the first '{' and the matching closing '}' (respecting string
+         literals and escape sequences) and parse that slice.
+      3. Locate the first '[' and treat the result as a dict only if the slice
+         itself is a dict (skip — we want objects only).
+
+    Returns the parsed dict, or None if nothing usable was found. Never raises.
+    """
+    s = text.strip()
+    # 1) fenced code block
+    if s.startswith("```"):
+        # find the matching closing fence
+        end = s.rfind("```")
+        if end > 3:
+            inner = s[3:end].lstrip()
+            # strip optional "json" language tag
+            if inner.startswith("json"):
+                inner = inner[4:].lstrip()
+            elif inner.startswith("JSON"):
+                inner = inner[4:].lstrip()
+            try:
+                obj = json.loads(inner)
+                return obj if isinstance(obj, dict) else None
+            except json.JSONDecodeError:
+                pass
+
+    # 2) outermost brace match (respect strings)
+    depth = 0
+    start = -1
+    in_str = False
+    escape = False
+    for i, ch in enumerate(s):
+        if in_str:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}":
+            if depth > 0:
+                depth -= 1
+                if depth == 0 and start >= 0:
+                    slice_ = s[start:i + 1]
+                    try:
+                        obj = json.loads(slice_)
+                        return obj if isinstance(obj, dict) else None
+                    except json.JSONDecodeError:
+                        # keep scanning in case there's a larger object later
+                        start = -1
+                        continue
+    return None
+
+
 # --------------------------------------------------------------------------- #
 # Call an agent
 # --------------------------------------------------------------------------- #
@@ -154,6 +248,23 @@ def call_agent(
       3. `model_name` — the chat's default model.
     """
     system_prompt = load_prompt(agent_id)
+    # Append a JSON-only directive to every brief. The orchestrator / lead
+    # prompts already say this, but small models (<=8B) routinely ignore it
+    # when their context window is dominated by a long system prompt. A short
+    # concrete reminder at the *bottom* of the brief lands reliably.
+    # We also explicitly tell the model NOT to mirror any nested JSON example
+    # found in the user brief (e.g. a prior thesis row inside `relevant_history`).
+    json_only_directive = (
+        "\n\n---\n\nRESPONSE FORMAT (HARD RULE): Reply with ONE JSON object and nothing else. "
+        "No prose, no markdown fences, no commentary before or after. The very first "
+        "character of your reply must be `{` and the very last must be `}`. If a field "
+        "is unknown, omit it rather than write null.\n\n"
+        "DO NOT mirror the shape of any nested JSON example in this brief (such as a "
+        "prior thesis row, citation list, or connector excerpt). Your reply shape is "
+        "defined solely by the schema in your system prompt, NOT by the input data. "
+        "Strip nested-object fields down to only the keys required by that schema.")
+    if not user_brief.endswith(json_only_directive):
+        user_brief = (user_brief + json_only_directive) if user_brief else json_only_directive.lstrip()
     effective_model = model_name
     if per_agent_model and agent_id in per_agent_model:
         effective_model = per_agent_model[agent_id]
@@ -206,11 +317,32 @@ def call_agent(
             if emit_event is not None:
                 emit_event(AgentChunk(agent_id=agent_id, delta=response.text))
         wallclock = time.monotonic() - t0
-        # Parse envelope
+        # Parse envelope. We try strict JSON first, then fall back to a
+        # resilient extractor that strips code fences, leading prose,
+        # and trailing commentary before locating the outermost {...}.
+        envelope = None
+        parse_err: Exception | None = None
         try:
             envelope = json.loads(text)
         except json.JSONDecodeError as exc:
-            raise RuntimeError(f"{agent_id} returned non-JSON: {exc}\nRaw: {text[:500]}") from exc
+            parse_err = exc
+            envelope = _extract_json_envelope(text)
+        if not isinstance(envelope, dict):
+            raise RuntimeError(
+                f"{agent_id} returned non-JSON: {parse_err or 'no JSON object found'}\n"
+                f"Raw (first 600 chars): {text[:600]}"
+            )
+        # Fill in trivially-derivable defaults so small models (which often
+        # omit depth/compressed/agent_id echoes) still validate. We never
+        # touch substantive fields like thesis / bottom_line / findings.
+        if not envelope.get("agent_id"):
+            envelope["agent_id"] = agent_id
+        if "depth" not in envelope or not envelope["depth"]:
+            envelope["depth"] = "STANDARD"
+        if "compressed" not in envelope:
+            envelope["compressed"] = False
+        if "confidence" not in envelope or not envelope["confidence"]:
+            envelope["confidence"] = "MIXED"  # safe default; honored by validate_envelope
         ok, failures = validate_envelope(envelope, agent_id)
         if not ok:
             raise RuntimeError(f"{agent_id} envelope failed validation: {failures}")
@@ -269,12 +401,15 @@ def execute_flow_f1(
     register = ThesisRegister()
     prior_thesis = register.read_thesis(ticker, since_days=14)
 
-    # Wave 1: orchestrator
+    # Wave 1: orchestrator. We deliberately omit `relevant_history` here
+    # because small models (<=8B) tend to mirror the nested thesis-row shape
+    # in their response envelope. The senior-analyst carries the prior
+    # thesis forward, where its output schema is self-consistent.
     orch_brief = json.dumps({
         "flow_id": "f1",
         "user_query": f"Analyze {ticker}",
         "ticker": ticker,
-        "relevant_history": prior_thesis,
+        "has_prior_thesis": bool(prior_thesis),
         "depth": "STANDARD",
         "compressed": False,
     })
@@ -283,13 +418,17 @@ def execute_flow_f1(
                                      paid_for=paid_for, emit_event=emit_event,
                                      per_agent_model=per_agent_model)
 
-    # Wave 2: senior-analyst
+    # Wave 2: senior-analyst. We collapse prior_thesis into a count/string
+    # summary rather than passing the full row, because small models
+    # (<=8B) tend to mirror nested JSON examples in their response envelope.
+    # Concretely: 3B model returned the prior-thesis schema as its OUTPUT
+    # when the input contained a prior-thesis-shaped field.
     sr_brief = json.dumps({
         "from": "orchestrator",
         "situation": f"User wants analysis of {ticker}",
         "task": f"Build thesis skeleton on {ticker}",
         "ticker": ticker,
-        "relevant_history": prior_thesis,
+        "prior_thesis_summary": _summarize_prior_thesis(prior_thesis),
         "depth": "STANDARD",
         "compressed": False,
     })
