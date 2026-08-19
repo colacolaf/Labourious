@@ -74,6 +74,7 @@ def load_prompt(agent_id: str) -> str:
         "senior-analyst": PROMPTS_DIR / "leads" / "senior-analyst" / "system-prompt.md",
         "forensic-accounting": PROMPTS_DIR / "specialists" / "forensic-accounting" / "system-prompt.md",
         "devils-advocate": PROMPTS_DIR / "specialists" / "devils-advocate" / "system-prompt.md",
+        "model-builder": PROMPTS_DIR / "leads" / "model-builder" / "system-prompt.md",
         "final-report": PROMPTS_DIR / "cross-cutting" / "final-report" / "system-prompt.md",
     }
     path = candidates.get(agent_id)
@@ -101,6 +102,9 @@ def validate_envelope(envelope: dict[str, Any], agent_id: str) -> tuple[bool, li
                             "steelmanned_bull", "bear_case", "fragile_assumption",
                             "what_an_attacker_would_say", "findings", "gaps", "verification",
                             "citations", "next_steps"],
+        "model-builder": ["agent_id", "ticker", "depth", "compressed", "as_of", "model",
+                         "result_summary", "conclusion", "confidence",
+                         "citations", "gaps", "verification"],
         "final-report": ["agent_id", "flow_id", "depth", "compressed", "memo", "confidence",
                          "gaps", "verification"],
     }
@@ -372,6 +376,111 @@ def execute_flow_f1(
 
 
 # --------------------------------------------------------------------------- #
+# Flow f9 — Model Build (DCF + comps)
+# --------------------------------------------------------------------------- #
+def execute_flow_f9(
+    ticker: str,
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
+    flow_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """DCF + comps model build. The math runs deterministically in
+    `runtime.tools.dcf` and `runtime.tools.comps`; the agent layer's job
+    is to populate the inputs (WACC, FCF projections, comps set) with
+    cited, defensible numbers and emit the model envelope.
+
+    Wave plan (zero parallelism — single analyst in the loop is intentional):
+      wave 1: senior-analyst   → frames the thesis so the model is thesis-aware
+      wave 2: model-builder    → parametric envelope (this is what gets quoted)
+      wave 3: devils-advocate  → attacks the inputs (β, growth, comps set)
+      wave 4: final-report     → memo with model summary
+
+    Note: parallelism is intentionally NOT used here — DCF is a
+    serial-sensitivity exercise where the comps come AFTER the DCF is
+    built to triangulate. Concurrent waves would produce inconsistent
+    per-share values.
+    """
+    flow_context = flow_context or {}
+
+    # Wave 1: senior-analyst (thesis frame)
+    sa_brief = json.dumps({
+        "from": "orchestrator",
+        "flow_id": "f9",
+        "task": f"Frame thesis for DCF + comps model on {ticker}",
+        "ticker": ticker,
+        "depth": "STANDARD",
+        "compressed": False,
+        "flow_context": flow_context,
+    })
+    sa_env, sa_cost = call_agent("senior-analyst", sa_brief, model,
+                                  paid_for=paid_for, emit_event=emit_event,
+                                  per_agent_model=per_agent_model,
+                                  stream_chunks=stream_chunks)
+
+    # Wave 2: model-builder — envelope
+    mb_brief = json.dumps({
+        "from": "senior-analyst",
+        "flow_id": "f9",
+        "task": f"Build DCF + comps model on {ticker}",
+        "ticker": ticker,
+        "thesis_synthesis": sa_env,
+        "depth": "STANDARD",
+        "compressed": False,
+        "as_of": dt.datetime.utcnow().isoformat() + "Z",
+    })
+    mb_env, mb_cost = call_agent("model-builder", mb_brief, model,
+                                  paid_for=paid_for, emit_event=emit_event,
+                                  per_agent_model=per_agent_model,
+                                  stream_chunks=stream_chunks)
+
+    # Wave 3: devils-advocate — attacks the model inputs
+    da_brief = json.dumps({
+        "from": "model-builder",
+        "flow_id": "f9",
+        "task": f"Attack the DCF + comps model on {ticker}",
+        "ticker": ticker,
+        "thesis": sa_env.get("thesis", {}),
+        "model_envelope": mb_env,
+        "depth": "STANDARD",
+        "compressed": False,
+    })
+    da_env, da_cost = call_agent("devils-advocate", da_brief, model,
+                                  paid_for=paid_for, emit_event=emit_event,
+                                  per_agent_model=per_agent_model,
+                                  stream_chunks=stream_chunks)
+
+    # Wave 4: final-report — memo with the model summary
+    fr_brief = json.dumps({
+        "from": "model-builder",
+        "flow_id": "f9",
+        "thesis_synthesis": sa_env,
+        "model_envelope": mb_env,
+        "bear_case": da_env,
+        "depth": "STANDARD",
+        "compressed": False,
+    })
+    fr_env, fr_cost = call_agent("final-report", fr_brief, model,
+                                  paid_for=paid_for, emit_event=emit_event,
+                                  per_agent_model=per_agent_model,
+                                  stream_chunks=stream_chunks)
+
+    return {
+        "final_envelope": fr_env,
+        "model_envelope": mb_env,
+        "costs": [sa_cost, mb_cost, da_cost, fr_cost],
+        "envelopes": {
+            "senior-analyst": sa_env,
+            "model-builder": mb_env,
+            "devils-advocate": da_env,
+            "final-report": fr_env,
+        },
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Streaming entrypoint — what the TUI consumes (PROTOCOL.md §1)
 # --------------------------------------------------------------------------- #
 def run_flow_stream(
@@ -402,10 +511,10 @@ def run_flow_stream(
     the pre-streaming CLI contract where each agent emits ONE chunk with
     the full body.
     """
-    if flow_id != "f1":
+    if flow_id not in ("f1", "f9"):
         raise NotImplementedError(
             f"run_flow_stream: flow '{flow_id}' is not implemented yet. "
-            f"For v1 only 'f1' is wired; add execute_flow_<flow_id> then a generator wrapper."
+            f"For v1 'f1' and 'f9' are wired; add execute_flow_<flow_id> then extend the dispatcher."
         )
 
     ticker = inputs["ticker"]
@@ -456,14 +565,26 @@ def run_flow_stream(
     events_out: list[Any] = []
 
     try:
-        result = execute_flow_f1(
-            ticker=ticker,
-            model=model,
-            paid_for=paid_for,
-            emit_event=emit,
-            per_agent_model=per_agent_model,
-            stream_chunks=stream_chunks,
-        )
+        if flow_id == "f9":
+            flow_ctx = inputs.get("flow_context") or {}
+            result = execute_flow_f9(
+                ticker=ticker,
+                model=model,
+                paid_for=paid_for,
+                emit_event=emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+                flow_context=flow_ctx,
+            )
+        else:
+            result = execute_flow_f1(
+                ticker=ticker,
+                model=model,
+                paid_for=paid_for,
+                emit_event=emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
     except Exception as exc:
         # Drain everything the agent emitted before the crash, then FlowFailed.
         while events_out:
@@ -616,6 +737,11 @@ def main() -> int:
             print("error: --ticker is required for f1", file=sys.stderr)
             return 2
         result = execute_flow_f1(ticker, args.model, paid_for=paid_for)
+    elif args.flow == "f9":
+        if not ticker:
+            print("error: --ticker is required for f9", file=sys.stderr)
+            return 2
+        result = execute_flow_f9(ticker, args.model, paid_for=paid_for)
     elif args.flow == "f2":
         # Placeholder — f2 implementation deferred to P1
         print(f"# f2 not yet wired in skeleton. tickers={args.tickers}. See docs/flows/f2-compare-tickers.md",

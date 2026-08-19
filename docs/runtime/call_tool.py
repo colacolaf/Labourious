@@ -27,6 +27,8 @@ from typing import Any, Callable, Mapping
 
 from .events import ConnectorCompleted, ConnectorFailed, ConnectorRequested
 from .tools import ToolResult
+from .tools.comps import CompsTool
+from .tools.dcf import DCFTool
 from .tools.news_8k import News8KTool
 from .tools.insider import InsiderTool
 from .tools.institutional import InstitutionalTool
@@ -104,6 +106,21 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         tool_class=TranscriptsTool,
         default_method="list_for_ticker",
         arg_keys=("ticker", "since_quarters", "limit"),
+        summary_field="",
+    ),
+    # ── quant: DCF + comps ──
+    "quant_dcf": ToolBinding(
+        tool_id="quant_dcf",
+        tool_class=DCFTool,
+        default_method="run_model",
+        arg_keys=("ticker",),
+        summary_field="per_share",
+    ),
+    "quant_comps": ToolBinding(
+        tool_id="quant_comps",
+        tool_class=CompsTool,
+        default_method="run",
+        arg_keys=("subject.ticker",),
         summary_field="",
     ),
 }
