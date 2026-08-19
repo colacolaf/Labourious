@@ -21,6 +21,7 @@ skips the event emission and the connector strip will *not* update.
 from __future__ import annotations
 
 import datetime as dt
+import inspect
 import logging
 import os
 from dataclasses import dataclass
@@ -333,6 +334,46 @@ def call_tool(
     # call_tool safe under concurrent flows).
     tool_instance = binding.tool_class()
 
+    # [domain-8] ETag injection: when the snippet-cacheable tools are
+    # being called with a run_id, read the sidecar's cached_etag (if
+    # any) and inject it as ``if_none_match`` in the call's kwargs.
+    # The connector reads this and sends it as ``If-None-Match``. On
+    # 304 from upstream, the connector returns
+    # ``ToolResult(status="UNCHANGED", etag=...)``, and the snippet
+    # cache honours it (see write_snippet_for). Since we are
+    # *outside* the snippet-cacheable set (DCF/Comps/Comparator),
+    # nothing here changes.
+    if (
+        run_id
+        and tool_id in {"sec_edgar_fulltext", "news_8k", "transcripts"}
+        and not args.get("if_none_match")
+    ):
+        try:
+            from .snippets import (
+                _safe_source as _safe_src, _meta_path_for as _meta_for,
+                SnippetMetadata, snippet_metadata_for,
+            )
+            from pathlib import Path as _P
+            from . import snippets as _sn
+            _override_base = os.environ.get("LABOURIOUS_RUNS_DIR_OVERRIDE")
+            _RUNS = _P(_override_base) if _override_base else _sn.RUNS_DIR
+            _snippet_path = _RUNS / run_id / "snippets" / f"{_safe_src(tool_id)}_{snippet_idx}.txt"
+            _meta_p = _meta_for(_snippet_path)
+            if _meta_p.exists():
+                _existing = snippet_metadata_for(_snippet_path)
+                if _existing is not None and _existing.cached_etag:
+                    args["if_none_match"] = _existing.cached_etag
+            # Also compute the snippet path; if connector returns
+            # UNCHANGED we'll find the cached version cleanly.
+        except Exception as _exc:
+            # Non-fatal: connector can still do a fresh GET without
+            # conditional headers.
+            import logging as _logging
+            _logging.getLogger("labourious.call_tool").debug(
+                "if_none_match injection skipped for %s/%s: %s",
+                tool_id, run_id, _exc,
+            )
+
     try:
         # Tools whose default method takes a single `request` dict get the
         # whole args bag as a positional rather than spread as kwargs. This
@@ -341,6 +382,36 @@ def call_tool(
         if binding.passes_request and not method:
             result = fn(tool_instance, request=args)
         else:
+            # [domain-8] Auto-injected ``if_none_match`` is meant for the
+            # connector that does the HTTP fetch — but if the entry method
+            # (default or override) doesn't accept it, the kwarg-spread
+            # would crash. Strip it from the bag and surface it on the
+            # tool_instance, where the connector can read it. Connectors
+            # whose method *does* accept it (sec_edgar_fulltext.search,
+            # news_8k.search, transcripts.list_for_ticker) keep getting
+            # the kwarg normally.
+            try:
+                _sig = inspect.signature(fn)
+                _accepts_inm = (
+                    "if_none_match" in _sig.parameters
+                    or any(
+                        p.kind is inspect.Parameter.VAR_KEYWORD
+                        for p in _sig.parameters.values()
+                    )
+                )
+            except (TypeError, ValueError):
+                _accepts_inm = False
+            if not _accepts_inm and "if_none_match" in args:
+                _inm_value = args.pop("if_none_match")
+                # Surface on instance so the connector can pick it up
+                # before its internal calls (e.g. news_8k.latest shell ->
+                # search), but on a fresh attribute, never into the
+                # permanent class namespace.
+                try:
+                    setattr(tool_instance, "_labourious_if_none_match",
+                            _inm_value)
+                except Exception:
+                    pass
             result = fn(tool_instance, **args)
     except Exception as exc:  # surface the failure as an event, not a raise
         log.exception("call_tool: tool=%s method=%s crashed", tool_id, fn_name)

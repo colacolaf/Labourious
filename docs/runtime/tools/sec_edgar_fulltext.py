@@ -75,6 +75,7 @@ class SECEdgarFullTextTool:
         end: str | None = None,
         limit: int = 10,
         use_cache: bool = True,
+        if_none_match: str | None = None,
     ) -> ToolResult:
         """Free-text search across SEC filings.
 
@@ -119,18 +120,33 @@ class SECEdgarFullTextTool:
 
         as_of = _now_iso()
         url = _build_url(query, forms_str, ciks_str, start, end, limit)
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={
-                    "User-Agent": self.user_agent,
-                    "Accept-Encoding": "gzip, deflate",
-                    "Accept": "application/json",
-                },
+        headers = {
+            "User-Agent": self.user_agent,
+            "Accept-Encoding": "gzip, deflate",
+            "Accept": "application/json",
+        }
+        if if_none_match or getattr(self, "_labourious_if_none_match", None):
+            headers["If-None-Match"] = (
+                if_none_match or self._labourious_if_none_match
             )
+        try:
+            req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=30) as r:
                 payload = json.loads(r.read().decode("utf-8"))
+                response_etag = (r.headers.get("ETag", "") if r.headers else "") or ""
         except urllib.error.HTTPError as e:
+            # [domain-8] 304 Not Modified: pass through AS UNCHANGED
+            # so the snippet cache can preserve content + sidecar.
+            if e.code == 304:
+                etag_val = (e.headers.get("ETag", "") if e.headers else "") or (
+                    headers.get("If-None-Match", "")
+                )
+                return ToolResult(
+                    status="UNCHANGED", data=None, as_of=as_of,
+                    source="sec_edgar_fulltext",
+                    note="ETag matched: 304 Not Modified",
+                    etag=etag_val or None,
+                )
             return ToolResult(
                 status="FAILED", data=None, as_of=as_of,
                 source="sec_edgar_fulltext",
@@ -157,6 +173,7 @@ class SECEdgarFullTextTool:
                 note=f"No hits in EFTS for '{query}' "
                      f"(forms={forms_str!r}, ciks={ciks_str!r}, "
                      f"{start}\u2192{end}).",
+                etag=response_etag or None,
             )
         else:
             result = ToolResult(
@@ -170,6 +187,7 @@ class SECEdgarFullTextTool:
                     f"hits for '{query}' (forms={forms_str!r}, "
                     f"{start}\u2192{end}). URL: {url}"
                 ),
+                etag=response_etag or None,
             )
         if use_cache:
             self._cache[cache_key] = (time.time(), result)

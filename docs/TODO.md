@@ -86,7 +86,7 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 - Process: 9 pilots × ~140 assertions, ZERO failures (this commit).
 
 ✅ Process
-- 28+ pilots × ~800+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `acfe3ebe` → `726cb4fa` → `a2b98b83` → `3a717669` → `pending this commit`)
+- 7 smokes + 7 pytest = 14 green runs × ~270+ individual tests, ZERO failures (this commit)
 
 ---
 
@@ -781,17 +781,75 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
   - Network bytes saved: ~2 KB per snippet × N rows × M days.
   - Latency: 304 is sub-second; 200 with body is several seconds
     round-trip with parsing.
-- **Combined regression**: 18 pilots × 800+ assertions, ZERO
+- **Combined regression**: 7 smokes + 7 pytest evals = ZERO
   failures; ``pytest docs/runtime/evals/`` 7/7 pass.
 - **What's NOT yet wired** (future follow-ups):
-  - Connectors that don't currently support conditional GETs
-    (e.g. SEC EDGAR) need their HTTP fetcher updated to read
-    ``snippet_metadata_for(path).cached_etag`` and send
-    ``If-None-Match``. The runtime scaffolding is in place;
-    per-connector integration is its own patch.
-  - The current UNCHANGED path uses ``section_cache``-style
-    freshness (chip label flips `` ◫`` → ``⚠ ◫`` based on
-    ``written_at``). When a 304 re-attests the ETag, we bump
+  - Other wrapper methods (e.g. news_8k.material_only, future
+    abstracts over search) need the same kwarg-forwarding
+    pattern. Today latest/material_only are wired; new ones
+    added later should accept ``if_none_match`` and forward.
+  - The current UNCHANGED path uses section_cache-style freshness
+    (chip label flips ` ◫` → `⚠ ◫` based on `written_at`). When
+    a 304 re-attests the ETag, we bump `written_at` *and* (if
+    the connector re-attested it) `cached_etag`. Reviewers see
+    ` ◫` (fresh) immediately; the ETag stays current; the
+    chip's data is still cached.
+
+### [domain-8] Per-connector ETag integration  ✅ DONE
+- **What shipped**: actual ``If-None-Match`` headers are now sent
+  by the 3 snippet-cacheable HTTP connectors (``news_8k.search``,
+  ``sec_edgar_fulltext.search``, ``transcripts.list_for_ticker``).
+  When upstream returns 304 Not Modified, the connector emits
+  ``ToolResult(status="UNCHANGED", etag=...)`` and the cache
+  preserves content byte-for-byte.
+- **Three layers wired**:
+  - ``runtime/tools/sec_edgar_fulltext.py``: ``search()`` now
+    accepts ``if_none_match=`` kwarg, sends it as
+    ``If-None-Match`` via ``urllib``, captures upstream ``ETag``
+    response header into ``ToolResult.etag``, and returns
+    UNCHANGED on 304.
+  - ``runtime/tools/news_8k.py``: ``_default_opener`` + ``_fetch``
+    return ``(status, body, etag)``; ``search()`` forwards the
+    kwarg; UNCHANGED path uses upstream's echoed ETag (or the one
+    we sent, as fallback).
+  - ``runtime/tools/transcripts.py``: ``_fetch`` returns
+    ``(status, body, etag)``; ``list_for_ticker()`` accepts
+    ``if_none_match=``, forwards to ``_fetch``, exposes
+    ``self._last_etag`` for the 304 path to round-trip via
+    ``ToolResult.etag``. ``_headers(if_none_match=...)`` adds the
+    ``If-None-Match`` header conditionally.
+  - Wrapper methods (``news_8k.latest``, ``news_8k.material_only``)
+    accept ``if_none_match=`` + forward to ``search``.
+- **call_tool** (`docs/runtime/call_tool.py`):
+  - Injects ``args["if_none_match"] = meta.cached_etag`` for the
+    snippet-cacheable set when ``run_id`` is set and a cached
+    sidecar exists.
+  - Uses ``inspect.signature`` to check whether the chosen method
+    accepts ``if_none_match``. For methods that don't, it pops
+    the kwarg and surfaces it on
+    ``tool_instance._labourious_if_none_match`` instead, so
+    wrappers can pick it up.
+  - That introspection-based fallback makes the system robust to
+    new connector wrappers without manual kwarg bookkeeping.
+- **Pilots green** (no regressions; new integration is
+  exercised via the pre-existing snippet_etag pilot §10 after
+  adding ``method="search"`` overrides):
+  - ``snippet_etag_smoke.py`` — 35 / 35 ok
+  - ``snippet_cache_smoke.py`` — 54 / 54 ok
+  - ``snippet_ttl_smoke.py`` — 62 / 62 ok
+  - ``snippet_asof_smoke.py`` — 40 / 40 ok
+  - ``connectors_e2e_smoke.py`` — 22 / 22 ok
+  - ``citation_chip_smoke.py`` — 42 / 42 ok
+  - ``f1_parallel_smoke.py`` — 14 / 14 ok
+  - ``pytest docs/runtime/evals/`` — 7/7 pass
+- **Why this matters**: the iteration loop is now zero-network
+  in steady state. Same ticker, same flow, same day → snippets
+  are served from disk with one 304 round-trip per source. The
+  news_8k `_default_opener` captures the upstream ETag header
+  automatically, so once a flow runs once, every subsequent call
+  is a single round-trip with zero body bytes.
+
+---
     ``written_at`` *and* (if the connector re-attested it)
     ``cached_etag``. Reviewers see `` ◫`` (fresh) immediately;
     the ETag stays current; the chip's data is still cached.

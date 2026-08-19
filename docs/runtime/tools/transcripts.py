@@ -291,13 +291,30 @@ def _now_quarter() -> int:
 # --------------------------------------------------------------------------- #
 
 
-def _default_opener(url: str, headers: dict[str, str] | None = None) -> tuple[int, str]:
-    """Plain urllib opener used when tests don't inject an `opener=` shim."""
+def _default_opener(url: str, headers: dict[str, str] | None = None) -> tuple[int, str, str]:
+    """Plain urllib opener used when tests don't inject an `opener=` shim.
+
+    Returns ``(status, body, etag)``. ``etag`` is whatever the upstream set
+    in the ``ETag`` (or ``Last-Modified``) response header, hashable to a
+    conditional GET. Empty string when upstream omits ETag (which is the
+    common case for free-data providers like SeekingAlpha).
+    """
     import urllib.request as _ur
 
+    etag = ""
     req = _ur.Request(url, headers=headers or {})
-    with _ur.urlopen(req, timeout=15) as resp:  # noqa: S310
-        return resp.status, resp.read().decode("utf-8", errors="replace")
+    try:
+        with _ur.urlopen(req, timeout=15) as resp:  # noqa: S310
+            status = resp.status
+            body = resp.read().decode("utf-8", errors="replace")
+            etag = resp.headers.get("ETag", "") or ""
+    except _ur.HTTPError as exc:  # 304 / 404 / 5xx
+        status = exc.code
+        body = exc.read().decode("utf-8", errors="replace")
+        etag = (exc.headers.get("ETag", "") if exc.headers else "") or ""
+    except Exception:
+        return 0, "", ""
+    return status, body, etag
 
 
 # --------------------------------------------------------------------------- #
@@ -345,14 +362,37 @@ class TranscriptsTool:
         self._cache.clear()
 
     # -- network -------------------------------------------------------- #
-    def _headers(self) -> dict[str, str]:
-        return {
+    def _headers(self, if_none_match: str | None = None) -> dict[str, str]:
+        h = {
             "User-Agent": self._ua,
             "Accept": "text/html,application/xhtml+xml",
         }
+        if if_none_match:
+            h["If-None-Match"] = if_none_match
+        return h
 
-    def _fetch(self, url: str) -> tuple[int, str]:
-        return self._opener(url, self._headers())
+    def _fetch(
+        self,
+        url: str,
+        *,
+        if_none_match: str | None = None,
+    ) -> tuple[int, str, str]:
+        """Fetch a URL via the tool's opener.
+
+        Returns ``(status, body, etag)``. ``self._last_etag`` carries
+        the ETag that *came back from* the fetch (i.e. what the next
+        conditional GET should send). Connectors that return UNCHANGED
+        use this with the prior etag so the snippet cache stays in sync.
+        """
+        result = self._opener(url, self._headers(if_none_match=if_none_match))
+        # Back-compat: 2-tuple openers (older test mocks) get normalized.
+        if isinstance(result, tuple) and len(result) == 2:
+            status, body = result
+            etag = ""
+        else:
+            status, body, etag = result
+        self._last_etag = etag or ""
+        return status, body, etag
 
     # -- public API ---------------------------------------------------- #
     def list_for_ticker(
@@ -360,7 +400,11 @@ class TranscriptsTool:
         ticker: str,
         since_quarters: int = 8,
         limit: int = 50,
+        if_none_match: str | None = None,
     ) -> ToolResult:
+        if_none_match = if_none_match or getattr(
+            self, "_labourious_if_none_match", None
+        )
         ticker = (ticker or "").upper().strip()
         if not ticker:
             return ToolResult(
@@ -378,7 +422,7 @@ class TranscriptsTool:
 
         url = SA_TICKER_INDEX.format(ticker=_up.quote(ticker))
         try:
-            status_code, html = self._fetch(url)
+            status_code, html = self._fetch(url, if_none_match=if_none_match)
         except Exception as exc:
             return ToolResult(
                 as_of=_now_iso(),
@@ -386,6 +430,20 @@ class TranscriptsTool:
                 data=None,
                 source=self.SOURCE,
                 note=f"network error on {url}: {exc!r}",
+            )
+
+        # [domain-8] 304 Not Modified: upstream confirms cached index is
+        # current. We don't re-parse the body. Return UNCHANGED with the
+        # same ETag so the snippet cache can keep its state.
+        if status_code == 304:
+            etag_response = self._last_etag
+            return ToolResult(
+                as_of=_now_iso(),
+                status="UNCHANGED",
+                data=None,
+                source=self.SOURCE,
+                note="ETag matched: 304 Not Modified",
+                etag=(etag_response or if_none_match),
             )
 
         if status_code >= 400:

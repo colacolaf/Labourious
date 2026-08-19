@@ -249,12 +249,37 @@ def _project_hit(hit: dict[str, Any]) -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
-def _default_opener(url: str, headers: dict[str, str] | None = None) -> tuple[int, str]:
+def _default_opener(
+    url: str,
+    headers: dict[str, str] | None = None,
+    *,
+    if_none_match: str | None = None,
+) -> tuple[int, str] | tuple[int, str, str]:
+    """Plain urllib opener used when tests don't inject an `opener=` shim.
+
+    [domain-8] ETag support: if ``if_none_match`` is set, sends it as
+    ``If-None-Match``. Returns ``(304, "")`` on 304 Not Modified
+    (instead of raising ``HTTPError``); other HTTPError codes are
+    re-raised so existing FAILED-path tests still trigger. When
+    upstream returns an ETag response header, it is included as the
+    3rd element of the tuple (or simply left empty for back-compat).
+    """
     import urllib.request as _ur
 
-    req = _ur.Request(url, headers=headers or {})
-    with _ur.urlopen(req, timeout=20) as resp:  # noqa: S310
-        return resp.status, resp.read().decode("utf-8", errors="replace")
+    h = dict(headers or {})
+    if if_none_match:
+        h["If-None-Match"] = if_none_match
+    req = _ur.Request(url, headers=h)
+    try:
+        with _ur.urlopen(req, timeout=20) as resp:  # noqa: S310
+            etag = resp.headers.get("ETag", "") if resp.headers else ""
+            return resp.status, resp.read().decode("utf-8", errors="replace"), etag
+    except _ur.HTTPError as exc:
+        if exc.code == 304:
+            etag = exc.headers.get("ETag", "") if exc.headers else ""
+            return 304, "", etag
+        # Re-raise so the tool's existing FAILED-path handles it.
+        raise
 
 
 # --------------------------------------------------------------------------- #
@@ -306,8 +331,17 @@ class News8KTool:
             "Accept": "application/json,text/json",
         }
 
-    def _fetch(self, url: str) -> tuple[int, str]:
-        return self._opener(url, self._headers())
+    def _fetch(
+        self, url: str,
+        *, if_none_match: str | None = None,
+    ) -> tuple[int, str]:
+        """Network fetch with optional ``If-None-Match``.
+
+        304 → ``(304, "")`` (caught in the default opener); the search
+        method maps that to ``ToolResult(status="UNCHANGED", ...)``.
+        Other HTTP codes continue to raise as before.
+        """
+        return self._opener(url, self._headers(), if_none_match=if_none_match)
 
     # -- date range helpers -------------------------------------------- #
     @staticmethod
@@ -328,6 +362,7 @@ class News8KTool:
         cik: str | None = None,
         since_days: int = 30,
         limit: int = 50,
+        if_none_match: str | None = None,
     ) -> ToolResult:
         return self.search(
             ticker=ticker,
@@ -336,6 +371,8 @@ class News8KTool:
             since_days=since_days,
             limit=limit,
             priority_filter=None,
+            if_none_match=if_none_match
+            or getattr(self, "_labourious_if_none_match", None),
         )
 
     def material_only(
@@ -344,6 +381,7 @@ class News8KTool:
         cik: str | None = None,
         since_days: int = 30,
         limit: int = 50,
+        if_none_match: str | None = None,
     ) -> ToolResult:
         """Same as `latest` but filters LOW-priority items out."""
         return self.search(
@@ -353,6 +391,8 @@ class News8KTool:
             since_days=since_days,
             limit=limit,
             priority_filter={"HIGH", "MEDIUM"},
+            if_none_match=if_none_match
+            or getattr(self, "_labourious_if_none_match", None),
         )
 
     def search(
@@ -363,6 +403,8 @@ class News8KTool:
         since_days: int = 30,
         limit: int = 50,
         priority_filter: set[str] | None = None,
+        *,
+        if_none_match: str | None = None,
     ) -> ToolResult:
         ticker = (ticker or "").upper().strip() or None
         cik = (cik or "").strip() or None
@@ -398,7 +440,7 @@ class News8KTool:
         )
 
         try:
-            status_code, body = self._fetch(url)
+            status_code, body, response_etag = self._fetch(url, if_none_match=if_none_match)
         except Exception as exc:
             return ToolResult(
                 as_of=_now_iso(),
@@ -406,6 +448,20 @@ class News8KTool:
                 data=None,
                 source=self.SOURCE,
                 note=f"network error on {url}: {exc!r}",
+            )
+
+        # [domain-8] 304 Not Modified: upstream confirms the cached
+        # body is still current. We hand UNCHANGED back with the
+        # etag we sent (or whatever upstream echoed), so the snippet
+        # cache can refresh its ``written_at`` and keep the cached body.
+        if status_code == 304:
+            return ToolResult(
+                as_of=_now_iso(),
+                status="UNCHANGED",
+                data=None,
+                source=self.SOURCE,
+                note="ETag matched: 304 Not Modified",
+                etag=(response_etag or if_none_match),
             )
 
         if status_code >= 400:
@@ -484,6 +540,7 @@ class News8KTool:
                     f"in last {since_days}d (limit {limit}). "
                     f"Source: {url}"
                 ),
+                etag=response_etag or None,
             )
         else:
             result = ToolResult(
@@ -497,6 +554,7 @@ class News8KTool:
                     f"in last {since_days}d ({summary}). "
                     f"Source: {url}"
                 ),
+                etag=response_etag or None,
             )
 
         self._cache_put(cache_key, result)

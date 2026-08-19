@@ -352,7 +352,7 @@ try:
 
     # Step 1: warm the cache with a successful fetch.
     out_first = real_call_tool("news_8k", requested_by_agent="pilot",
-                                emit_event=None,
+                                emit_event=None, method="search",
                                 args={"ticker": "X", "limit": 5},
                                 run_id="pilot-cb", snippet_idx=0)
     step("step1 (200): out_first has snippet_path + v4 etag",
@@ -363,7 +363,7 @@ try:
     # Step 2: simulate 304 — same ETag matches upstream; connector
     # returns UNCHANGED; runtime preserves cache verbatim.
     out_304 = real_call_tool("news_8k", requested_by_agent="pilot",
-                             emit_event=None,
+                             emit_event=None, method="search",
                              args={"ticker": "X", "limit": 5},
                              run_id="pilot-cb", snippet_idx=0)
     step("step2 (304): snippet_path preserved (same file)",
@@ -377,7 +377,7 @@ try:
 
     # Step 3: simulate 200 with rotated ETag — cache rewritten
     out_200b = real_call_tool("news_8k", requested_by_agent="pilot",
-                              emit_event=None,
+                              emit_event=None, method="search",
                               args={"ticker": "X", "limit": 5},
                               run_id="pilot-cb", snippet_idx=0)
     step("step3 (200 with rotated etag): same snippet_path",
