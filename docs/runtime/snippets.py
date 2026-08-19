@@ -30,12 +30,27 @@ The on-disk shape:
     `<RUNS_DIR>/<run_id>/snippets/<safe_source>_<idx>.txt` — content
     `<RUNS_DIR>/<run_id>/snippets/<safe_source>_<idx>.meta.json` — metadata
         {
-          "written_at": "2026-08-19T18:00:00+00:00",
+          "written_at": 1234567890.0,            (epoch seconds, local cache time)
           "source": "sec_edgar_fulltext",
           "bytes_written": 1620,
           "ttl_seconds": 86400,
           "truncated": false,
+          "cached_as_of": "2026-08-19T17:59:55Z" (upstream's as_of at last write)
         }
+
+As-of-equals freshness ([domain-6]): in addition to the wallclock
+TTL gate, ``write_snippet_for`` will refresh a cached snippet when
+the upstream ``ToolResult.as_of`` is strictly *later* than what
+the cache recorded (sidecar's ``cached_as_of`` field). This handles
+the case where the same ticker publishes a successor 8-K later in
+the same day — the cache should pick up the new filing on the
+next connector call, even if the wallclock TTL hasn't elapsed.
+
+ISO-8601 timestamps (``...Z`` or ``+00:00``) compare correctly
+lexicographically when both use the same offset. The gate uses a
+strict ``>`` so an equal ``as_of`` falls back to the TTL check.
+We deliberately do NOT downgrade the cache when ``as_of`` regresses
+(a stale response with an older timestamp doesn't lose what we have).
 
 Two responsibilities kept here, none elsewhere:
 
@@ -233,11 +248,12 @@ def _excerpt_from_data(data: Any, cap_bytes: int = MAX_SNIPPET_BYTES) -> tuple[s
 @dataclass(frozen=True)
 class SnippetMetadata:
     """Sidecar metadata for a single cached snippet."""
-    written_at: float   # seconds since epoch (UTC)
+    written_at: float                          # epoch seconds, local cache time
     source: str
     bytes_written: int
     ttl_seconds: int
     truncated: bool = False
+    cached_as_of: str | None = None            # upstream's as_of at last write
 
     def age_seconds(self, now_s: float | None = None) -> float:
         return (now_s if now_s is not None else _now_s()) - self.written_at
@@ -255,6 +271,7 @@ class SnippetMetadata:
             "bytes_written": self.bytes_written,
             "ttl_seconds": self.ttl_seconds,
             "truncated": self.truncated,
+            "cached_as_of": self.cached_as_of,
         }, indent=2)
 
     @staticmethod
@@ -266,6 +283,7 @@ class SnippetMetadata:
             bytes_written=int(d["bytes_written"]),
             ttl_seconds=int(d["ttl_seconds"]),
             truncated=bool(d.get("truncated", False)),
+            cached_as_of=d.get("cached_as_of"),
         )
 
 
@@ -359,6 +377,36 @@ def snippet_for(tr: Any, run_id: str, idx: int,
 # ---------------------------------------------------------------------------
 # Write paths (TTL-gated)
 # ---------------------------------------------------------------------------
+def _iso_compare(a: str | None, b: str | None) -> int:
+    """Compare two ISO-8601 strings, normalizing 'Z' to '+00:00'.
+
+    Returns -1 / 0 / +1 like a strcmp, with ``None`` sorted last
+    (``None`` is "unknown" so never wins). Compares on the same
+    UTC offset when both are convertible; otherwise falls back to
+    string compare (works for Z-suffixed timestamps which sort
+    correctly in lexicographic order).
+    """
+    def norm(v: str | None) -> str | None:
+        if v is None:
+            return None
+        s = v.strip()
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        return s
+    na, nb = norm(a), norm(b)
+    if na is None and nb is None:
+        return 0
+    if na is None:
+        return 1   # unknown is "less than"
+    if nb is None:
+        return -1
+    if na < nb:
+        return -1
+    if na > nb:
+        return 1
+    return 0
+
+
 def write_snippet_for(tr: Any, run_id: str, idx: int,
                       *, base_dir: Path | None = None,
                       force: bool = False) -> SnippetPath | None:
@@ -367,14 +415,17 @@ def write_snippet_for(tr: Any, run_id: str, idx: int,
     Returns the resolved SnippetPath on success, ``None`` if the
     result wasn't eligible (FAILED / EMPTY / None).
 
-    TTL gate:
-      - If a cached snippet exists AND its sidecar says
-        ``age < ttl_seconds`` AND ``force=False``: skip the write,
-        return SnippetPath with ``new_write=False`` and ``refreshed=False``.
-      - Otherwise: write content + sidecar with ``now = _now_s()``,
-        return SnippetPath with ``new_write=True``.
+    TWO refresh gates, in order:
+      1. **TTL gate**: cached snippet's ``age >= ttl_seconds``?
+         Yes → refresh.
+      2. **as-of gate** ([domain-6]): ``ToolResult.as_of`` strictly
+         later than cached snippet's ``cached_as_of``? Yes → refresh.
+         Catches the case where a successor filing appears within
+         the wallclock TTL window.
 
-    ``force=True`` skips the gate entirely (used by tests + ops).
+    Either gate firing → refresh. Neither firing → return cached
+    SnippetPath with ``new_write=False``. ``force=True`` skips both
+    gates entirely (used by tests + ops).
     """
     if tr is None:
         return None
@@ -389,22 +440,28 @@ def write_snippet_for(tr: Any, run_id: str, idx: int,
     ttl = _resolve_ttl(source)
     now_s = _now_s()
 
-    # === TTL gate ===
+    # === Both gates ===
     if not force and path.exists() and meta_path.exists():
         try:
             meta = SnippetMetadata.from_json(meta_path.read_text(encoding="utf-8"))
         except Exception:
             meta = None
-        if meta is not None and not meta.is_stale(now_s):
-            size = path.stat().st_size
-            return SnippetPath(
-                path=path,
-                bytes_written=size,
-                truncated=meta.truncated,
-                new_write=False,
-                metadata=meta,
-            )
-        # else: stale or unreadable meta — fall through to write.
+        if meta is not None:
+            ttl_fresh = not meta.is_stale(now_s)
+            # as-of gate: skip refresh if cached_as_of is missing,
+            # equal, or *later* than the new ToolResult.as_of.
+            tr_as_of = getattr(tr, "as_of", "") or ""
+            asof_fresh = (_iso_compare(tr_as_of, meta.cached_as_of) <= 0)
+            if ttl_fresh and asof_fresh:
+                size = path.stat().st_size
+                return SnippetPath(
+                    path=path,
+                    bytes_written=size,
+                    truncated=meta.truncated,
+                    new_write=False,
+                    metadata=meta,
+                )
+            # else: at least one gate wants a refresh — fall through.
 
     # === Write path ===
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -419,6 +476,7 @@ def write_snippet_for(tr: Any, run_id: str, idx: int,
         bytes_written=len(raw),
         ttl_seconds=ttl,
         truncated=truncated,
+        cached_as_of=getattr(tr, "as_of", "") or None,
     )
     meta_path.write_text(metadata.to_json(), encoding="utf-8")
     return SnippetPath(
@@ -470,6 +528,7 @@ def force_refresh(path: Path | str, *,
         bytes_written=overrides.get("bytes_written", size),
         ttl_seconds=overrides.get("ttl_seconds", existing_meta.ttl_seconds),
         truncated=overrides.get("truncated", existing_meta.truncated),
+        cached_as_of=overrides.get("cached_as_of", existing_meta.cached_as_of),
     )
     meta_p.write_text(new_meta.to_json(), encoding="utf-8")
     return SnippetPath(

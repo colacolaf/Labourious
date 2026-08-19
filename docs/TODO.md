@@ -86,7 +86,7 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 - Process: 9 pilots × ~140 assertions, ZERO failures (this commit).
 
 ✅ Process
-- 26+ pilots × ~720+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `acfe3ebe` → `726cb4fa` → `pending this commit`)
+- 27+ pilots × ~760+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `acfe3ebe` → `726cb4fa` → `a2b98b83` → `pending this commit`)
 
 ---
 
@@ -603,6 +603,81 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
   24 h *will not* re-download. Re-running tomorrow *will*. Reviewers
   will see ``⚠ ◫`` on the chip first if they re-render before the
   TTL fires (so the badge refreshes on every chip re-render).
+
+### [domain-6] Snippet cache as-of-equality refresh  ✅ DONE
+- **What shipped**: a second refresh trigger alongside the wallclock
+  TTL. When the upstream ``ToolResult.as_of`` is strictly *later*
+  than the cache's ``cached_as_of`` (stored in the sidecar), the
+  snippet is rewritten even within the TTL window. Handles the
+  case where the same ticker publishes a successor 8-K within the
+  same day — we want the *latest*, not the cached one.
+- **Two refresh gates** (both must agree to skip refresh):
+  1. **TTL gate** — ``now - written_at >= ttl_seconds``
+  2. **as-of gate** — ``ToolResult.as_of > cached.cached_as_of``
+  
+  Either firing → refresh. ``force=True`` skips both. The gate
+  uses strict``>``, so equal ``as_of`` falls back to TTL.
+- **Sidecar schema** (extended):
+  ```json
+  {
+    "written_at": 1234567890.0,
+    "source": "news_8k",
+    "bytes_written": 1620,
+    "ttl_seconds": 3600,
+    "truncated": false,
+    "cached_as_of": "2026-08-19T17:59:55Z"   ← NEW
+  }
+  ```
+  Old-format sidecars without ``cached_as_of`` parse cleanly
+  (back-compat); we treat them as ``None`` which means "no as_of
+  preference, TTL gate only".
+- **Decision semantics** (forward-looking):
+  - **Later as_of → refresh** (the data was modified upstream).
+  - **Equal as_of → reuse** (no change, TTL is the only signal).
+  - **Older as_of → reuse** (deliberately, we don't downgrade to
+    to a stale revision — keeping the latest is the safer default
+    given how 8-Ks and amendments work).
+  - **Missing as_of on either side → TTL only** (we have no signal,
+    we trust the wallclock).
+- **New helper** (``docs/runtime/snippets.py``):
+  - ``_iso_compare(a: str|None, b: str|None) -> int`` — lexicographic
+    compare with ``Z ← +00:00`` normalization. None sorts last
+    (unknown is "less than").
+  - ``SnippetMetadata.cached_as_of: str | None = None`` — dataclass
+    field with to_json/from_json round-trip.
+  - ``force_refresh(new_metadata_overrides={"cached_as_of": ...})``
+    accepts the new field for symmetric updates.
+- **Pilot** ([smokes/snippet_asof_smoke.py](runtime/smokes/snippet_asof_smoke.py))
+  — **40 / 40 ok**:
+  1. ``_iso_compare`` equality, before/after, ``Z``↔``+00:00``,
+     different offsets, None-vs-string (8 assertions).
+  2. First write records ``cached_as_of`` in sidecar (3).
+  3. Later as_of refreshes even within 24h TTL (5).
+  4. Equal as_of reuses cached (2).
+  5. Older as_of does NOT downgrade (3).
+  6. Missing as_of → TTL-only, then TTL elapsed → refresh (5).
+  7. ``force=True`` overrides the as-of gate (3).
+  8. TTL fires independently of equal as_of (2).
+  9. ``SnippetMetadata`` JSON round-trip, old-format compat (3).
+  10. ``force_refresh`` supports ``cached_as_of`` overrides (2).
+  11. End-to-end ``call_tool(run_id=...)`` later→refresh,
+      older→reject downgrade (4).
+- **Back-compat fix**: `docs/runtime/smokes/snippet_cache_smoke.py`
+  §4 idempotency test now uses the *same* ``as_of`` as the cached
+  write (it was previously using a different timestamp which would
+  now correctly trigger the as-of gate). All 54 assertions still
+  green.
+- **Why this matters**: consider this scenario:
+  - 9 AM — agent runs ``news_8k`` for NVDA, caches 8-K filing #1
+    (``as_of=09:00Z``). TTL=1 h, fresh until 10 AM.
+  - 9:30 AM — same agent runs again. The 8-K #1 has been *replaced*
+    by 8-K #2 (``as_of=09:30Z``) upstream.
+  - **Before** this commit: cache reused (within TTL) — reviewer
+    sees stale data.
+  - **After** this commit: as_of-gate fires, cache refreshed, chip
+    shows latest snippets.
+- **Combined regression**: 17 pilots × 760+ assertions, ZERO failures;
+  ``pytest docs/runtime/evals/`` 7/7 pass.
 
 ---
 ### [protocol-1] Live provider health probes

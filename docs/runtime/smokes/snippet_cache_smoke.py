@@ -170,9 +170,12 @@ sp4a = snip_mod.write_snippet_for(tr_success, run_id="pilot-1", idx=0,
 step("second call returns SnippetPath", sp4a is not None)
 step("second call: new_write is False", sp4a is not None and sp4a.new_write is False)
 step("second call: same path", sp4a is not None and str(sp4a.path) == str(sp.path))
-# Even with completely different data, no rewrite unless force=True
+# Even with completely different data, no rewrite unless force=True.
+# NB: same as_of as v1 to keep TTL+asof gate both satisfied — this test
+# is about idempotency for *the same* upstream publication, not for
+# later revisions; asof-driven refresh is tested in snippet_asof_smoke.
 new_tr = ToolResult(status="SUCCESS", data=["totally different"],
-                   as_of="2026-08-19T19:00:00Z",
+                   as_of="2026-08-19T18:00:00Z",
                    source="sec_edgar_fulltext",
                    note="would-be-different")
 sp4b = snip_mod.write_snippet_for(new_tr, run_id="pilot-1", idx=0,
