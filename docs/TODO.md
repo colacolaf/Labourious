@@ -134,7 +134,66 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
   3. Streaming mode (currently only senior-analyst was tested in single-
      shot mode).
   4. Citation URLs must verify against real connector output.
+- **Resolved in `[content-1]` (this commit)**: the "empty body"
+  problem is fixed by priming every brief with a CONCRETE filled
+  example envelope + an anti-echo directive. llama3.2:3b now
+  produces 30+ substantive strings per envelope (was 0). Wallclock
+  goes 17s → 64s for the senior-analyst, but the structural problem
+  is gone. Quality of paraphrase (i.e., whether the model writes
+  things about NVDA specifically vs copy-swap of the example) is
+  still loose and depends on data feeding; that's `[connectors-1]`.
 - Effort: 1 day for full smoke + content-level fixes.
+
+### [content-1] **Empty-envelope fix**  ✅ DONE
+- **Root cause**: small (3B-8B) LLMs over-fit to "fill the keys" of a
+  JSON envelope with empty strings/lists instead of filling the
+  content with real analysis. Empirically observed in smoke-1 with
+  llama3.2:3b: 13 required keys present, every substantive string
+  was `""` or `[]`.
+- **Fix**: every brief now appends (in order):
+  1. A CONCRETE filled example envelope using a fictional `ACME`
+     ticker. The example shows the model what a *complete*
+     response looks like — not just keys but analysis prose,
+     citations, gaps, etc. Compact per-agent examples (~440-840
+     tokens each).
+  2. The HARD-RULE directive now explicitly tells the model to
+     "DO NOT mirror the example above verbatim; copy the SHAPE and
+     COMPLETENESS, then replace every fact with yours." This
+     prevents the model from copying the ACME example across the
+     ticker boundary.
+- **Plumbing** (`docs/runtime/runtime.py`):
+  - `_EXAMPLE_ENVELOPES[agent_id]`: dict[str, str] of JSON-shaped
+    examples per agent (orchestrator, senior-analyst,
+    forensic-accounting, devils-advocate, final-report,
+    model-builder).
+  - `_example_envelope_for(agent_id)`: returns None for unknown agents.
+  - `_wrap_example_with_directive(agent_id)`: returns
+    ``"--- EXAMPLE...\n```json\n<example>\n```\n"`` so the example
+    is the last context the model sees before generating.
+  - `call_agent` now concatenates: `user_brief + example_block +
+    json_only_directive`. Order matters: example BEFORE the JSON-only
+    directive, so the directive stops the model from echoing the
+    fence code.
+- **Smoke evidence** (`/tmp/smoke_content_3b.py`):
+  - llama3.2:3b warms up in ~50s (cold) and finishes senior-analyst
+    in **64s wallclock** for 926 output tokens.
+  - Substantive strings: **33** (was 0).
+  - `conclusion`: "NVDA: HOLD, conviction 4/5; ..." — real content.
+  - `thesis.one_sentence`: 90 chars of analyst prose, not empty.
+  - `bear_case_from_devils_advocate`: 95 chars, structurally correct.
+  - `what_an_attacker_would_say`: 70 chars.
+  - `bottom_line.direction | conviction | flip_trigger`: all filled.
+  - 2 findings, 2 gaps, 2 next_steps, 2 citations — all populated.
+- **Pilot** (`/tmp/content_shape_pilot.py`): 40/40 ok — every example
+  parses, has ACME marker, has ≥5 substantive strings, ≤3500 bytes,
+  validates against `validate_envelope`, and the wrap helper
+  produces anti-echo framing.
+- **Regression**: 9/9 other pilots green; 7/7 eval tests still pass.
+- **Caveat**: the example's prose is generic ("multiple 5σ above 10y
+  mean"); the model mostly copy-swaps ACME → user's ticker with
+  light paraphrasing. Real-data fidelity (using actual NVDA
+  revenue, beta, etc.) requires live connector output — which is
+  `[domain-2]`.
 
 ### [smoke-2] **Per-agent model routing from settings**
 - Settings rail §3 lets users set a per-agent override (`ollama/...` for

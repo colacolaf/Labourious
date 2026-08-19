@@ -215,6 +215,269 @@ def _extract_json_envelope(text: str) -> dict | None:
 
 
 # --------------------------------------------------------------------------- #
+# Example envelope (for shape-with-content priming)
+# --------------------------------------------------------------------------- #
+# Small (<=8B) local LLMs over-fit to "fill the keys" instead of "fill the
+# content" of a JSON envelope. Empirically observed in smoke-1 with
+# llama3.2:3b: every required field present, every substantive string/list
+# empty. Fix: append a CONCRETE filled example at the END of the brief,
+# before the JSON-only directive. The example gives the model a shape to
+# copy WITH content, not just a skeleton to fill with empties.
+#
+# Critically: the example uses a FICTIONAL ticker ("ACME") so the model
+# cannot accidentally echo or substitute it for the user's input. The
+# directive explicitly tells the model to fill YOUR answer, not the example.
+_EXAMPLE_TICKER = "ACME"
+
+
+_EXAMPLE_ENVELOPES: dict[str, str] = {
+    "orchestrator": json.dumps({
+        "agent_id": "orchestrator",
+        "flow_id": "f1",
+        "answer": f"{_EXAMPLE_TICKER}: HOLD conviction 4/5; multiple > base, with a tight flip trigger.",
+        "bottom_line": "HOLD · 4/5 · flip trigger: <= $720 OR dividend suspension.",
+        "key_takeaways": [
+            "Momentum-cohort correlation ~0.9 in shocks; diversification is thin.",
+            "Hyperscaler tier-1 concentration is the single biggest FCF-durability risk.",
+            "Bear case steelmanned: multiple expansion drove ~80% of the trailing 12-mo return.",
+        ],
+        "options": [
+            "A: Trim 25% to fund an underweight in a cash-returning mid-cap.",
+            "B: Hold core; pair-trade against sector-weakest peer.",
+            "C: Maintain full position; size to your tolerance for multiple compression.",
+        ],
+        "evidence": [
+            {"from": "senior-analyst", "claim": "Multiple is 5σ above 10y mean.", "citation": "10-K FY2026 + 10y monthly closes"},
+            {"from": "forensic-accounting", "claim": "SBC drag structural.", "citation": "FY2026 10-K share-based comp note"},
+        ],
+        "disagreements": [
+            {"issue": "Whether China export-control overhang resolves in FY25 or FY27", "parties": ["mgmt", "policy"],
+             "resolution": "Bear-case risk; flip trigger on policy lapse."},
+        ],
+        "activity": [
+            {"agent": "senior-analyst", "status": "CALLED", "note": "wave 2"},
+            {"agent": "forensic-accounting", "status": "CALLED", "note": "wave 3"},
+            {"agent": "devils-advocate", "status": "CALLED", "note": "wave 3"},
+            {"agent": "final-report", "status": "CALLED", "note": "wave 4"},
+        ],
+        "confidence": "MODERATE_HIGH",
+        "verification": {
+            "asset_checks": [{"ticker": _EXAMPLE_TICKER, "status": "CLEAN", "note": "CIK resolved."}],
+            "connector_status": [{"tool": "sec_edgar", "status": "SUCCESS", "note": "10-K retrieved"}],
+            "error_flags": [],
+        },
+        "next_steps": ["Confirm Q4 inventory turnover; flag if gross-margin guide slips."],
+        "compressed": False,
+    }, indent=2),
+
+    "senior-analyst": json.dumps({
+        "agent_id": "senior-analyst",
+        "depth": "STANDARD",
+        "compressed": False,
+        "conclusion": f"{_EXAMPLE_TICKER}: HOLD, conviction 4/5; premium to base + tight flip trigger.",
+        "question_framed": f"Is {_EXAMPLE_TICKER}'s multiple commensurate with AI-capex tailwind durability?",
+        "thesis": {
+            "one_sentence": f"{_EXAMPLE_TICKER}'s AI franchise commands a multi-year moat but has priced in 2-3y of accelerating FCF.",
+            "fragile_assumption": "Hyperscaler capex stays flat-to-up through FY27.",
+            "bull_case": f"{_EXAMPLE_TICKER}'s accelerator moat is intact; FY27 capex is cash-funded; hierarchy-1 hyperscaler commitments hold.",
+            "primary_source_priorities": ["10-K FY2026", "Q3 2026 10-Q", "latest transcript"],
+        },
+        "bear_case_from_devils_advocate": "SBC drag structural at ~12% of revenue; multiple expansion drove 80% of trailing return; China overhang unlapsed.",
+        "what_an_attacker_would_say": "Multiple is 5σ above 10y mean; every prior episode ended 35-50% below.",
+        "bottom_line": {"direction": "HOLD", "conviction": 4, "flip_trigger": "<= $720 OR dividend suspension OR policy lapse"},
+        "next_three_questions": [
+            "Is GM guidance supply- or demand-driven?",
+            "Hyperscaler pull-through quarterly?",
+            "H100/H200 inventory clearing?",
+        ],
+        "findings": [
+            {"id": "f1", "source_agent": "self", "claim": "Multiple 5σ above 10y mean.", "evidence": "Monthly closes 10y.", "source": "10-K FY2026", "url": None, "as_of": "2026-08-12"},
+            {"id": "f2", "source_agent": "forensic-accounting", "claim": "SBC 12% of revenue.", "evidence": "FY2024-26 SBC vs revenue.", "source": "10-K Note 14", "url": None, "as_of": "2026-08-12"},
+        ],
+        "tensions": [{"issue": "Inventory normalization timing", "parties": ["mgmt", "auditor"], "resolution": "Q4 print resolves."}],
+        "gaps": ["Hyperscaler pull-through not retrievable.", "Inventory step-down assumed, not disclosed."],
+        "verification": {
+            "asset_checks": [{"ticker": _EXAMPLE_TICKER, "status": "CLEAN", "note": "ID ok"}],
+            "connector_status": [{"tool": "sec_edgar", "status": "SUCCESS", "note": "10-K + 10-Q"}, {"tool": "news_8k", "status": "SUCCESS", "note": "3 8-K"}],
+            "error_flags": [],
+        },
+        "citations": [
+            {"ref": "f1", "type": "PRIMARY", "name": f"10-K FY2026 ({_EXAMPLE_TICKER})", "date": "2026-08-12", "url": f"https://www.sec.gov/.../{_EXAMPLE_TICKER}-10k"},
+            {"ref": "f2", "type": "PRIMARY", "name": "10-K Note 14 SBC", "date": "2026-08-12", "url": f"https://www.sec.gov/.../{_EXAMPLE_TICKER}-10k#sbc"},
+        ],
+        "activity": [
+            {"agent": "forensic-accounting", "status": "CALLED", "note": "wave 3"},
+            {"agent": "devils-advocate", "status": "CALLED", "note": "wave 3"},
+        ],
+        "next_steps": ["Watch Q4 print.", "Re-run if multiple compresses 1σ."],
+        "confidence": "MODERATE_HIGH",
+    }, indent=2),
+
+    "forensic-accounting": json.dumps({
+        "agent_id": "forensic-accounting",
+        "depth": "STANDARD",
+        "compressed": False,
+        "conclusion": f"{_EXAMPLE_TICKER} FLAGGED (medium): SBC drag structural; FY27 guide rests on unverified inventory step-down.",
+        "confidence": "MIXED",
+        "verdict": "FLAGGED",
+        "findings": [
+            {"id": "f1", "source_agent": "self", "claim": "SBC 12.1% of revenue, structural.", "evidence": "FY24 SBC $X bn vs revenue; peer median 5.4%.", "source": "10-K Note 14", "url": None, "as_of": "2026-08-12"},
+            {"id": "f2", "source_agent": "self", "claim": "Working capital flat FY27; 5y pattern shows +5-7% build.", "evidence": "5y rolling NWC-to-revenue.", "source": "10-K MD&A", "url": None, "as_of": "2026-08-12"},
+            {"id": "f3", "source_agent": "self", "claim": "Inventory normalization unverified; auditor scope covered year-end only.", "evidence": "Note 3 spans 3 pages.", "source": "FY2026 10-K", "url": None, "as_of": "2026-08-16"},
+        ],
+        "gaps": ["Quarterly inventory disclosed only in 10-Qs.", "SBC FY26+ policy not captured."],
+        "verification": {
+            "asset_checks": [{"ticker": _EXAMPLE_TICKER, "status": "CLEAN", "note": "ID ok"}],
+            "connector_status": [{"tool": "sec_edgar", "status": "SUCCESS", "note": "10-K + auditor report"}],
+            "error_flags": [],
+        },
+        "citations": [
+            {"ref": "f1", "type": "PRIMARY", "name": f"10-K Note 14 ({_EXAMPLE_TICKER})", "date": "2026-08-12", "url": f"https://www.sec.gov/.../{_EXAMPLE_TICKER}-10k#sbc"},
+            {"ref": "f2", "type": "PRIMARY", "name": f"10-K MD&A ({_EXAMPLE_TICKER})", "date": "2026-08-12", "url": f"https://www.sec.gov/.../{_EXAMPLE_TICKER}-10k#mda"},
+        ],
+        "next_steps": ["Pull Q4 liquidity.", "Compare SBC policy to MSFT/GOOGL peers."],
+    }, indent=2),
+
+    "devils-advocate": json.dumps({
+        "agent_id": "devils-advocate",
+        "depth": "STANDARD",
+        "compressed": False,
+        "conclusion": f"Steelmanned bull holds at franchise level; bear case wins on multiple basis — {_EXAMPLE_TICKER}'s premium is not earned by current FCF durability.",
+        "confidence": "MODERATE_HIGH",
+        "steelmanned_bull": f"{_EXAMPLE_TICKER}'s AI accelerator franchise is structurally defensible; competitive silicon narrowed the gap but didn't erase it; hyperscaler capex is the durable demand backstop.",
+        "bear_case": f"{_EXAMPLE_TICKER} trades 32x forward vs 10y mean 19x; 78% of trailing 12-mo return is multiple expansion; SBC 12% of revenue is real cash drag; China overhang unlapsed.",
+        "fragile_assumption": "Hyperscaler AI capex stays flat-to-up through FY27 — dip 15-20% collapses the premium in 1Q.",
+        "what_an_attacker_would_say": f"Multiple 5σ above 10y mean; every prior episode ended -35-50% before fundamentals stabilized; {_EXAMPLE_TICKER} is crowded long-and-thin.",
+        "base_rates": [
+            {"claim": "Late-cycle growth names mean-revert 62% within 4Q post-recession onset.", "evidence": "n=14 analog set 1995-2024", "source": "regime analog set", "as_of": "2026-08-16"},
+        ],
+        "findings": [
+            {"id": "f1", "source_agent": "self", "claim": "78% of trailing 12-mo return is multiple expansion.", "evidence": "Decomposition: 22% earnings, 78% PE.", "source": f"monthly closes + consensus EPS ({_EXAMPLE_TICKER})", "url": None, "as_of": "2026-08-16"},
+            {"id": "f2", "source_agent": "self", "claim": "H200 lead times narrowing; inventory channel build.", "evidence": "3 trade-press reports.", "source": "trade press 2026-Q3", "url": None, "as_of": "2026-08-16"},
+        ],
+        "tensions": [{"issue": "Bull case lacks AI capex durability citation.", "parties": ["bull case", "missing citation"], "resolution": "Re-brief with hyperscaler Q3 capex data."}],
+        "gaps": ["Hyperscaler GenAI ROI undisclosed.", "Channel inventory is trade-press grade."],
+        "verification": {
+            "asset_checks": [{"ticker": _EXAMPLE_TICKER, "status": "CLEAN", "note": "ID ok"}],
+            "connector_status": [{"tool": "transcripts", "status": "SUCCESS", "note": "Q3 transcript"}],
+            "error_flags": [],
+        },
+        "citations": [
+            {"ref": "f1", "type": "SECONDARY", "name": "Trade-press digest 2026-Q3", "date": "2026-08-12", "url": None},
+        ],
+        "next_steps": ["Layer in 5y/10y curve regime signal from macro lead."],
+    }, indent=2),
+
+    "final-report": json.dumps({
+        "agent_id": "final-report",
+        "flow_id": "f1",
+        "depth": "STANDARD",
+        "compressed": False,
+        "memo": {
+            "bottom_line": {
+                "direction": "HOLD",
+                "conviction": 4,
+                "flip_trigger": "<= $720 OR dividend suspension OR policy lapse",
+                "one_liner": f"{_EXAMPLE_TICKER}: HOLD; multiple is the position, not the earnings.",
+            },
+            "bull_case": f"{_EXAMPLE_TICKER}'s AI moat is intact; FY27 capex is cash-funded; hyperscaler commitments hold; GM compression is supply-driven.",
+            "bear_case": "78% of trailing return is multiple expansion; GenAI ROI unverified; SBC 12% real cash drag; China overhang unlapsed.",
+            "what_an_attacker_would_say": f"Multiple 5σ above 10y mean; every prior episode ended -35-50% before fundamentals stabilized.",
+            "next_three_questions": [
+                "Is Q4 print showing inventory normalization?",
+                "Hyperscaler pull-through quarterly?",
+                "H100/H200 inventory clearing?",
+            ],
+            "citations_used": [
+                {"ref": "f1", "type": "PRIMARY", "name": f"10-K FY2026 ({_EXAMPLE_TICKER})", "date": "2026-08-12", "url": f"https://www.sec.gov/.../{_EXAMPLE_TICKER}-10k"},
+                {"ref": "f2", "type": "PRIMARY", "name": "Q3 2026 transcript", "date": "2026-08-16", "url": f"https://www.sec.gov/.../{_EXAMPLE_TICKER}-8k"},
+            ],
+        },
+        "confidence": "MODERATE_HIGH",
+        "gaps": ["Quarterly hyperscaler pull-through not retrieved.", "Inventory step-down disclosed only in 10-Qs."],
+        "verification": {
+            "asset_checks": [{"ticker": _EXAMPLE_TICKER, "status": "CLEAN", "note": "CIK ok"}],
+            "connector_status": [{"tool": "sec_edgar", "status": "SUCCESS", "note": "10-K + transcript"}],
+            "error_flags": [],
+        },
+    }, indent=2),
+
+    "model-builder": json.dumps({
+        "agent_id": "model-builder",
+        "ticker": _EXAMPLE_TICKER,
+        "depth": "STANDARD",
+        "compressed": False,
+        "as_of": "2026-08-16",
+        "model": {
+            "wacc": {
+                "cost_of_equity": 0.1112,
+                "after_tax_cost_of_debt": 0.0294,
+                "wacc": 0.1079,
+                "rationale": "CAPM with Damodaran implied US ERP",
+            },
+            "forecast": {"fcf_series": [115.5, 121.3, 127.4, 132.5, 137.8]},
+            "terminal": {"perpetual_growth": 0.03, "primary_method": "gordon"},
+            "sensitivity_grid_basis_points": 100,
+            "sensitivity_dimensions": ["wacc", "terminal_g"],
+        },
+        "result_summary": {
+            "dcf_intrinsic_per_share_base": 96.77,
+            "dcf_intrinsic_per_share_bear": 71.20,
+            "comps_implied_per_share_ev_ebitda": 215.06,
+            "model_midpoint_per_share": 155.91,
+            "triangulation_vs_market": "Market $195 vs DCF base $96.77 (50% premium); vs comps $215 in line.",
+        },
+        "conclusion": "DEFENSIBLE — DCF base respects GDP cap; bear respects sector medians.",
+        "confidence": "MODERATE_HIGH",
+        "citations": [
+            {"name": f"10-K FY2026 CF ({_EXAMPLE_TICKER})", "type": "PRIMARY", "url": f"https://www.sec.gov/.../{_EXAMPLE_TICKER}-10k", "date": "2026-08-12"},
+            {"name": "Damodaran US ERP 2026", "type": "SECONDARY", "url": "https://pages.stern.nyu.edu/~adamodar/", "date": "2026-01-15"},
+        ],
+        "gaps": ["10-K did not disclose segment FCF.", "Bear peers filter excluded EM-domiciled."],
+        "verification": {
+            "warnings": ["perpetual growth at GDP cap"],
+            "checks_passed": ["WACC within 3-20% band", "share_count > 0", "FCF series positive 5Y", "sensitivity grid 5x5"],
+            "asset_checks": [{"ticker": _EXAMPLE_TICKER, "status": "CLEAN", "note": "ID ok"}],
+            "connector_status": [{"tool": "sec_edgar", "status": "SUCCESS", "note": "10-K CF stmt"}],
+            "error_flags": [],
+        },
+    }, indent=2),
+}
+
+
+def _example_envelope_for(agent_id: str) -> str | None:
+    """Return a compact, schema-complete, content-filled example envelope
+    for `agent_id`. Used to prime small LLMs to fill *content*, not just
+    *keys*. Returns None for unknown agents.
+    """
+    return _EXAMPLE_ENVELOPES.get(agent_id)
+
+
+def _wrap_example_with_directive(agent_id: str) -> str:
+    """Wrap an example envelope with anti-echo framing so the model copies
+    the *shape* but writes *its own content* for the user's input.
+
+    The block:
+    1. Names the placeholder ticker (ACME) so the model knows the example
+       is illustrative, not the user's ticker.
+    2. Tells the model explicitly to substitute its own conclusions.
+    3. Marks the boundary between the example and the final HARD-RULE
+       directive so the JSON-only instruction still applies.
+    """
+    example = _example_envelope_for(agent_id)
+    if not example:
+        return ""
+    return (
+        "\n\n---\n\n"
+        "BELOW IS AN EXAMPLE OF A WELL-FORMED RESPONSE for this kind of task.\n"
+        "It uses the placeholder ticker 'ACME' — your answer must use the\n"
+        "user's actual ticker and provide YOUR OWN analysis, not the example's content.\n"
+        "Copy the SHAPE and COMPLETENESS; replace facts with yours.\n\n"
+        f"```json\n{example}\n```\n"
+    )
+
+
+# --------------------------------------------------------------------------- #
 # Call an agent
 # --------------------------------------------------------------------------- #
 def call_agent(
@@ -248,23 +511,31 @@ def call_agent(
       3. `model_name` — the chat's default model.
     """
     system_prompt = load_prompt(agent_id)
-    # Append a JSON-only directive to every brief. The orchestrator / lead
-    # prompts already say this, but small models (<=8B) routinely ignore it
-    # when their context window is dominated by a long system prompt. A short
-    # concrete reminder at the *bottom* of the brief lands reliably.
-    # We also explicitly tell the model NOT to mirror any nested JSON example
-    # found in the user brief (e.g. a prior thesis row inside `relevant_history`).
+    # Append (in this order):
+    # 1. Example envelope — a CONCRETE filled example for this agent with a
+    #    fictional `ACME` ticker. Small (<=8B) models over-fit to "fill the
+    #    keys" with empty strings; the example gives them a shape to copy
+    #    WITH content. The example is wrapped with anti-echo framing.
+    # 2. JSON-only directive — the hard rule that says "respond with one
+    #    JSON object, no prose, no fences". Critical because the example
+    #    above is itself a JSON block in a fence; the rule below
+    #    *removes* the fence for the response and forbids echoing.
+    example_block = _wrap_example_with_directive(agent_id)
     json_only_directive = (
         "\n\n---\n\nRESPONSE FORMAT (HARD RULE): Reply with ONE JSON object and nothing else. "
         "No prose, no markdown fences, no commentary before or after. The very first "
         "character of your reply must be `{` and the very last must be `}`. If a field "
         "is unknown, omit it rather than write null.\n\n"
-        "DO NOT mirror the shape of any nested JSON example in this brief (such as a "
-        "prior thesis row, citation list, or connector excerpt). Your reply shape is "
-        "defined solely by the schema in your system prompt, NOT by the input data. "
-        "Strip nested-object fields down to only the keys required by that schema.")
-    if not user_brief.endswith(json_only_directive):
-        user_brief = (user_brief + json_only_directive) if user_brief else json_only_directive.lstrip()
+        "DO NOT mirror the example above verbatim. The example uses the placeholder ticker "
+        "'ACME' — your answer must use the user's actual ticker and YOUR OWN analysis. "
+        "Copy the example's SHAPE and COMPLETENESS, then replace every fact with yours. "
+        "Your reply shape is defined by your system prompt, NOT by nested JSON data in "
+        "this brief (messages, prior-thesis rows, citation lists, connector excerpts). "
+        "Strip nested-object fields down to only the keys required by your schema.")
+    if user_brief:
+        user_brief = user_brief + example_block + json_only_directive
+    else:
+        user_brief = (example_block + json_only_directive).lstrip()
     effective_model = model_name
     if per_agent_model and agent_id in per_agent_model:
         effective_model = per_agent_model[agent_id]
