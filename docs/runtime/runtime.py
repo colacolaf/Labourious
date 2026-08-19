@@ -437,7 +437,16 @@ def execute_flow_f1(
                                  per_agent_model=per_agent_model,
                                  stream_chunks=stream_chunks)
 
-    # Wave 3: forensic-accounting + devils-advocate (sequential; future: parallel)
+    # Wave 3 (parallel): forensic-accounting + devils-advocate.
+    # Per `docs/flows/f1-analyze-ticker.md` the recipe calls this
+    # "wave 2 (parallel): forensic + devils-advocate (parallel)". The
+    # two agents are independent (devil does not consume forensic's
+    # output in the upstream flow); they both feed the final-report
+    # wave. Parallelism saves ~5-10s on a typical STAN4/8B speak.
+    # ThreadPoolExecutor is fine here because call_agent is synchronous
+    # (LLM HTTP requests are blocking); using async/await would require
+    # restructuring the runtime. We pin max_workers=2 to mirror the
+    # recipe's claim of "two agents one wave".
     fa_brief = json.dumps({
         "from": "senior-analyst",
         "task": f"Earnings-quality review on {ticker}",
@@ -445,11 +454,6 @@ def execute_flow_f1(
         "depth": "STANDARD",
         "compressed": False,
     })
-    fa_env, fa_cost = call_agent("forensic-accounting", fa_brief, model,
-                                 paid_for=paid_for, emit_event=emit_event,
-                                 per_agent_model=per_agent_model,
-                                 stream_chunks=stream_chunks)
-
     da_brief = json.dumps({
         "from": "senior-analyst",
         "task": f"Counter-case on {ticker} thesis",
@@ -458,10 +462,38 @@ def execute_flow_f1(
         "depth": "STANDARD",
         "compressed": False,
     })
-    da_env, da_cost = call_agent("devils-advocate", da_brief, model,
-                                 paid_for=paid_for, emit_event=emit_event,
-                                 per_agent_model=per_agent_model,
-                                 stream_chunks=stream_chunks)
+    fa_cost: dict[str, Any] = {}
+    da_cost: dict[str, Any] = {}
+    with cf.ThreadPoolExecutor(max_workers=2, thread_name_prefix="f1-wave3") as ex:
+        fa_fut = ex.submit(
+            call_agent, "forensic-accounting", fa_brief, model,
+            paid_for=paid_for, emit_event=emit_event,
+            per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+        )
+        da_fut = ex.submit(
+            call_agent, "devils-advocate", da_brief, model,
+            paid_for=paid_for, emit_event=emit_event,
+            per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+        )
+        # Both results must materialize before wave 4. We collect them in
+        # deterministic order — forensic first, devil second — for the
+        # event log so the TUI sees a stable bubble order.
+        try:
+            fa_env, fa_cost = fa_fut.result()
+        except Exception as exc:
+            # Even if forensic fails, try to surface the devil's output
+            # so the TUI shows partial work.
+            try:
+                da_env, da_cost = da_fut.result()
+            except Exception:
+                da_env, da_cost = {}, {"agent_id": "devils-advocate", "error": str(exc)}
+            raise RuntimeError(
+                f"forensic-accounting failed in wave 3: {type(exc).__name__}: {exc}"
+            ) from exc
+        try:
+            da_env, da_cost = da_fut.result()
+        except Exception as exc:
+            da_env, da_cost = {}, {"agent_id": "devils-advocate", "error": str(exc)}
 
     # Wave 4: final-report
     fr_brief = json.dumps({
@@ -2298,13 +2330,124 @@ def render_memo_markdown(env: dict[str, Any]) -> str:
 # --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
+def _run_cli_call_tool(args: argparse.Namespace) -> int:
+    """`--call-tool` CLI dispatcher.
+
+    Run a single connector from the registry, print events as they fire, write
+    the ToolResult into `.runs/<run_id>/connector_<tool_id>.json` so the eval
+    suite (``inventory`` etc.) picks the artifact up.
+    """
+    # When invoked as `python docs/runtime/runtime.py`, Python treats the file
+    # as top-level (`__main__`), so neither relative imports (`from .call_tool`)
+    # nor absolute `import runtime.call_tool` resolve automatically. We
+    # explicitly load the `runtime` package init into sys.modules, then load
+    # call_tool against the package. The same trick is used by the pilot scripts.
+    if "runtime" not in sys.modules:
+        _RUNTIME_PKG_PARENT = str(Path(__file__).resolve().parent.parent)
+        if _RUNTIME_PKG_PARENT not in sys.path:
+            sys.path.insert(0, _RUNTIME_PKG_PARENT)
+        import importlib.util as _ilu
+        _pkg_init = Path(__file__).resolve().parent / "__init__.py"
+        if _pkg_init.exists():
+            _spec = _ilu.spec_from_file_location("runtime", _pkg_init)
+            _pkg = _ilu.module_from_spec(_spec)
+            _spec.loader.exec_module(_pkg)
+            sys.modules["runtime"] = _pkg
+    from runtime.call_tool import call_tool as call_tool_fn
+    from runtime.call_tool import TOOL_REGISTRY  # noqa: F401  (exposed for tests)
+    # Build kwargs from the generic arg flags. Tools that don't accept a given
+    # key will raise inside the tool method, which call_tool catches and turns
+    # into ConnectorFailed + a FAILED ToolResult.
+    kwarg_candidates = {
+        "ticker": args.ticker,
+        "query": args.query,
+        "since_days": args.since_days,
+        "limit": args.limit,
+        "forms": args.forms.split(",") if args.forms else None,
+        "ciks": args.ciks.split(",") if args.ciks else None,
+        "start": args.start,
+        "end": args.end,
+        "article_id": args.article_id,
+    }
+    # If caller provided a raw JSON --request, that wins. (Structured tools
+    # like DCFTool / CompsTool / ComparatorTool take `request` / `subject`
+    # / `tickers` dicts that the generic flag set can't fully express.)
+    if args.request:
+        try:
+            tool_args = json.loads(args.request)
+        except json.JSONDecodeError as exc:
+            print(f"# call_tool: --request is not valid JSON: {exc}", file=sys.stderr)
+            return 2
+    else:
+        tool_args = {k: v for k, v in kwarg_candidates.items() if v is not None}
+
+    print(f"# call_tool: {args.call_tool} args={tool_args}", file=sys.stderr)
+    events_emitted: list[Any] = []
+
+    def _emit(ev: Any) -> None:
+        events_emitted.append(ev)
+        # Render as one-line log to stderr (so stdout stays clean).
+        kind = type(ev).__name__
+        if hasattr(ev, "__dict__"):
+            payload = {k: v for k, v in ev.__dict__.items()
+                       if not k.startswith("_")}
+            print(f"#   \u21aa {kind}: {payload}", file=sys.stderr)
+
+    result = call_tool_fn(
+        tool_id=args.call_tool,
+        requested_by_agent="cli-tool",
+        emit_event=_emit,
+        method=args.tool_method or None,
+        args=tool_args,
+    )
+
+    run_id = make_run_id(f"tool-{args.call_tool}", args.ticker or "")
+    run_dir = RUNS_DIR / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    art = {
+        "run_id": run_id,
+        "tool_id": args.call_tool,
+        "method": args.tool_method,
+        "args": tool_args,
+        "tool_result": result.__dict__ if hasattr(result, "__dict__") else str(result),
+        "events": [e.__dict__ if hasattr(e, "__dict__") else str(e) for e in events_emitted],
+        "as_of": dt.datetime.utcnow().isoformat() + "Z",
+    }
+    (run_dir / f"connector_{args.call_tool}.json").write_text(
+        json.dumps(art, indent=2), encoding="utf-8")
+
+    print(f"\n=== call_tool result ({args.call_tool}) ===")
+    print(f"  status       : {result.status}")
+    print(f"  as_of        : {result.as_of}")
+    print(f"  source       : {result.source}")
+    if result.note:
+        print(f"  note         : {result.note[:200]}")
+    summary = result.data
+    if isinstance(summary, list):
+        print(f"  rows returned: {len(summary)}")
+        for i, row in enumerate(summary[:3]):
+            print(f"    [{i}] {row}")
+    elif isinstance(summary, dict):
+        print(f"  data keys    : {sorted(summary.keys())}")
+        for k in list(summary.keys())[:5]:
+            v = summary[k]
+            if isinstance(v, str) and len(v) > 200:
+                v = v[:200] + "..."
+            print(f"    {k}: {v!r}")
+    print(f"\n# run_id: {run_id}", file=sys.stderr)
+    print(f"# artifact: {run_dir / f'connector_{args.call_tool}.json'}", file=sys.stderr)
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description="Labourious runtime — Analyst's Bench skeleton")
-    p.add_argument("--flow", required=True, choices=["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"])
+    p.add_argument("--flow", required=("--call-tool" not in sys.argv and "--list-tools" not in sys.argv),
+                   choices=["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"])
     p.add_argument("--ticker", help="Single ticker (e.g. NVDA)")
     p.add_argument("--tickers", help="Comma-separated tickers (for f2)")
     p.add_argument("--thesis", help="Thesis text (for f6)")
-    p.add_argument("--model", required=("--dry-run" not in sys.argv), help="e.g. ollama/llama3.3:70b, groq/llama-3.3-70b-versatile, anthropic/claude-sonnet-4-5 (skippable with --dry-run)")
+    p.add_argument("--model", required=("--dry-run" not in sys.argv and "--call-tool" not in sys.argv and "--list-tools" not in sys.argv),
+                   help="e.g. ollama/llama3.3:70b, groq/llama-3.3-70b-versatile, anthropic/claude-sonnet-4-5 (skippable with --dry-run / --call-tool / --list-tools)")
     p.add_argument("--paid-for", help="Comma-separated agents to put on the paid model (e.g. final-report)")
     p.add_argument("--depth", default="STANDARD", choices=["SCAN", "STANDARD", "DEEP"])
     p.add_argument("--compressed", action="store_true")
@@ -2314,7 +2457,57 @@ def main() -> int:
     p.add_argument("--thesis-id", type=int, help="For f3/f4: specific thesis_register row id")
     p.add_argument("--skip-devil", action="store_true",
                    help="For f3: skip the devils-advocate beat (cheaper pre-mortem)")
+    # --- [cli-tool] Direct connector invocation ---------------------------------
+    # `python docs/runtime/runtime.py --call-tool news_8k --ticker NVDA --since-days 30`
+    # runs a single connector and prints ConnectorRequested → Completed/Failed.
+    # Useful as the backend for the TUI /tool <name> slash command.
+    p.add_argument("--call-tool",
+                   help="Run a single tool from the registry and print events. "
+                        "Pairs with --ticker/--query/etc. Examples: "
+                        "--call-tool news_8k --ticker NVDA --since-days 30 ; "
+                        "--call-tool sec_edgar_fulltext --query 'AI capex' --limit 5.")
+    p.add_argument("--tool-method",
+                   help="Override a tool's default method. e.g. transcripts/fetch_transcript "
+                        "instead of the registry default.")
+    p.add_argument("--list-tools", action="store_true",
+                   help="Print the tool registry contents (id + default method + arg_keys) and exit.")
+    # Generic kwargs accepted by every connector in the registry. Unknown kwargs for
+    # the requested tool surface as ConnectorFailed (TypeError gets caught by call_tool).
+    # (--ticker is already added above; we just add the rest here.)
+    p.add_argument("--query", help="tool kwarg: search query string")
+    p.add_argument("--since-days", type=int, help="tool kwarg: look back N days")
+    p.add_argument("--limit", type=int, help="tool kwarg: max rows")
+    p.add_argument("--forms", help="tool kwarg: comma-separated SEC form types (10-K,10-Q,8-K)")
+    p.add_argument("--ciks", help="tool kwarg: comma-separated SEC CIK ids")
+    p.add_argument("--start", help="tool kwarg: ISO start date")
+    p.add_argument("--end", help="tool kwarg: ISO end date")
+    p.add_argument("--article-id", help="tool kwarg: e.g. transcripts article_id")
+    p.add_argument("--request", help="JSON-encoded call payload. "
+                   "Overrides all other kwargs. Useful for tools (quant_dcf, "
+                   "quant_comps, quant_comparator) that expect a structured request "
+                   "dict instead of flat kwargs. Example: --request '{\"ticker\":\"NVDA\",\"as_of\":\"...\"}'")
     args = p.parse_args()
+
+    if args.list_tools:
+        if "runtime" not in sys.modules:
+            _RUNTIME_PKG_PARENT = str(Path(__file__).resolve().parent.parent)
+            if _RUNTIME_PKG_PARENT not in sys.path:
+                sys.path.insert(0, _RUNTIME_PKG_PARENT)
+            import importlib.util as _ilu
+            _pkg_init = Path(__file__).resolve().parent / "__init__.py"
+            if _pkg_init.exists():
+                _spec = _ilu.spec_from_file_location("runtime", _pkg_init)
+                _pkg = _ilu.module_from_spec(_spec)
+                _spec.loader.exec_module(_pkg)
+                sys.modules["runtime"] = _pkg
+        from runtime.call_tool import TOOL_REGISTRY
+        print("# tool registry:")
+        for tid, binding in sorted(TOOL_REGISTRY.items()):
+            print(f"#   {tid}: default={binding.default_method} args={','.join(binding.arg_keys)}")
+        return 0
+
+    if args.call_tool:
+        return _run_cli_call_tool(args)
 
     if args.dry_run:
         # Sketch the wave plan and exit

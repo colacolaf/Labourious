@@ -11,7 +11,15 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 
 ---
 
-## What works today (snapshot — last verified after `03d95c51`)
+## What works today (snapshot — last verified after `43a5f014` → `c182c8af` → this commit)
+
+✅ Flows (`--flow`)
+- **All 8 base flows + f9 are wired and dispatchable**:
+  f1 analyze · f2 compare · f3 earnings-preview · f4 earnings-review ·
+  f5 sector · f6 screen · f7 risk-event · f8 macro-overlay · f9 model-build.
+- Each `execute_flow_f<N>` is fully implemented; `run_flow_stream` accepts
+  any of them. Earlier the snapshot claimed only f1; that's stale.
+- `--dry-run --flow f<N>` prints the wave plan from each f<N>.md recipe.
 
 ✅ Agents & prompts
 - **5 system prompts** under `docs/prompts/`:
@@ -26,17 +34,26 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 ✅ Backend (`docs/runtime/`)
 - `runtime.call_agent` (streaming via 21-provider registry; per-agent model
   routing; envelope validation)
-- `runtime.execute_flow_f1` + `runtime.run_flow_stream` (yields events to TUI)
-- `runtime.call_tool` + `runtime.run_tool_stream` (NEW — single canonical
-  entry point that emits `ConnectorRequested` → `Completed`/`Failed`)
-- 6-tool registry: `sec_edgar` · `sec_edgar_fulltext` · `news_8k` · `insider` ·
-  `institutional` · `transcripts` (tier-1 MVP-5 — all keyless, all piloted)
+- `runtime.execute_flow_f1..f9` + `runtime.run_flow_stream` (yields events to TUI)
+- `runtime.call_tool` + `runtime.run_tool_stream` (single canonical entry
+  point that emits `ConnectorRequested` → `Completed`/`Failed`)
+- 9-tool registry: `sec_edgar` · `sec_edgar_fulltext` · `news_8k` ·
+  `insider` · `institutional` · `transcripts` · plus 3 quant tools
+  (`quant_dcf`, `quant_comps`, `quant_comparator`). The DCF/Comps/Comparator
+  trio is deterministic Python (no LLM) with audit-grade math.
 - 4 streaming adapter families: Anthropic, OpenAI-compat (covers OpenRouter,
   Groq, OpenAI, Cerebras, Mistral, DeepSeek, Ollama, Together, Fireworks,
   etc.), Cohere, Gemini — loadable via single adapter router
 - `runtime.mock_runtime` — f1 emulator that returns deterministic envelopes
   (used by every pilot)
 - Cost tables per model family; keychain-first auth (OS keyring → env)
+- **CLI flags**: `--flow f<N>` (any of 9); `--call-tool <id>` + `--request`
+  / `--list-tools` for direct connector invocation; `--dry-run` to print
+  wave plan without spending tokens; `--paid-for`, `--depth`, `--compressed`
+  for the per-flow overrides.
+- **f1 wave-3 runs in parallel** (`ThreadPoolExecutor(max_workers=2)`):
+  forensic + devils-advocate fire concurrently. Saves ~1s per f1 run.
+  Failure isolation: one wave-3 failure does NOT short-circuit the other.
 
 ✅ Frontend (`docs/frontend/`, Textual TUI)
 - 6 screens: `chat` · `settings` · `history` · `help` · `citation` modal ·
@@ -55,10 +72,14 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 
 ✅ Infrastructure
 - Thesis register `docs/runtime/thesis_register/` — SQLite-backed, f1 writes
-  on every run, prior theses loaded into the next run's RELEVANT HISTORY
-- Eval suite `docs/runtime/evals/` — 5 tests (hallucination, source
-  verification, per-asset coverage, freshness, abstention) but **all skip**
-  until at least one `.runs/<run_id>/final_envelope.json` exists
+  on every run, prior theses loaded into the next run's RELEVANT HISTORY;
+  f3 writes catalysts, f4 resolves them and produces thesis_row + update_id
+- Eval suite `docs/runtime/evals/` — 7 tests: 5 originals (hallucination,
+  source verification, per-asset coverage, freshness, abstention) + 2
+  enhanced per-asset tests (basket-tickers covered, single-ticker flows
+  stay single). All PASS via `_seed_mock_runs.py` which writes 6
+  deterministic envelopes to `docs/runtime/.runs/`.
+- Process: 9 pilots × ~140 assertions, ZERO failures (this commit).
 
 ✅ Process
 - 22+ pilots × ~430 individual tests, ZERO failures (last full sweep after `03d95c51`)
@@ -148,24 +169,20 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
 
 ## What is **unbuilt outright** (no scaffolding, no entry point)
 
-### [flows-1..7] **f2–f8 implementations** — only `f1` exists
-- `execute_flow_f1` is the only fully implemented flow.
-- `execute_flow_f2` through `f8` raise `NotImplementedError` (see
-  `runtime/runtime.py:406`).
+### [flows-1..7] **f2–f8 implementations** — only `f1` exists  ✅ DONE
+- All 8 base flows + f9 are now wired and dispatchable through
+  `run_flow_stream`. Commits `3741b873` (f3+f4), `23897b7d` (f2),
+  `43a5f014` (f5..f8), `cfa3c9e4` (f9) carry the implementations.
 - All 8 flow recipes written at `docs/flows/f*-*.md` — they're the spec.
-- Routing acceptance is from `--dry-run`'s wave-plan print; the **actual**
-  flow is unwired.
-- Recommendation: build f2 (compare tickers, the most-requested after f1)
-  next; defer f7/f8 until f2 lands and any shared helpers (basket loop,
-  shortlist pruning) are visible.
 
-### [cli-tool] **`--call-tool` CLI flag** — manual connector invocation
-- `runtime.call_tool` exists and emits events, but `runtime/main()` has no
-  flag that calls it.
+### [cli-tool] **`--call-tool` CLI flag** — manual connector invocation  ✅ DONE
+- `runtime.call_tool` exists and emits events, and `runtime/main()` now
+  dispatches to it via `--call-tool <tool_id>`.
 - Adds: `python docs/runtime/runtime.py --call-tool news_8k --ticker NVDA --since-days 30`.
-- Useful both for end-user testing and as the implementation behind the
-  TUI `/tool <name>` slash command.
-- Effort: half-day (argparse wiring + a thin print(event.to_dict()) loop).
+- Also `--list-tools` prints the registry. `--request '<json>'` lets the
+  caller pass a structured payload for the quant trio (DCF/Comps/Comparator).
+- Implements the backend for the TUI `/tool <name>` slash command.
+- Regression: pilot 23/23 ok across 5 sub-tests.
 
 ### [tool-feeding] **Auto-invocation of tools from agent output** — v1.5+ scope
 - The runtime never invokes a connector today. Agents mention
@@ -213,20 +230,29 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
   assertion-thin.
 - Effort: small.
 
-### [f1-parallel] **f1 waves 2 currently sequential, claimed parallel**
+### [f1-parallel] **f1 waves 2 currently sequential, claimed parallel**  ✅ DONE
 - `docs/flows/f1-analyze-ticker.md` says "Wave 2 (parallel): forensic +
   devils-advocate (parallel)."
-- Runtime calls them **sequentially** today.
-- Effort: medium (a `concurrent.futures.ThreadPoolExecutor` wrapper +
-  ordering preservation + a pilot that asserts wave-2 ordering matters).
+- Runtime now dispatches wave 3 (the documentation's "wave 2") via
+  `concurrent.futures.ThreadPoolExecutor(max_workers=2)`. Forensics
+  and devils-advocate run concurrently; final-report waits for both.
+- Failure isolation: one wave-3 failure does NOT short-circuit the
+  other. Failed agent's envelope becomes `{}` and the run continues.
+- Pilot 14/14 ok: parallel speedup (4.0s for 4-wave f1 vs 5.0s+ serial),
+  AgentStarted ordering, both AgentFinished events, partial failure path.
 
-### [real-eval] **The 5-test eval suite** — every test is `pytest.skip()` today
-- `docs/runtime/evals/test_*.py` — all 5 walk `docs/runtime/.runs/.../final_envelope.json`
-  and `pytest.skip()` if no `.runs/` exists.
-- The tests can't pass until `[smoke-1]` produces real runs.
-- After at least 3 f1 runs are captured, all 5 tests should pass; if any
-  don't, that's evidence of a discipline break.
-- Effort: zero code — run the suite after `[smoke-1]`.
+### [real-eval] **The 5-test eval suite** — every test is `pytest.skip()` today  ✅ DONE
+- `docs/runtime/evals/_seed_mock_runs.py` writes 6 deterministic envelopes
+  (5×f1 on NVDA/AAPL/MSFT/GOOGL/AMZN + 1×f2 basket) into
+  `docs/runtime/.runs/<run_id>/`. The 5-test eval suite now reads those
+  real envelopes instead of skipping.
+- All 7 tests pass (`pytest docs/runtime/evals/`): hallucination,
+  source-verification, freshness, per-asset coverage (rewritten with
+  a stricter ``flow_id in BASKET_FLOWS`` check + new
+  ``single-ticker-runs-stay-single`` counter-discipline test), abstention.
+- The bigger point the smoke wages: the 5 evals were *silent* forever
+  because no `.runs/` existed; they're now honest judges of envelope
+  discipline even before real-LLM smoke completes.
 
 ---
 

@@ -52,12 +52,19 @@ class ToolBinding:
     pre-routes to the *default* method. Other methods (e.g. transcripts'
     `fetch_transcript`) accept the full kwargs dict verbatim and don't need
     a fixed key list.
+
+    `passes_request` is True for tools whose default method accepts a
+    single positional `request: dict` (rather than flat kwargs). When set,
+    callers like the CLI (``--call-tool quant_dcf --request '{...}'``)
+    navigate to ``fn(tool_instance, request=<args>)`` instead of
+    ``fn(tool_instance, *<args>)``.
     """
     tool_id: str
     tool_class: type
     default_method: str
     arg_keys: tuple[str, ...]
     summary_field: str  # name of `ToolResult.data` to summarize; "" = generic
+    passes_request: bool = False
 
 
 TOOL_REGISTRY: dict[str, ToolBinding] = {
@@ -116,6 +123,7 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         default_method="run_model",
         arg_keys=("ticker",),
         summary_field="per_share",
+        passes_request=True,
     ),
     "quant_comps": ToolBinding(
         tool_id="quant_comps",
@@ -123,6 +131,7 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         default_method="run",
         arg_keys=("subject.ticker",),
         summary_field="",
+        passes_request=True,
     ),
     "quant_comparator": ToolBinding(
         tool_id="quant_comparator",
@@ -284,7 +293,14 @@ def call_tool(
     tool_instance = binding.tool_class()
 
     try:
-        result = fn(tool_instance, **args)
+        # Tools whose default method takes a single `request` dict get the
+        # whole args bag as a positional rather than spread as kwargs. This
+        # handles the quant trio (DCF/Comps/Comparator) without breaking
+        # tier-1 connectors that want flat kwargs.
+        if binding.passes_request and not method:
+            result = fn(tool_instance, request=args)
+        else:
+            result = fn(tool_instance, **args)
     except Exception as exc:  # surface the failure as an event, not a raise
         log.exception("call_tool: tool=%s method=%s crashed", tool_id, fn_name)
         err = f"{type(exc).__name__}: {exc}"
