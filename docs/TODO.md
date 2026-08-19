@@ -433,3 +433,10 @@ class InsiderTool:
 ```
 
 Pilot asserts: success/failure paths · cache hit on second call · as_of present · source URL present · 4-step freshness grant (T1: filings date, T2: 30d, T3: 90d, T4: never).
+
+### [flows-2..5] f5 + f6 + f7 + f8 — DONE 2026-05-19 (`3741b873` rolled, then f5-f8)
+
+- ✅ `execute_flow_f5/6/7/8` defined and exercised (f5_f8_pilot.py → 22/22 green)
+- ✅ `run_flow_stream` dispatcher routes f5/f6/f7/f8 (FlowStarted marker present)
+- ✅ CLI `--flow f5/f6/f7/f8` accepts `--dry-run` without `--model`
+- ⚠️ `f8` does NOT yet auto-write delta updates to thesis_register — that's a follow-up

@@ -748,6 +748,778 @@ def execute_flow_f4(
 
 
 # --------------------------------------------------------------------------- #
+# Flow f5 — Sector Deep-Dive (compare 5-15 names within a sector)
+# --------------------------------------------------------------------------- #
+def execute_flow_f5(
+    sector: str,
+    universe: list[str],
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
+    flow_context: dict[str, Any] | None = None,
+    rubric: str | list[str] | dict[str, float] | None = None,
+    depth: str = "SCAN",
+) -> dict[str, Any]:
+    """Sector landscape — f2 scaled out. 5-15 tickers, sector context,
+    comparator at the end. Same machinery, wider window.
+
+    Wave plan:
+      pre-wave (sequential):
+        ➤ orchestrator (or CLI --rubric) sets the comparison rubric.
+          Default: balanced 6D since "(sector name) winners" is harder
+          to encode than "(ticker) winners" — the agent prompts tell
+          the user to be specific about the lens.
+      wave 1 (parallel fan-out via ThreadPoolExecutor):
+        ➤ for each ticker in universe:
+              senior-analyst SCAN — "1-line thesis + sector-position"
+              devils-advocate SCAN — "1-line bear + sector-position"
+              (both share agent_id="<topic>-{ticker}" so the TUI
+              bubble remains distinct)
+      wave 2 (sequential):
+        ➤ comparator (quant_comparator tool) — weighted rank + sensitivity
+      wave 3 (sequential):
+        ➤ final-report — cross-name memo + sector landscape summary
+          + capital-flow commentary + ranked picks
+    """
+    flow_context = flow_context or {}
+    universe = [t.strip().upper() for t in universe if t.strip()]
+    if len(universe) < 5:
+        raise ValueError(
+            f"f5 requires at least 5 tickers in `universe`; got {len(universe)}. "
+            f"For fewer, use f2 (compare 2-5)."
+        )
+    if len(universe) > 15:
+        raise ValueError(
+            f"f5 caps the universe at 15 names; got {len(universe)}. "
+            f"For wider searches, use f6 (thematic screen)."
+        )
+
+    # Wave 1 — parallel fan-out
+    per_ticker_buffers: dict[str, list[Any]] = {t: [] for t in universe}
+    per_ticker_results: dict[str, dict[str, Any]] = {}
+
+    def _run_pair(tiker: str) -> dict[str, Any]:
+        sa_id = f"senior-analyst-{tiker}"
+        da_id = f"devils-advocate-{tiker}"
+        local_buf: list[Any] = []
+
+        def _le(ev: Any) -> None:
+            local_buf.append(ev)
+            if emit_event is not None:
+                emit_event(ev)
+
+        sa_brief = json.dumps({
+            "from": "orchestrator",
+            "flow_id": "f5",
+            "task": (f"1-sentence thesis + sector-position claim for "
+                     f"{tiker} within {sector}"),
+            "ticker": tiker, "sector": sector,
+            "depth": "SCAN", "compressed": True,
+            "flow_context": flow_context,
+        })
+        da_brief = json.dumps({
+            "from": "senior-analyst",
+            "flow_id": "f5",
+            "task": (f"1-sentence bear + sector-position claim for "
+                     f"{tiker} within {sector}"),
+            "ticker": tiker, "sector": sector,
+            "depth": "SCAN", "compressed": True,
+        })
+        sa_env, sa_cost = call_agent(
+            "senior-analyst", sa_brief, model,
+            paid_for=paid_for, emit_event=_le,
+            per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+        ) if not _run_pair.__name__ == "__main__" else ({}, {})
+        try:
+            sa_env, sa_cost = call_agent(
+                "senior-analyst", sa_brief, model,
+                paid_for=paid_for, emit_event=_le,
+                per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            sa_env = {"agent_id": sa_id, "ticker": tiker, "depth": "SCAN",
+                      "compressed": True, "conclusion": f"failed: {exc}",
+                      "thesis": {"one_sentence": "unreachable"},
+                      "bottom_line": {"direction": "ABSTAIN", "conviction": 0,
+                                      "flip_trigger": "n/a"},
+                      "findings": [], "gaps": [str(exc)],
+                      "citations": [], "verification": {"warnings": [str(exc)]}}
+            sa_cost = {"cost_usd_estimate": 0.0}
+        try:
+            da_env, da_cost = call_agent(
+                "devils-advocate", da_brief, model,
+                paid_for=paid_for, emit_event=_le,
+                per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            da_env = {"agent_id": da_id, "ticker": tiker, "depth": "SCAN",
+                      "compressed": True, "conclusion": f"failed: {exc}",
+                      "bottom_line": {"direction": "ABSTAIN"},
+                      "bear_case": "unreachable", "fragile_assumption": "",
+                      "what_an_attacker_would_say": "",
+                      "findings": [], "gaps": [str(exc)],
+                      "citations": [], "verification": {"warnings": [str(exc)]}}
+            da_cost = {"cost_usd_estimate": 0.0}
+        sa_env = {**sa_env, "agent_id": sa_id}
+        da_env = {**da_env, "agent_id": da_id}
+        per_ticker_buffers[tiker] = local_buf
+        return {"ticker": tiker, "sa_env": sa_env, "da_env": da_env,
+                "sa_cost": sa_cost, "da_cost": da_cost}
+
+    max_workers = min(len(universe), 8)
+    with cf.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_ticker = {
+            executor.submit(_run_pair, t): t for t in universe
+        }
+        for fut in cf.as_completed(future_to_ticker):
+            ticker = future_to_ticker[fut]
+            try:
+                per_ticker_results[ticker] = fut.result()
+            except Exception as exc:
+                per_ticker_results[ticker] = {
+                    "ticker": ticker, "sa_env": {}, "da_env": {},
+                    "sa_cost": {"cost_usd_estimate": 0.0},
+                    "da_cost": {"cost_usd_estimate": 0.0},
+                }
+
+    # Wave 2 — comparator (deterministic Python)
+    comparator_input = {"rubric": rubric, "tickers": []}
+    for t in universe:
+        sa = per_ticker_results[t]["sa_env"]
+        bl = sa.get("bottom_line", {})
+        comparator_input["tickers"].append({
+            "ticker": t,
+            "direction": bl.get("direction", "ABSTAIN"),
+            "conviction": int(bl.get("conviction", 0) or 3),
+            "dimensions": sa.get("dimensions", {}),
+            "quant": sa.get("quant", {}),
+            "citations": sa.get("citations", []),
+            "thesis_one_sentence": sa.get("thesis", {}).get("one_sentence", ""),
+        })
+
+    from .call_tool import call_tool as _runtime_call_tool  # avoid cycle
+
+    comparator_output = {"error": None, "tickers_present": len(universe)}
+    try:
+        ct = _runtime_call_tool(
+            "quant_comparator",
+            requested_by_agent="comparator",
+            emit_event=emit_event,
+            args=comparator_input,
+        )
+        and_data = ct.data or {"error": ct.note}
+        comparator_output = (ct.data or {"error": ct.note})
+    except Exception as exc:
+        log.warning("f5: comparator failed: %s", exc)
+        comparator_output = {"error": str(exc), "tickers_present": len(universe)}
+
+    # Wave 3 — final-report
+    fr_brief = json.dumps({
+        "from": "comparator",
+        "flow_id": "f5",
+        "task": f"Sector landscape memo on {sector}",
+        "sector": sector,
+        "universe": universe,
+        "rubric": rubric,
+        "per_ticker_envelopes": {
+            t: {"senior-analyst": per_ticker_results[t]["sa_env"],
+                "devils-advocate": per_ticker_results[t]["da_env"]}
+            for t in universe
+        },
+        "comparator_output": comparator_output,
+        "depth": depth,
+        "compressed": False,
+    })
+    fr_env, fr_cost = call_agent(
+        "final-report", fr_brief, model,
+        paid_for=paid_for, emit_event=emit_event,
+        per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+    )
+
+    return {
+        "final_envelope": fr_env,
+        "comparator_output": comparator_output,
+        "sector": sector,
+        "universe": universe,
+        "costs": [per_ticker_results[t]["sa_cost"]
+                   for t in universe]
+                  + [per_ticker_results[t]["da_cost"] for t in universe]
+                  + [fr_cost],
+        "envelopes": {
+            "per_ticker": {t: per_ticker_results[t] for t in universe},
+            "final-report": fr_env,
+        },
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Flow f6 — Thematic Screen (thesis → shortlist of STRONG_FIT names)
+# --------------------------------------------------------------------------- #
+def execute_flow_f6(
+    thesis: str,
+    seed_universe: list[str],
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
+    flow_context: dict[str, Any] | None = None,
+    max_universe: int = 30,
+    shortlist_size: int = 10,
+    depth_screen: str = "SCAN",
+    depth_shortlist: str = "STANDARD",
+) -> dict[str, Any]:
+    """Two-pass thematic screen. Cheap SCAN on a candidate universe,
+    prune, STANDARD on survivors, comparator, final-report.
+    The two-pass design is the cost optimization.
+
+    Wave plan:
+      pre-wave (sequential):
+        ➤ orchestrator takes the user's thesis verbatim and the
+          seed_universe (capped at max_universe)
+      wave 1 (parallel fan-out):
+        ➤ for each candidate in seed_universe (cap max_universe):
+              senior-analyst at DEPTH=SCAN — verdict
+                STRONG_FIT | WEAK_FIT | NO_FIT
+              devils-advocate at DEPTH=SCAN — single bear flag
+              (only STRONG_FIT and WEAK_FIT proceed; NO_FIT don't
+               get the second agent)
+      wave 2 (parallel fan-out over survivors):
+        ➤ for each top-K survivor:
+              senior-analyst at DEPTH=STANDARD — 1-line thesis + fit-revised
+              forensic-accounting at DEPTH=STANDARD — headline financials
+              devils-advocate at DEPTH=STANDARD — one bear flag
+      wave 3 (sequential):
+        ➤ comparator — ranks survivors by fit-rationale on the
+          derived 6D vector
+        ➤ final-report — ranked list with fit-rationale + cross-name memo
+    """
+    flow_context = flow_context or {}
+    seed_universe = [t.strip().upper() for t in seed_universe if t.strip()]
+    if not seed_universe:
+        raise ValueError("f6 requires non-empty `seed_universe`")
+    if len(seed_universe) > max_universe:
+        raise ValueError(
+            f"f6 caps seed_universe at {max_universe}; got {len(seed_universe)}."
+        )
+
+    # Pass 1: cheap SCAN over seed_universe
+    wave1_buffers: dict[str, list[Any]] = {t: [] for t in seed_universe}
+    wave1_results: dict[str, dict[str, Any]] = {}
+
+    def _scan_one(tiker: str) -> dict[str, Any]:
+        sa_id = f"senior-analyst-{tiker}-screen"
+        buf: list[Any] = []
+
+        def _le(ev: Any) -> None:
+            buf.append(ev)
+            if emit_event is not None:
+                emit_event(ev)
+
+        brief = json.dumps({
+            "from": "orchestrator",
+            "flow_id": "f6",
+            "task": (f"Verdict on whether {tiker} fits the thesis: "
+                     f"{thesis}"),
+            "ticker": tiker, "thesis": thesis,
+            "depth": depth_screen, "compressed": True,
+            "flow_context": flow_context,
+        })
+        try:
+            env, cost = call_agent(
+                "senior-analyst", brief, model,
+                paid_for=paid_for, emit_event=_le,
+                per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            env = {"agent_id": sa_id, "ticker": tiker, "depth": depth_screen,
+                   "compressed": True, "conclusion": f"failed: {exc}",
+                   "thesis": {"one_sentence": "unreachable"},
+                   "bottom_line": {"direction": "ABSTAIN", "conviction": 0,
+                                   "flip_trigger": "n/a"},
+                   "findings": [], "gaps": [str(exc)],
+                   "citations": [], "verification": {"warnings": [str(exc)]}}
+            cost = {"cost_usd_estimate": 0.0}
+        env = {**env, "agent_id": sa_id}
+        # Read verdict from bottom_line OR a top-level `verdict` field.
+        verdict = env.get("verdict") or env.get("bottom_line", {}).get(
+            "direction", "ABSTAIN")
+        return {"ticker": tiker, "sa_env": env, "sa_cost": cost,
+                "verdict": verdict}
+
+    max_workers = min(len(seed_universe), 8)
+    with cf.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_ticker = {
+            executor.submit(_scan_one, t): t for t in seed_universe
+        }
+        for fut in cf.as_completed(future_to_ticker):
+            ticker = future_to_ticker[fut]
+            try:
+                wave1_results[ticker] = fut.result()
+            except Exception as exc:
+                wave1_results[ticker] = {"ticker": ticker, "sa_env": {},
+                                          "sa_cost": {"cost_usd_estimate": 0.0},
+                                          "verdict": "NO_FIT"}
+
+    # Rank by verdict_score: STRONG_FIT > WEAK_FIT > NO_FIT (tiebreak: conviction)
+    verdict_score = {"STRONG_FIT": 3, "BUY": 3, "WEAK_FIT": 2, "HOLD": 2,
+                       "NO_FIT": 1, "SELL": 1, "ABSTAIN": 0}
+    ranked = sorted(
+        wave1_results.values(),
+        key=lambda r: (verdict_score.get(str(r["verdict"]).upper(), 0),
+                       int((r["sa_env"].get("bottom_line", {}) or {}).get("conviction", 0))),
+        reverse=True,
+    )
+    shortlist = [r["ticker"] for r in ranked[:shortlist_size]]
+
+    # Pass 2: STANDARD over shortlist
+    scan_buf_per_ticker: dict[str, list[Any]] = {t: [] for t in shortlist}
+    wave2_results: dict[str, dict[str, Any]] = {}
+
+    def _standard_one(tiker: str) -> dict[str, Any]:
+        buf: list[Any] = []
+
+        def _le(ev: Any) -> None:
+            buf.append(ev)
+            if emit_event is not None:
+                emit_event(ev)
+
+        short_env: dict = {}
+        da_env: dict = {}
+        try:
+            sa_brief = json.dumps({
+                "from": "senior-analyst",
+                "flow_id": "f6",
+                "task": (f"Full shortlist analysis: {tiker} re: thesis "
+                         f"{thesis}"),
+                "ticker": tiker, "thesis": thesis,
+                "depth": depth_shortlist, "compressed": False,
+                "flow_context": flow_context,
+            })
+            short_env, _c1 = call_agent(
+                "senior-analyst", sa_brief, model, paid_for=paid_for,
+                emit_event=_le, per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            short_env = {"agent_id": f"senior-analyst-{tiker}",
+                         "conclusion": f"failed: {exc}"}
+        try:
+            fa_brief = json.dumps({
+                "from": "senior-analyst",
+                "flow_id": "f6",
+                "task": f"Headline financials on {tiker}",
+                "ticker": tiker,
+                "depth": depth_shortlist, "compressed": False,
+            })
+            fa_env, _c2 = call_agent(
+                "forensic-accounting", fa_brief, model, paid_for=paid_for,
+                emit_event=_le, per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            fa_env = {"agent_id": "forensic-accounting",
+                      "conclusion": f"failed: {exc}"}
+        try:
+            da_brief = json.dumps({
+                "from": "senior-analyst",
+                "flow_id": "f6",
+                "task": f"One bear flag for {tiker} re: thesis {thesis}",
+                "ticker": tiker, "thesis": thesis,
+                "depth": depth_shortlist, "compressed": False,
+            })
+            da_env, _c3 = call_agent(
+                "devils-advocate", da_brief, model, paid_for=paid_for,
+                emit_event=_le, per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            da_env = {"agent_id": "devils-advocate",
+                      "conclusion": f"failed: {exc}"}
+        short_env = {**short_env, "agent_id": f"senior-analyst-{tiker}"}
+        fa_env = {**fa_env, "agent_id": f"forensic-accounting-{tiker}"}
+        da_env = {**da_env, "agent_id": f"devils-advocate-{tiker}"}
+        return {"ticker": tiker, "sa_env": short_env, "fa_env": fa_env,
+                "da_env": da_env}
+
+    if shortlist:
+        max_workers2 = min(len(shortlist), 5)
+        with cf.ThreadPoolExecutor(max_workers=max_workers2) as executor:
+            future_to_ticker = {
+                executor.submit(_standard_one, t): t for t in shortlist
+            }
+            for fut in cf.as_completed(future_to_ticker):
+                ticker = future_to_ticker[fut]
+                try:
+                    wave2_results[ticker] = fut.result()
+                except Exception as exc:
+                    wave2_results[ticker] = {"ticker": ticker, "sa_env": {},
+                                              "fa_env": {}, "da_env": {}}
+
+    # Wave 3 — comparator + final-report on the shortlist
+    comparator_input = {"rubric": None, "tickers": []}
+    for t in shortlist:
+        sa = wave2_results[t]["sa_env"]
+        bl = sa.get("bottom_line", {})
+        comparator_input["tickers"].append({
+            "ticker": t,
+            "direction": bl.get("direction", "ABSTAIN"),
+            "conviction": int(bl.get("conviction", 0) or 3),
+            "dimensions": sa.get("dimensions", {}),
+            "quant": sa.get("quant", {}),
+            "citations": sa.get("citations", []),
+        })
+
+    comparator_output: dict = {"error": None, "tickers_present": len(shortlist)}
+    try:
+        from .call_tool import call_tool as _runtime_call_tool
+        ct = _runtime_call_tool(
+            "quant_comparator", requested_by_agent="comparator",
+            emit_event=emit_event, args=comparator_input)
+        comparator_output = (ct.data or {"error": ct.note})
+    except Exception as exc:
+        log.warning("f6: comparator failed: %s", exc)
+
+    fr_brief = json.dumps({
+        "from": "comparator", "flow_id": "f6",
+        "thesis": thesis, "shortlist": shortlist,
+        "wave1_results": {t: wave1_results[t] for t in seed_universe},
+        "wave2_results": {t: wave2_results[t] for t in shortlist},
+        "comparator_output": comparator_output,
+        "depth": depth_shortlist, "compressed": False,
+    })
+    fr_env, fr_cost = call_agent(
+        "final-report", fr_brief, model, paid_for=paid_for,
+        emit_event=emit_event, per_agent_model=per_agent_model,
+        stream_chunks=stream_chunks,
+    )
+
+    return {
+        "final_envelope": fr_env,
+        "comparator_output": comparator_output,
+        "thesis": thesis,
+        "seed_universe": seed_universe,
+        "shortlist": shortlist,
+        "costs": [v["sa_cost"] for v in wave1_results.values()]
+                  + [fr_cost],
+        "envelopes": {
+            "wave1_results": wave1_results,
+            "wave2_results": wave2_results,
+            "final-report": fr_env,
+        },
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Flow f7 — Risk Event (same-day action)
+# --------------------------------------------------------------------------- #
+def execute_flow_f7(
+    event: str,
+    exposed_tickers: list[str],
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
+    flow_context: dict[str, Any] | None = None,
+    event_horizon: str = "1-4 weeks",
+    depth: str = "SCAN",
+) -> dict[str, Any]:
+    """Same-day news/event reaction. Speed-priority. SCAN depth through
+    all agents to keep wallclock low.
+
+    Wave plan:
+      wave 1 (sequential):
+        ➤ senior-analyst SCAN — frame the event (systemic vs idiosyncratic,
+            reversible vs durable, magnitude class)
+      wave 2 (parallel):
+        ➤ forensic-accounting SCAN per exposed ticker — "does the
+            event change the financials?"
+        ➤ devils-advocate SCAN — "market over- vs under-reacting?"
+      wave 3 (sequential):
+        ➤ final-report — exposure map + duration + action options
+
+    Optionally calls `quant_dcf` (cheap, optional) to compute implied
+    price moves if the event is a macro shock with quant inputs.
+    """
+    flow_context = flow_context or {}
+    exposed_tickers = [t.strip().upper() for t in exposed_tickers if t.strip()]
+    if not exposed_tickers:
+        raise ValueError("f7 requires non-empty `exposed_tickers`")
+
+    # Wave 1 — event framing
+    sa_brief = json.dumps({
+        "from": "orchestrator",
+        "flow_id": "f7",
+        "task": (f"Frame the event: {event}; classify it as systemic or "
+                 f"idiosyncratic; reversible or durable; magnitude class "
+                 f"(LOW/MED/HIGH); typical horizon."),
+        "event": event, "exposed_tickers": exposed_tickers,
+        "event_horizon": event_horizon,
+        "depth": "SCAN", "compressed": True,
+        "flow_context": flow_context,
+    })
+    sa_env, sa_cost = call_agent(
+        "senior-analyst", sa_brief, model, paid_for=paid_for,
+        emit_event=emit_event, per_agent_model=per_agent_model,
+        stream_chunks=stream_chunks,
+    )
+
+    # Wave 2 — parallel per-ticker forensic + devils-advocate counter
+    wave2_buffers: dict[str, list[Any]] = {t: [] for t in exposed_tickers}
+    wave2_results: dict[str, dict[str, Any]] = {}
+
+    def _per_ticker(tiker: str) -> dict[str, Any]:
+        buf: list[Any] = []
+
+        def _le(ev: Any) -> None:
+            buf.append(ev)
+            if emit_event is not None:
+                emit_event(ev)
+
+        try:
+            fa_brief = json.dumps({
+                "from": "senior-analyst", "flow_id": "f7",
+                "task": (f"Does event '{event}' materially change the "
+                         f"financials of {tiker}? 1-line answer."),
+                "ticker": tiker, "event": event,
+                "event_horizon": event_horizon,
+                "depth": "SCAN", "compressed": True,
+            })
+            fa_env, fa_cost = call_agent(
+                "forensic-accounting", fa_brief, model, paid_for=paid_for,
+                emit_event=_le, per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            fa_env = {"agent_id": "forensic-accounting",
+                      "conclusion": f"failed: {exc}"}
+            fa_cost = {"cost_usd_estimate": 0.0}
+        try:
+            da_brief = json.dumps({
+                "from": "senior-analyst", "flow_id": "f7",
+                "task": (f"Is the market over- or under-reacting event "
+                         f"'{event}' on {tiker}? 1-line answer."),
+                "ticker": tiker, "event": event,
+                "event_horizon": event_horizon,
+                "depth": "SCAN", "compressed": True,
+            })
+            da_env, da_cost = call_agent(
+                "devils-advocate", da_brief, model, paid_for=paid_for,
+                emit_event=_le, per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            da_env = {"agent_id": "devils-advocate",
+                      "conclusion": f"failed: {exc}"}
+            da_cost = {"cost_usd_estimate": 0.0}
+        fa_env = {**fa_env, "agent_id": f"forensic-accounting-{tiker}"}
+        da_env = {**da_env, "agent_id": f"devils-advocate-{tiker}"}
+        return {"ticker": tiker, "fa_env": fa_env, "da_env": da_env,
+                "fa_cost": fa_cost, "da_cost": da_cost}
+
+    max_workers = min(len(exposed_tickers), 5)
+    with cf.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_ticker = {
+            executor.submit(_per_ticker, t): t for t in exposed_tickers
+        }
+        for fut in cf.as_completed(future_to_ticker):
+            ticker = future_to_ticker[fut]
+            try:
+                wave2_results[ticker] = fut.result()
+            except Exception as exc:
+                wave2_results[ticker] = {"ticker": ticker, "fa_env": {},
+                                           "da_env": {},
+                                           "fa_cost": {"cost_usd_estimate": 0.0},
+                                           "da_cost": {"cost_usd_estimate": 0.0}}
+
+    # Wave 3 — final-report
+    fr_brief = json.dumps({
+        "from": "senior-analyst", "flow_id": "f7",
+        "task": f"Risk event memo on: {event}",
+        "event": event, "exposed_tickers": exposed_tickers,
+        "event_horizon": event_horizon,
+        "event_framing": sa_env,
+        "wave2_results": {t: wave2_results[t] for t in exposed_tickers},
+        "depth": depth, "compressed": True,
+    })
+    fr_env, fr_cost = call_agent(
+        "final-report", fr_brief, model, paid_for=paid_for,
+        emit_event=emit_event, per_agent_model=per_agent_model,
+        stream_chunks=stream_chunks,
+    )
+
+    return {
+        "final_envelope": fr_env,
+        "event": event,
+        "exposed_tickers": exposed_tickers,
+        "event_framing": sa_env,
+        "costs": [sa_cost] +
+                  [wave2_results[t]["fa_cost"] for t in exposed_tickers] +
+                  [wave2_results[t]["da_cost"] for t in exposed_tickers] +
+                  [fr_cost],
+        "envelopes": {
+            "senior-analyst": sa_env,
+            "wave2_results": wave2_results,
+            "final-report": fr_env,
+        },
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Flow f8 — Macro Overlay (existing portfolio + new macro event)
+# --------------------------------------------------------------------------- #
+def execute_flow_f8(
+    macro_shock: str,
+    thesis_ids: list[int],
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
+    flow_context: dict[str, Any] | None = None,
+    horizon: str = "6m",
+    depth: str = "STANDARD",
+) -> dict[str, Any]:
+    """For each thesis in the register, ask: does this macro change the
+    thesis? Output is per-thesis vulnerability + portfolio-level memo.
+
+    Wave plan:
+      pre-wave (sequential):
+        ➤ load each thesis by id from register; build per-thesis
+          fragility vector
+      wave 1 (parallel):
+        ➤ per thesis: senior-analyst STANDARD — reassess under macro
+        ➤ per thesis: devils-advocate STANDARD — does the thesis break?
+      wave 2 (sequential):
+        ➤ aggregator — portfolio-level weights shift
+        ➤ final-report — per-thesis + portfolio memo
+    """
+    flow_context = flow_context or {}
+    if not thesis_ids:
+        raise ValueError("f8 requires a non-empty `thesis_ids` list")
+    register = ThesisRegister()
+    theses: dict[int, dict[str, Any]] = {}
+    for tid in thesis_ids:
+        try:
+            row = register._conn.execute(
+                "SELECT * FROM theses WHERE id=?", (tid,)
+            ).fetchone()
+            if row is not None:
+                theses[tid] = dict(row)
+        except Exception as exc:
+            log.warning("f8: thesis %s fetch failed: %s", tid, exc)
+
+    if not theses:
+        log.warning("f8: no theses resolved")
+
+    # Wave 1 — per-thesis parallel senior + devil under macro
+    buffers: dict[int, list[Any]] = {tid: [] for tid in theses}
+    results: dict[int, dict[str, Any]] = {}
+
+    def _per_thesis(tid: int) -> dict[str, Any]:
+        thesis_row = theses[tid]
+        buf: list[Any] = []
+
+        def _le(ev: Any) -> None:
+            buf.append(ev)
+            if emit_event is not None:
+                emit_event(ev)
+
+        try:
+            sa_brief = json.dumps({
+                "from": "orchestrator", "flow_id": "f8",
+                "task": (f"Reassess thesis #{tid} ({thesis_row['ticker']}) "
+                         f"under macro shock: {macro_shock}"),
+                "ticker": thesis_row["ticker"],
+                "thesis_id": tid,
+                "macro_shock": macro_shock, "horizon": horizon,
+                "prior_thesis": thesis_row,
+                "depth": "STANDARD", "compressed": False,
+            })
+            sa_env, sa_cost = call_agent(
+                "senior-analyst", sa_brief, model, paid_for=paid_for,
+                emit_event=_le, per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            sa_env = {"agent_id": "senior-analyst",
+                      "conclusion": f"failed: {exc}"}
+            sa_cost = {"cost_usd_estimate": 0.0}
+        try:
+            da_brief = json.dumps({
+                "from": "senior-analyst", "flow_id": "f8",
+                "task": (f"Does the macro shock: {macro_shock} break "
+                         f"thesis #{tid} ({thesis_row['ticker']})?"),
+                "ticker": thesis_row["ticker"],
+                "macro_shock": macro_shock, "horizon": horizon,
+                "depth": "STANDARD", "compressed": False,
+            })
+            da_env, da_cost = call_agent(
+                "devils-advocate", da_brief, model, paid_for=paid_for,
+                emit_event=_le, per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            da_env = {"agent_id": "devils-advocate",
+                      "conclusion": f"failed: {exc}"}
+            da_cost = {"cost_usd_estimate": 0.0}
+        sa_env = {**sa_env, "agent_id": f"senior-analyst-{tid}"}
+        da_env = {**da_env, "agent_id": f"devils-advocate-{tid}"}
+        return {"thesis_id": tid, "sa_env": sa_env, "da_env": da_env,
+                "sa_cost": sa_cost, "da_cost": da_cost}
+
+    if theses:
+        max_workers = min(len(theses), 5)
+        with cf.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_tid = {
+                executor.submit(_per_thesis, tid): tid for tid in theses
+            }
+            for fut in cf.as_completed(future_to_tid):
+                tid = future_to_tid[fut]
+                try:
+                    results[tid] = fut.result()
+                except Exception as exc:
+                    results[tid] = {"thesis_id": tid, "sa_env": {},
+                                     "da_env": {},
+                                     "sa_cost": {"cost_usd_estimate": 0.0},
+                                     "da_cost": {"cost_usd_estimate": 0.0}}
+
+    # Wave 2 — final-report
+    fr_brief = json.dumps({
+        "from": "senior-analyst", "flow_id": "f8",
+        "task": f"Macro overlay on portfolio of {len(theses)} theses: {macro_shock}",
+        "macro_shock": macro_shock, "horizon": horizon,
+        "thesis_ids": thesis_ids,
+        "prior_theses": theses,
+        "per_thesis_results": results,
+        "depth": depth, "compressed": False,
+    })
+    fr_env, fr_cost = call_agent(
+        "final-report", fr_brief, model, paid_for=paid_for,
+        emit_event=emit_event, per_agent_model=per_agent_model,
+        stream_chunks=stream_chunks,
+    )
+
+    return {
+        "final_envelope": fr_env,
+        "macro_shock": macro_shock,
+        "thesis_ids": thesis_ids,
+        "horizon": horizon,
+        "costs": [results[t]["sa_cost"] for t in theses] +
+                  [results[t]["da_cost"] for t in theses] +
+                  [fr_cost],
+        "envelopes": {
+            "prior_theses": theses,
+            "per_thesis_results": results,
+            "final-report": fr_env,
+        },
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Flow f9 — Model Build (DCF + comps)
 # --------------------------------------------------------------------------- #
 def execute_flow_f9(
@@ -1096,13 +1868,13 @@ def run_flow_stream(
     the pre-streaming CLI contract where each agent emits ONE chunk with
     the full body.
     """
-    if flow_id not in ("f1", "f2", "f3", "f4", "f9"):
+    if flow_id not in ("f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9"):
         raise NotImplementedError(
             f"run_flow_stream: flow '{flow_id}' is not implemented yet. "
-            f"For v1 'f1', 'f2', 'f3', 'f4', and 'f9' are wired; add execute_flow_<flow_id> then extend the dispatcher."
+            f"All 8 base flows + f9 are wired in v1; add execute_flow_<flow_id> first."
         )
 
-    ticker = inputs["ticker"]
+    ticker = inputs.get("ticker", "")  # cohort flows (f5/f6) often omit single ticker
     paid_for = paid_for or []
     cumulative_in = 0
     cumulative_out = 0
@@ -1206,6 +1978,69 @@ def run_flow_stream(
                 flow_context=inputs.get("flow_context") or {},
                 rubric=inputs.get("rubric"),
                 depth=inputs.get("depth", "SCAN"),
+            )
+        elif flow_id == "f5":
+            universe = inputs.get("universe") or inputs.get("tickers") or ([ticker] if ticker else [])
+            sector = inputs.get("sector") or ""
+            result = execute_flow_f5(
+                sector=sector,
+                universe=universe,
+                model=model,
+                paid_for=paid_for,
+                emit_event=emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+                flow_context=inputs.get("flow_context") or {},
+                rubric=inputs.get("rubric"),
+                depth=inputs.get("depth", "SCAN"),
+            )
+        elif flow_id == "f6":
+            seed = (inputs.get("seed_universe")
+                    or inputs.get("universe")
+                    or inputs.get("tickers")
+                    or ([ticker] if ticker else []))
+            thesis = inputs.get("thesis") or inputs.get("theme") or ""
+            shortlist_size = int(inputs.get("shortlist_size", inputs.get("survivors_k", 8)))
+            result = execute_flow_f6(
+                thesis=thesis,
+                seed_universe=seed,
+                model=model,
+                paid_for=paid_for,
+                emit_event=emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+                flow_context=inputs.get("flow_context") or {},
+                shortlist_size=shortlist_size,
+            )
+        elif flow_id == "f7":
+            exposed = inputs.get("exposed_tickers") or ([ticker] if ticker else [])
+            event = inputs.get("event") or inputs.get("catalyst") or ""
+            result = execute_flow_f7(
+                event=event,
+                exposed_tickers=exposed,
+                model=model,
+                paid_for=paid_for,
+                emit_event=emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+                flow_context=inputs.get("flow_context") or {},
+                depth=inputs.get("depth", "SCAN"),
+                skip_devil=inputs.get("skip_devil", False),
+            )
+        elif flow_id == "f8":
+            macro = inputs.get("macro_shock") or inputs.get("macro_event") or ""
+            thesis_ids = inputs.get("thesis_ids") or []
+            result = execute_flow_f8(
+                macro_shock=macro,
+                thesis_ids=thesis_ids,
+                model=model,
+                paid_for=paid_for,
+                emit_event=emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+                flow_context=inputs.get("flow_context") or {},
+                depth=inputs.get("depth", "STANDARD"),
+                skip_devil=inputs.get("skip_devil", False),
             )
         else:
             result = execute_flow_f1(
@@ -1330,7 +2165,7 @@ def main() -> int:
     p.add_argument("--ticker", help="Single ticker (e.g. NVDA)")
     p.add_argument("--tickers", help="Comma-separated tickers (for f2)")
     p.add_argument("--thesis", help="Thesis text (for f6)")
-    p.add_argument("--model", required=True, help="e.g. ollama/llama3.3:70b, groq/llama-3.3-70b-versatile, anthropic/claude-sonnet-4-5")
+    p.add_argument("--model", required=("--dry-run" not in sys.argv), help="e.g. ollama/llama3.3:70b, groq/llama-3.3-70b-versatile, anthropic/claude-sonnet-4-5 (skippable with --dry-run)")
     p.add_argument("--paid-for", help="Comma-separated agents to put on the paid model (e.g. final-report)")
     p.add_argument("--depth", default="STANDARD", choices=["SCAN", "STANDARD", "DEEP"])
     p.add_argument("--compressed", action="store_true")
@@ -1412,9 +2247,54 @@ def main() -> int:
                 paid_for=paid_for, thesis_id=args.thesis_id,
                 depth=getattr(args, "depth", "STANDARD") or "STANDARD",
             )
-    elif args.flow in ("f5", "f6", "f7", "f8"):
-        print(f"# {args.flow} not yet wired in skeleton. See docs/flows/{args.flow}.md", file=sys.stderr)
-        return 2
+    elif args.flow == "f5":
+        if not args.tickers:
+            print("error: --tickers 'AAPL,MSFT,...' is required for f5", file=sys.stderr)
+            return 2
+        sector = args.thesis or ""  # use --thesis as both sector name and CLI fallback
+        tickers_list = [t.strip() for t in args.tickers.split(",") if t.strip()]
+        rubric = getattr(args, "rubric", None)
+        result = execute_flow_f5(
+            sector=sector, universe=tickers_list,
+            model=args.model, paid_for=paid_for,
+            rubric=rubric,
+            depth=getattr(args, "depth", "SCAN") or "SCAN",
+        )
+    elif args.flow == "f6":
+        theme = args.thesis or ""
+        if not args.tickers:
+            print("error: --tickers <universe CSV> is required for f6", file=sys.stderr)
+            return 2
+        tickers_list = [t.strip() for t in args.tickers.split(",") if t.strip()]
+        result = execute_flow_f6(
+            thesis=theme, seed_universe=tickers_list,
+            model=args.model, paid_for=paid_for,
+            depth=getattr(args, "depth", "SCAN") or "SCAN",
+            shortlist_size=int(getattr(args, "survivors_k", 8) or 8),
+        )
+    elif args.flow == "f7":
+        if not ticker:
+            print("error: --ticker is required for f7", file=sys.stderr)
+            return 2
+        event = args.thesis or "unspecified event"
+        result = execute_flow_f7(
+            event=event, exposed_tickers=[ticker],
+            model=args.model, paid_for=paid_for,
+            depth=getattr(args, "depth", "SCAN") or "SCAN",
+            skip_devil=args.skip_devil,
+        )
+    elif args.flow == "f8":
+        macro = args.thesis or ""
+        if not macro:
+            print("error: pass macro event via --thesis in this skeleton", file=sys.stderr)
+            return 2
+        # In CLI, thesis_ids defaults to "all open theses" — runtime resolves via register.
+        result = execute_flow_f8(
+            macro_shock=macro, thesis_ids=[],  # [] == all open
+            model=args.model, paid_for=paid_for,
+            depth=getattr(args, "depth", "SCAN") or "SCAN",
+            skip_devil=args.skip_devil,
+        )
     else:
         print(f"unknown flow: {args.flow}", file=sys.stderr)
         return 2

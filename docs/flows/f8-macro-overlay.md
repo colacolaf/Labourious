@@ -96,3 +96,37 @@ Roughly **0.8× f1 per thesis**.
 - Single-thesis macro re-examination. The user has multiple theses; for a single-name macro read, use f4 if "earnings print" timeframe or f1 if the agent needs a full re-thesis.
 - New thesis initiation. Use f1.
 - Sector-wide macro read. Use f5 with rubric-name = macro tag.
+
+## Implementation notes
+
+Implemented in `docs/runtime/runtime.py` as `execute_flow_fN` and wired through
+`run_flow_stream` + `--flow fN …` CLI. Behavior:
+
+- **f5 (sector landscape)** — `execute_flow_f5(sector, universe, …)`. Per-ticker
+  parallel fan-out (ThreadPoolExecutor) of senior + devil, then comparator via
+  `runtime.call_tool("quant_comparator", …)`, then final-report. Min 5 tickers.
+  Same rubric semantics as f2.
+- **f6 (thematic screen)** — `execute_flow_f6(thesis, seed_universe, …)`. Two-pass:
+  cheap SCAN on the universe, prune to `shortlist_size`, then STANDARD on
+  survivors. Comparator + final-report on survivors.
+- **f7 (risk event)** — `execute_flow_f7(event, exposed_tickers, …)`. Speed-priority:
+  SCAN depth through all agents. Single senior framing, parallel per-ticker
+  forensic + devil, then final-report. No thesis-register write.
+- **f8 (macro overlay)** — `execute_flow_f8(macro_shock, thesis_ids, …)`.
+  Pre-wave loads prior theses; parallel per-thesis senior + devil under macro;
+  final-report returns per-thesis vulnerability + portfolio memo.
+
+Pilot: `f5_f8_pilot.py` — 22/22 green.
+
+Dry-run smoke:
+
+```bash
+python docs/runtime/runtime.py --flow f5 --tickers AAPL,MSFT,GOOGL,META,AMZN,NVDA \
+    --thesis "Big Tech" --dry-run
+python docs/runtime/runtime.py --flow f6 --tickers AAPL,MSFT,GOOGL,META,AMZN,NVDA \
+    --thesis "AI beneficiaries" --dry-run
+python docs/runtime/runtime.py --flow f7 --ticker NVDA \
+    --thesis "export-control update" --dry-run
+python docs/runtime/runtime.py --flow f8 \
+    --thesis "Fed cuts 50bps on 2026-09-15" --dry-run
+```
