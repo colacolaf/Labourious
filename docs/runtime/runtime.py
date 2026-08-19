@@ -742,8 +742,10 @@ def _tool_preflight(
     from runtime.call_tool import call_tool as _call_tool
 
     directives = [
+        ("market_data", {"ticker": ticker, "period": "3mo", "interval": "1d"},
+         "Recent OHLCV (yfinance) — keyless and the most reliable primary data source even through MITM proxies"),
         ("sec_edgar", {"ticker": ticker},
-         "CIK + recent filings for the user's ticker — every analysis needs this"),
+         "CIK + recent filings for the user's ticker — primary-source backbone for any thesis"),
         ("news_8k",   {"ticker": ticker, "since_days": 30, "limit": 5},
          "Recent 8-K filings (material events) for the user's ticker"),
         ("transcripts", {"ticker": ticker, "since_quarters": 4, "limit": 3},

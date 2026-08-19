@@ -40,7 +40,7 @@ class OllamaAdapter:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=120) as r:
+            with urllib.request.urlopen(req, timeout=240) as r:
                 payload = json.loads(r.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             raise RuntimeError(f"Ollama {e.code}: {e.read().decode('utf-8', errors='replace')}") from e
