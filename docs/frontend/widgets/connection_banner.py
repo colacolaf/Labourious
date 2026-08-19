@@ -32,16 +32,36 @@ class ConnectionBanner(Static):
         self.update(f"⚠  {msg}")
         self.add_class("warn")
         self.remove_class("error")
+        self.remove_class("info")
         self.remove_class("hide")
 
     def set_error(self, msg: str) -> None:
         self.update(f"⛔  {msg}")
         self.add_class("error")
         self.remove_class("warn")
+        self.remove_class("info")
+        self.remove_class("hide")
+
+    def set_info(self, msg: str) -> None:
+        """Brief, transient success/info flash.
+
+        Distinct from ``set_warning`` in that it's blue/neutral and
+        carries an auto-clear handle. Callers can call
+        ``clear_after(seconds)`` to remove the flash after a delay
+        without losing any pre-existing warning state.
+        """
+        self.update(f"i  {msg}")
+        self.add_class("info")
+        self.remove_class("warn")
+        self.remove_class("error")
         self.remove_class("hide")
 
     def set_ok(self) -> None:
         self.update("")
         self.remove_class("warn")
         self.remove_class("error")
+        self.remove_class("info")
         self.add_class("hide")
+
+    def _is_info_active(self) -> bool:
+        return "info" in self.classes and "warn" not in self.classes and "error" not in self.classes

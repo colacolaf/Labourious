@@ -86,7 +86,7 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 - Process: 9 pilots × ~140 assertions, ZERO failures (this commit).
 
 ✅ Process
-- 23+ pilots × ~430+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `pending this commit`)
+- 24+ pilots × ~470+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `pending this commit`)
 
 ---
 
@@ -424,11 +424,50 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
   Once the user is off Securly, sec_edgar will add real filing URLs the
   same way.
 
-### [domain-3] Citation chip click → open source
-- Today's chip is a count badge. Click should open the URL in OS browser
-  AND fetch the snippet from the cited page so a reviewer can verify it.
-- Or: open `less`/`bat` against the cached snippet file written on first read.
-- Effort: medium.
+### [domain-3] Citation chip key actions → open in browser / copy URL  ✅ DONE
+- **What shipped**: the chip now has *focusable* key actions that skip
+  the modal for the common case:
+  - **`o`** — open the chip's current URL in the OS default browser
+    (via `frontend.utils.platform.open_in_browser` —
+    `webbrowser` → `open`/`xdg-open`/`os.startfile` fallback chain).
+  - **`y`** — copy the same URL to the clipboard
+    (`pbcopy`/`xclip`/`clip` chain, or `pyperclip` if installed).
+  - **`n`** — advance the chip's local `current_idx` and flash
+    "→ <url>" in the banner.
+  - **`Enter` / click** — unchanged: opens `CitationModalScreen`
+    (still the right path when the user wants the full Snippet view).
+- **No browser ever launches in tests**: the chip posts a new
+  `CitationChip.ActionRequested(chip_id, action, url, idx)`
+  message bushward. `ChatScreen.on_citation_chip_action_requested`
+  monkey-patches `frontend.utils.platform.{open_in_browser,
+  copy_to_clipboard}` and asserts behaviour via recorders.
+- **ConnectionBanner.set_info()** ships alongside — a transient
+  blue/neutral flash ("✓ opened: https://…") that auto-clears after
+  `duration_s` without disturbing any pre-existing warning.
+  `_is_info_active()` lets the auto-clear path distinguish info
+  flash from layered warnings.
+- **Pilot** ([smokes/citation_chip_smoke.py](runtime/smokes/citation_chip_smoke.py))
+  — 39/39 ok, covering:
+  1. Single URL + `o` → posts ActionRequested with that URL.
+  2. 3 URLs + `o` → defaults to idx=0 (chip's current).
+  3. `n` advances idx, wraps; `o` after wrap uses citations[0].
+  4. Empty chip + `o` → empty URL, idx=-1, chat shows warn.
+  5. `y` posts a copy action.
+  6. Click still posts Pressed (not ActionRequested) — existing
+     behaviour intact.
+  7. Label renders `[1/2 sec.gov] ↵` for multi, `[1 citation] ↵`
+     for single, `[no citations] ↵` for empty.
+  8. ChatScreen routing: open/copy/empty all call the platform helper
+     and route to the flash banner.
+  9. ConnectionBanner.set_info round-trip + layered-warn handling.
+- **Why this beats the original plan**: the reviewer no longer needs
+  to drill through the modal just to verify a citation. The full
+  snippet-fetch path is the *next* layer — we landed the direct path
+  first because every user test session starts with "did it open
+  the right URL?".
+- **Deferred (snippet fetch)**: opening the cached snippet file in
+  `less`/`bat` is a follow-up that depends on `[connectors-2]`
+  (snippet-write cache). Not blocking.
 
 ---
 

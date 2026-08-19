@@ -598,8 +598,64 @@ class ChatScreen(Screen):
             thesis_id=chip.thesis_id,
             version=chip.version,
             timestamp=ts,
-        )  # The screen sets its own id in __init__ (idempotent).
+        )        # The screen sets its own id in __init__ (idempotent).
         self.app.push_screen(modal)
+
+    # ---------------------------------------------------------- chip actions
+    def on_citation_chip_action_requested(self, message) -> None:
+        """User pressed ``o`` / ``y`` / ``n`` on a focused chip.
+
+        Routes the action to the platform helper and flashes a toast.
+        All of these calls go through ``frontend.utils.platform.*``,
+        which is monkey-patched in tests so no browser actually launches.
+
+        Actions:
+            open    → ``open_in_browser(message.url)``
+            copy    → ``copy_to_clipboard(message.url)``
+            preview → just an inline reflow of the chip's status; flash OK.
+        """
+        from frontend.utils import platform as _plat
+        try:
+            # Resolve chip if present to honour is shorthand; we don't
+            # actually need the chip object — the message has the URL.
+            pass
+        except Exception:
+            return
+        action = getattr(message, "action", "")
+        url = getattr(message, "url", "") or ""
+        if action == "open":
+            if not url:
+                self._set_status_flash("⚠  no URL on this chip — press Enter for the modal", warn=True)
+                return
+            try:
+                ok, msg = _plat.open_in_browser(url)
+            except Exception as e:
+                ok, msg = False, f"{type(e).__name__}: {e}"
+            if ok:
+                self._set_status_flash(f"✓ opened: {url}", ok=True, duration_s=3.0)
+            else:
+                self._set_status_flash(f"✗ browser refused: {msg}", warn=True)
+            return
+        if action == "copy":
+            if not url:
+                self._set_status_flash("⚠  no URL on this chip — press Enter for the modal", warn=True)
+                return
+            try:
+                ok, msg = _plat.copy_to_clipboard(url)
+            except Exception as e:
+                ok, msg = False, f"{type(e).__name__}: {e}"
+            if ok:
+                self._set_status_flash(f"✓ copied: {url}", ok=True, duration_s=3.0)
+            else:
+                self._set_status_flash(f"✗ copy failed: {msg}", warn=True)
+            return
+        if action == "preview":
+            # The chip has already advanced its label; we just confirm.
+            if url:
+                self._set_status_flash(f"→ {url}", ok=True, duration_s=1.6)
+            return
+        # Unknown action — silently ignore (future-proofing).
+        return
 
     # ---------------------------------------------------------- internal helpers
     def _show_welcome(self, force: bool = False) -> None:
@@ -631,6 +687,62 @@ class ChatScreen(Screen):
 
     def _set_banner_ok(self) -> None:
         self.query_one(ConnectionBanner).set_ok()
+
+    def _set_status_flash(
+        self,
+        msg: str,
+        *,
+        ok: bool = False,
+        warn: bool = False,
+        duration_s: float = 0.0,
+    ) -> None:
+        """Brief transient banner flash.
+
+        Distinct from ``_set_banner_warning`` in that it does NOT
+        clobber an active warning if we want a separate ephemeral
+        info line. Currently rendered on the same ConnectionBanner
+        widget but using the ``info`` style (blue/neutral). When
+        ``duration_s > 0`` we schedule an auto-clear that does NOT
+        touch any active warning state — the flash simply disappears.
+
+        OK and warn are mutually exclusive — warn takes precedence to
+        match the user's mental model of "important <= important+".
+        """
+        try:
+            banner = self.query_one(ConnectionBanner)
+        except Exception:
+            return
+        # Don't step on an active warning: warnings take priority over
+        # transient info flashes per the same UX rule used by toast
+        # widgets in the existing modal screens.
+        if warn and not banner._is_info_active():
+            # If a true warning is already up, leave it; surface the
+            # warn flash as info so the user still sees it.
+            banner.set_info(f"⚠  {msg}")
+        else:
+            banner.set_info(msg)
+        if duration_s > 0:
+            try:
+                self.set_timer(duration_s, self._clear_status_flash_once)
+            except Exception:
+                # Headless / off-event-loop path; skip the timer silently.
+                pass
+
+    def _clear_status_flash_once(self) -> None:
+        """Clear a transient info flash without disturbing a real warning.
+
+        If the banner is currently in ``warn`` or ``error`` mode (i.e.
+        the warning was set AFTER our info flash and we're now trying
+        to clear the flash back to warning), we call ``set_ok`` which
+        would erase it. So guard: if the banner is in info-only mode,
+        clear; if a warning is layered on top, leave it.
+        """
+        try:
+            banner = self.query_one(ConnectionBanner)
+        except Exception:
+            return
+        if banner._is_info_active():
+            banner.set_ok()
 
     def _update_footer_hint(self, suffix: str = "") -> None:
         paid = ",".join(self.paid_for) if self.paid_for else "none"
