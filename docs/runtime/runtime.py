@@ -13,6 +13,7 @@ Phase: skeleton. The shape of a working runtime; many stubs still resolve to "ra
 from __future__ import annotations
 
 import argparse
+import concurrent.futures as cf
 import datetime as dt
 import hashlib
 import json
@@ -481,6 +482,219 @@ def execute_flow_f9(
 
 
 # --------------------------------------------------------------------------- #
+# Flow f2 — Compare Tickers (concurrent fan-out + comparator)
+# --------------------------------------------------------------------------- #
+def execute_flow_f2(
+    tickers: list[str],
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
+    flow_context: dict[str, Any] | None = None,
+    rubric: str | list[str] | dict[str, float] | None = None,
+    depth: str = "SCAN",
+) -> dict[str, Any]:
+    """Compare N tickers (2–5). Multi-agent fan-out per Anthropic's pattern:
+    one senior-analyst agent per ticker in its own context, in parallel;
+    then a deterministic comparator aggregates.
+
+    Wave plan:
+      pre-wave (sequential):
+        ➤ orchestrator confirms tickers + rubric (or sets balanced default)
+      wave 1 (parallel fan-out via ThreadPoolExecutor):
+        ➤ for each ticker (concurrent.futures):
+              senior-analyst (DEPTH=SCAN by default) — emits per-ticker
+              bubble under agent_id="senior-analyst-{ticker}" so the TUI
+              row is distinct, not clobbered by the single-name version
+      wave 2 (sequential, deterministic):
+        ➤ comparator (quant_comparator tool) — weighted rank + sensitivity
+      wave 3 (sequential):
+        ➤ final-report — builds the comparison table + ranking + bear
+          case on the top pick
+
+    The parallelism is critical because Anthropic's multi-agent paper
+    shows breadth-first tasks like this earn the 15× token cost only
+    with concurrent execution. Threads (not processes) because adapters
+    are mostly HTTP and GIL is irrelevant.
+    """
+    flow_context = flow_context or {}
+    tickers = [t.strip().upper() for t in tickers if t.strip()]
+    if len(tickers) < 2:
+        raise ValueError(f"f2 requires at least 2 tickers; got {len(tickers)}")
+    if len(tickers) > 5:
+        # Soft cap — comparison table doesn't scale past ~5 cleanly.
+        raise ValueError(
+            f"f2 accepts 2-5 tickers for comparison; got {len(tickers)}. "
+            f"For wider universe, use f5 (sector landscape) or f6 (screen)."
+        )
+
+    # Per-ticker agent_ids so the chat strip can mount distinct bubbles.
+    per_ticker_agents = [f"senior-analyst-{t}" for t in tickers]
+
+    # ---- Wave 1: parallel fan-out ----
+    # Each thread has its own emit buffer; events merge after join.
+    per_ticker_buffers: dict[str, list[Any]] = {t: [] for t in tickers}
+    per_ticker_results: dict[str, dict[str, Any]] = {}
+
+    def _run_senior_for_ticker(ticker: str) -> dict[str, Any]:
+        agent_id = f"senior-analyst-{ticker}"
+        # Sub-emit hook that tags events with this agent so events land
+        # on the right bubble when merged.
+        local_buffer: list[Any] = []
+
+        def _local_emit(ev: Any) -> None:
+            # Re-anchor AgentStarted/Chunk/Finished to this ticker's id
+            # already set by call_agent. The chat handler reads .agent_id
+            # so we just collect.
+            local_buffer.append(ev)
+            # Also bubble up to the outer emit_event so the user sees
+            # streaming progress in real-time when supported.
+            if emit_event is not None:
+                emit_event(ev)
+
+        brief = json.dumps({
+            "from": "orchestrator",
+            "flow_id": "f2",
+            "task": f"Frame a 1-sentence SCAN-depth thesis + 4-5 dimension signals on {ticker}",
+            "ticker": ticker,
+            "rubric": rubric,                # pass rubric as hint for the dimensions dict
+            "depth": depth,
+            "compressed": True,              # keep fan-out cheap
+            "flow_context": flow_context,
+        })
+        try:
+            env, cost = call_agent(
+                "senior-analyst", brief, model,
+                paid_for=paid_for,
+                emit_event=_local_emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            return {
+                "ticker": ticker,
+                "agent_id": agent_id,
+                "envelope": {
+                    "agent_id": agent_id,
+                    "ticker": ticker,
+                    "conclusion": f"SENIOR-ANALYST FAILED: {exc}",
+                    "thesis": {"one_sentence": f"Failed to analyze {ticker}: {exc}"},
+                    "bottom_line": {"direction": "ABSTAIN", "conviction": 0,
+                                    "flip_trigger": "n/a"},
+                    "findings": [], "gaps": [str(exc)], "verification": {"warnings": [str(exc)]},
+                    "citations": [],
+                },
+                "cost": {"cost_usd_estimate": 0.0},
+            }
+        # Re-tag agent_id so the comparator + final-report can use it.
+        env = {**env, "agent_id": agent_id}
+        per_ticker_buffers[ticker] = local_buffer
+        return {"ticker": ticker, "agent_id": agent_id,
+                "envelope": env, "cost": cost}
+
+    max_workers = min(len(tickers), 5)
+    with cf.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_ticker = {
+            executor.submit(_run_senior_for_ticker, t): t for t in tickers
+        }
+        for fut in cf.as_completed(future_to_ticker):
+            ticker = future_to_ticker[fut]
+            try:
+                per_ticker_results[ticker] = fut.result()
+            except Exception as exc:  # should not — _run_senior_for_ticker catches
+                per_ticker_results[ticker] = {
+                    "ticker": ticker,
+                    "agent_id": f"senior-analyst-{ticker}",
+                    "envelope": {
+                        "agent_id": f"senior-analyst-{ticker}",
+                        "ticker": ticker,
+                        "conclusion": f"THREAD FAILED: {exc}",
+                        "thesis": {"one_sentence": "unreachable"},
+                        "bottom_line": {"direction": "ABSTAIN", "conviction": 0,
+                                        "flip_trigger": "n/a"},
+                        "findings": [], "gaps": [str(exc)], "verification": {"warnings": [str(exc)]},
+                        "citations": [],
+                    },
+                    "cost": {"cost_usd_estimate": 0.0},
+                }
+
+    # ---- Wave 2: comparator (deterministic Python) ----
+    # Populate comparator input from each ticker's senior-analyst output.
+    # Senior-analyst is expected to emit a `dimensions` block and optional
+    # `quant` block; otherwise comparator falls back to qualitative-only.
+    comparator_input: dict[str, Any] = {"rubric": rubric, "tickers": []}
+    for t in tickers:
+        env = per_ticker_results[t]["envelope"]
+        bottom = env.get("bottom_line", {})
+        # Best-effort extract: comparator handles missing fields gracefully.
+        comparator_input["tickers"].append({
+            "ticker": t,
+            "direction": bottom.get("direction", "ABSTAIN"),
+            "conviction": int(bottom.get("conviction", 0) or 3),
+            "dimensions": env.get("dimensions", {}),
+            "quant": env.get("quant", {}),
+            "citations": env.get("citations", []),
+            "thesis_one_sentence": env.get("thesis", {}).get("one_sentence", ""),
+            "fragile_assumption": env.get("thesis", {}).get("fragile_assumption", ""),
+        })
+
+    # Use the runtime.call_tool path so chat strip lights up
+    # (this also gives us free ConnectorRequested/Completed events).
+    from .call_tool import call_tool as _runtime_call_tool  # late import to avoid cycle
+
+    events_comparator: list[Any] = []
+
+    def _com_em(ev: Any) -> None:
+        events_comparator.append(ev)
+        if emit_event is not None:
+            emit_event(ev)
+
+    ct_result = _runtime_call_tool(
+        "quant_comparator",
+        requested_by_agent="comparator",  # not a real agent id; chat ignores unknown
+        emit_event=_com_em,
+        args=comparator_input,
+    )
+
+    comparator_output = ct_result.data or {"error": ct_result.note, "tickers_present": len(tickers)}
+
+    # ---- Wave 3: final-report memo ----
+    fr_brief = json.dumps({
+        "from": "comparator",
+        "flow_id": "f2",
+        "task": f"Compare {len(tickers)} tickers with rubric and produce a memo",
+        "tickers": tickers,
+        "rubric": rubric,
+        "per_ticker_envelopes": {t: per_ticker_results[t]["envelope"] for t in tickers},
+        "comparator_output": comparator_output,
+        "depth": depth,
+        "compressed": False,
+    })
+    fr_env, fr_cost = call_agent(
+        "final-report", fr_brief, model,
+        paid_for=paid_for,
+        emit_event=emit_event,
+        per_agent_model=per_agent_model,
+        stream_chunks=stream_chunks,
+    )
+
+    costs = [per_ticker_results[t]["cost"] for t in tickers]
+    costs.append(comparator_output)
+    costs.append(fr_cost)
+
+    return {
+        "final_envelope": fr_env,
+        "comparator_output": comparator_output,
+        "costs": costs,
+        "envelopes": {
+            "per_ticker": {t: per_ticker_results[t]["envelope"] for t in tickers},
+            "final-report": fr_env,
+        },
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Streaming entrypoint — what the TUI consumes (PROTOCOL.md §1)
 # --------------------------------------------------------------------------- #
 def run_flow_stream(
@@ -511,10 +725,10 @@ def run_flow_stream(
     the pre-streaming CLI contract where each agent emits ONE chunk with
     the full body.
     """
-    if flow_id not in ("f1", "f9"):
+    if flow_id not in ("f1", "f2", "f9"):
         raise NotImplementedError(
             f"run_flow_stream: flow '{flow_id}' is not implemented yet. "
-            f"For v1 'f1' and 'f9' are wired; add execute_flow_<flow_id> then extend the dispatcher."
+            f"For v1 'f1', 'f2', and 'f9' are wired; add execute_flow_<flow_id> then extend the dispatcher."
         )
 
     ticker = inputs["ticker"]
@@ -575,6 +789,19 @@ def run_flow_stream(
                 per_agent_model=per_agent_model,
                 stream_chunks=stream_chunks,
                 flow_context=flow_ctx,
+            )
+        elif flow_id == "f2":
+            tickers = inputs.get("tickers") or [ticker] if ticker else []
+            result = execute_flow_f2(
+                tickers=tickers,
+                model=model,
+                paid_for=paid_for,
+                emit_event=emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+                flow_context=inputs.get("flow_context") or {},
+                rubric=inputs.get("rubric"),
+                depth=inputs.get("depth", "SCAN"),
             )
         else:
             result = execute_flow_f1(
@@ -704,6 +931,7 @@ def main() -> int:
     p.add_argument("--depth", default="STANDARD", choices=["SCAN", "STANDARD", "DEEP"])
     p.add_argument("--compressed", action="store_true")
     p.add_argument("--dry-run", action="store_true", help="Print the wave plan + brief structure; do not call models")
+    p.add_argument("--rubric", help="For f2: comparison rubric (e.g. 'growth, valuation, quality'). Defaults to balanced.")
     args = p.parse_args()
 
     if args.dry_run:
@@ -743,10 +971,19 @@ def main() -> int:
             return 2
         result = execute_flow_f9(ticker, args.model, paid_for=paid_for)
     elif args.flow == "f2":
-        # Placeholder — f2 implementation deferred to P1
-        print(f"# f2 not yet wired in skeleton. tickers={args.tickers}. See docs/flows/f2-compare-tickers.md",
-              file=sys.stderr)
-        return 2
+        if not args.tickers:
+            print("error: --tickers 'AAPL,MSFT' is required for f2", file=sys.stderr)
+            return 2
+        tickers_list = [t.strip() for t in args.tickers.split(",") if t.strip()]
+        # --rubric optional; default = balanced.
+        rubric = getattr(args, "rubric", None)
+        result = execute_flow_f2(
+            tickers=tickers_list,
+            model=args.model,
+            paid_for=paid_for,
+            rubric=rubric,
+            depth=getattr(args, "depth", "SCAN") or "SCAN",
+        )
     elif args.flow in ("f3", "f4", "f5", "f6", "f7", "f8"):
         print(f"# {args.flow} not yet wired in skeleton. See docs/flows/{args.flow}.md", file=sys.stderr)
         return 2

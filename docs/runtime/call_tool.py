@@ -27,6 +27,7 @@ from typing import Any, Callable, Mapping
 
 from .events import ConnectorCompleted, ConnectorFailed, ConnectorRequested
 from .tools import ToolResult
+from .tools.comparator import ComparatorTool
 from .tools.comps import CompsTool
 from .tools.dcf import DCFTool
 from .tools.news_8k import News8KTool
@@ -108,7 +109,7 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         arg_keys=("ticker", "since_quarters", "limit"),
         summary_field="",
     ),
-    # ── quant: DCF + comps ──
+    # ── quant: DCF + comps + comparator ──
     "quant_dcf": ToolBinding(
         tool_id="quant_dcf",
         tool_class=DCFTool,
@@ -122,6 +123,13 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         default_method="run",
         arg_keys=("subject.ticker",),
         summary_field="",
+    ),
+    "quant_comparator": ToolBinding(
+        tool_id="quant_comparator",
+        tool_class=ComparatorTool,
+        default_method="run",
+        arg_keys=("rubric",),
+        summary_field="confidence",
     ),
 }
 

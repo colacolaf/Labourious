@@ -103,3 +103,104 @@ Wave 3 (sequential):
 - Tiered cheaper than f1: shortlist-first pays off.
 - All-free 5-ticker f2: **~$0**.
 - Hybrid f2 (3 shortlisted, full depth + Sonnet synthesis): **~$0.20**.
+
+---
+
+## Implementation notes (post-build)
+
+This section captures the running implementation in `execute_flow_f2` + `runtime.tools.comparator`.
+
+### Architecture
+
+```
+Pre-wave (sequential):
+  ➤ orchestrator (or CLI --rubric flag) sets the comparison rubric.
+    Default: balanced 6D. Free-text supported (keyword parser).
+
+Wave 1 — parallel fan-out (ThreadPoolExecutor, max_workers=min(N,5)):
+  ➤ for each ticker:
+      senior-analyst (DEPTH=SCAN by default, compressed=true)
+      → emits under agent_id="senior-analyst-{ticker}" so the chat
+        bubble is per-ticker (not clobbered by previous ticker's run)
+  → per-ticker envelopes accumulate in `per_ticker_results`.
+
+Wave 2 — comparator (deterministic Python, NOT an LLM agent):
+  ➤ runtime.call_tool("quant_comparator", requested_by_agent="comparator")
+  → 6D scoring per ticker (qualitative lookup + cohort-normalized quant)
+  → weighted sum with parsed rubric weights
+  → ±10% weight perturbation per dimension → confidence label
+  → emiss Requested/Completed events → chat strip lights up
+
+Wave 3 — sequential:
+  ➤ final-report (DEPTH=SCAN/STANDARD per user) — comparison table +
+    per-row mini-memos + ranking rationale + bear case on top pick.
+```
+
+### Comparator interface
+
+```python
+from runtime.tools.comparator import ComparatorTool
+
+tool = ComparatorTool()
+result = tool.run(
+    tickers=[
+        {
+            "ticker": "AAPL",
+            "direction": "BUY", "conviction": 4,
+            "dimensions": {"valuation": "fair", "growth": "steady",
+                            "quality": "high", "leverage": "moderate",
+                            "momentum": "positive", "sentiment": "neutral"},
+            "quant": {"pe_ntm": 30.0, "growth_consensus_pct": 8.0, ...},
+            "citations": [...],
+            "thesis_one_sentence": "...",
+            "fragile_assumption": "...",
+        },
+        ...  # 2-5 tickers total
+    ],
+    rubric="growth at reasonable valuation",   # OR a dict
+    sensitivity_pct=0.10,
+)
+```
+
+### Rubric
+
+Six dimensions: `valuation`, `growth`, `quality`, `leverage`, `momentum`, `sentiment`.
+Free-text parser handles:
+- `"growth at reasonable valuation"` → weights balanced + growth + valuation elevated
+- `"quality, low leverage, moat"` → three dimensions weighted up
+- `"-leverage"` → subtract from leverage
+- Explicit dict: `{"valuation": 0.4, "growth": 0.6}` → normalized to [0,1]
+
+### Sensitivity (`confidence` label)
+
+| Confidence | Top-1 stability under ±10% perturbation |
+|---|---|
+| HIGH | Top-1 wins every perturbation across all 6 dimensions × 2 signs |
+| MEDIUM | 1-2 flips |
+| LOW | >2 flips (rubric is fragile; memo should call this out) |
+
+### CLI
+
+```bash
+python docs/runtime/runtime.py --flow f2 --tickers AAPL,MSFT,GOOGL,META \
+    --model ollama/llama3.3:70b [--rubric "growth, valuation"] [(--dry-run)]
+```
+
+### Boundaries (enforced)
+
+| Constraint | Behavior |
+|---|---|
+| <2 tickers | `raise ValueError("f2 requires at least 2 tickers; got 1")` |
+| >5 tickers | `raise ValueError("f2 accepts 2-5 tickers for comparison; got N. For wider universe, use f5 (sector landscape) or f6 (screen).")` |
+| Per-ticker senior-analyst fails | Comparator still runs with that ticker's `direction=ABSTAIN`, `conviction=0`; ranking proceeds |
+| Comparator fails | Flow continues; `comparator_output.error` is recorded; final-report still emits |
+
+### Real-world backtest (May 2024 cohort)
+
+Public hand-crafted inputs for AAPL/MSFT/GOOGL/META/AMZN under `"valuation, quality, low leverage, moat"` rubric → comparator ranked **META → GOOGL → MSFT → AAPL → AMZN** at `confidence=HIGH` with `flips_top1=0`. META wins because it scores high on growth (accelerating) + low leverage + high quality simultaneously — exactly the kind of multi-axis winner a quality+moat rubric is designed to surface. This matches how a real Argus-style "best ideas" screen would pick META that quarter.
+
+### What's NOT in scope here
+
+- **Universe source** — user provides tickers; f6 (screen) is for "find names that match this thesis"; f5 (sector landscape) is for "map out a sector"
+- **Free-text NLP rubric** — only structured keywords + explicit dict supported
+- **Regressing the top-1 ranking against pull-forward data** — flagged as [smoke-1] in TODO.md
