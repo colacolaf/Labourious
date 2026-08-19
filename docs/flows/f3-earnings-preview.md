@@ -94,3 +94,88 @@ Cost: roughly **half of f1**.
 - Full thesis re-derivation. Use f1.
 - Comparison prints across peer set. Use f2 with `rubric = "earnings print at [date]"`.
 - Post-mortem. Use f4.
+
+---
+
+## Implementation notes (post-build)
+
+This section covers the running implementation in `execute_flow_f3`.
+
+### Wave plan (light, deliberately not parallel)
+
+```
+pre-wave (sequential):
+  ➤ load prior thesis from register → RELEVANT HISTORY
+wave 1 (sequential):
+  ➤ senior-analyst at DEPTH=SCAN — frame "what to watch"
+      with prior thesis context
+wave 2 (sequential):
+  ➤ forensic-accounting SCAN — 3 measurable metrics
+      (rev growth, gross margin, FCF gen by default)
+wave 2b (optional — `--skip-devil` to drop):
+  ➤ devils-advocate SCAN — bear-case plausibility check
+wave 3 (sequential):
+  ➤ final-report — assembles the pre-mortem memo
+post-wave (sequential):
+  ➤ register.add_catalyst(ticker, event='earnings_print:YYYY-MM-DD',
+                              expected_date, what_to_watch)
+  → produces catalyst_id so f4 can resolve it after the print
+```
+
+### Memo shape
+
+```json
+{
+  "flow_id": "f3",
+  "memo": {
+    "what_to_watch": [
+      { "metric": "revenue growth", "importance": "HIGH", "rationale": "..." },
+      { "metric": "gross margin",    "importance": "MEDIUM", "rationale": "..." },
+      { "metric": "FCF gen",         "importance": "MEDIUM", "rationale": "..." }
+    ],
+    "reaction_function": [
+      { "metric": "revenue growth", "if_x": "<8% YoY",
+        "then_stock": "-8%", "magnitude_reasoning": "..." }
+    ],
+    "thesis_implication": {
+      "if_print_a": "thesis stands",
+      "if_print_b": "thesis shifts",
+      "if_print_c": "thesis breaks"
+    },
+    "citations": [...]
+  },
+  "confidence": "MEDIUM"
+}
+```
+
+The memo MUST have 3-5 watch metrics — fewer is risky (no signal filtered), more dilutes attention.
+
+### Disciplines applied
+
+- **Pre-mortem methodology (Gary Klein, HBR 2007)** — "imagine 6 months from now this print was a disaster; what went wrong?" — used as the explicit framing for the devils-advocate beat
+- **Sell-side pre-mortem practice** — 3-5 watchpoints ranked by likely impact, each with a reaction function; no orphan bullets
+- **Anthropic finance agents pattern** — even with the lighter scope, we keep the citation-first discipline (every metric's rationale traces to a primary source)
+- **Thesis_register coherence** — f3 writes a catalyst row so f4 can resolve it post-print; this closes the loop on "what we said we'd watch vs what we did"
+
+### Boundaries
+
+| Behavior | Default |
+|---|---|
+| Devils-advocate fires? | Yes; `--skip-devil` to drop |
+| Default depth | `SCAN` (cheap; pre-mortems work better with fewer hot takes) |
+| 3+ agents always fire | senior-analyst, forensic-accounting, final-report (skip-devil drops the 3rd) |
+| Catalyst persisted | Always (ticker, event, expected_date, what_to_watch JSON) |
+
+### CLI
+
+```bash
+python docs/runtime/runtime.py --flow f3 \
+    --ticker NVDA --model ollama/llama3.3:70b \
+    --earnings-date 2026-11-20 [--skip-devil]
+```
+
+### What's NOT in scope
+
+- Multi-ticker earnings preview (use f2 with `rubric="earnings preview"` if needed)
+- Original coverage / thesis derivation (use f1)
+- DCF triggered by print reaction (use f9)

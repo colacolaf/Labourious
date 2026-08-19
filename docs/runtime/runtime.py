@@ -17,11 +17,14 @@ import concurrent.futures as cf
 import datetime as dt
 import hashlib
 import json
+import logging
 import os
 import sys
 import time
 from pathlib import Path
 from typing import Any, Callable, Iterator
+
+log = logging.getLogger("labourious.runtime")
 
 # Project root (this file lives at docs/runtime/runtime.py)
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -377,6 +380,374 @@ def execute_flow_f1(
 
 
 # --------------------------------------------------------------------------- #
+# Flow f3 — Earnings Preview (pre-mortem)
+# --------------------------------------------------------------------------- #
+def execute_flow_f3(
+    ticker: str,
+    earnings_date: str,
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
+    flow_context: dict[str, Any] | None = None,
+    thesis_id: str | None = None,
+    skip_devil: bool = False,
+    depth: str = "SCAN",
+) -> dict[str, Any]:
+    """Pre-mortem on an upcoming earnings print.
+
+    Wave plan (light, deliberately not parallel — pre-mortems work better
+    when one voice owns the narrative):
+
+      pre-wave (sequential):
+        ➤ load prior thesis from register → RELEVANT HISTORY
+      wave 1 (sequential):
+        ➤ senior-analyst at DEPTH=SCAN — frame "what to watch"
+            with prior thesis context
+      wave 2 (sequential OR small parallel):
+        ➤ forensic-accounting SCAN — 3 key metrics (rev growth,
+            gross margin, FCF gen by default; user can override)
+      wave 2b (optional): devils-advocate SCAN — bear-case plausibility
+       (only if user wants the cheap "what an attacker would say" beat)
+      wave 3 (sequential):
+        ➤ final-report — assemble the pre-mortem memo; record a
+          catalyst in the thesis_register so f4 can resolve it after
+          the print
+
+    Returns the same shape as execute_flow_f1 plus a `catalyst_id`
+    field on the result so the TUI can show "watchpoint #7 created."
+    """
+    flow_context = flow_context or {}
+    register = ThesisRegister()
+    prior_thesis = register.read_thesis(ticker, since_days=14)
+
+    # Wave 1
+    sa_brief = json.dumps({
+        "from": "orchestrator",
+        "flow_id": "f3",
+        "task": (
+            f"Frame what to watch on {ticker}'s upcoming earnings "
+            f"on {earnings_date}"
+        ),
+        "ticker": ticker,
+        "earnings_date": earnings_date,
+        "thesis_id": thesis_id,
+        "relevant_history": prior_thesis,
+        "depth": depth,
+        "compressed": True,
+        "flow_context": flow_context,
+    })
+    sa_env, sa_cost = call_agent(
+        "senior-analyst", sa_brief, model,
+        paid_for=paid_for, emit_event=emit_event,
+        per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+    )
+
+    # Wave 2 (sequential forensic — the dependencies between metrics
+    # make parallelism artificial here)
+    fa_brief = json.dumps({
+        "from": "senior-analyst",
+        "flow_id": "f3",
+        "task": (
+            f"Identify 3 measurable metrics for {ticker}'s print and "
+            f"what 'good' vs 'bad' look like for each."
+        ),
+        "ticker": ticker,
+        "earnings_date": earnings_date,
+        "depth": "SCAN",
+        "compressed": True,
+    })
+    fa_env, fa_cost = call_agent(
+        "forensic-accounting", fa_brief, model,
+        paid_for=paid_for, emit_event=emit_event,
+        per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+    )
+
+    da_env = None
+    da_cost = None
+    if not skip_devil:
+        da_brief = json.dumps({
+            "from": "senior-analyst",
+            "flow_id": "f3",
+            "task": (
+                f"Bear-case plausibility check for {ticker}'s print — "
+                f"what would collapse the prior thesis if it materializes?"
+            ),
+            "ticker": ticker,
+            "earnings_date": earnings_date,
+            "thesis": sa_env.get("thesis", {}),
+            "depth": "SCAN",
+            "compressed": True,
+        })
+        da_env, da_cost = call_agent(
+            "devils-advocate", da_brief, model,
+            paid_for=paid_for, emit_event=emit_event,
+            per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+        )
+
+    # Wave 3 — final-report
+    fr_brief = json.dumps({
+        "from": "senior-analyst",
+        "flow_id": "f3",
+        "earnings_date": earnings_date,
+        "thesis_synthesis": sa_env,
+        "forensic_output": fa_env,
+        "bear_case": da_env,
+        "skip_devil": skip_devil,
+        "depth": depth,
+        "compressed": False,
+    })
+    fr_env, fr_cost = call_agent(
+        "final-report", fr_brief, model,
+        paid_for=paid_for, emit_event=emit_event,
+        per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+    )
+
+    # Persist watchpoints as a catalyst row so f4 can resolve later.
+    catalyst_id = None
+    try:
+        watchpoints = (fr_env.get("memo", {}).get("what_to_watch")
+                        if isinstance(fr_env.get("memo"), dict) else None)
+        watch_str = json.dumps(watchpoints) if watchpoints else f"earnings print {earnings_date}"
+        catalyst_id = register.add_catalyst(
+            ticker=ticker,
+            event=f"earnings_print:{earnings_date}",
+            expected_date=earnings_date,
+            what_to_watch=watch_str,
+        )
+    except Exception as exc:
+        # Don't fail the flow — log and move on.
+        log.warning("f3: failed to register catalyst: %s", exc)
+
+    return {
+        "final_envelope": fr_env,
+        "catalyst_id": catalyst_id,
+        "earnings_date": earnings_date,
+        "costs": [sa_cost, fa_cost, da_cost, fr_cost] if da_cost else
+                  [sa_cost, fa_cost, fr_cost],
+        "envelopes": {
+            "senior-analyst": sa_env,
+            "forensic-accounting": fa_env,
+            "devils-advocate": da_env,
+            "final-report": fr_env,
+        },
+        "prior_thesis": prior_thesis,
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Flow f4 — Earnings Review (post-mortem + diff vs prior thesis)
+# --------------------------------------------------------------------------- #
+def execute_flow_f4(
+    ticker: str,
+    earnings_date: str,
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
+    flow_context: dict[str, Any] | None = None,
+    thesis_id: str | None = None,
+    depth: str = "STANDARD",
+) -> dict[str, Any]:
+    """Post-print review. The differentiator is the **diff memo** —
+    what the prior thesis said vs what we say now.
+
+    Wave plan (heaviest single flow in v1):
+      pre-wave (sequential):
+        ➤ load prior thesis from register (>=14d window default)
+        ➤ resolve any open catalysts at-or-before earnings_date
+      wave 1 (sequential):
+        ➤ senior-analyst at DEPTH=STANDARD — analyze the print, diff
+            against prior
+      wave 2 (sequential):
+        ➤ forensic-accounting STANDARD — compare print to last quarter
+            + check the 3 watchpoints from any prior f3
+      wave 2b (sequential):
+        ➤ devils-advocate STANDARD — did the bear case worsen?
+      wave 3 (sequential):
+        ➤ final-report — diff memo and the bottom_line update
+      post-wave (sequential):
+        ➤ write a new theses row + add_update row so the register
+            reflects "we said X, now we say Y, here's why"
+
+    Returns the same shape as f1 + a `thesis_row` field with the new
+    `{thesis_id, version}` so the chat strip can flash it.
+    """
+    flow_context = flow_context or {}
+    register = ThesisRegister()
+    prior_thesis = register.read_thesis(ticker, since_days=14)
+
+    # Resolve any open catalysts at or before this print date.
+    resolved_catalysts: list[dict[str, Any]] = []
+    open_catalysts: list[dict[str, Any]] = []
+    try:
+        cur = register._conn.cursor()
+        rows = cur.execute(
+            "SELECT id, event, what_to_watch, expected_date FROM catalysts "
+            "WHERE ticker=? AND resolved_date IS NULL ORDER BY id",
+            (ticker.upper(),),
+        ).fetchall()
+        for r in rows:
+            if r["expected_date"] and r["expected_date"] <= earnings_date:
+                # Resolve as 'pending_diff' — f4 will finalize this with
+                # the diff output later.
+                resolved_catalysts.append(dict(r))
+            else:
+                open_catalysts.append(dict(r))
+    except Exception as exc:
+        log.warning("f4: catalyst fetch failed: %s", exc)
+
+    # Wave 1
+    sa_brief = json.dumps({
+        "from": "orchestrator",
+        "flow_id": "f4",
+        "task": (
+            f"Analyze {ticker}'s earnings print on {earnings_date} and "
+            f"diff the implications against the prior thesis."
+        ),
+        "ticker": ticker,
+        "earnings_date": earnings_date,
+        "thesis_id": thesis_id,
+        "prior_thesis": prior_thesis,
+        "open_catalysts": open_catalysts,
+        "depth": depth,
+        "compressed": False,
+    })
+    sa_env, sa_cost = call_agent(
+        "senior-analyst", sa_brief, model,
+        paid_for=paid_for, emit_event=emit_event,
+        per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+    )
+
+    # Wave 2 — forensic (sequential, after senior-analyst completed)
+    fa_brief = json.dumps({
+        "from": "senior-analyst",
+        "flow_id": "f4",
+        "task": (
+            f"Compare {ticker}'s print to the prior quarter and to the "
+            f"f3 watchpoints. Did the 3 metrics move as expected?"
+        ),
+        "ticker": ticker,
+        "earnings_date": earnings_date,
+        "depth": "STANDARD",
+        "compressed": False,
+    })
+    fa_env, fa_cost = call_agent(
+        "forensic-accounting", fa_brief, model,
+        paid_for=paid_for, emit_event=emit_event,
+        per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+    )
+
+    # Wave 2b — devils-advocate
+    da_brief = json.dumps({
+        "from": "senior-analyst",
+        "flow_id": "f4",
+        "task": (
+            f"Did the bear case for {ticker} materially improve or worsen "
+            f"after the print on {earnings_date}? What is the new "
+            f"fragile assumption?"
+        ),
+        "ticker": ticker,
+        "earnings_date": earnings_date,
+        "thesis": sa_env.get("thesis", {}),
+        "depth": "STANDARD",
+        "compressed": False,
+    })
+    da_env, da_cost = call_agent(
+        "devils-advocate", da_brief, model,
+        paid_for=paid_for, emit_event=emit_event,
+        per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+    )
+
+    # Wave 3 — final-report
+    fr_brief = json.dumps({
+        "from": "senior-analyst",
+        "flow_id": "f4",
+        "earnings_date": earnings_date,
+        "thesis_synthesis": sa_env,
+        "forensic_output": fa_env,
+        "bear_case": da_env,
+        "prior_thesis": prior_thesis,
+        "depth": depth if depth in ("STANDARD", "DEEP") else "STANDARD",
+        "compressed": False,
+    })
+    fr_env, fr_cost = call_agent(
+        "final-report", fr_brief, model,
+        paid_for=paid_for, emit_event=emit_event,
+        per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+    )
+
+    # Post-wave — persist the new thesis row + an update row.
+    thesis_row = None
+    diff_envelope = (fr_env.get("memo", {}).get("diff")
+                      if isinstance(fr_env.get("memo"), dict) else None)
+    new_thesis_text = sa_env.get("thesis", {}).get("one_sentence", "")
+    bl = sa_env.get("bottom_line", {})
+    try:
+        thesis_row = register.write_thesis(
+            ticker=ticker,
+            thesis_text=new_thesis_text,
+            conviction=int(bl.get("conviction", 0) or 3),
+            bottom_line=bl if isinstance(bl, dict) else {},
+            evidence_urls=[c.get("url") for c in sa_env.get("citations", [])
+                              if c.get("url")],
+            flow_id="f4",
+        )
+    except Exception as exc:
+        log.warning("f4: write_thesis failed: %s", exc)
+        thesis_row = None
+
+    update_id = None
+    if prior_thesis and thesis_row:
+        try:
+            update_id = register.add_update(
+                ticker=ticker,
+                what_changed=json.dumps(
+                    diff_envelope or {
+                        "thesis_diff": "see memo.diff",
+                        "earnings_date": earnings_date,
+                    }
+                ),
+                new_thesis_text=new_thesis_text,
+                deltas=diff_envelope,
+                reason=f"earnings print on {earnings_date}",
+            )
+        except Exception as exc:
+            log.warning("f4: add_update failed: %s", exc)
+
+    # Resolve the open catalysts (we treat all at-or-before now as
+    # resolved; users can override via the memo).
+    for c in resolved_catalysts:
+        try:
+            register.resolve_catalyst(
+                c["id"], earnings_date,
+                outcome=(diff_envelope or {}).get("prior_conviction_change", "")
+                        or f"resolved_by_f4_{earnings_date}",
+            )
+        except Exception as exc:
+            log.warning("f4: resolve_catalyst failed for %s: %s", c["id"], exc)
+
+    return {
+        "final_envelope": fr_env,
+        "diff_envelope": diff_envelope,
+        "thesis_row": thesis_row,
+        "update_id": update_id,
+        "earnings_date": earnings_date,
+        "costs": [sa_cost, fa_cost, da_cost, fr_cost],
+        "envelopes": {
+            "senior-analyst": sa_env,
+            "forensic-accounting": fa_env,
+            "devils-advocate": da_env,
+            "final-report": fr_env,
+        },
+        "prior_thesis": prior_thesis,
+        "resolved_catalyst_ids": [c["id"] for c in resolved_catalysts],
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Flow f9 — Model Build (DCF + comps)
 # --------------------------------------------------------------------------- #
 def execute_flow_f9(
@@ -725,10 +1096,10 @@ def run_flow_stream(
     the pre-streaming CLI contract where each agent emits ONE chunk with
     the full body.
     """
-    if flow_id not in ("f1", "f2", "f9"):
+    if flow_id not in ("f1", "f2", "f3", "f4", "f9"):
         raise NotImplementedError(
             f"run_flow_stream: flow '{flow_id}' is not implemented yet. "
-            f"For v1 'f1', 'f2', and 'f9' are wired; add execute_flow_<flow_id> then extend the dispatcher."
+            f"For v1 'f1', 'f2', 'f3', 'f4', and 'f9' are wired; add execute_flow_<flow_id> then extend the dispatcher."
         )
 
     ticker = inputs["ticker"]
@@ -789,6 +1160,39 @@ def run_flow_stream(
                 per_agent_model=per_agent_model,
                 stream_chunks=stream_chunks,
                 flow_context=flow_ctx,
+            )
+        elif flow_id == "f3":
+            earnings_date = inputs.get("earnings_date") or "1900-01-01"  # placeholder
+            if earnings_date == "1900-01-01":
+                log.warning("f3: no --earnings-date supplied; using placeholder")
+            result = execute_flow_f3(
+                ticker=ticker,
+                earnings_date=earnings_date,
+                model=model,
+                paid_for=paid_for,
+                emit_event=emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+                flow_context=inputs.get("flow_context") or {},
+                thesis_id=inputs.get("thesis_id"),
+                skip_devil=inputs.get("skip_devil", False),
+                depth=inputs.get("depth", "SCAN"),
+            )
+        elif flow_id == "f4":
+            earnings_date = inputs.get("earnings_date") or "1900-01-01"  # placeholder
+            if earnings_date == "1900-01-01":
+                log.warning("f4: no --earnings-date supplied; using placeholder")
+            result = execute_flow_f4(
+                ticker=ticker,
+                earnings_date=earnings_date,
+                model=model,
+                paid_for=paid_for,
+                emit_event=emit,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+                flow_context=inputs.get("flow_context") or {},
+                thesis_id=inputs.get("thesis_id"),
+                depth=inputs.get("depth", "STANDARD"),
             )
         elif flow_id == "f2":
             tickers = inputs.get("tickers") or [ticker] if ticker else []
@@ -932,6 +1336,10 @@ def main() -> int:
     p.add_argument("--compressed", action="store_true")
     p.add_argument("--dry-run", action="store_true", help="Print the wave plan + brief structure; do not call models")
     p.add_argument("--rubric", help="For f2: comparison rubric (e.g. 'growth, valuation, quality'). Defaults to balanced.")
+    p.add_argument("--earnings-date", help="For f3/f4: ISO date of earnings print")
+    p.add_argument("--thesis-id", type=int, help="For f3/f4: specific thesis_register row id")
+    p.add_argument("--skip-devil", action="store_true",
+                   help="For f3: skip the devils-advocate beat (cheaper pre-mortem)")
     args = p.parse_args()
 
     if args.dry_run:
@@ -984,7 +1392,27 @@ def main() -> int:
             rubric=rubric,
             depth=getattr(args, "depth", "SCAN") or "SCAN",
         )
-    elif args.flow in ("f3", "f4", "f5", "f6", "f7", "f8"):
+    elif args.flow in ("f3", "f4"):
+        if not ticker:
+            print(f"error: --ticker is required for {args.flow}", file=sys.stderr)
+            return 2
+        if not args.earnings_date:
+            print(f"error: --earnings-date is required for {args.flow}", file=sys.stderr)
+            return 2
+        if args.flow == "f3":
+            result = execute_flow_f3(
+                ticker=ticker, earnings_date=args.earnings_date, model=args.model,
+                paid_for=paid_for, thesis_id=args.thesis_id,
+                skip_devil=args.skip_devil,
+                depth=getattr(args, "depth", "SCAN") or "SCAN",
+            )
+        else:
+            result = execute_flow_f4(
+                ticker=ticker, earnings_date=args.earnings_date, model=args.model,
+                paid_for=paid_for, thesis_id=args.thesis_id,
+                depth=getattr(args, "depth", "STANDARD") or "STANDARD",
+            )
+    elif args.flow in ("f5", "f6", "f7", "f8"):
         print(f"# {args.flow} not yet wired in skeleton. See docs/flows/{args.flow}.md", file=sys.stderr)
         return 2
     else:
