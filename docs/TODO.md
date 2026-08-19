@@ -86,7 +86,7 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 - Process: 9 pilots × ~140 assertions, ZERO failures (this commit).
 
 ✅ Process
-- 24+ pilots × ~470+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `pending this commit`)
+- 25+ pilots × ~520+ individual tests, ZERO failures (last full sweep after `1f8706b8` → `18716a32` → `020c2874` → `acfe3ebe` → `pending this commit`)
 
 ---
 
@@ -465,14 +465,82 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
   snippet-fetch path is the *next* layer — we landed the direct path
   first because every user test session starts with "did it open
   the right URL?".
-- **Deferred (snippet fetch)**: opening the cached snippet file in
-  `less`/`bat` is a follow-up that depends on `[connectors-2]`
-  (snippet-write cache). Not blocking.
+- **Snippet fetch (`v` action) shipped in `[domain-4]`**: see below.
+
+### [domain-4] Snippet cache → chip `v` key opens cached snippet  ✅ DONE
+- **What shipped**: every SUCCESS-shaped result from
+  ``sec_edgar_fulltext``, ``news_8k``, or ``transcripts`` writes the
+  first 2 KB of ``ToolResult.data`` to
+  ``docs/runtime/.runs/<run_id>/snippets/<safe_source>_<idx>.txt``
+  (override-able via ``LABOURIOUS_RUNS_DIR_OVERRIDE`` env var for
+  tests). The chip's ``v`` key pops that file into ``less``/``bat``/
+  ``more``/``cat`` (tried in order) without re-fetching the network.
+- **Three responsibilities kept in ``docs/runtime/snippets.py``**:
+  1. Excerpt construction (``_excerpt_from_data``) — handles
+     ``dict``/``list``/``str`` shapes. Tab-separated key/value rows for
+     list-of-dict (typical EFTS), pretty-printed JSON for dict,
+     raw text for str.
+  2. Path derivation (``_safe_source``) — strict slug, only
+     [a-z0-9_-] pass, capped at 48 chars.
+  3. Cache writer (``write_snippet_for``) — idempotent
+     (default behaviour skips rewrite on existing file; ``force=True``
+     overwrites), ``mkdir -p`` on demand, 2 KB cap with
+     ``[truncated @ 2048 bytes]`` tail marker.
+- **Connector wiring**: ``runtime.call_tool`` gained two optional
+  kwargs: ``run_id: str | None`` and ``snippet_idx: int = 0``. When
+  ``run_id`` is set AND ``tool_id ∈ {sec_edgar_fulltext, news_8k,
+  transcripts}`` AND ``result.status == "SUCCESS"``, the runtime
+  imports ``runtime.snippets`` lazily and attaches
+  ``ToolResult.snippet_path`` to the dataclass. Other tools
+  (``yfinance``, ``dcf``, ``comparator``, …) keep ``snippet_path``
+  ``None`` so the chip's label correctly omits the ◫ badge.
+- **Frontend wiring**:
+  - ``frontend.utils.platform.open_in_pager(path)``: ``less`` →
+    ``bat`` → ``more`` → ``cat`` chain via
+    ``subprocess.Popen([cmd, path])``. Returns ``(ok, msg)`` where
+    ``msg`` names the chosen pager.
+  - ``CitationChip``: gained ``snippet_paths`` parallel list (new
+    constructor kwarg + ``set_citations`` kwarg), ``chip-has-snippets``
+    CSS class when any snippet is set, `` ◫`` badge in the chip
+    label (whole-chip when any, per-citation when the current ``n``
+    has one), and a new ``v`` key that posts
+    ``ActionRequested(action="snippet", url=path, idx=…)``.
+  - ``ChatScreen.on_citation_chip_action_requested``: handles
+    ``action == 'snippet'`` → calls ``open_in_pager`` →
+    flashes ``✓ pager: less /path/to/snippet`` on success or
+    ``✗ pager failed: <reason>``/``⚠ no cached snippet`` on warn.
+- **Pilot** ([smokes/snippet_cache_smoke.py](runtime/smokes/snippet_cache_smoke.py))
+  — **54 / 54 ok**:
+  1. Writer writes file, returns SnippetPath with metadata.
+  2. 2 KB cap + truncated tail marker on big payloads.
+  3. FAILED / EMPTY / None skip writes; ``snippet_for`` on failed
+     reads ``None``.
+  4. Idempotency: second call returns same path, ``new_write=False``;
+     ``force=True`` overwrites with new data.
+  5. ``ToolResult.to_dict()`` carries ``snippet_path``.
+  6. End-to-end ``call_tool(run_id=...)`` sets snippet_path on
+     ``sec_edgar_fulltext`` SUCCESS but stays ``None`` for
+     ``market_data`` (correct — not in the cache set).
+  7. CitationChip ``v`` → ``request_view`` posts
+     ``action='snippet'`` with the on-disk path; empty snippet
+     posts empty-URL marker for chat's warn toast.
+  8. ChatScreen routing: snippet → ``open_in_pager`` with the path.
+  9. ``open_in_pager`` chain selects ``less`` on macOS, returns the
+     pager name + path; empty/nonexistent files fail cleanly.
+  10. Chip labels carry ◫ badges (whole-chip + per-citation).
+- **Why this matters**: the reviewer can now ground the citation
+  *without leaving the terminal*. Press ``o`` → browser opens
+  full filing. Press ``v`` → first 2 KB of excerpt inline in
+  ``less``. The exec-path is non-blocking (``Popen`` returns
+  immediately; ``less`` holds the screen but it's independent).
+  When SEC EDGAR fails-soft under our Securly MITM proxy, the
+  snippet is whatever we already cached from a previous run.
+- **Deferred**: HTTP cache for snippets themselves (so a re-run of
+  the same connector refreshes the file with newer data); for now
+  the cache uses run_id + source + idx so each run gets fresh
+  snippets *on first call* and re-uses them on idempotent retries.
 
 ---
-
-## Deferred — protocol + polish
-
 ### [protocol-1] Live provider health probes
 - The Settings panel shows a dot per-provider computed at startup
 - Add a `↻ test` button next to each row → ping endpoint, report latency

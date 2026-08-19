@@ -649,6 +649,26 @@ class ChatScreen(Screen):
             else:
                 self._set_status_flash(f"✗ copy failed: {msg}", warn=True)
             return
+        if action == "snippet":
+            # The chip's `v` key sends a snippet path. Empty/missing
+            # means the connector didn't cache one — toast a hint that
+            # `o` is the fallback path.
+            if not url:
+                self._set_status_flash(
+                    "⚠  no cached snippet for this citation — "
+                    "press `o` to open the URL instead",
+                    warn=True,
+                )
+                return
+            try:
+                ok, msg = _plat.open_in_pager(url)
+            except Exception as e:
+                ok, msg = False, f"{type(e).__name__}: {e}"
+            if ok:
+                self._set_status_flash(f"✓ pager: {msg}", ok=True, duration_s=2.0)
+            else:
+                self._set_status_flash(f"✗ pager failed: {msg}", warn=True)
+            return
         if action == "preview":
             # The chip has already advanced its label; we just confirm.
             if url:

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import os
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
@@ -241,6 +242,8 @@ def call_tool(
     *,
     method: str | None = None,
     args: Mapping[str, Any] | None = None,
+    run_id: str | None = None,
+    snippet_idx: int = 0,
 ) -> ToolResult:
     """Run a tier-1 connector and emit 3 typed events around it.
 
@@ -265,6 +268,17 @@ def call_tool(
         Keyword arguments forwarded to the tool method. Only the keys listed
         in `binding.arg_keys` are validated for the default method — other
         methods accept arbitrary kwargs.
+    run_id : str, optional
+        When set AND the tool is one of the snippet-cacheable sources
+        (``sec_edgar_fulltext``, ``news_8k``, ``transcripts``) AND the
+        result is ``SUCCESS``, write the first 2 KB of result data to
+        ``.runs/<run_id>/snippets/<source>_<snippet_idx>.txt`` and attach
+        the path to ``ToolResult.snippet_path`` so the chip's ``v`` key
+        can pop it into ``less``/``bat``. Idempotent — re-runs with the
+        same run_id do not rewrite.
+    snippet_idx : int, default 0
+        Sub-identifier when the same (run_id, source) produces multiple
+        snippets in one run (e.g. transcripts with limit=4).
 
     Returns
     -------
@@ -361,5 +375,31 @@ def call_tool(
             data_summary=summary,
             requested_by_agent=requested_by_agent,
         ))
+
+    # Snippet cache: write the first 2 KB of SUCCESS results from the
+    # text-heavy connectors. Idempotent. Failure-side (FAILED/EMPTY)
+    # is intentionally skipped — chips' `v` action reports "no snippet".
+    _SNIPPET_SOURCES = {
+        "sec_edgar_fulltext",
+        "news_8k",
+        "transcripts",
+    }
+    if run_id and tool_id in _SNIPPET_SOURCES and result.status == "SUCCESS":
+        try:
+            _override_base = os.environ.get("LABOURIOUS_RUNS_DIR_OVERRIDE")
+            from .snippets import write_snippet_for
+            snip = write_snippet_for(result, run_id, snippet_idx,
+                                     base_dir=_override_base)
+            if snip is not None:
+                # ToolResult has snippet_path as a regular attribute — setattr
+                # is safe and the dataclass __init__ default has it as None.
+                result.snippet_path = str(snip.path)
+        except Exception as exc:
+            # Snippet-write failures are non-fatal; the connector still
+            # returned its result. Log and move on.
+            import logging as _logging
+            _logging.getLogger("labourious.call_tool").debug(
+                "snippet write skipped for %s/%s: %s", tool_id, run_id, exc
+            )
 
     return result

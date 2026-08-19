@@ -10,18 +10,26 @@ source.
 Quick actions (no modal needed for the common case):
     `o`  →  Open the *first* (or currently-selected) URL in OS browser.
     `y`  →  Copy that URL to the system clipboard.
+    `v`  →  View cached snippet (`.runs/<run_id>/snippets/<n>.txt`) in
+             `less`/`bat`. Populated by the runtime's snippet cache when
+             the citation came from `sec_edgar_fulltext`, `news_8k`, or
+             `transcripts`. Without a snippet a toast warns the user.
     `n`  →  Advance the chip's current-URL index to the next one and
              flash its preview in the chip label. (Purely local; no
              side-effect beyond the chip updating its label.)
 
 The chip carries:
-    - ``citations``    : list[str] of evidence URLs (the only v1 field)
-    - ``agent_id``     : e.g. ``final-report`` — used for the modal title
-    - ``thesis_id``    : int row id of the thesis (optional)
-    - ``version``      : e.g. ``v3`` (optional)
-    - ``timestamp``    : ISO-ish string (optional)
-    - ``_current_idx`` : int — which citation ``o``/``y``/``n`` act on
-                         (defaults to 0)
+    - ``citations``     : list[str] of evidence URLs (the only v1 field)
+    - ``snippet_paths`` : parallel list[str|None] of cached-snippet file
+                          paths. ``None`` for citations whose connector
+                          never wrote a snippet (or whose fetch failed).
+                          Length should match ``citations`` length.
+    - ``agent_id``      : e.g. ``final-report`` — used for the modal title
+    - ``thesis_id``     : int row id of the thesis (optional)
+    - ``version``       : e.g. ``v3`` (optional)
+    - ``timestamp``     : ISO-ish string (optional)
+    - ``_current_idx``  : int — which citation ``o``/``y``/`v`/``n`` act
+                          on (defaults to 0)
 
 The data lives on the chip itself rather than behind a lookup so that
 chat.py doesn't need to remember which bubble the chip is attached to.
@@ -81,6 +89,7 @@ class CitationChip(Static):
         count: int = 0,
         *,
         citations: list[str] | None = None,
+        snippet_paths: list[str | None] | None = None,
         agent_id: str = "",
         thesis_id: int | None = None,
         version: str | None = None,
@@ -94,6 +103,14 @@ class CitationChip(Static):
             count = len(self.citations)
         else:
             self.citations = []
+        # Snippet paths must align with citations. Pad to length with
+        # ``None`` for missing entries; ignore extras (defensive).
+        if snippet_paths:
+            self.snippet_paths: list[str | None] = list(snippet_paths)[: count]
+            while len(self.snippet_paths) < count:
+                self.snippet_paths.append(None)
+        else:
+            self.snippet_paths = [None] * count
         self.count = count
         self.agent_id = agent_id
         self.thesis_id = thesis_id
@@ -106,6 +123,9 @@ class CitationChip(Static):
             self.add_class("chip-empty")
         else:
             self.add_class("chip-has-data")
+        # Snippet badge: chip shows ◫ if any citation has a snippet
+        if any(p for p in self.snippet_paths):
+            self.add_class("chip-has-snippets")
         self.can_focus = True
 
     # ----- label rendering -----------------------------------------------
@@ -124,11 +144,16 @@ class CitationChip(Static):
         if self.count == 0:
             return "[no citations] ↵"
         word = "citation" if self.count == 1 else "citations"
+        snippet_count = sum(1 for p in self.snippet_paths if p)
+        snippet_badge = " ◫" if snippet_count else ""
         if self.count == 1 or self._current_idx < 0:
-            return f"[{self.count} {word}] ↵"
+            return f"[{self.count} {word}{snippet_badge}] ↵"
         host = self._short_host(self._current_url()) or "?"
+        # Per-citation snippet mini-badge if THIS idx has a cached snippet.
+        per_idx_snip = " ◫" if (self._current_idx < len(self.snippet_paths)
+                                and self.snippet_paths[self._current_idx]) else ""
         # Show "idx/n · host" so the user knows which one `o` will fire.
-        return f"[{self._current_idx + 1}/{self.count} {host}] ↵"
+        return f"[{self._current_idx + 1}/{self.count} {host}{per_idx_snip}] ↵"
 
     def _current_url(self) -> str:
         if not self.citations or self._current_idx < 0:
@@ -156,6 +181,7 @@ class CitationChip(Static):
         self,
         citations: list[str],
         *,
+        snippet_paths: list[str | None] | None = None,
         agent_id: str = "",
         thesis_id: int | None = None,
         version: str | None = None,
@@ -164,6 +190,12 @@ class CitationChip(Static):
         """Replace the chip's data in one call."""
         self.citations = list(citations or [])
         self.count = len(self.citations)
+        if snippet_paths:
+            self.snippet_paths = list(snippet_paths)[: self.count]
+            while len(self.snippet_paths) < self.count:
+                self.snippet_paths.append(None)
+        else:
+            self.snippet_paths = [None] * self.count
         if agent_id:
             self.agent_id = agent_id
         if thesis_id is not None:
@@ -176,9 +208,12 @@ class CitationChip(Static):
         if self.count == 0:
             self.add_class("chip-empty")
             self.remove_class("chip-has-data")
+            self.remove_class("chip-has-snippets")
         else:
             self.add_class("chip-has-data")
             self.remove_class("chip-empty")
+        if any(p for p in self.snippet_paths):
+            self.add_class("chip-has-snippets")
         self.update(self._label())
 
     # ----- action methods (testable directly) ----------------------------
@@ -204,6 +239,23 @@ class CitationChip(Static):
         self.post_message(self.ActionRequested(self.id or "", "copy", url, self._current_idx))
         return url
 
+    def request_view(self) -> str:
+        """Post an ``action='snippet'`` message; return the snippet path.
+
+        The path is the on-disk cached excerpt the runtime wrote for
+        this citation. Empty/no snippet path → empty-url marker so
+        chat.py can toast "no snippet for this citation".
+        """
+        if not self.snippet_paths or self._current_idx < 0:
+            self.post_message(self.ActionRequested(self.id or "", "snippet", "", self._current_idx))
+            return ""
+        path = self.snippet_paths[self._current_idx] if self._current_idx < len(self.snippet_paths) else None
+        if not path:
+            self.post_message(self.ActionRequested(self.id or "", "snippet", "", self._current_idx))
+            return ""
+        self.post_message(self.ActionRequested(self.id or "", "snippet", path, self._current_idx))
+        return path
+
     def request_preview(self) -> str:
         """Advance to next URL and post a ``preview`` message with it."""
         if not self.citations:
@@ -222,6 +274,8 @@ class CitationChip(Static):
         ``enter``  → open the modal (existing).
         ``o``      → open this chip's current URL in the OS browser.
         ``y``      → copy that URL to clipboard.
+        ``v``      → view cached snippet for the current citation in
+                     ``less``/``bat``.
         ``n``      → advance to the next URL in the chip's local index.
         """
         if event.key == "enter":
@@ -236,6 +290,11 @@ class CitationChip(Static):
             return
         if event.key == "y":
             self.request_copy()
+            event.prevent_default()
+            event.stop()
+            return
+        if event.key == "v":
+            self.request_view()
             event.prevent_default()
             event.stop()
             return

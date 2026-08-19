@@ -12,10 +12,17 @@ Functions:
     source_type_from_url(url)               -> str  ("filing"|"news"|"macro"|"web")
     open_in_browser(url)                    -> (bool, str)
     copy_to_clipboard(text)                 -> (bool, str)
+    open_in_pager(path)                     -> (bool, str)
 
 The source-type heuristic is intentionally simple — host-only, no
 fancy path inspection. We can grow the catalog as the connector set
 grows (research/connectors/*.py). Unknown hosts fall back to "web".
+
+The pager chain is: ``less`` (preferred — most TUI-friendly) → ``bat``
+(prettier on macOS) → ``more`` (universal fallback) → ``cat``
+(non-interactive, last-ditch). Tries each in order until one is
+present on PATH. Used by the chip ``v`` action to pop a cached snippet
+into a scrollable reader.
 """
 
 from __future__ import annotations
@@ -155,6 +162,41 @@ def _open_native(url: str) -> tuple[bool, str]:
 
 
 # ---------------------------------------------------------------------------
+# open in pager (less/bat/more/cat)
+# ---------------------------------------------------------------------------
+def open_in_pager(path: str) -> tuple[bool, str]:
+    """Open a text file in a scrollable reader.
+
+    Returns ``(True, "less /path/to/snippet.txt")`` on success or
+    ``(False, reason)`` on failure. Tries, in order:
+        1. ``less`` — preferred; responds to ``q`` to exit
+        2. ``bat``  — pre-formatted; macOS users often prefer this
+        3. ``more`` — universal POSIX fallback
+        4. ``cat``  — non-interactive, last-ditch
+
+    Each is invoked as ``subprocess.Popen(["<pager>", path])`` so the
+    reader runs in its own process. We deliberately don't capture
+    output — the user sees the snippet. If even ``cat`` is missing
+    the function returns a clear failure with the system name so the
+    caller can surface "install less (or bat) to view snippets".
+    """
+    if not path:
+        return False, "empty path"
+    import os as _os
+    if not _os.path.exists(path):
+        return False, f"file not found: {path}"
+    for cmd in ("less", "bat", "more", "cat"):
+        if shutil.which(cmd):
+            try:
+                subprocess.Popen([cmd, path])
+                return True, f"{cmd} {path}"
+            except Exception as e:
+                # Try the next one in the chain.
+                continue
+    return False, f"no less/bat/more/cat on PATH ({platform.system()})"
+
+
+# ---------------------------------------------------------------------------
 # copy to clipboard
 # ---------------------------------------------------------------------------
 def copy_to_clipboard(text: str) -> tuple[bool, str]:
@@ -210,4 +252,9 @@ def copy_to_clipboard(text: str) -> tuple[bool, str]:
 
 
 # Re-export at module level for clarity.
-__all__ = ["source_type_from_url", "open_in_browser", "copy_to_clipboard"]
+__all__ = [
+    "source_type_from_url",
+    "open_in_browser",
+    "copy_to_clipboard",
+    "open_in_pager",
+]
