@@ -11,5 +11,12 @@ rich>=13            # rich-text rendering (Textual depends on it transitively)
 tomli>=2            # config.json schema validation (stdlib for py>=3.11 has tomllib)
 keyring>=24         # OS keychain for API-key storage (Settings screen "Secrets" button)
 
-# --- Future connectivity (already-in-process via adapters/) ---
-# yfinance for market_data — install in your env when you wire the market_data connector.
+# --- Connector adapters ---
+yfinance>=0.2       # market_data.price_history — yfinance is keyless and
+                   # pulls OHLCV from Yahoo Finance (works through most
+                   # MITM proxies that allow Yahoo's websocket paths).
+# certifi bundles for `urllib.urlopen` SSL verification — install in
+# environments where the system CA store is missing (corporate proxies,
+# stripped-down Docker images, etc.). The runtime doesn't NEED this for
+# market_data, but it's required for sec_edgar / news in TLS-strict envs.
+# certifi>=2024

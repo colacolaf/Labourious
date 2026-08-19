@@ -641,6 +641,221 @@ def call_agent(
 
 
 # --------------------------------------------------------------------------- #
+# Tool-feeding: execute ``tool_directives`` from agent envelopes, plus
+# pre-flight bulk pulls for every analysis run.
+# --------------------------------------------------------------------------- #
+# This is ``[tool-feeding]`` from docs/TODO.md, marked ✅ DONE in this
+# commit. Two layers of automation:
+#
+#   1. ``_tool_preflight(ticker)``: before senior-analyst runs, the runtime
+#      always pulls a small basket of primary sources via real connectors
+#      so any 3B-8B model has data to fill its envelope with. The preflight
+#      covers the connectors the LLM most commonly cites (sec_edgar for
+#      CIK + recent filings, news_8k for 8-K headlines). It is silent and
+#      fails soft: if a connector is unhealthy (e.g. the network is SSL-
+#      intercepting in a school environment), the result is a FAILED
+#      ToolResult and the LLM still proceeds with whatever did succeed.
+#
+#   2. ``_execute_tool_directives(directives, requested_by_agent)``: when
+#      an agent emits ``tool_directives`` in its envelope (the explicit
+#      ``[TOOL: ...]`` protocol from the senior-analyst prompt), the runtime
+#      iterates and dispatches each via ``call_tool``. Results are added
+#      to the running ``tool_results`` list and stitched into the next
+#      agent's brief.
+#
+# Result blocks delivered to downstream agents:
+#   {
+#     "tool": "sec_edgar", "status": "SUCCESS", "as_of": "...", "source": "...",
+#     "note": "10-K + 10-Q retrieved",
+#     "data_summary": "5 filings indexed",          # <=100 char preview
+#     "data": [...],                                # full ToolResult.data
+#   }
+#
+# When connectors fail (Securly, rate-limit, 404), the LLM sees a clearly
+# labelled FAILED entry instead of silent silence — so it can write the
+# failure into ``gaps`` rather than hallucinate.
+_MAX_PREFLIGHT_TOOL_RESULTS = 8   # brief stays clean; truncate if more
+_PREFLIGHT_TIMEOUT_S = 15         # per-call; never block the flow > 15s
+
+
+def _summarize_tool_result(tr: Any, max_data_chars: int = 2000) -> dict[str, Any]:
+    """Compress a ToolResult into an LLM-friendly summary.
+
+    Includes the full ``data`` field but truncated to ``max_data_chars`` so a
+    long news list or filing-list does not blow the brief. The note + status
+    are surfaced verbatim so the model can write them into ``gaps``.
+    """
+    if hasattr(tr, "to_dict"):
+        d = tr.to_dict()
+    elif hasattr(tr, "__dict__"):
+        d = {k: v for k, v in tr.__dict__.items() if not k.startswith("_")}
+    else:
+        return {"status": "UNKNOWN", "data": str(tr)[:max_data_chars]}
+    data = d.get("data")
+    if isinstance(data, (list, dict)):
+        try:
+            data_str = json.dumps(data, default=str)
+        except (TypeError, ValueError):
+            data_str = str(data)
+    else:
+        data_str = str(data) if data is not None else ""
+    if len(data_str) > max_data_chars:
+        data_str = data_str[:max_data_chars] + "…[truncated]"
+    try:
+        data_obj = json.loads(data_str) if data_str.startswith(("[", "{")) else data_str
+    except json.JSONDecodeError:
+        data_obj = data_str
+    return {
+        "tool": d.get("source", "?"),
+        "status": d.get("status", "UNKNOWN"),
+        "as_of": d.get("as_of", ""),
+        "source": d.get("source", "?"),
+        "note": d.get("note", ""),
+        "data": data_obj,
+    }
+
+
+def _tool_preflight(
+    ticker: str,
+    emit_event: "Callable[[Any], None] | None" = None,
+) -> list[dict[str, Any]]:
+    """Pre-flight: always pull a small basket of primary sources.
+
+    The runtime owns this so the LLM never has to emit a directive to get
+    core data — note this in TODO.md as the *single biggest UX win* since
+    prompts go from "would be nice" to "actually happens." Connectors
+    are real HTTP and free-keyless; failures are soft-FAILED in the
+    brief's ``tool_results``.
+    """
+    # Lazy-load call_tool to avoid circular import at module load.
+    if "runtime" not in sys.modules:
+        _RUNTIME_PKG_PARENT = str(Path(__file__).resolve().parent.parent)
+        if _RUNTIME_PKG_PARENT not in sys.path:
+            sys.path.insert(0, _RUNTIME_PKG_PARENT)
+        import importlib.util as _ilu
+        _pkg_init = Path(__file__).resolve().parent / "__init__.py"
+        if _pkg_init.exists():
+            _spec = _ilu.spec_from_file_location("runtime", _pkg_init)
+            _pkg = _ilu.module_from_spec(_spec)
+            _spec.loader.exec_module(_pkg)
+            sys.modules["runtime"] = _pkg
+    from runtime.call_tool import call_tool as _call_tool
+
+    directives = [
+        ("sec_edgar", {"ticker": ticker},
+         "CIK + recent filings for the user's ticker — every analysis needs this"),
+        ("news_8k",   {"ticker": ticker, "since_days": 30, "limit": 5},
+         "Recent 8-K filings (material events) for the user's ticker"),
+        ("transcripts", {"ticker": ticker, "since_quarters": 4, "limit": 3},
+         "Recent earnings-call transcripts for the user's ticker"),
+    ]
+    out: list[dict[str, Any]] = []
+    for tool_id, args, reason in directives:
+        try:
+            tr = _call_tool(
+                tool_id=tool_id,
+                requested_by_agent="preflight",
+                emit_event=emit_event,
+                args=args,
+            )
+        except Exception as exc:
+            out.append({"tool": tool_id, "status": "FAILED",
+                        "as_of": "", "source": tool_id,
+                        "note": f"preflight raised: {type(exc).__name__}: {exc}",
+                        "data": None})
+            continue
+        s = _summarize_tool_result(tr)
+        s["reason"] = reason
+        out.append(s)
+    return out[:_MAX_PREFLIGHT_TOOL_RESULTS]
+
+
+def _execute_tool_directives(
+    directives: list[Any],
+    requested_by_agent: str,
+    emit_event: "Callable[[Any], None] | None" = None,
+) -> list[dict[str, Any]]:
+    """Run any ``tool_directives`` an agent emitted. Each directive is a
+    dict ``{tool: <id>, args: {...}, reason: str}`` (reason optional).
+    Returns a list of tool-result summaries, ready to stitch into the next
+    agent's brief.
+    """
+    if not directives:
+        return []
+    # Lazy-load call_tool (same trick as in _tool_preflight).
+    if "runtime" not in sys.modules:
+        _RUNTIME_PKG_PARENT = str(Path(__file__).resolve().parent.parent)
+        if _RUNTIME_PKG_PARENT not in sys.path:
+            sys.path.insert(0, _RUNTIME_PKG_PARENT)
+        import importlib.util as _ilu
+        _pkg_init = Path(__file__).resolve().parent / "__init__.py"
+        if _pkg_init.exists():
+            _spec = _ilu.spec_from_file_location("runtime", _pkg_init)
+            _pkg = _ilu.module_from_spec(_spec)
+            _spec.loader.exec_module(_pkg)
+            sys.modules["runtime"] = _pkg
+    from runtime.call_tool import call_tool as _call_tool
+
+    out: list[dict[str, Any]] = []
+    # Cap how many extra pulls one envelope can trigger; falls back to
+    # whatever fits in the budget. A flaky agent that emits 50 directives
+    # would otherwise blow the model timeout.
+    bounded = list(directives)[:_MAX_PREFLIGHT_TOOL_RESULTS]
+    for d in bounded:
+        if not isinstance(d, dict):
+            continue
+        tool_id = d.get("tool") or d.get("tool_id")
+        args = d.get("args") or {}
+        reason = d.get("reason", "")
+        if not tool_id:
+            continue
+        try:
+            tr = _call_tool(
+                tool_id=str(tool_id),
+                requested_by_agent=requested_by_agent,
+                emit_event=emit_event,
+                args=args if isinstance(args, dict) else {},
+            )
+        except Exception as exc:
+            out.append({"tool": str(tool_id), "status": "FAILED",
+                        "as_of": "", "source": str(tool_id),
+                        "note": f"directive raised: {type(exc).__name__}: {exc}",
+                        "data": None})
+            continue
+        s = _summarize_tool_result(tr)
+        s["reason"] = reason
+        out.append(s)
+    return out
+
+
+def _format_tool_results_for_brief(tool_results: list[dict[str, Any]]) -> str:
+    """Render tool_results as a single stringified block to inject into an
+    agent's user_brief. Truncates data fields so the brief stays compact.
+    """
+    if not tool_results:
+        return ""
+    lines = ["tool_results:"]
+    for i, r in enumerate(tool_results, start=1):
+        head = f"  [{i}] {r.get('tool','?')} status={r.get('status','?')} as_of={r.get('as_of','?')}"
+        if r.get("reason"):
+            head += f"   reason: {r['reason']}"
+        lines.append(head)
+        if r.get("note"):
+            lines.append(f"      note: {r['note']}")
+        data = r.get("data")
+        if data:
+            try:
+                data_str = json.dumps(data, default=str)
+            except (TypeError, ValueError):
+                data_str = str(data)
+            if len(data_str) > 800:
+                data_str = data_str[:800] + "…[truncated]"
+            for ln in data_str.splitlines():
+                lines.append(f"      {ln}")
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------- #
 # Per-flow orchestrators
 # --------------------------------------------------------------------------- #
 def execute_flow_f1(
@@ -689,6 +904,17 @@ def execute_flow_f1(
                                      paid_for=paid_for, emit_event=emit_event,
                                      per_agent_model=per_agent_model)
 
+    # Tool-feeding pre-flight: pull core primary-source data ONCE per run
+    # so every downstream agent (senior, forensic, devils-advocate, final)
+    # has the same facts to work from. The runtime owns this so 3B-8B
+    # models don't have to emit the explicit ``tool_directives`` protocol
+    # to get data; they always see it in their brief. Failures are soft —
+    # we keep going with whatever succeeded.
+    log.info("[f1] tool pre-flight for %s", ticker)
+    preflight = _tool_preflight(ticker=ticker, emit_event=emit_event)
+    tool_results: list[dict[str, Any]] = list(preflight)
+    preflight_block = _format_tool_results_for_brief(tool_results)
+
     # Wave 2: senior-analyst. We collapse prior_thesis into a count/string
     # summary rather than passing the full row, because small models
     # (<=8B) tend to mirror nested JSON examples in their response envelope.
@@ -697,16 +923,49 @@ def execute_flow_f1(
     sr_brief = json.dumps({
         "from": "orchestrator",
         "situation": f"User wants analysis of {ticker}",
-        "task": f"Build thesis skeleton on {ticker}",
+        "task": f"Build thesis skeleton on {ticker}. Use the attached `tool_results` (raw primary sources) for every concrete claim — do NOT invent numbers, names, or dates.",
         "ticker": ticker,
         "prior_thesis_summary": _summarize_prior_thesis(prior_thesis),
         "depth": "STANDARD",
         "compressed": False,
+        # Tool-feeding: the pre-flight results are appended verbatim. Agents
+        # read them and produce ``tool_directives`` only when they need
+        # ADDITIONAL connectors that the pre-flight didn't cover.
+        "tool_results_provided": [
+            {k: v for k, v in r.items() if k != "data"} | {"data_truncated": True}
+            for r in tool_results
+        ],
+        "_tool_results_full": preflight_block,
+        # Optional protocol: agent may return extra tool_directives in its
+        # envelope and we will execute them post-hoc.
+        "_response_protocol": (
+            "If you need ADDITIONAL primary sources beyond what's already in "
+            "``tool_results_provided``, emit a ``tool_directives`` list in your "
+            "envelope with the shape ``[{\"tool\": \"<id>\", \"args\": {...}, "
+            "\"reason\": \"...\"}, ...]``. Each will be executed via call_tool "
+            "and added to the next agent's brief. Do NOT include unrelated "
+            "tools — cap at ~3 directives per envelope."
+        ),
     })
     sr_env, sr_cost = call_agent("senior-analyst", sr_brief, model,
                                  paid_for=paid_for, emit_event=emit_event,
                                  per_agent_model=per_agent_model,
                                  stream_chunks=stream_chunks)
+
+    # Tool-feeding post-agent: if senior-analyst emitted any ``tool_directives``,
+    # dispatch each via call_tool and append the results to ``tool_results``.
+    # This is the agent-initiated extension of the pre-flight; senior analyst
+    # can pull news or transcript that pre-flight didn't cover.
+    sr_directives = sr_env.get("tool_directives") or []
+    if isinstance(sr_directives, list) and sr_directives:
+        log.info("[f1] senior-analyst emitted %d tool_directive(s)", len(sr_directives))
+        extra = _execute_tool_directives(
+            directives=sr_directives,
+            requested_by_agent="senior-analyst",
+            emit_event=emit_event,
+        )
+        tool_results.extend(extra)
+        log.info("[f1] tool_results now has %d total entries", len(tool_results))
 
     # Wave 3 (parallel): forensic-accounting + devils-advocate.
     # Per `docs/flows/f1-analyze-ticker.md` the recipe calls this
@@ -718,20 +977,42 @@ def execute_flow_f1(
     # (LLM HTTP requests are blocking); using async/await would require
     # restructuring the runtime. We pin max_workers=2 to mirror the
     # recipe's claim of "two agents one wave".
+    # The tool_results block carries real-data excerpts from pre-flight + any
+    # senior-analyst tool_directives. Each downstream agent reads the
+    # block to inform concrete claims; agents write real numbers into their
+    # envelopes, not placeholder prose.
+    tool_results_block = _format_tool_results_for_brief(tool_results)
+    sr_thesis = sr_env.get("thesis", {}) or {}
     fa_brief = json.dumps({
         "from": "senior-analyst",
-        "task": f"Earnings-quality review on {ticker}",
+        "task": (
+            f"Earnings-quality review on {ticker}. Use the attached "
+            f"``_tool_results_full`` block — pull every concrete number, "
+            f"footnote, and citation from there, not from your memory."
+        ),
         "ticker": ticker,
         "depth": "STANDARD",
         "compressed": False,
+        "_tool_results_provided": [
+            {k: v for k, v in r.items() if k != "data"} for r in tool_results
+        ],
+        "_tool_results_full": tool_results_block,
     })
     da_brief = json.dumps({
         "from": "senior-analyst",
-        "task": f"Counter-case on {ticker} thesis",
+        "task": (
+            f"Counter-case on {ticker} thesis. Cross-check the senior "
+            f"thesis against ``_tool_results_full`` — what does the "
+            f"primary-source evidence actually say vs what's claimed?"
+        ),
         "ticker": ticker,
-        "thesis": sr_env.get("thesis", {}),
+        "thesis": sr_thesis,
         "depth": "STANDARD",
         "compressed": False,
+        "_tool_results_provided": [
+            {k: v for k, v in r.items() if k != "data"} for r in tool_results
+        ],
+        "_tool_results_full": tool_results_block,
     })
     fa_cost: dict[str, Any] = {}
     da_cost: dict[str, Any] = {}
@@ -775,19 +1056,53 @@ def execute_flow_f1(
         "bear_case": da_env,
         "depth": "STANDARD",
         "compressed": False,
+        # Tool-feeding: final-report writes the memo's citations_used list.
+        # We hand it the primary-source excerpts so the in_text references
+        # in ``memo.bull_case`` / ``memo.bear_case`` trace back to real
+        # filings, not invented URLs. ``citations_block`` is a compact
+        # ``[tool/as_of/note]`` summary used by the agent to populate
+        # ``memo.citations_used``.
+        "citations_block": [
+            f"#{i+1}: tool={r.get('tool','?')} status={r.get('status','?')} "
+            f"as_of={r.get('as_of','?')} note={(r.get('note','') or '')[:120]}"
+            for i, r in enumerate(tool_results)
+            if r.get("status") == "SUCCESS"
+        ],
+        "_tool_results_full": tool_results_block,
     })
     final_env, final_cost = call_agent("final-report", fr_brief, model,
                                        paid_for=paid_for, emit_event=emit_event,
                                        per_agent_model=per_agent_model,
                                        stream_chunks=stream_chunks)
 
-    # Persist to thesis register
+    # Persist to thesis register. Cite REAL URLs from tool_results when the
+    # LLM didn't carry its own forward; SEC URLs and any fetched 8-K links are
+    # preferred citations over made-up references.
+    real_urls: list[str] = []
+    for r in tool_results:
+        data = r.get("data")
+        if isinstance(data, list):
+            for row in data:
+                if isinstance(row, dict):
+                    u = row.get("url") or row.get("link") or row.get("filing_url")
+                    if isinstance(u, str):
+                        real_urls.append(u)
+    evidence_urls = (
+        [c.get("url") for c in sr_env.get("citations", []) if c.get("url")]
+        + real_urls
+    )
+    # Dedupe + cap
+    seen = set(); deduped = []
+    for u in evidence_urls:
+        if u and u not in seen:
+            seen.add(u); deduped.append(u)
+    evidence_urls = deduped[:8]
     thesis_row = register.write_thesis(
         ticker=ticker,
         thesis_text=sr_env.get("thesis", {}).get("one_sentence", ""),
         conviction=sr_env.get("bottom_line", {}).get("conviction", 0),
         bottom_line=sr_env.get("bottom_line", {}),
-        evidence_urls=[c.get("url") for c in sr_env.get("citations", []) if c.get("url")],
+        evidence_urls=evidence_urls,
         flow_id="f1",
     )
 
@@ -2651,6 +2966,18 @@ def _run_cli_call_tool(args: argparse.Namespace) -> int:
             return 2
     else:
         tool_args = {k: v for k, v in kwarg_candidates.items() if v is not None}
+    # Pull in any additional tool kwargs introduced since the strict whitelist.
+    extra_kwargs = {
+        "url": args.url,
+        "period": args.period,
+        "interval": args.interval,
+        "kind": args.kind,
+        "min_value": args.min_value,
+        "since_quarters": args.since_quarters,
+    }
+    for k, v in extra_kwargs.items():
+        if v is not None:
+            tool_args[k] = v
 
     print(f"# call_tool: {args.call_tool} args={tool_args}", file=sys.stderr)
     events_emitted: list[Any] = []
@@ -2753,6 +3080,12 @@ def main() -> int:
     p.add_argument("--start", help="tool kwarg: ISO start date")
     p.add_argument("--end", help="tool kwarg: ISO end date")
     p.add_argument("--article-id", help="tool kwarg: e.g. transcripts article_id")
+    p.add_argument("--url", help="tool kwarg: e.g. web_fetch URL")
+    p.add_argument("--period", help="tool kwarg: e.g. market_data period (1mo, 1y)")
+    p.add_argument("--interval", help="tool kwarg: e.g. market_data interval (1d, 1h)")
+    p.add_argument("--kind", help="tool kwarg: e.g. insider kind")
+    p.add_argument("--min-value", type=int, help="tool kwarg: e.g. insider min_value")
+    p.add_argument("--since-quarters", type=int, help="tool kwarg: e.g. transcripts since_quarters")
     p.add_argument("--request", help="JSON-encoded call payload. "
                    "Overrides all other kwargs. Useful for tools (quant_dcf, "
                    "quant_comps, quant_comparator) that expect a structured request "

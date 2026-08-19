@@ -33,9 +33,12 @@ from .tools.dcf import DCFTool
 from .tools.news_8k import News8KTool
 from .tools.insider import InsiderTool
 from .tools.institutional import InstitutionalTool
+from .tools.market_data import MarketDataTool
+from .tools.news import NewsTool
 from .tools.sec_edgar import SECEdgarTool
 from .tools.sec_edgar_fulltext import SECEdgarFullTextTool
 from .tools.transcripts import TranscriptsTool
+from .tools.web_fetch import WebFetchTool
 
 
 log = logging.getLogger("labourious.call_tool")
@@ -139,6 +142,30 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         default_method="run",
         arg_keys=("rubric",),
         summary_field="confidence",
+    ),
+    # ── news: Google News RSS (no key) or NewsAPI (free key) ──
+    "news": ToolBinding(
+        tool_id="news",
+        tool_class=NewsTool,
+        default_method="search_news",
+        arg_keys=("query", "limit"),
+        summary_field="",
+    ),
+    # ── market_data: yfinance (no key) + FRED (free key) ──
+    "market_data": ToolBinding(
+        tool_id="market_data",
+        tool_class=MarketDataTool,
+        default_method="price_history",
+        arg_keys=("ticker", "period", "interval"),
+        summary_field="",
+    ),
+    # ── web_fetch: any URL → text ──
+    "web_fetch": ToolBinding(
+        tool_id="web_fetch",
+        tool_class=WebFetchTool,
+        default_method="fetch",
+        arg_keys=("url",),
+        summary_field="",
     ),
 }
 

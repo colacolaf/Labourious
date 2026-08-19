@@ -259,6 +259,40 @@ Field rules:
 - `gaps` and `error_flags` are always present, even if empty arrays.
 - `next_three_questions` is always populated for STANDARD and DEEP outputs. SCAN may omit it.
 
+### Tool-feeding protocol (optional, use only when needed)
+
+The brief you receive contains a `tool_results_provided` block (compact
+cipher) and a `_tool_results_full` block (raw excerpts of recent 10-K
+filings, 8-K headlines, transcript snippets, etc.) — pre-fetched for you
+by the runtime. **Use this for every concrete fact; don't invent numbers,
+dates, or filer names.**
+
+If you need ADDITIONAL primary sources beyond what was pre-fetched
+(e.g. you cited a specific 8-K and want its full text; or you want a
+transcript snippet of the latest earnings call), emit a `tool_directives`
+list in your envelope:
+
+```json
+"tool_directives": [
+  {"tool": "sec_edgar_fulltext", "args": {"query": "AI capex FY27", "forms": "10-K", "ciks": ["0001045810"], "limit": 5}, "reason": "Verify the capex claim from f2"},
+  {"tool": "news_8k",            "args": {"ticker": "NVDA", "since_days": 7, "limit": 3},                            "reason": "Catch any 8-K filed since pre-flight (24h ago)"}
+]
+```
+
+Available tools: `sec_edgar`, `sec_edgar_fulltext`, `news_8k`,
+`insider`, `institutional`, `transcripts`, `news`, `market_data`,
+`web_fetch`, `quant_dcf`, `quant_comps`, `quant_comparator`.
+
+Rules:
+- Cap at **3 directives per envelope**. The runtime will run them in
+  order, fail-soft, and add the results to the next agent's brief.
+- Issuing directives **does not replace** citations in
+  `citations[]` — the directives are ACTIONS; the citations are
+  REFERENCES for the user-visible memo.
+- If a directive would have produced data already in
+  `tool_results_provided`, skip it — the runtime has just refreshed
+  those.
+
 ## 13. Quality Gates
 
 Before returning, all must pass; otherwise fix and re-check:
