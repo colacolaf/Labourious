@@ -2956,6 +2956,8 @@ def _run_cli_call_tool(args: argparse.Namespace) -> int:
         "start": args.start,
         "end": args.end,
         "article_id": args.article_id,
+        "resolution": args.resolution,
+        "days_back": args.days_back,
     }
     # If caller provided a raw JSON --request, that wins. (Structured tools
     # like DCFTool / CompsTool / ComparatorTool take `request` / `subject`
@@ -3088,6 +3090,10 @@ def main() -> int:
     p.add_argument("--kind", help="tool kwarg: e.g. insider kind")
     p.add_argument("--min-value", type=int, help="tool kwarg: e.g. insider min_value")
     p.add_argument("--since-quarters", type=int, help="tool kwarg: e.g. transcripts since_quarters")
+    p.add_argument("--resolution", help="tool kwarg: e.g. quotes_realtime resolution "
+                   "(D, 60, 30, 15, 5, 1 — or alias: 1d, 1h, 5m, etc.)")
+    p.add_argument("--days-back", type=int, help="tool kwarg: e.g. quotes_realtime lookback "
+                   "(calendar days). Default: 365 for candles; quote ignores.")
     p.add_argument("--request", help="JSON-encoded call payload. "
                    "Overrides all other kwargs. Useful for tools (quant_dcf, "
                    "quant_comps, quant_comparator) that expect a structured request "

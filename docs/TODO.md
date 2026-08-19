@@ -963,14 +963,87 @@ after `[smoke-1]`).
 
 ### Tier 2 — free w/ key, ship when tier 1 lands
 
-| ID | Connector file | Provider | Free tier |
-|---|---|---|---|
-| `conn-6` | `quotes_realtime.py` | Finnhub | 60 req/min |
-| `conn-7` | `fundamentals.py` | Financial Modeling Prep | 250 req/day |
-| `conn-8` | `consensus.py` | Finnhub | part of free |
-| `conn-9` | `calendars.py` | Finnhub | part of free |
-| `conn-10` | `newsapi.py` | NewsAPI.org | 100 req/day |
-| `conn-11` | `macro.py` | FRED | free w/ key (extract from `market_data.py`) |
+| ID | Connector file | Pilot | Commit | Status |
+|---|---|---|---|---|
+| `conn-6` | `quotes_realtime.py` | 53/53 | `pending this commit` | ✅ shipped |
+| `conn-7` | `fundamentals.py` | — | — | ⏳ pending (FMP, 250 req/day) |
+| `conn-8` | `consensus.py` | — | — | ⏳ pending (Finnhub part-of-free) |
+| `conn-9` | `calendars.py` | — | — | ⏳ pending (Finnhub earnings/IPO calendar) |
+| `conn-10` | `newsapi.py` | — | — | ⏳ pending (NewsAPI.org 100 req/day) |
+| `conn-11` | `macro.py` | — | — | ⏳ pending (FRED free w/ key — extract from `market_data.py`) |
+
+#### [conn-6] `quotes_realtime.py` — Finnhub (60 req/min)  ✅ DONE
+- **What shipped**: realtime US-equity quote snapshot + OHLCV
+  candles via Finnhub's free tier. Authentication is by query-string
+  token (`?token=...`); pref read order is
+  `api_key` arg → `FINNHUB_API_KEY` → `LABOURIOUS_FINNHUB_KEY`.
+- **Two endpoints**, two methods on the `QuotesRealtimeTool` dataclass:
+  1. `quote(ticker)` → `GET /api/v1/quote` — single-ticker snapshot.
+     Returns `{ticker, current, high, low, open, prev_close, change,
+     change_pct, as_of_unix, as_of, url}`. Cached 60 s (free-tier
+     rate limit + 1 poll margin). Strict shape validation: `c=0`
+     (out-of-hours) and `{}` (unknown ticker) both surface as FAILED
+     so we never fabricate `$0.00`.
+  2. `candles(ticker, resolution="D", days_back=365, limit=1000)` →
+     `GET /api/v1/stock/candle` — OHLCV. Resolutions: `1` · `5` ·
+     `15` · `30` · `60` · `D` (canonical) plus natural aliases
+     (`1m` / `1h` / `1d` etc.). `days_back` clamped to 25y ceiling;
+     `limit` clamped to 5000. Returns `{rows: [{t, ts_iso, o, h, l,
+     c, v}], meta: {resolution, from_ts, to_ts, from_iso, to_iso,
+     status, row_count}}`.
+- **ToolResult token redaction**: ToolResult.note + ToolResult.data['url']
+  redact the `token=` query param so log-spam can't leak secrets.
+  The raw token still appears in the urllib request URL (Finnhub's
+  auth-by-query-string protocol — unavoidable) but never in the
+  ToolResult artifact.
+- **Why this matters**: yfinance is good for daily backtests but
+  loses real-time coverage. Finnhub's free tier gives us sub-second
+  `/quote` data + minute-bar candles with no rate-limit pitfalls
+  in steady state. `news_8k` already brought the material-event
+  wire; `quotes_realtime` brings the price anchor. Together they
+  give the brief a price + event-pair the LLM can ground analysis
+  into.
+- **Pilot** ([smokes/quotes_realtime_smoke.py](runtime/smokes/quotes_realtime_smoke.py))
+  — **53 / 53 ok**:
+  1. Quote SUCCESS shape + change_pct math (8 assertions).
+  2. Cache hit on second call (returns SAME object identity).
+  3. Cache miss after TTL=0 → fresh fetch (data differs).
+  4. No key → FAILED with "FINNHUB_API_KEY not configured" (no
+     silent fallback to Mock).
+  5-8. HTTP 401, 429, `c=0` (out-of-hours), empty payload → all
+     FAILED with clear notes.
+  9. Candles SUCCESS: list-of-rows + meta block shape.
+  10. Resolution aliases (`1d`→`D`, `1h`→`60`, `5m`→`5`,
+      `1m`→`1`, etc.).
+  11. Candles status=no_data → EMPTY (rows=[]).
+  12. Candles alias garbage → FAILED with "not supported" note.
+  13. Candles cache hit within TTL → SAME object identity.
+  14. days_back ceiling (99y → 25y, asserted via URL query params).
+  15. limit 99999 → clamped ≤ 5000.
+  16. Note + ToolResult.data['url'] REDACT the secret (token cannot
+      leak via ToolResult; the urllib request URL itself still
+      carries it — that's Finnhub's auth-by-query-string protocol).
+  17-18. End-to-end `call_tool("quotes_realtime", ..., method="candles")`
+      round-trip via the registry.
+  19. `call_tool("not_a_real_tool")` → FAILED with "unknown tool_id".
+  20. Token precedence: explicit arg wins over env; FINNHUB_API_KEY
+      wins over LABOURIOUS_FINNHUB_KEY.
+  21. `clear_cache()` empties both quote + candle caches.
+  22. `ToolResult.to_dict()` carries `snippet_path=None` (this tool
+      is NOT snippet-cacheable; the chip never shows ◫).
+  23. Note has REDACTED token + no raw secret leak in note.
+  24. `resolution="1"` (1-minute) canonicalised correctly.
+- **CLI**: `--call-tool quotes_realtime --ticker AAPL` for the
+  snapshot, `--tool-method candles --resolution 60 --days-back 7`
+  for intraday candles. New flags: `--resolution`, `--days-back`.
+  Listed in `--list-tools` output along with the other 12 tools.
+- **Catalog**: `frontend/connectors_catalog.py` gained the
+  `quotes_realtime` entry — tier 2 (free w/ key), `default_on=False`
+  (user opts in by setting FINNHUB_API_KEY), `recommended=True`.
+  The settings panel autopicks it from the catalog via
+  `_build_known_connectors()` — no separate wiring needed.
+- **Combined regression**: 8 smokes + 7 pytest evals = 320+
+  total assertions, ZERO failures.
 
 ### Tier 3 — defer until flow f7 ships
 

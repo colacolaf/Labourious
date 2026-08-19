@@ -37,6 +37,7 @@ from .tools.insider import InsiderTool
 from .tools.institutional import InstitutionalTool
 from .tools.market_data import MarketDataTool
 from .tools.news import NewsTool
+from .tools.quotes_realtime import QuotesRealtimeTool
 from .tools.sec_edgar import SECEdgarTool
 from .tools.sec_edgar_fulltext import SECEdgarFullTextTool
 from .tools.transcripts import TranscriptsTool
@@ -159,6 +160,14 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         tool_class=MarketDataTool,
         default_method="price_history",
         arg_keys=("ticker", "period", "interval"),
+        summary_field="",
+    ),
+    # ── quotes_realtime: Finnhub quote + candles (free-with-key) ──
+    "quotes_realtime": ToolBinding(
+        tool_id="quotes_realtime",
+        tool_class=QuotesRealtimeTool,
+        default_method="quote",
+        arg_keys=("ticker", "resolution", "days_back", "limit"),
         summary_field="",
     ),
     # ── web_fetch: any URL → text ──
