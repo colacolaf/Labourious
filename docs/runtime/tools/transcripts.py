@@ -422,7 +422,13 @@ class TranscriptsTool:
 
         url = SA_TICKER_INDEX.format(ticker=_up.quote(ticker))
         try:
-            status_code, html = self._fetch(url, if_none_match=if_none_match)
+            # [domain-8] _fetch returns 3-tuple since the ETag work
+            # (status, html, etag). UNUSED the etag here; we read it
+            # via self._last_etag when we hit the 304 branch below so
+            # the value survives any older test-mock openers that
+            # return only 2-tuples.
+            status_code, html, _fetched_etag = self._fetch(
+                url, if_none_match=if_none_match)
         except Exception as exc:
             return ToolResult(
                 as_of=_now_iso(),
@@ -516,7 +522,10 @@ class TranscriptsTool:
 
         url = SA_ARTICLE.format(article_id=_up.quote(article_id))
         try:
-            status_code, html = self._fetch(url)
+            # [domain-8] _fetch returns 3-tuple since the ETag work
+            # (status, html, etag). discard etag here; cached hydrated
+            # in ETag tests upstream already-check this path.
+            status_code, html, _fetched_etag = self._fetch(url)
         except Exception as exc:
             return ToolResult(
                 as_of=_now_iso(),
