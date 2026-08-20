@@ -488,6 +488,7 @@ def call_agent(
     emit_event: "Callable[[Any], None] | None" = None,
     per_agent_model: dict[str, str] | None = None,
     stream_chunks: bool = False,
+    system_prompt_override: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Calls an agent by loading its prompt, calling the model, parsing the JSON envelope.
@@ -509,8 +510,19 @@ def call_agent(
          (Settings > per-agent section, or `/model <id>=<model>` syntax).
       2. `paid_for` hybrid rule — final-report → Sonnet, senior-analyst → Sonnet.
       3. `model_name` — the chat's default model.
+
+    If `system_prompt_override` is provided, it replaces the default
+    ``load_prompt(agent_id)`` for this call. Used by f5 (sector deep
+    dive) to inject a sector-pack into the senior-analyst prompt at
+    runtime — the pluggable policy: sectors are knowledge packs, not
+    agents. Callers that pre-format the prompt (e.g. via
+    ``packs.format_senior_analyst_with_pack``) pass the formatted
+    string here.
     """
-    system_prompt = load_prompt(agent_id)
+    if system_prompt_override is not None:
+        system_prompt = system_prompt_override
+    else:
+        system_prompt = load_prompt(agent_id)
     # Append (in this order):
     # 1. Example envelope — a CONCRETE filled example for this agent with a
     #    fictional `ACME` ticker. Small (<=8B) models over-fit to "fill the
@@ -1555,6 +1567,41 @@ def execute_flow_f5(
             f"For wider searches, use f6 (thematic screen)."
         )
 
+    # ----------------------------------------------------------------
+    # Pluggable sector-pack (pluggable policy: sectors are knowledge
+    # packs, not agents.). The senior-analyst prompt accepts a pack
+    # body appended under its `{sector_pack}` placeholder; no new
+    # agent is created. The pack is identified two ways:
+    #
+    #   1. explicit slug in `flow_context["sector_pack_slug"]`
+    #   2. auto-match against the universe tickers (highest overlap)
+    #
+    # If both fail (no overlap, no slug), the senior-analyst runs as
+    # a generalist and the placeholder carries a stub.
+    # ----------------------------------------------------------------
+    from runtime.packs import (
+        auto_match_pack, format_senior_analyst_with_pack, load_pack,
+    )
+    explicit_slug = ((flow_context or {}).get("sector_pack_slug") or "").strip()
+    explicit_pack = load_pack(explicit_slug) if explicit_slug else None
+    auto_match = auto_match_pack(universe)
+    chosen_pack = explicit_pack or (auto_match.pack if auto_match else None)
+    if chosen_pack is None:
+        log.warning(
+            "f5: no sector pack matched universe=%s sector_context=%s; "
+            "running as generalist.",
+            universe, explicit_slug or None,
+        )
+    base_sa_prompt = load_prompt("senior-analyst")
+    sector_pa_prompt = format_senior_analyst_with_pack(base_sa_prompt, chosen_pack)
+    if chosen_pack is not None:
+        log.info(
+            "f5: sector pack loaded slug=%s matched=%s overlap=%.2f",
+            chosen_pack.meta.slug,
+            auto_match.matched_tickers if auto_match else "(explicit)",
+            auto_match.overlap_pct if auto_match else 1.0,
+        )
+
     # Wave 1 — parallel fan-out
     per_ticker_buffers: dict[str, list[Any]] = {t: [] for t in universe}
     per_ticker_results: dict[str, dict[str, Any]] = {}
@@ -1596,6 +1643,7 @@ def execute_flow_f5(
                 "senior-analyst", sa_brief, model,
                 paid_for=paid_for, emit_event=_le,
                 per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+                system_prompt_override=sector_pa_prompt,
             )
         except Exception as exc:
             sa_env = {"agent_id": sa_id, "ticker": tiker, "depth": "SCAN",
