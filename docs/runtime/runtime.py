@@ -3105,6 +3105,105 @@ def write_run_artifact(run_id: str, flow: str, ticker: str | None,
     return run_dir
 
 
+# --------------------------------------------------------------------------- #
+# [--export] Export the rendered memo (and optionally the envelope) to a user path.
+# --------------------------------------------------------------------------- #
+def export_run_artifact(
+    run_dir: Path,
+    export_path: str | Path,
+    *,
+    envelope: dict[str, Any] | None = None,
+) -> list[Path]:
+    """Copy ``run_dir/memo.md`` (and optionally the envelope) to ``export_path``.
+
+    Three shapes of ``export_path``:
+
+    1. ``".md"`` suffix  → write only the rendered memo to that exact path.
+    2. ``".json"`` suffix → write only the final envelope JSON to that exact path.
+       Requires ``envelope``; raises ``ValueError`` otherwise.
+    3. Directory (existing, trailing slash, or nested path) → write both
+       ``memo.md`` AND ``final_envelope.json`` *inside* that directory.
+       The directory is created if it doesn't exist.
+
+    Bare names like ``out`` (no separator, no suffix) default to file
+    mode — the user's mental model is "give me a file" → file mode
+    produces ``./out.md``.
+
+    Returns the list of paths actually written (always ≥ 1 unless
+    ``export_path`` is the empty string). On any other error (permission
+    denied, bad path) raises — the caller prints to stderr and exits
+    non-zero so the user knows the export didn't land.
+    """
+    raw_input = str(export_path)
+    target = Path(raw_input).expanduser()
+    if not raw_input.strip():
+        raise ValueError("--export path is empty")
+
+    written: list[Path] = []
+
+    # Case 1 + 2: explicit file path with extension
+    suffix = target.suffix.lower()
+    if suffix == ".md":
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text((run_dir / "memo.md").read_text(encoding="utf-8"),
+                          encoding="utf-8")
+        written.append(target)
+        return written
+    if suffix == ".json":
+        if envelope is None:
+            envelope_path = run_dir / "final_envelope.json"
+            if envelope_path.exists():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(envelope_path.read_text(encoding="utf-8"),
+                                  encoding="utf-8")
+                written.append(target)
+                return written
+            raise ValueError(
+                f"--export {target} requested .json but no envelope available "
+                f"at {envelope_path}"
+            )
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(envelope, indent=2), encoding="utf-8")
+        written.append(target)
+        return written
+
+    # Case 3: directory. Two directory heuristics (after the .md/.json cases):
+    #   a) raw input ends with a trailing separator (e.g. "exports/")
+    #      — checked against raw_input because Path() normalises slashes away
+    #   b) path exists and is a directory on disk
+    #   c) path has more than one path component (e.g. "./exports",
+    #      "/tmp/exports", "sub/exports") AND no recognized file extension.
+    # Bare names like ``out`` or ``./out`` (no recognized suffix, single
+    # component) default to file mode — the user's mental model is "give
+    # me a file" → file mode produces ``./out.md``.
+    ends_sep = raw_input.endswith("/") or raw_input.endswith(os.sep)
+    is_dir = target.exists() and target.is_dir()
+    multi_component = len(target.parts) > 1
+    if ends_sep or is_dir or (multi_component and suffix == ""):
+        target.mkdir(parents=True, exist_ok=True)
+        memo_dest = target / "memo.md"
+        memo_dest.write_text((run_dir / "memo.md").read_text(encoding="utf-8"),
+                             encoding="utf-8")
+        written.append(memo_dest)
+        envelope_src = run_dir / "final_envelope.json"
+        if envelope_src.exists():
+            envelope_dest = target / "final_envelope.json"
+            envelope_dest.write_text(envelope_src.read_text(encoding="utf-8"),
+                                     encoding="utf-8")
+            written.append(envelope_dest)
+        return written
+
+    # Case 4: ambiguous path that doesn't exist (e.g. ``out`` or ``out.tar``).
+    # Default to writing a file by appending ``.md`` so the user gets the
+    # common case: ``--export out`` → ``./out.md`` ; ``--export out.tar`` →
+    # ``./out.tar.md``. Preserves whatever the user typed as the prefix.
+    target = Path(str(target) + ".md")
+    target.write_text((run_dir / "memo.md").read_text(encoding="utf-8"),
+                      encoding="utf-8")
+    written.append(target)
+    return written
+
+
 def render_memo_markdown(env: dict[str, Any]) -> str:
     """Render the final-report envelope into a memo that matches docs/flows/*.md templates."""
     memo = env.get("memo", {})
@@ -3298,6 +3397,16 @@ def main() -> int:
     p.add_argument("--resume-from", help="Agent_id after which to run fresh; cached agents before this point are replayed.")
     p.add_argument("--compressed", action="store_true")
     p.add_argument("--dry-run", action="store_true", help="Print the wave plan + brief structure; do not call models")
+    # --- [--export] Save the rendered memo (and optionally the envelope) to disk
+    # Three shapes:
+    #   --export out.md             → write memo.md to ./out.md
+    #   --export out.json           → write final_envelope.json to ./out.json
+    #   --export /path/to/dir       → write BOTH memo.md + final_envelope.json into dir
+    # Default behaviour (no --export) is unchanged: print memo to stdout,
+    # write the canonical artifacts under docs/runtime/.runs/<run_id>/.
+    p.add_argument("--export", dest="export_path", default=None, metavar="PATH",
+                   help="Save the rendered memo to PATH. .md → memo, .json → envelope, "
+                        "directory → both. Default: print to stdout only.")
     p.add_argument("--rubric", help="For f2: comparison rubric (e.g. 'growth, valuation, quality'). Defaults to balanced.")
     p.add_argument("--earnings-date", help="For f3/f4: ISO date of earnings print")
     p.add_argument("--thesis-id", type=int, help="For f3/f4: specific thesis_register row id")
@@ -3520,6 +3629,20 @@ def main() -> int:
     run_id = make_run_id(args.flow, ticker or args.tickers)
     run_dir = write_run_artifact(run_id, args.flow, ticker or args.tickers,
                                   result, result["costs"])
+    # [--export] Copy the rendered memo (and envelope) to the user-supplied path
+    # before printing to stdout. Failures here are surfaced (non-zero exit)
+    # so the user knows their `--export` didn't land — better than silent loss.
+    if getattr(args, "export_path", None):
+        try:
+            written_paths = export_run_artifact(
+                run_dir, args.export_path,
+                envelope=result.get("final_envelope"),
+            )
+            for wp in written_paths:
+                print(f"# exported: {wp}", file=sys.stderr)
+        except (ValueError, OSError) as e:
+            print(f"error: --export {args.export_path} failed: {e}", file=sys.stderr)
+            return 3
     # Print memo to stdout
     print((run_dir / "memo.md").read_text(encoding="utf-8"))
     print(f"\n# run_id: {run_id}", file=sys.stderr)

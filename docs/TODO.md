@@ -1038,6 +1038,28 @@ section + ticker in `what_an_attacker_would_say`.
 
 ---
 
+### `[--export]` Memo + envelope export to a user-supplied path — DONE
+
+- **What shipped**: new `runtime.export_run_artifact(run_dir, path, envelope=None)` helper that copies the rendered memo (and optionally the envelope) to a user-supplied path. Wired into `runtime.main()` after `write_run_artifact` so the export happens on every successful flow run.
+- **Three path shapes**:
+  - `.md` suffix  → write only the rendered memo to that file
+  - `.json` suffix → write only the final envelope JSON to that file
+  - Directory (trailing slash, already-existing dir, or multi-component path) → write BOTH `memo.md` AND `final_envelope.json` inside the directory (created if missing)
+- **Bare-name fallback**: `--export out` (no suffix, single path component) defaults to file mode → writes `./out.md`. Unrecognised suffix like `--export out.tar` → writes `./out.tar.md`. Preserves user intent for unknown extensions.
+- **CLI integration**:
+  ```
+  --export PATH     Save the rendered memo to PATH. .md → memo,
+                    .json → envelope, directory → both. Default:
+                    print to stdout only.
+  ```
+  Failures surface as `error: --export <path> failed: <reason>` to stderr + non-zero exit (code 3) so the user knows the export didn't land — better than silent loss.
+- **Per-file confirmation**: each written file gets a `# exported: <path>` line on stderr. Default behaviour (no `--export`) is unchanged — memo still prints to stdout, canonical artifacts still land under `docs/runtime/.runs/<run_id>/`.
+- **`~` expansion**: paths starting with `~` expand to `$HOME` like any Unix CLI tool.
+- **Pilot**: `docs/runtime/smokes/export_smoke.py` — **44/44 assertions** across 16 sections covering all four path shapes × on-disk/envelope-kwarg fall-back × empty/whitespace raise × `~/` expansion × argparse metavar/help × main() wiring (write_run_artifact → export_run_artifact → `# exported:` print → non-zero exit on failure) × default behaviour unchanged.
+- **Combined regression**: 28 smokes + 17 evals = 45 pilots, ~1,750 assertions, 0 failures.
+
+---
+
 ## How to pick the next one (revised priority after the runtime audit)
 
 The new sections above re-order everything. When picking the next thing:
