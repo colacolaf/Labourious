@@ -20,12 +20,16 @@ from .status_strip import (                                # type: ignore
     StatusStrip, StatusStripLeft, StatusStripRight,
     render_pairs_line, render_help_tag,
 )
+from .ticker_shortcuts import (                            # type: ignore
+    TickerShortcuts, DEFAULT_TICKERS,
+)
 
 __all__ = [
     "ActivityPanel",
     "CitationChip",
     "ConnectionBanner",
     "CostWidget",
+    "DEFAULT_TICKERS",
     "DiffPanel",
     "InlineTextEditor",
     "InlineToggleEditor",
@@ -38,6 +42,7 @@ __all__ = [
     "StatusStripRight",
     "TextEditCommitted",
     "TextEditReverted",
+    "TickerShortcuts",
     "ToggleEditCommitted",
     "ToggleEditDone",
     "render_pairs_line",

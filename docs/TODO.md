@@ -1010,6 +1010,17 @@ section + ticker in `what_an_attacker_would_say`.
   That's fine but a tiny "shortcut chips" row would help new users:
   `[NVDA] [AAPL] [MSFT] [GOOG] [TSLA]` selects a one-click ticker
 
+#### `[ux-4]` Ticker shortcut chips — DONE
+
+- **What shipped**: `frontend/widgets/ticker_shortcuts.py` — a `TickerShortcuts` widget that mounts a row of small clickable `Button`s for the curated 7 mega-cap tickers (NVDA, AAPL, MSFT, GOOG, AMZN, META, TSLA). Click → fills the prompt input with `analyze <TICKER>` and submits (same code path as a typed Enter).
+- **`Pressed` message bus**: chip click → `Button.Pressed` → `on_button_pressed` extracts the ticker from the button id (`chip-NVDA` → `NVDA`) and posts a `TickerShortcuts.Pressed(ticker)` message. The `ChatScreen` binds it once, decoupled from any specific button id.
+- **Curated default list**: the 7 names cover ~80% of "what does this company actually do" requests. `Config.watchlist` (when present) overrides the default. Trivial to extend.
+- **Visibility sync**: `_sync_shortcuts_visibility()` hides the chips once the chat-log has more than the welcome bubble (post-first-message). Re-shows on `/clear` (which calls `_show_welcome → _sync_shortcuts_visibility`).
+- **WELCOME_TEMPLATE updated**: removed the now-redundant `Try: analyze NVDA` line; replaced with "Pick a ticker below to start the flagship flow".
+- **CSS**: muted ticker-amber text on the dark surface, subtle border, hover-glow border. `Button.ticker_chip:focus` mirrors the hover state so keyboard nav is visible.
+- **Pilot**: `docs/runtime/smokes/ticker_shortcuts_smoke.py` 34/34 assertions across 9 sections. End-to-end Textual pilot confirms `Button.Pressed → on_ticker_shortcuts_pressed → handler invoked` with the correct ticker.
+- **Combined regression**: 26 smokes + 17 evals = 43 pilots, ~1,535 assertions, 0 failures.
+
 ---
 
 ## How to pick the next one (revised priority after the runtime audit)

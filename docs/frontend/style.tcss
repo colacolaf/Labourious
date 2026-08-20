@@ -226,6 +226,47 @@ CitationChip.chip-empty {
 
 .final-chip { text-style: italic; }
 
+/* ---------- Ticker shortcut chips ---------- */
+/* Visible only when chat-log is empty; hidden after the first submit. */
+TickerShortcuts {
+    height: auto;
+    background: transparent;
+    padding: 0 1;
+    margin: 0 0 1 1;
+}
+
+#ticker-shortcuts-row {
+    height: auto;
+    align: left middle;
+}
+
+.ticker_shortcuts_label {
+    color: #6e7887;
+    text-style: italic;
+    padding: 0 1 0 0;
+    width: auto;
+}
+
+Button.ticker_chip {
+    background: #11141a;
+    color: #d4b485;
+    border: round #465262;
+    padding: 0 2;
+    margin: 0 1 0 0;
+    min-width: 7;
+    height: 1;
+}
+
+Button.ticker_chip:hover {
+    background: #1a1f29;
+    color: #f0c89a;
+    border: round #8cdcdc;
+}
+
+Button.ticker_chip:focus {
+    border: round #8cdcdc;
+}
+
 /* ---------- Diff panel ---------- */
 DiffPanel {
     background: #11141a;

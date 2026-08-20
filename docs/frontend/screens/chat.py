@@ -50,7 +50,7 @@ if str(_THIS.parents[2]) not in sys.path:
 
 from frontend.widgets import (  # type: ignore
     ActivityPanel, CostWidget, CitationChip, ConnectionBanner,
-    DiffPanel, MessageBubble,
+    DiffPanel, MessageBubble, TickerShortcuts,
 )
 from frontend.keys import COMMAND_PALETTE_PREFIX  # type: ignore
 # Re-export the same event module the TUI uses (single source of truth: runtime/events.py)
@@ -76,9 +76,7 @@ WELCOME_TEMPLATE = """\
 
 **{state_badge}** · model **·** `{model}` · depth **·** {depth} · compressed **·** {compressed} · paid-for **·** {paid_for}
 
-Run the flagship flow on a ticker to begin. Try:
-
-> `analyze NVDA`
+Pick a ticker below to start the flagship flow, or type your own prompt:
 
 Or set up first:
 - `/model <provider/name>` — switch the default model
@@ -164,6 +162,10 @@ class ChatScreen(Screen):
             placeholder="> analyze NVDA at $890  (try `/help` for commands)",
             id="prompt",
         )
+        # Ticker shortcut chips — only useful when the chat-log is empty;
+        # the screen hides them as soon as a flow starts. See
+        # `_sync_shortcuts_visibility`.
+        yield TickerShortcuts(id="ticker-shortcuts")
         # StatusStrip replaces the default `Footer` because:
         # - we want the `? help` right-corner tag as a consistent affordance
         # - we want screen-aware key hints that swap when a modal pushes/pops
@@ -291,6 +293,7 @@ class ChatScreen(Screen):
         user_bubble = MessageBubble(role="user", agent_id="user")
         await self.query_one("#chat-log", VerticalScroll).mount(user_bubble)
         user_bubble.append_delta(text)
+        self._sync_shortcuts_visibility()
 
         # Ticker detection: prefer explicit mentions, else fall back to /ticker.
         ticker = detect_ticker(text) or self.ticker
@@ -317,6 +320,35 @@ class ChatScreen(Screen):
         if self.last_user_prompt:
             self.query_one("#prompt", Input).value = self.last_user_prompt
             await self.action_submit()
+
+    # ------------------------------------------------- ticker-shortcut chip handler
+    def on_ticker_shortcuts_pressed(self, event: TickerShortcuts.Pressed) -> None:
+        """User clicked a ticker chip on the welcome screen.
+
+        Populate the prompt input with ``analyze <TICKER>`` and submit
+        it (same path as a typed Enter). The chip widget hides itself
+        via ``_sync_shortcuts_visibility`` once the chat-log has content.
+        """
+        ticker = event.ticker
+        self.ticker = ticker
+        self.query_one("#prompt", Input).value = f"analyze {ticker}"
+        # Run the submit coroutine without awaiting it here — on_message
+        # handlers are sync in textual; the action_submit chain drives its
+        # own awaitables.
+        self.run_worker(self.action_submit(), exclusive=False)
+
+    def _sync_shortcuts_visibility(self) -> None:
+        """Hide the chip row once the chat has content beyond the welcome card; show on empty."""
+        try:
+            shortcuts = self.query_one("#ticker-shortcuts", TickerShortcuts)
+        except Exception:
+            return
+        log = self.query_one("#chat-log", VerticalScroll)
+        # Welcome bubble is the only bubble at first mount. After the user
+        # sends a message (or clicks a chip), the user bubble lands as the
+        # 2nd child — hide the chips then. Re-show on /clear (action_clear_chat
+        # calls _show_welcome → _sync_shortcuts_visibility).
+        shortcuts.display = len(log.children) <= 1
 
     # --------------------------------------------------------- command palette
     async def _handle_command(self, body: str) -> None:
@@ -806,6 +838,7 @@ class ChatScreen(Screen):
         )
         text += "\n" + QUICK_ACTION_HINT
         bubble.append_delta(text)
+        self._sync_shortcuts_visibility()
 
     def _set_banner_warning(self, msg: str) -> None:
         self.query_one(ConnectionBanner).set_warning(msg)
