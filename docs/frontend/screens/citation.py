@@ -101,8 +101,16 @@ def _render_citation_row(
     *,
     selected: bool,
     opened: bool = False,
+    snippet_cached: bool = False,
 ) -> str:
-    """Build the ANSI line for one citation row."""
+    """Build the ANSI line for one citation row.
+
+    ``snippet_cached`` adds a small ``◫`` glyph just before the
+    per-citation idx so the reviewer can see at a glance which rows
+    are grounded (snippet on disk, the chip's ``v`` action works) vs
+    naked (only ``o`` works). The colour is muted by default so it
+    doesn't compete with the row's primary action glyph.
+    """
     bullet = "▌" if selected else " "
     if selected:
         # Wrap the row in a subtle inverted bg + leading brand-cyan strip.
@@ -146,7 +154,14 @@ def _render_citation_row(
         action = f"\x1b[{_FG3}m{'⌘ ↗ open'}\x1b[0m"
     action_padded = f"{action:>{_COL_ACT + 10}}"
 
-    return f"{bg}{leading}{idx_rendered}{src_rendered} {url_rendered} {action_padded}{end_bg}"
+    # Snippet ground indicator (small ◫) — only renders when present,
+    # colour muted so the row's primary action glyph still leads.
+    snippet_glyph = ""
+    if snippet_cached:
+        glyph_color = _OK if selected else _FG3
+        snippet_glyph = f"\x1b[{glyph_color}m ◫\x1b[0m"
+
+    return f"{bg}{leading}{idx_rendered}{src_rendered} {url_rendered}{snippet_glyph} {action_padded}{end_bg}"
 
 
 def _render_empty_row() -> str:
@@ -192,6 +207,7 @@ class CitationModalScreen(Screen):
         *,
         agent_id: str = "",
         citations: list[str] | None = None,
+        snippet_paths: list[str | None] | None = None,
         thesis_id: int | None = None,
         version: str | None = None,
         timestamp: str | None = None,
@@ -200,6 +216,11 @@ class CitationModalScreen(Screen):
         super().__init__(**kwargs)
         self._agent_id: str = agent_id or ""
         self._citations: list[str] = list(citations or [])
+        # Per-citation snippet paths — same length as ``_citations``;
+        # ``None`` for citations whose snippet hasn't been written.
+        self._snippet_paths: list[str | None] = list(snippet_paths or [])
+        while len(self._snippet_paths) < len(self._citations):
+            self._snippet_paths.append(None)
         self._thesis_id = thesis_id
         self._version = version
         self._timestamp = timestamp
@@ -212,6 +233,7 @@ class CitationModalScreen(Screen):
         }
         for u in self._citations:
             self._type_counts[source_type_from_url(u)] += 1
+        self._snippet_ready_count: int = sum(1 for p in self._snippet_paths if p)
         # Body RichLog id (slug-safe).
         self.id = f"citation-{slugify(agent_id)}"
 
@@ -304,10 +326,14 @@ class CitationModalScreen(Screen):
         body.write(_render_caption())
         body.write(_render_blank())
         for i, url in enumerate(self._citations):
+            snippet_cached = bool(
+                i < len(self._snippet_paths) and self._snippet_paths[i]
+            )
             body.write(_render_citation_row(
                 i, url,
                 selected=(i == self._selected),
                 opened=(i == self._opened_idx),
+                snippet_cached=snippet_cached,
             ))
 
     def _refresh_foot(self) -> None:

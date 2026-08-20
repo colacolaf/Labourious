@@ -84,6 +84,31 @@ class CitationChip(Static):
             self.url = url
             self.idx = idx
 
+    class SnippetReady(Message):
+        """Posted by ChatScreen when the lawyer-grade binding (``runtime.citations``
+        + ``ensure_snippet_for_url``) finishes writing a snippet for one URL on
+        this chip. The chat screen listens, and on receipt calls
+        ``chip.set_citations(snippet_paths=[...])`` so the chip's snippet
+        badge (``◫`` / ``⚠ ◫``) lights up without a remount.
+
+        Attributes:
+            chip_id     : str   — the widget id
+            url         : str   — the URL whose snippet is now ready
+            idx         : int   — index into the chip's citations list
+            snippet_path: str   — absolute path to the on-disk snippet
+                                   ("" if the fetch failed)
+            ok          : bool  — True if the snippet was written; False if
+                                   the fetch failed.
+        """
+        def __init__(self, chip_id: str, url: str, idx: int,
+                     snippet_path: str, ok: bool) -> None:
+            super().__init__()
+            self.chip_id = chip_id
+            self.url = url
+            self.idx = idx
+            self.snippet_path = snippet_path
+            self.ok = ok
+
     def __init__(
         self,
         count: int = 0,

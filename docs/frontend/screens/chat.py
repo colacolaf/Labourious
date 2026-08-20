@@ -573,6 +573,14 @@ class ChatScreen(Screen):
         We resolve the chip by id (the chip carries the citation list and
         metadata), grab the data, and push a ``CitationModalScreen`` on
         top of this chat screen.
+
+        This also kicks off the **lawyer-grade citation binding**: for
+        each URL on the chip without a cached snippet, we fire
+        ``runtime.citations.ensure_snippet_for_url`` in a thread. When
+        each fetch completes, the chat screen posts a
+        ``SnippetReady`` message back; the chip updates its
+        ``snippet_paths`` and lights up the ◫ badge. Pure side-effect
+        -- fire-and-forget; no UI block.
         """
         try:
             chip = self.query_one(f"#{message.chip_id}", CitationChip)
@@ -595,11 +603,108 @@ class ChatScreen(Screen):
         modal = CitationModalScreen(
             agent_id=chip.agent_id or "(unknown)",
             citations=list(chip.citations),
+            snippet_paths=list(chip.snippet_paths),
             thesis_id=chip.thesis_id,
             version=chip.version,
             timestamp=ts,
         )        # The screen sets its own id in __init__ (idempotent).
         self.app.push_screen(modal)
+        # Kick off background snippet-fetch for any naked URL on this
+        # chip. No UI block; chip updates on completion.
+        self._ensure_snippets_in_background(chip)
+
+    # ---------------------------------------------------------- snippet fetch
+    def on_citation_chip_snippet_ready(self, message) -> None:
+        """Listen for ``SnippetReady`` and update the chip's snippet_paths.
+
+        Called from the asyncio event loop after a worker thread has
+        run ``ensure_snippet_for_url``. We resolve the chip by id,
+        splice the new path into ``chip.snippet_paths`` at the right
+        index, and call ``chip.set_citations(snippet_paths=...)`` so
+        the chip label re-lights.
+        """
+        try:
+            chip = self.query_one(f"#{message.chip_id}", CitationChip)
+        except Exception:
+            return
+        # Build a new snippet_paths list, padding with prior entries.
+        cur = list(chip.snippet_paths or [])
+        while len(cur) < len(chip.citations or []):
+            cur.append(None)
+        if 0 <= message.idx < len(cur):
+            cur[message.idx] = message.snippet_path if message.ok else None
+        chip.set_citations(list(chip.citations), snippet_paths=cur)
+
+    def _ensure_snippets_in_background(self, chip: CitationChip) -> None:
+        """For each naked URL on *chip*, fire ``ensure_snippet_for_url``
+        in a worker thread. On completion, post ``SnippetReady`` so the
+        chip gets updated in the UI thread.
+
+        Concurrency: one task per URL. ``runtime.citations``'s in-memory
+        dedupe guarantees the network sees each URL at most once even
+        if the user double-clicks the chip. Failures leave the chip's
+        snippet_paths[idx] = None, and a toast hint is shown so the user
+        knows to ``o``/`y` the URL instead.
+        """
+        run_id = getattr(self, "_current_run_id", None) or "_chat_default"
+        urls = list(chip.citations or [])
+        paths = list(chip.snippet_paths or [])
+        while len(paths) < len(urls):
+            paths.append(None)
+        chip_id = chip.id or ""
+        async def _kick() -> None:
+            for idx, url in enumerate(urls):
+                if not url:
+                    continue
+                if paths[idx]:       # already cached
+                    continue
+                # Fire-and-forget: do not block loop on slow upstream.
+                await self._fetch_one_snippet(chip_id, url, idx, run_id)
+        try:
+            self.run_worker(_kick(), exclusive=False)
+        except Exception:
+            # Textual run_worker is a soft DM; fall back to a thread.
+            try:
+                import threading as _t
+                _t.Thread(target=lambda: [
+                    self._fetch_one_snippet(chip_id, url, idx, run_id)
+                    for idx, url in enumerate(urls)
+                    if url and not paths[idx]
+                ], daemon=True).start()
+            except Exception:
+                pass
+
+    async def _fetch_one_snippet(self, chip_id: str, url: str,
+                                  idx: int, run_id: str) -> None:
+        """Worker-thread wrapper: call cite module, dispatch SnippetReady."""
+        import asyncio as _aio
+        from runtime import citations as _cite
+        loop = _aio.get_event_loop()
+        try:
+            res = await loop.run_in_executor(
+                None, _cite.ensure_snippet_for_url, url, run_id,
+            )
+        except Exception as e:
+            self.post_message(CitationChip.SnippetReady(
+                chip_id, url, idx, snippet_path="", ok=False,
+            ))
+            return
+        ok = res.path is not None
+        self.post_message(CitationChip.SnippetReady(
+            chip_id, url, idx,
+            snippet_path=str(res.path) if ok else "",
+            ok=ok,
+        ))
+        if not ok and res.error:
+            # Surface a non-blocking toast so the user knows to open in
+            # browser instead. Don't flash on every URL — only rarely.
+            try:
+                self._set_status_flash(
+                    f"⚠  snippet unavailable ({url[:32]}…): {res.error}",
+                    warn=True, duration_s=2.5,
+                )
+            except Exception:
+                pass
 
     # ---------------------------------------------------------- chip actions
     def on_citation_chip_action_requested(self, message) -> None:

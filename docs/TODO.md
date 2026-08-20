@@ -58,7 +58,7 @@ gracefully without, but each would visibly improve the experience.
 | ID | Item | Effort | Notes |
 |---|---|---|---|
 | `[domain-8]` | Per-connector ETag for `news_8k`, `sec_edgar_fulltext`, `transcripts` | small | TODO says DONE in the file but the actual integration is partial — confirm in the next commit |
-| `[citation-open-hard]` | On first chip render, `call_tool("web_fetch", url=…)` + cache 4 KiB snippet alongside URL so the reviewer can verify the claim from inside the TUI | small | The "lawyer-grade citation" layer |
+| `[citation-open-hard]` | On first chip render, `call_tool("web_fetch", url=…)` + cache 4 KiB snippet alongside URL so the reviewer can verify the claim from inside the TUI | small | ✅ DONE — `runtime/citations.py` + chip `SnippetReady` message + modal ◫ indicator. Pilot `citation_hard_smoke.py` 94/94. |
 | `[pluggable]` | Side-agent folder ghost — repopulate `docs/prompts/pluggable/sector-analyst/` and wire orchestrator hook, OR remove the side-agent concept | small | Documentation-vs-code drift |
 | `[runtime-2]` | Axios-style retry+backoff for transient HTTP errors | medium | Today every adapter throws on first 5xx |
 | `[runtime-4]` | Resume flow on partial failure (carry-over state between waves) | medium | Today a single failure aborts the whole flow |
