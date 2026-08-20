@@ -966,7 +966,7 @@ after `[smoke-1]`).
 | ID | Connector file | Pilot | Commit | Status |
 |---|---|---|---|---|
 | `conn-6` | `quotes_realtime.py` | 53/53 | `pending this commit` | ✅ shipped |
-| `conn-7` | `fundamentals.py` | — | — | ⏳ pending (FMP, 250 req/day) |
+| `conn-7` | `fundamentals.py` | 106/106 | `<this commit>` | ✅ shipped |
 | `conn-8` | `consensus.py` | — | — | ⏳ pending (Finnhub part-of-free) |
 | `conn-9` | `calendars.py` | — | — | ⏳ pending (Finnhub earnings/IPO calendar) |
 | `conn-10` | `newsapi.py` | — | — | ⏳ pending (NewsAPI.org 100 req/day) |
@@ -1043,6 +1043,63 @@ after `[smoke-1]`).
   The settings panel autopicks it from the catalog via
   `_build_known_connectors()` — no separate wiring needed.
 - **Combined regression**: 8 smokes + 7 pytest evals = 320+
+  total assertions, ZERO failures.
+
+#### [conn-7] `fundamentals.py` — Financial Modeling Prep (250 req/day)  ✅ DONE
+- **What shipped**: 5-method FMP `/stable` router covering the
+  entire Wharton-sheet income-line backbone. Defaults to
+  `income_statement(ticker, period="annual", limit=5)` — the
+  one pull every DCF/Comps/Comparator agent reads first.
+- **Five endpoints**, five public methods on
+  `runtime.tools.fundamentals.FundamentalsTool`:
+  1. `income_statement(ticker, period="annual", limit=5)` →
+     `GET /stable/income-statement` — revenue, COGS, gross/operating
+     income, net income, EPS. Used by DCF growth-rate assumptions
+     and Comps peer set.
+  2. `balance_sheet(ticker, period, limit)` → `/stable/balance-sheet-statement` —
+     total assets/liabilities/equity, cash. Used by Comps
+     leverage/health ratios.
+  3. `cash_flow(ticker, period, limit)` → `/stable/cash-flow-statement` —
+     operating cash flow, capex, free cash flow. Anchors DCF
+     five-year cash flow projections.
+  4. `key_metrics(ticker, period, limit)` → `/stable/key-metrics` —
+     pre-computed P/E, P/B, ROE, debt/equity. Spares the LLM
+     hand-rolling these in DCF discount rate.
+  5. `ratios(ticker, period, limit)` → `/stable/ratios` —
+     ~60 ratios (gross/operating/net profit margin, current ratio,
+     etc.). Comparator reads them directly.
+- **Period canonicalisation**: `annual` ← {annual, year, y, yearly,
+  fy, "fiscal year"}; `quarter` ← {quarter, quarterly, q, q1-q4,
+  3m, "three-month"}. Anything else → FAILED with "not supported"
+  (no silent passthrough).
+- **Auth**: defaults to header path (`apikey: KEY`) which keeps
+  the secret out of URL logs; query path (`?apikey=…`) supported
+  via `auth="query"` for proxy-debug cases. Pref read order is
+  `api_key` arg → `FMP_API_KEY` → `LABOURIOUS_FMP_KEY`.
+- **Redaction**: `_redact_apikey()` strips `apikey=…` from any
+  URL before it lands in `ToolResult.note` or `ToolResult.data['url']`.
+  Header-auth path: URL has no apikey param to begin with, so the
+  note simply omits redaction. Query-auth path: URL is rewritten
+  with `apikey=REDACTED`.
+- **HTTP error handling** (banner-level): 401 → "invalid FMP_API_KEY"
+  hint; 403 → "free-tier daily limit likely hit (250 req/day)";
+  429 → rate-limited; FMP's `{"Error Message": "..."}` → echoed
+  to the note. FAILED for everything except EMPTY for `[]`.
+- **Cache**: 1 h TTL since quarterly/annual data barely changes
+  intra-day; `clear_cache()` for ops/tests.
+- **Catalog**: `frontend/connectors_catalog.py` gained the
+  `fundamentals` entry — tier 2 (free w/ key), key_env =
+  `FMP_API_KEY`, `citation_kind="filing"`, `recommended=True`.
+  Settings panel autopicks it from the catalog.
+- **What it unblocks**:
+  - f1 (DCF) now has the actual 5-year revenue + free-cash-flow
+    trajectory to project, not a single estimate.
+  - f2 (comps) gets a comparable-by-comparable revenue/growth
+    grid for the universe.
+  - f4 (comparator) reads pre-computed ROE, gross margin, debt/E
+    for the rubric axes instead of hand-computing from raw
+    statements.
+- **Combined regression**: 9 smokes + 7 pytest evals = 443+
   total assertions, ZERO failures.
 
 ### Tier 3 — defer until flow f7 ships

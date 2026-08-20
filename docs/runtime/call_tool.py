@@ -32,6 +32,7 @@ from .tools import ToolResult
 from .tools.comparator import ComparatorTool
 from .tools.comps import CompsTool
 from .tools.dcf import DCFTool
+from .tools.fundamentals import FundamentalsTool
 from .tools.news_8k import News8KTool
 from .tools.insider import InsiderTool
 from .tools.institutional import InstitutionalTool
@@ -169,6 +170,18 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         default_method="quote",
         arg_keys=("ticker", "resolution", "days_back", "limit"),
         summary_field="",
+    ),
+    # ── fundamentals: FMP income/balance/cashflow/key-metrics/ratios (free-with-key)
+    # The default method is 5 years of annual income statement — the single
+    # most-cited fundamental pull across the agent pipeline (DCF, Comps,
+    # Comparator all read it). Other methods expose the rest of FMP's
+    # /stable router.
+    "fundamentals": ToolBinding(
+        tool_id="fundamentals",
+        tool_class=FundamentalsTool,
+        default_method="income_statement",
+        arg_keys=("ticker", "period", "limit"),
+        summary_field="row_count",
     ),
     # ── web_fetch: any URL → text ──
     "web_fetch": ToolBinding(
