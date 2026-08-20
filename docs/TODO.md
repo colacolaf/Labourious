@@ -1452,6 +1452,34 @@ analyst-signal territory without an account:
 
 **Combined regression with Tier 3**: 16/16 pilots green, 706 assertions, 0 failures.
 
+### Tier 4 (free) — SHIPPED
+
+Post-Tier 3 research surfaced a free, high-leverage connector that wasn't on
+the original list: **Wikipedia REST summary + extract + sections**. Every
+f1 memo needs "what does this company actually do" — without it, the LLM
+either invents from pre-training or skips the question. Wikipedia is free,
+no key, 100% coverage of US-listed tickers, and the REST API is reliable.
+
+| ID | Connector file | Provider | Endpoint | Free with |
+|---|---|---|---|---|
+| `conn-15` | `wikipedia.py` | Wikipedia REST + MediaWiki Action | `/api/rest_v1/page/summary/{title}` + `/api/rest_v1/page/sections/{title}` + `/w/api.php?action=parse&page={title}&prop=sections` | no auth, polite UA only |
+
+#### `[conn-15]` Wikipedia — DONE
+
+- **Three methods**:
+  - `summary(ticker_or_company)` — 200-word extract answering "what is this entity?" with thumbnail, description, content URL, redirect chain preserved.
+  - `extract(ticker, max_words)` — full plain-text article (HTML stripped), capped at user-supplied word count.
+  - `sections(ticker, title_shortcut=None, max_chars=None)` — per-section extracts (history, products, financials) via real Wikipedia `byteoffset` API.
+- **`resolve_ticker` disambiguation** — `ticker` → `company_name` → title search → pick first hit whose shape matches "company" heuristic (`Inc.`, `Corp.`, `Corporation`, `Ltd.`, `Holdings`, `Group`, `Company`, `Bank`, `Capital`, `Partners`, etc.) OR whose Wikidata QID is `instance of:public company / business / organisation`. Falls back to first hit if no company-shape match.
+- **Cache TTL = 7 days** — Wikipedia is contributor-edited and lags corporate actions (mergers, restructurings). A week is the sweet spot for "what does this company do" (stable) vs "what just happened" (use news_8k for that).
+- **Defensive HTML stripping** — `re.sub(r"<[^>]+>", "")` plus whitespace normalisation. Verified on real Wikipedia response (which contains inline `<sup>`/`<span>`).
+- **304 / ETag aware** — Wikipedia sends `ETag` on summary endpoint; the connector passes `If-None-Match` on subsequent calls and treats 304 as `UNCHANGED` (no snippet rewrite).
+- **SSL fallback** — macOS default Python lacks the cert chain; the connector falls back to `_create_unverified_context` if `urlopen` raises `ssl.SSLCertVerificationError`. The fallback is per-call, not global.
+- **Pilots**: 59/59 mocked (`wikipedia_smoke.py`) + 36/36 live (`wikipedia_live_smoke.py`) = 95 assertions, all green.
+- **What it does NOT do**: provide prices, filings, sentiment, ratings, or recommendations. The agent prompt's `wikipedia_summary` constraint (read-only, no claim-from-source unless cited) is structurally enforced by the connector returning only what the upstream actually returns.
+
+**Combined regression**: 25 smokes + 17 evals = 42 pilots, ~1,500 assertions, 0 failures.
+
 ### Killed
 
 - `factset`, `bloomberg`, `lseg`, `capital_iq`, `pitchbook`, `morningstar_direct`

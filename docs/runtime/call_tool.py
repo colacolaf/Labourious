@@ -50,6 +50,7 @@ from .tools.sec_edgar import SECEdgarTool
 from .tools.sec_edgar_fulltext import SECEdgarFullTextTool
 from .tools.transcripts import TranscriptsTool
 from .tools.web_fetch import WebFetchTool
+from .tools.wikipedia import WikipediaTool
 
 
 log = logging.getLogger("labourious.call_tool")
@@ -161,6 +162,14 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         default_method="search_news",
         arg_keys=("query", "limit"),
         summary_field="",
+    ),
+    # ── wikipedia: company context (free, no key) ──
+    "wikipedia": ToolBinding(
+        tool_id="wikipedia",
+        tool_class=WikipediaTool,
+        default_method="summary",
+        arg_keys=("ticker", "company_name", "title"),
+        summary_field="extract",
     ),
     # ── market_data: yfinance (no key) + FRED (free key) ──
     "market_data": ToolBinding(
