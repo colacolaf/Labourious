@@ -31,6 +31,7 @@ from .events import ConnectorCompleted, ConnectorFailed, ConnectorRequested
 from .tools import ToolResult
 from .tools.comparator import ComparatorTool
 from .tools.comps import CompsTool
+from .tools.consensus import ConsensusTool
 from .tools.dcf import DCFTool
 from .tools.fundamentals import FundamentalsTool
 from .tools.news_8k import News8KTool
@@ -182,6 +183,19 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         default_method="income_statement",
         arg_keys=("ticker", "period", "limit"),
         summary_field="row_count",
+    ),
+    # ── consensus: Finnhub sell-side analyst consensus (free-with-key)
+    # Default method is price_target — the single most-asked "what does
+    # the street think?" question. Three methods cover the whole
+    # consensus surface: price_target (point estimate), recommendations
+    # (last 4 months of broker upgrades/downgrades), revenue_estimate
+    # (quarterly or annual sell-side forecasts).
+    "consensus": ToolBinding(
+        tool_id="consensus",
+        tool_class=ConsensusTool,
+        default_method="price_target",
+        arg_keys=("ticker", "freq", "limit"),
+        summary_field="target_mean",
     ),
     # ── web_fetch: any URL → text ──
     "web_fetch": ToolBinding(

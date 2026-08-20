@@ -967,7 +967,7 @@ after `[smoke-1]`).
 |---|---|---|---|---|
 | `conn-6` | `quotes_realtime.py` | 53/53 | `pending this commit` | ✅ shipped |
 | `conn-7` | `fundamentals.py` | 106/106 | `<this commit>` | ✅ shipped |
-| `conn-8` | `consensus.py` | — | — | ⏳ pending (Finnhub part-of-free) |
+| `conn-8` | `consensus.py` | 103/103 | `<this commit>` | ✅ shipped |
 | `conn-9` | `calendars.py` | — | — | ⏳ pending (Finnhub earnings/IPO calendar) |
 | `conn-10` | `newsapi.py` | — | — | ⏳ pending (NewsAPI.org 100 req/day) |
 | `conn-11` | `macro.py` | — | — | ⏳ pending (FRED free w/ key — extract from `market_data.py`) |
@@ -1100,6 +1100,60 @@ after `[smoke-1]`).
     for the rubric axes instead of hand-computing from raw
     statements.
 - **Combined regression**: 9 smokes + 7 pytest evals = 443+
+  total assertions, ZERO failures.
+
+#### [conn-8] `consensus.py` — Finnhub sell-side analyst consensus  ✅ DONE
+- **What shipped**: three sell-side consensus endpoints on a single
+  dataclass (``runtime.tools.consensus.ConsensusTool``). Same
+  ``FINNHUB_API_KEY`` as ``quotes_realtime`` — zero new signup.
+- **Three endpoints**, three public methods:
+  1. `recommendations(ticker)` — `GET /stock/recommendation` —
+     last 4 months of analyst recommendation distribution:
+     `{period, strongBuy, buy, hold, sell, strongSell,
+     analyst_count}`. Reporter: `analyst_count = strongBuy + buy
+     + hold + sell + strongSell`. Cached 6 h.
+  2. `price_target(ticker)` — `GET /stock/price-target` — current
+     sell-side 12-month consensus: `{target_mean, target_median,
+     target_high, target_low, last_updated}`. Default method of the
+     tool because it's the single most-asked "where does the street
+     think it goes?" question. Cached 1 h (earnings prints can
+     shift the target intraday). Strict shape validation:
+     `targetMean=0` or missing `targetMean` → FAILED with
+     "no coverage" hint (no fabricated `$0.00`).
+  3. `revenue_estimate(ticker, freq="quarterly", limit=8)` —
+     `GET /stock/revenue-estimate` — analyst revenue forecasts:
+     `{period, revenue_avg, revenue_low, revenue_high,
+     revenue_growth, num_analysts}`. `freq` aliases: quarterly
+     ← {quarterly, quarter, q, q1-q4, 3m, 3month}; annual ←
+     {annual, yearly, year, fy, y}. Limit clamped to 50. Cached 6 h.
+- **Three independent caches** — `_rec_cache`, `_pt_cache`,
+  `_re_cache` — keyed by `rec::<ticker>`, `pt::<ticker>`, and
+  `re::<ticker>::<freq>::<limit>` respectively. Verified that
+  hitting one method does NOT warm the others (relevant pilot
+  section: test 8 — "Cache across distinct methods does not
+  cross-pollute").
+- **Auth**: `?token=...` query-string, identical to
+  `quotes_realtime`. `_redact_token()` strips `token=…` from any
+  note / log URL before it lands. Pilot verifies raw secret NEVER
+  appears in any note for any of the three methods.
+- **HTTP error mapping**: 401 → "invalid FINNHUB_API_KEY"; 403 →
+  "free-tier rate limit likely hit (60 req/min)"; 429 →
+  "rate-limited"; FMP "Error" dict OR dict with "error" key →
+  echoed verbatim.
+- **Catalog**: `frontend/connectors_catalog.py` gained the
+  `consensus` entry — tier 2 (free w/ key), `FINNHUB_API_KEY`,
+  `citation_kind="consensus"`, `recommended=True`. Settings
+  panel autopicks.
+- **What it unblocks**:
+  - f4 (comparator) finally has a sell-side anchor for the
+    "Does the street agree with the model's growth thesis?"
+    rubric axis. Pre-conn-8, the rubric was hand-coded or skipped.
+  - f1 (DCF) gets a `target_mean` row that DCFs can sanity-check
+    their 5-year projection against (target_mean / current_price
+    is the implied upside).
+  - f2 (comps) can rank peers by revenue_growth deltas instead of
+    historical EPS only.
+- **Combined regression**: 10 smokes + 7 pytest evals = 546+
   total assertions, ZERO failures.
 
 ### Tier 3 — defer until flow f7 ships
