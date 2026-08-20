@@ -42,7 +42,10 @@ from .tools.newsapi import NewsAPITool
 from .tools.institutional import InstitutionalTool
 from .tools.market_data import MarketDataTool
 from .tools.news import NewsTool
+from .tools.options_chain import OptionsChainTool
 from .tools.quotes_realtime import QuotesRealtimeTool
+from .tools.sentiment_social import SentimentSocialTool
+from .tools.short_interest import ShortInterestTool
 from .tools.sec_edgar import SECEdgarTool
 from .tools.sec_edgar_fulltext import SECEdgarFullTextTool
 from .tools.transcripts import TranscriptsTool
@@ -244,6 +247,41 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         default_method="fetch",
         arg_keys=("url",),
         summary_field="",
+    ),
+    # ── options_chain: Finnhub /stock/option-chain + /option-expiry-dates
+    # Same FINNHUB pool as quotes_realtime / consensus / calendars. Default
+    # method is `chain` — the most common options question ("show me the
+    # chain at expiry X"). `expirations` is the discovery layer for that.
+    "options_chain": ToolBinding(
+        tool_id="options_chain",
+        tool_class=OptionsChainTool,
+        default_method="chain",
+        arg_keys=("ticker", "expiration", "limit"),
+        summary_field="row_count",
+    ),
+    # ── short_interest: Finnhub /stock/short-interest ───────────────────
+    # FINRA biweekly shorts. `is_squeeze_candidate` flag is derived inside
+    # the connector (>20 % float short AND >3 days to cover) so the LLM
+    # doesn't have to invent the rule. Default method `history` (returns
+    # a trend + summary); `latest` is a one-row convenience used by the
+    # PM bodyguard.
+    "short_interest": ToolBinding(
+        tool_id="short_interest",
+        tool_class=ShortInterestTool,
+        default_method="history",
+        arg_keys=("ticker", "from_date", "to_date"),
+        summary_field="row_count",
+    ),
+    # ── sentiment_social: Stocktwits public stream (no key) ─────────────
+    # First free-no-auth connector. Default method `messages` — the most
+    # common social-sentiment question ("what are people saying about X").
+    # `trending` is the discovery layer for "what's hot right now".
+    "sentiment_social": ToolBinding(
+        tool_id="sentiment_social",
+        tool_class=SentimentSocialTool,
+        default_method="messages",
+        arg_keys=("ticker", "limit", "top_n"),
+        summary_field="total",
     ),
 }
 

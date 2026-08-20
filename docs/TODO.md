@@ -1295,13 +1295,62 @@ after `[smoke-1]`).
 - **Combined regression**: 13 smokes + 7 pytest = 805+
   assertions, zero failures.
 
-### Tier 3 — defer until flow f7 ships
+### Tier 3 — SHIPPED (free precedence)
 
-| ID | Connector file | Provider | Reason deferred |
-|---|---|---|---|
-| `conn-12` | `options_realtime.py` | Polygon/Massive | $29+/mo + only useful for f7 |
-| `conn-13` | `intraday.py` | Polygon/Massive | Tick data, out of memo cadence |
-| `conn-14` | `sentiment_quant.py` | Unusual Whales, Menthor Q | Paid; US-only |
+After re-research, the original Tier 3 (Polygon, Unusual Whales) is all
+paid. Replaced with three **free** connectors that cover the same
+analyst-signal territory without an account:
+
+| ID | Connector file | Provider | Endpoint | Free with |
+|---|---|---|---|---|
+| `conn-12` | `options_chain.py` | Finnhub | `/stock/option-chain` + `/stock/option-expiry-dates` | `FINNHUB_API_KEY` (same key as Tier 2) |
+| `conn-13` | `short_interest.py` | Finnhub | `/stock/short-interest` | `FINNHUB_API_KEY` |
+| `conn-14` | `sentiment_social.py` | Stocktwits | `/api/2/streams/symbol/{ticker}.json` + `/trending/...` | no auth needed |
+
+#### `[conn-12]` Options chain — DONE
+
+- **Two methods**: `chain(ticker, expiration)` returns full chain rows
+  with greeks + OI + IV + bid/ask per strike per side; `expirations(ticker)`
+  returns the list of available YYYY-MM-DD expiry dates.
+- **Derived summary** (baked into the connector): per-side OI, P/C OI
+  ratio, max-OI strike per side, mean IV per side.
+- **Cache TTLs**: expirations 24h (move weekly), chain 15 min (greeks
+  follow the underlying).
+- **Defensive row casting**: drops non-dict rows, normalises side, ignores
+  fields we don't understand (vendor drift immunity).
+- **Pilot**: 77 assertions across 20 sections, all green.
+
+#### `[conn-13]` Short interest — DONE
+
+- **Two methods**: `history(ticker, from_date, to_date)` returns FINRA
+  biweekly rows; `latest(ticker)` is a one-row convenience method.
+- **`is_squeeze_candidate` flag DERIVED in the connector** — `pct_of_float >
+  = 20% AND days_to_cover > = 3.0`. The LLM gets a single hard yes/no bit
+  to attach to the brief, instead of having to compute it.
+- **`trend_4w_delta_pct_float` derived** (current vs 2 biweekly prints back).
+- **Default window**: 9 months back from today if `from_date/to_date` blank.
+- **Latest row is chosen by `settlement_date` sort, NOT upstream order** — so
+  a flustered upstream ordering never gives us the "latest"-labeled row as
+  the second one.
+- **Pilot**: 70 assertions across 20 sections, all green.
+
+#### `[conn-14]` Sentiment (Stocktwits) — DONE
+
+- **Free public stream, no auth**. Polite UA header.
+- **Two methods**: `messages(ticker, limit)` for per-symbol recent posts
+  with bullish/bearish breakdown; `trending(top_n)` for top N trending.
+- **Bucketed sentiment counts**: `bullish_count / bearish_count / neutral_count`,
+  plus `bullish_pct` and `avg_watchlist_count_per_msg`. Per-row `sentiment`
+  field carries the upstream's self-tagged basic sentiment.
+- **Defensive row casting**: ignores non-dict messages, accepts upstream's
+  `entities.sentiment.basic ∈ {"Bullish","Bearish"}` (None for untagged).
+- **The `USER-JOBS.md` strict-skeptical-of-social-sentiment stance is honoured**:
+  the connector surfaces the raw breakdown; the agent decides how much
+  weight to give. We don't synthesise a "sentiment score" the agent has
+  to trust by reflex.
+- **Pilot**: 73 assertions across 22 sections, all green.
+
+**Combined regression with Tier 3**: 16/16 pilots green, 706 assertions, 0 failures.
 
 ### Killed
 
