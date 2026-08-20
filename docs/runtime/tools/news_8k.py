@@ -265,13 +265,18 @@ def _default_opener(
     3rd element of the tuple (or simply left empty for back-compat).
     """
     import urllib.request as _ur
+    from runtime.retry import runtime_http_opener
 
     h = dict(headers or {})
     if if_none_match:
         h["If-None-Match"] = if_none_match
     req = _ur.Request(url, headers=h)
+    # Retry-aware default opener (3 attempts, exp backoff). 304 is
+    # short-circuited below; the wrapper does NOT retry 304 because
+    # 304 isn't in the default retry_statuses set.
+    opener = runtime_http_opener()
     try:
-        with _ur.urlopen(req, timeout=20) as resp:  # noqa: S310
+        with opener(req, timeout=20) as resp:  # noqa: S310
             etag = resp.headers.get("ETag", "") if resp.headers else ""
             return resp.status, resp.read().decode("utf-8", errors="replace"), etag
     except _ur.HTTPError as exc:

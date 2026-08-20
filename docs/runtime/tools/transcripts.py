@@ -298,13 +298,19 @@ def _default_opener(url: str, headers: dict[str, str] | None = None) -> tuple[in
     in the ``ETag`` (or ``Last-Modified``) response header, hashable to a
     conditional GET. Empty string when upstream omits ETag (which is the
     common case for free-data providers like SeekingAlpha).
+
+    The opener is the runtime's retry-aware default (``runtime_http_opener``)
+    so transient 5xx / 429 / connection blips are retried with exponential
+    backoff rather than failing the whole transcript fetch.
     """
     import urllib.request as _ur
+    from runtime.retry import runtime_http_opener
 
     etag = ""
     req = _ur.Request(url, headers=headers or {})
+    opener = runtime_http_opener()
     try:
-        with _ur.urlopen(req, timeout=15) as resp:  # noqa: S310
+        with opener(req, timeout=15) as resp:  # noqa: S310
             status = resp.status
             body = resp.read().decode("utf-8", errors="replace")
             etag = resp.headers.get("ETag", "") or ""

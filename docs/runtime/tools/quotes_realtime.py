@@ -128,7 +128,11 @@ class QuotesRealtimeTool:
                 or DEFAULT_USER_AGENT
             )
         if self.opener is None:
-            self.opener = urllib.request.urlopen
+            # Retry-aware default opener (3 attempts, exp backoff, honours
+            # Retry-After). Test paths inject a fake opener via the
+            # constructor and are not affected.
+            from runtime.retry import runtime_http_opener
+            self.opener = runtime_http_opener()
 
     # ----------------------------------------------------------- public API
     def quote(self, ticker: str) -> ToolResult:

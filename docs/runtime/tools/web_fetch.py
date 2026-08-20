@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from . import ToolResult
+from runtime.retry import runtime_http_opener, RetryPolicy as _retry_policy
 
 
 @dataclass
@@ -25,12 +26,19 @@ class WebFetchTool:
         req = urllib.request.Request(
             url, headers={"User-Agent": self.user_agent, "Accept-Encoding": "gzip, deflate"}
         )
+        # Retry+backoff on transient HTTP failures (5xx, 429 with Retry-After,
+        # connection blips, timeouts). The runtime layer is now resilient to user-
+        # network blips without each tool having to reimplement the policy.
+        opener = runtime_http_opener(retry_policy=_retry_policy())
         try:
-            with urllib.request.urlopen(req, timeout=30) as r:
+            with opener(req, timeout=30) as r:
                 raw = r.read()
         except urllib.error.HTTPError as e:
             return ToolResult(status="FAILED", data=None, as_of=as_of,
                               source="web_fetch", note=f"HTTP {e.code}: {e.reason}")
+        except Exception as e:
+            return ToolResult(status="FAILED", data=None, as_of=as_of,
+                              source="web_fetch", note=f"{type(e).__name__}: {e}")
         try:
             html = raw.decode("utf-8", errors="replace")
         except UnicodeDecodeError:
