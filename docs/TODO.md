@@ -972,11 +972,14 @@ section + ticker in `what_an_attacker_would_say`.
 - Add: per-agent `timeout_s` capability budget, with a clean FlowFailed
   if any agent exceeds it (vs. AgentFailed mid-flow which already works)
 
-### [runtime-4] Resume flow on partial failure
-- After a FlowFailed, the CLI prints partial_envelopes. Recovery
-  would be: re-run with `--resume-from <agent-id>` and reuse the prior
-  bottom_line/citations to skip the agents that already succeeded.
-- Useful but not v1; lower priority.
+### [runtime-4] Resume flow on partial failure  ✅ DONE
+- ✅ DONE — per-agent envelope persistence (`_persist_agent_envelope`),
+  `load_prior_resume_envelopes(run_id)` reader, module-level
+  `_RESUME_PARTIAL_ENVELOPES` cache, `call_agent` short-circuit on cache hit
+  (no model call, cost = 0.0, AgentStarted/AgentFinished with `depth="REPLAY"`
+  + zero tokens emitted for caller observability), `--resume-from <agent>`
+  cutoff semantics. Pilot `resume_smoke.py` 32/32 across 11 sections.
+- Combined: 23/23 smoke pilots + 17/17 evals = 40 green.
 
 ### [runtime-5] Adapter unit benchmarks
 - Each pilot prints total_tests but not wallclock per test.

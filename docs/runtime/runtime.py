@@ -523,6 +523,56 @@ def call_agent(
         system_prompt = system_prompt_override
     else:
         system_prompt = load_prompt(agent_id)
+
+    # [runtime-4] Resume replay short-circuit: if the agent_id has a cached
+    # envelope from a prior run that crashed and the user is resuming,
+    # skip the model call and return the cached envelope. Cost is 0.0
+    # because no tokens burned (and we want cumulative_cost unchanged).
+    # We still emit AgentStarted + AgentFinished so the TUI / smoke sees
+    # a "this agent ran" signal — the same shape as a real call would.
+    if _RESUME_PARTIAL_ENVELOPES and agent_id in _RESUME_PARTIAL_ENVELOPES:
+        cached = _RESUME_PARTIAL_ENVELOPES[agent_id]
+        if emit_event is not None:
+            try:
+                effective_model = (
+                    per_agent_model.get(agent_id, model_name)
+                    if per_agent_model else model_name
+                )
+            except Exception:
+                effective_model = model_name
+            emit_event(AgentStarted(agent_id=agent_id,
+                                    model=effective_model,
+                                    depth="REPLAY",
+                                    compressed=False))
+            from dataclasses import is_dataclass
+            if is_dataclass(cached) and not isinstance(cached, dict):
+                cached_as_dict = {f.name: getattr(cached, f.name)
+                                    for f in fields(cached)}
+            else:
+                cached_as_dict = cached
+            try:
+                emit_event(AgentFinished(agent_id=agent_id,
+                                         envelope=cached_as_dict,
+                                         wallclock_s=0.0,
+                                         in_tokens=0, out_tokens=0,
+                                         cost_usd_estimate=0.0))
+            except TypeError:
+                # Older AgentFinished signature without in_tokens/out_tokens
+                try:
+                    emit_event(AgentFinished(agent_id=agent_id,
+                                             envelope=cached_as_dict,
+                                             wallclock_s=0.0,
+                                             in_tokens=0, out_tokens=0,
+                                             cost_usd_estimate=0.0))
+                except TypeError:
+                    emit_event(AgentFinished(agent_id=agent_id,
+                                             envelope=cached_as_dict,
+                                             cost_usd_estimate=0.0))
+        return (
+            _RESUME_PARTIAL_ENVELOPES.pop(agent_id),
+            {"cost_usd_estimate": 0.0},
+        )
+
     # Append (in this order):
     # 1. Example envelope — a CONCRETE filled example for this agent with a
     #    fictional `ACME` ticker. Small (<=8B) models over-fit to "fill the
@@ -2681,6 +2731,36 @@ def run_flow_stream(
             f"All 8 base flows + f9 are wired in v1; add execute_flow_<flow_id> first."
         )
 
+    # [runtime-4] Resume load: when inputs["resume_run_id"] is supplied,
+    # pre-load the per-agent envelope cache from that prior run. Every
+    # agent_id written under .runs/<resume_run_id>/agents/*.json becomes
+    # replayable. ``resume_from`` (optional) names the agent AFTER which
+    # we want fresh runs; agents at-or-after that id run normally. When
+    # ``resume_from`` is omitted, every cached agent is replayed and
+    # only later agents run (a "review the partial work without going
+    # further" mode).
+    global _RESUME_PARTIAL_ENVELOPES, _RESUME_FROM_RUN_ID
+    prior_run_id = (inputs.get("resume_run_id") or "").strip()
+    resume_from = (inputs.get("resume_from") or "").strip()
+    if prior_run_id:
+        loaded = load_prior_resume_envelopes(prior_run_id)
+        # If `--resume-from <agent>` is supplied, drop agents at or
+        # after that anchor from the replay set.
+        if resume_from and resume_from in loaded:
+            cutoff = sorted(loaded.keys()).index(resume_from)
+            loaded = {k: v for i, (k, v) in enumerate(
+                sorted(loaded.items())) if i < cutoff}
+        _RESUME_PARTIAL_ENVELOPES = loaded
+        _RESUME_FROM_RUN_ID = prior_run_id
+        if loaded:
+            print(f"# resume: replay {len(loaded)} cached agent envelopes "
+                  f"from {prior_run_id} (anchor={'at ' + resume_from if resume_from else 'no fresh runs'}); "
+                  f"agents: {','.join(sorted(loaded.keys()))}",
+                  file=sys.stderr)
+    else:
+        _RESUME_PARTIAL_ENVELOPES = {}
+        _RESUME_FROM_RUN_ID = ""
+
     ticker = inputs.get("ticker", "")  # cohort flows (f5/f6) often omit single ticker
     paid_for = paid_for or []
     cumulative_in = 0
@@ -2705,7 +2785,8 @@ def run_flow_stream(
 
     def emit(ev: Any) -> None:
         """Hook passed into execute_flow_f1 → call_agent. Wraps AgentFinished
-        with a CostDelta so the TUI sidebar updates as each agent completes."""
+        with a CostDelta so the TUI sidebar updates as each agent completes.
+        Also persists the per-agent envelope to disk for [runtime-4] resume."""
         nonlocal cumulative_in, cumulative_out, cumulative_cost
         if isinstance(ev, AgentFinished):
             cumulative_in += ev.in_tokens
@@ -2722,6 +2803,16 @@ def run_flow_stream(
                 cumulative_cost=cumulative_cost,
             ))
             partial[ev.agent_id] = ev.envelope
+            # Persist the per-agent envelope to disk so a future
+            # `--resume-from <agent>` call can replay from this point.
+            # (If we got here because the agent was REPLAYED from a
+            # prior cache rather than freshly invoked, ``envelope``
+            # carries the cached envelope — it's safe to persist
+            # idempotently over the disk copy. But our cache-handling
+            # in call_agent pops the entry out instead of re-saving,
+            # so the disk copy stays canonical.)
+            if run_id:
+                _persist_agent_envelope(run_id, ev.agent_id, ev.envelope)
         else:
             events_out.append(ev)
 
@@ -2893,6 +2984,101 @@ def make_run_id(flow: str, ticker: str | None) -> str:
     suffix = (ticker or "no-ticker").replace(",", "_")
     h = hashlib.sha256(f"{flow}{ticker or ''}{ts}".encode()).hexdigest()[:8]
     return f"{ts}_{flow}_{suffix}_{h}"
+
+
+# --------------------------------------------------------------------------- #
+# Resume layer (runtime-4)
+#
+# When a flow fails at an agent AFTER some pre-agent envelopes have
+# arrived, the user wants to re-run from the failed agent rather than
+# starting over. The implementation is:
+#
+#   1. As each agent finishes, write its envelope to disk
+#      (.runs/<run_id>/agents/<safe_agent_id>.json).
+#   2. On `--resume-from <agent_id> --resume-run-id <run_id>`, the
+#      orchestrator pre-loads every agent envelope written under that
+#      run_id and assigns it to module-level `_RESUME_PARTIAL_ENVELOPES`.
+#   3. ``call_agent`` consults that cache: if `agent_id` is in it,
+#      the LLM call is skipped and the cached envelope is returned
+#      with a 0.0 cost (no CostDelta emitted for replayed agents).
+#
+# The "resume-from" semantic: replay everything whose agent_id is in
+# the cache, then run the named agent fresh. The CLI does *not* need
+# to know the wave order — it just lists an agent_id and the flow's
+# own dispatch logic decides replay vs fresh.
+# --------------------------------------------------------------------------- #
+_RESUME_PARTIAL_ENVELOPES: dict[str, dict[str, Any]] = {}
+_RESUME_FROM_RUN_ID: str = ""
+
+
+def _safe_agent_filename(agent_id: str) -> str:
+    """Filesystem-safe slug for an agent_id used as a filename component.
+
+    Matching convention with snippets.py / packs.py for consistency.
+    """
+    import re as _re
+    s = _re.sub(r"[^A-Za-z0-9_-]+", "_", agent_id or "").strip("_")
+    return (s.lower() or "unknown")[:64]
+
+
+def _persist_agent_envelope(run_id: str, agent_id: str, env: Any) -> Path | None:
+    """Write per-agent envelope to disk for later resume.
+
+    Called whenever ``emit`` sees an AgentFinished. Idempotent: if the
+    file already exists for the same (run_id, agent_id), we *don't*
+    overwrite from a re-run — the persistent disk copy acts as the
+    resume cache and a re-run is authorized by the user only when
+    they're explicitly retrying the agent (i.e. via --resume-from with
+    a DIFFERENT resume-run_id, or by saving a backup). For a re-run
+    on the same run_id we leave the cache untouched.
+    """
+    if not run_id or not agent_id:
+        return None
+    try:
+        p = RUNS_DIR / run_id / "agents"
+        p.mkdir(parents=True, exist_ok=True)
+        path = p / f"{_safe_agent_filename(agent_id)}.json"
+        if not path.exists():
+            path.write_text(json.dumps(env, indent=2), encoding="utf-8")
+        return path
+    except (OSError, TypeError, ValueError):
+        return None
+
+
+def load_prior_resume_envelopes(run_id: str) -> dict[str, dict[str, Any]]:
+    """Read every ``.runs/<run_id>/agents/*.json`` into a dict.
+
+    Keyed by ``agent_id`` from the envelope (falls back to the
+    filename stem if missing). A file that fails to parse is skipped
+    silently rather than crashing — a corrupt cache entry should not
+    prevent the next resume attempt from working.
+    """
+    out: dict[str, dict[str, Any]] = {}
+    if not run_id:
+        return out
+    agents_dir = RUNS_DIR / run_id / "agents"
+    if not agents_dir.exists():
+        return out
+    for path in agents_dir.glob("*.json"):
+        try:
+            env = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(env, dict):
+            continue
+        agent_id = (env.get("agent_id") or path.stem).strip()
+        if agent_id:
+            out[agent_id] = env
+    return out
+
+
+def clear_resume_cache() -> None:
+    """Reset the module-level resume cache.
+
+    Tests use this between scenarios to ensure no leakage.
+    """
+    global _RESUME_PARTIAL_ENVELOPES
+    _RESUME_PARTIAL_ENVELOPES = {}
 
 
 def write_run_artifact(run_id: str, flow: str, ticker: str | None,
@@ -3100,6 +3286,16 @@ def main() -> int:
                    help="e.g. ollama/llama3.3:70b, groq/llama-3.3-70b-versatile, anthropic/claude-sonnet-4-5 (skippable with --dry-run / --call-tool / --list-tools)")
     p.add_argument("--paid-for", help="Comma-separated agents to put on the paid model (e.g. final-report)")
     p.add_argument("--depth", default="STANDARD", choices=["SCAN", "STANDARD", "DEEP"])
+    # --- [runtime-4] Resume partial-failure --------------------------------------
+    # `--resume-run-id <id>` reads the per-agent envelope cache written by a
+    # prior crashed/aborted run; `--resume-from <agent_id>` names the *next*
+    # agent to run from. Every agent_id before ``--resume-from`` whose
+    # envelope is on disk is replayed; ``--resume-from`` itself + later agents
+    # are run fresh. Permitted patterns:
+    #   --resume-run-id <id>            # replay every cached agent (read-only)
+    #   --resume-run-id <id> --resume-from senior-analyst  # replay SA-and-before, run D-A + final-report fresh
+    p.add_argument("--resume-run-id", help="Reuse the per-agent envelope cache from a prior run's <run_id>.")
+    p.add_argument("--resume-from", help="Agent_id after which to run fresh; cached agents before this point are replayed.")
     p.add_argument("--compressed", action="store_true")
     p.add_argument("--dry-run", action="store_true", help="Print the wave plan + brief structure; do not call models")
     p.add_argument("--rubric", help="For f2: comparison rubric (e.g. 'growth, valuation, quality'). Defaults to balanced.")
@@ -3194,6 +3390,36 @@ def main() -> int:
 
     paid_for = [a.strip() for a in (args.paid_for or "").split(",") if a.strip()] or None
     ticker = args.ticker or (args.tickers.split(",")[0] if args.tickers else None)
+
+    # [runtime-4] Resume pre-load: if --resume-run-id is supplied,
+    # populate the module-level cache consulted by call_agent. The
+    # flow dispatch below (whether via execute_flow_f<N> directly or
+    # via run_flow_stream) will then transparently skip fresh calls
+    # for every agent whose envelope is on disk under that prior
+    # run_id. --resume-from <agent_id> drops agents at-or-after the
+    # anchor from the replay set so they run fresh.
+    global _RESUME_PARTIAL_ENVELOPES, _RESUME_FROM_RUN_ID
+    if args.resume_run_id:
+        loaded = load_prior_resume_envelopes(args.resume_run_id)
+        if args.resume_from and args.resume_from in loaded:
+            sorted_agents = sorted(loaded.keys())
+            cutoff = sorted_agents.index(args.resume_from)
+            loaded = {k: v for i, (k, v) in enumerate(sorted_agents) if i < cutoff}
+        _RESUME_PARTIAL_ENVELOPES = loaded
+        _RESUME_FROM_RUN_ID = args.resume_run_id
+        if loaded:
+            print(f"# resume: replay {len(loaded)} cached agent envelopes from "
+                  f"{args.resume_run_id} "
+                  f"(resume-from={'(' + args.resume_from + ' and below)' if args.resume_from else '<all cached>'}); "
+                  f"agents: {','.join(sorted(loaded.keys()))}",
+                  file=sys.stderr)
+        else:
+            print(f"# resume: --resume-run-id {args.resume_run_id} had no cached "
+                  f"envelopes (.runs/<id>/agents/*.{'{json}'} missing); running fresh",
+                  file=sys.stderr)
+    else:
+        _RESUME_PARTIAL_ENVELOPES = {}
+        _RESUME_FROM_RUN_ID = ""
 
     if args.flow == "f1":
         if not ticker:
