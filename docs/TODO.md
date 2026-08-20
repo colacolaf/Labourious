@@ -11,9 +11,85 @@ snapshot is either pending (in a TODO below) or unbuilt outright — both
 
 ---
 
-## What works today (snapshot — last verified after `43a5f014` → `c182c8af` → this commit)
+## 🔥 Priority snapshot — what to pick up next
 
-✅ Flows (`--flow`)
+> **Reading guide.** Pick the highest-priority bucket first. The
+> long detailed log under "What is known to be unproven",
+> "Deferred — install & launch", "Deferred — runtime hardening", etc.
+> is historical/explanatory; the priorities below are ordered by
+> what unblocks the next concrete piece of value.
+
+### 🟥 P0 — Critical path to "ship"
+
+These items are blockers for a clean-machine install + first-run
+experience. Until they're DONE, the project is not shippable.
+
+| ID | Item | Status | Why P0 |
+|---|---|---|---|
+| `[install-1]` | Real `pip install labourious` + `pyproject.toml` + package layout | ✅ DONE this commit | Without this, README's install instructions don't work; no user can put the tool on a clean machine |
+| `[install-2]` | `python -m labourious` + `labourious` console script | ✅ DONE this commit | The single entry point end-users should ever have to remember |
+| `[ollama-stream]` | Add `stream()` method to `OllamaAdapter` so local models stream tokens instead of bulk responses | ✅ DONE this commit | Was the only adapter gap; without it local Ollama felt 10× laggier than cloud |
+
+**Net P0 status today: 3/3 DONE.** The project installs cleanly with
+`pip install -e .` from any cwd, both `python -m labourious` and the
+`labourious` console script work, and Ollama streams token-by-token.
+
+### 🟧 P1 — High leverage (makes it FEEL like a working tool)
+
+These are the features users will touch daily. Not blocking ship, but
+each one converts the project from "lab experiment" to "I use this
+most workdays."
+
+| ID | Item | Status | Why P1 |
+|---|---|---|---|
+| `[protocol-1]` | Live provider health probes — ↻ test button next to each Settings → Providers row; calls the model with a 4-token "ok" prompt and reports OK / FAIL / AUTH_MISSING / TIMEOUT / UNREACHABLE + latency. Backend in `runtime/providers.py`. | ✅ DONE this commit | The most-clicked Settings row. Without it, users had no one-click way to verify "is my key working?" without running a full f1 |
+| `[smoke-1]` | Real-LLM end-to-end smoke of f1 — bring up Ollama locally + run `f1` on NVDA + verify every agent emits a parseable envelope | ✅ DONE (2026-08-19) | The single test that proved the whole architecture works against a non-mock LLM (with `[content-1]` priming) |
+| `[content-1]` | Empty-envelope fix — prime brief with filled example + HARD RULE directive so small LLMs (llama3.2:3b) fill 30+ substantive fields instead of empty list fields | ✅ DONE | Without this, every brief was a 13-key shell with empty content. The example-envelope priming lives in `runtime.py`; pilot shows 33 substantive strings per envelope |
+
+**Net P1 status today: 3/3 DONE.** The system has a Settings ↻ test
+that tells the truth about provider health; the "is my key working?"
+question now has a one-click answer.
+
+### 🟨 P2 — Polish (compounds over time, contributes but not blocking)
+
+Five items still open; each is a feature the runtime already handles
+gracefully without, but each would visibly improve the experience.
+
+| ID | Item | Effort | Notes |
+|---|---|---|---|
+| `[domain-8]` | Per-connector ETag for `news_8k`, `sec_edgar_fulltext`, `transcripts` | small | TODO says DONE in the file but the actual integration is partial — confirm in the next commit |
+| `[citation-open-hard]` | On first chip render, `call_tool("web_fetch", url=…)` + cache 4 KiB snippet alongside URL so the reviewer can verify the claim from inside the TUI | small | The "lawyer-grade citation" layer |
+| `[pluggable]` | Side-agent folder ghost — repopulate `docs/prompts/pluggable/sector-analyst/` and wire orchestrator hook, OR remove the side-agent concept | small | Documentation-vs-code drift |
+| `[runtime-2]` | Axios-style retry+backoff for transient HTTP errors | medium | Today every adapter throws on first 5xx |
+| `[runtime-4]` | Resume flow on partial failure (carry-over state between waves) | medium | Today a single failure aborts the whole flow |
+
+### 🟦 P3 — Backlog (deferred with reason documented in `DEFERRED.md` and `CANNOT-DO.md`)
+
+These are explicitly NOT in v1. They are recorded so the next project
+phase knows where to pick them up. Their `reason deferred` lives in
+`docs/DEFERRED.md`; their `why this can't ship today` lives in
+`docs/CANNOT-DO.md`.
+
+- Tier 4 connectors (paid options flow, paid fundamentals, paid
+  sentiment-quant)
+- `real-backtest` — backtest tracking via thesis_register
+- Per-provider retry-policy tuning per provider (`runtime-3`)
+- Most of the 11 deferred lead prompts in `DEFERRED.md`
+- Anything that calls an enterprise terminal (Bloomberg, FactSet, LSEG)
+
+---
+
+## What works today (snapshot — last verified after `43a5f014` → `c182c8af` → this commit + this commit)
+
+✅ **Install / package**
+- `pip install -e .` from project root installs both `labourious` and
+  `docs.*` packages side-by-side; the required runtime deps
+  (textual, rich, keyring, yfinance, httpx, requests, etc.) install
+  automatically.
+- `python -m labourious --help` works from any cwd.
+- `labourious` console script installed at `/Library/Frameworks/Python.framework/Versions/X.X/bin/labourious`.
+
+✅ Flow runtime (`--flow`)
 - **All 8 base flows + f9 are wired and dispatchable**:
   f1 analyze · f2 compare · f3 earnings-preview · f4 earnings-review ·
   f5 sector · f6 screen · f7 risk-event · f8 macro-overlay · f9 model-build.

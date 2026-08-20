@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "labourious"
+version = "0.1.0-dev"
+description = "The Analyst's Bench — citation-grounded short-form investment research, runs locally on free models."
+readme = "docs/README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "labourious maintainers" }]
+keywords = ["investment-research", "analyst", "multi-agent", "wharton-comp", "local-llm", "ollama", "free-models"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Office/Business :: Financial :: Investment",
+  "Topic :: Scientific/Artificial Intelligence",
+]
+
+# Runtime dependencies \u2014 mirror of docs/runtime/requirements.txt with extra
+# `httpx` for the streaming adapters that need modern HTTP/2 / SSE support;
+# `requests` for the few legacy connectors that prefer it over urllib.
+dependencies = [
+  "textual>=3.7",
+  "rich>=13",
+  "tomli>=2; python_version<'3.11'",
+  "keyring>=24",
+  "yfinance>=0.2",
+  "httpx>=0.27",
+]
+
+
+[project.urls]
+Repository = "https://github.com/colacolaf/Labourious"
+Issues = "https://github.com/colacolaf/Labourious/issues"
+
+
+[project.scripts]
+# One stable console entry. The user-facing command is `labourious`;
+# in source tree, `python docs/runtime/runtime.py` also still works.
+labourious = "labourious:main"
+
+
+# --------------------------------------------------------------------- packaging
+# Both packages install side-by-side:
+#   - docs.runtime, docs.frontend, docs.prompts, docs.flows, docs.frontend.* (real code)
+#   - labourious (thin shim that re-exports the public API)
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+  "labourious*",
+  "docs*",
+]
+namespaces = false
+
+
+# Don't ship the bulky smoke pilots / .pyc files / legacy 89-prompt
+# library / tests-on-pytest-folder in the wheel \u2014 they're research material,
+# not part of the installable binaries.
+[tool.setuptools.package-data]
+docs = ["prompts/**/*.md", "flows/*.md", "ARCHITECTURE.md", "CONTEXT.md", "R*.md", "USER-JOBS.md", "CANNOT-DO.md", "DEFERRED.md", "FRONTEND-DECISION.md", "RESTRUCTURING.md", "TODO.md", "LICENSE", "README.md", "V1-ROSTER.md", "CONNECTORS.md", "SECRETS.md"]
+
+
+[tool.setuptools.exclude-package-data]
+docs = ["runtime/smokes/*", "runtime/__pycache__/*", "runtime/.runs/*",
+        "frontend/__pycache__/*", "runtime/evals/_seed_mock_runs.py",
+        "runtime/evals/__pycache__/*", "prompts/leads/*",
+        "prompts/ARCHIVE/*", ".pytest_cache/*"]
+
+
+# --------------------------------------------------------------------- test config
+# We don't ship pytest config here because the pilots are smoke-style
+# import-and-run scripts; pytest is opt-in for callers who want it.
+[tool.pytest.ini_options]
+testpaths = ["docs/runtime/evals"]
+addopts = "-ra -q"
+
+
+# --------------------------------------------------------------------- lint hints
+# The codebase uses tabs sometimes and spaces at other times; black
+# is intentionally NOT configured so we can do gentle, human-reviewed
+# formatting. (Pre-existing rationale in RESTRUCTURING.md.)
