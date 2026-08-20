@@ -31,12 +31,14 @@ from .events import ConnectorCompleted, ConnectorFailed, ConnectorRequested
 from .tools import ToolResult
 from .tools.calendars import CalendarsTool
 from .tools.comparator import ComparatorTool
+from .tools.macro import MacroTool
 from .tools.comps import CompsTool
 from .tools.consensus import ConsensusTool
 from .tools.dcf import DCFTool
 from .tools.fundamentals import FundamentalsTool
 from .tools.news_8k import News8KTool
 from .tools.insider import InsiderTool
+from .tools.newsapi import NewsAPITool
 from .tools.institutional import InstitutionalTool
 from .tools.market_data import MarketDataTool
 from .tools.news import NewsTool
@@ -208,6 +210,31 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         tool_class=CalendarsTool,
         default_method="earnings",
         arg_keys=("ticker", "start", "end"),
+        summary_field="row_count",
+    ),
+    # ── newsapi: NewsAPI.org article search (free-with-key)
+    # The proper Tier-2 alternative to the lightweight
+    # news.google_rss fallback in tools/news.py. Default method is
+    # everything — generic full-text across the catalog.
+    # top_headlines and sources round out the three endpoints.
+    "newsapi": ToolBinding(
+        tool_id="newsapi",
+        tool_class=NewsAPITool,
+        default_method="everything",
+        arg_keys=("query", "since", "until", "sources",
+                  "language", "sort_by", "limit"),
+        summary_field="row_count",
+    ),
+    # ── macro: FRED series + search + release_calendar
+    # Default method is series — the primary macro lookup. search
+    # and release_calendar are the discovery-layer for the chat
+    # timeline of upcoming macro releases ("when's the next CPI?").
+    # Complements market_data.fred_series (lightweight shim).
+    "macro": ToolBinding(
+        tool_id="macro",
+        tool_class=MacroTool,
+        default_method="series",
+        arg_keys=("series_id", "limit", "sort_order", "query"),
         summary_field="row_count",
     ),
     # ── web_fetch: any URL → text ──

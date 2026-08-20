@@ -969,8 +969,8 @@ after `[smoke-1]`).
 | `conn-7` | `fundamentals.py` | 106/106 | `<this commit>` | ✅ shipped |
 | `conn-8` | `consensus.py` | 103/103 | `<this commit>` | ✅ shipped |
 | `conn-9` | `calendars.py` | 79/79 | `<this commit>` | ✅ shipped |
-| `conn-10` | `newsapi.py` | — | — | ⏳ pending (NewsAPI.org 100 req/day) |
-| `conn-11` | `macro.py` | — | — | ⏳ pending (FRED free w/ key — extract from `market_data.py`) |
+| `conn-10` | `newsapi.py`     | 85/85   | `<this commit>` | ✅ shipped |
+| `conn-11` | `macro.py`       | 95/95   | `<this commit>` | ✅ shipped |
 
 #### [conn-6] `quotes_realtime.py` — Finnhub (60 req/min)  ✅ DONE
 - **What shipped**: realtime US-equity quote snapshot + OHLCV
@@ -1214,6 +1214,86 @@ after `[smoke-1]`).
     for the print."
 - **Combined regression**: 11 smokes + 7 pytest evals = 625+
   total assertions, ZERO failures.
+
+#### [conn-10] `newsapi.py` — NewsAPI.org article search  ✅ DONE
+- **What shipped**: three structured article endpoints on a single
+  dataclass (`runtime.tools.newsapi.NewsAPITool`). The proper
+  Tier-2 follow-on to the lightweight `news.google_rss` fallback.
+  Same article corpus (Reuters, Bloomberg, FT, TechCrunch),
+  structured JSON instead of RSS XML, source metadata, date
+  filtering.
+- **Three endpoints**, three public methods:
+  1. `everything(query, since=None, until=None, sources=None,
+     language="en", sort_by="publishedAt", limit=20)` —
+     `GET /v2/everything?q=…&…&apiKey=…`. Full-text search across
+     the article corpus. Default method because it's the most
+     general "find articles about X" answer. Strict window cap
+     (~30 days) reflecting NewsAPI free-tier lookback limit.
+  2. `top_headlines(query=None, country="us", category=None,
+     limit=20)` — `GET /v2/top-headlines` — current top
+     headlines, optional category filter (business / technology /
+     general / etc.). 5-min cache (news moves fast).
+  3. `sources(category=None, language=None, country=None)` —
+     `GET /v2/sources` — list of available source publications.
+     1-h cache (sources rarely change). Used by the UI to drive
+     the source-filter dropdown.
+- **Date-window semantics**: same YAGNI discipline as
+  `calendars.py` — defaults to today-23d/today for `everything`,
+  rejects spans > 30d, end < since, invalid format, garbage
+  category, etc.
+- **Three independent caches** (prefixed `everything::` /
+  `top::` / `sources::`) verified to NOT cross-pollute.
+- **Auth + redaction**: `apiKey=...` query parameter,
+  `_redact_apikey()` strips the secret from notes. Pilot §15
+  verifies raw secret NEVER leaks for any of 3 methods.
+- **HTTP error mapping**: 401 → "invalid NEWSAPI_KEY",
+  403 → "free-tier daily cap (100 req/day)", 429 →
+  "rate-limited", `{"status": "error", "message": …}` echoed
+  verbatim.
+- **Catalog**: tier-2 entry (NEWSAPI_KEY, `citation_kind="news"`,
+  recommended=True).
+- **What it unblocks**: everything agent that needed structured
+  article data now has RSS-free structured JSON.
+- **Combined regression**: 12 smokes + 7 pytest = 730+
+  assertions, zero failures.
+
+#### [conn-11] `macro.py` — FRED macro series + search + release_calendar  ✅ DONE
+- **What shipped**: three macro endpoints on a single dataclass
+  (`runtime.tools.macro.MacroTool`). The proper macro suite that
+  complements the lightweight `market_data.fred_series` shim
+  — `fred_series` keeps its single-series lookup contract;
+  `macro.py` adds catalog search AND release calendar on top.
+  Both register under the same `FRED_API_KEY`.
+- **Three endpoints**, three public methods:
+  1. `series(series_id, limit=100, sort_order="desc")` —
+     `GET /fred/series/observations` — primary macro
+     lookup. Default method. FRED's `.` missing-value sentinel
+     is coerced to Python `None` (verified in pilot §14).
+  2. `search(query, limit=20)` — `GET /fred/series/search` —
+     keyword search across the FRED catalog
+     (`seriess` key, FRED-internal spelling preserved).
+  3. `release_calendar(limit=30)` — `GET /fred/releases/dates`
+     — upcoming macro release dates. Used by the chat timeline
+     to anchor "when's the next CPI?"
+- **Sort aliases**: `asc`/`desc`/`ascending`/`descending`/
+  `oldest`/`newest` all canonicalised. Garbage → FAILED with
+  "not supported" — no silent passthrough.
+- **Limit clamps**: 10,000 on series (FRED hard ceiling),
+  1,000 on search, 200 on release_calendar. All verified by
+  pilot. `limit=0` → 1, `limit=-5` → 1.
+- **Defensive row casting**: bad entries (string, list, None,
+  garbage popularity) silently skipped without crashing the
+  whole pull. Verified pilot §12 (series) and §19 (search).
+- **Two FRED response shapes accepted**: `release_dates` (today)
+  AND `release_date` (legacy), pilot §21 verifies both work.
+- **`FRED error_code/error_message` echoed** to user (pilot §15).
+- **Auth + redaction**: `api_key=...` query param,
+  `_redact_apikey()` strips secret. Pilot §30 verifies all 3
+  methods × both case-styles (apiKey, API_KEY, api_key).
+- **Catalog**: tier-2 entry (FRED_API_KEY, `citation_kind=
+  "macro"`, recommended=True).
+- **Combined regression**: 13 smokes + 7 pytest = 805+
+  assertions, zero failures.
 
 ### Tier 3 — defer until flow f7 ships
 
