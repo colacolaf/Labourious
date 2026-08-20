@@ -1060,6 +1060,27 @@ section + ticker in `what_an_attacker_would_say`.
 
 ---
 
+### `[f10]` Daily Briefing — DONE
+
+- **What it answers**: *"What changed in my watchlist since yesterday?"* — the daily-use-case flow. Per ticker: classify as REITERATE (no change) | UPDATE (meaningful shift, thesis intact) | FLIP (material change). One final-report assembles a one-page morning memo with the FLIPs at top, UPDATEs in the middle, REITERATEs at bottom.
+- **What shipped**:
+  - `runtime.execute_flow_f10()` — pre-wave (prior-thesis lookup) → parallel senior-analyst fan-out (one per watchlist ticker with a prior) → final-report → post-flow auto-write to `thesis_register.updates` for every FLIP.
+  - `ThesisRegister.list_open_catalysts(ticker=None)` — sorted by `expected_date` (NULLs last) for the watchpoints block.
+  - `Config.watchlist` — persistent default; `--watchlist` flag wins when supplied.
+  - `--flow f10` + `--watchlist` + `--briefing-days` (renamed from `--since-days` to avoid conflict with the existing tool-kwarg).
+  - `docs/flows/f10-daily-briefing.md` — full flow recipe doc with wave plan, output shape, CLI examples, cost table.
+- **Cost** (per run, watchlist=5):
+  - Ollama (free): free · 7 agents
+  - Claude Haiku 4: ≈ $0.06
+  - Claude Sonnet 4: ≈ $0.22
+  - Claude Opus 4: ≈ $1.10
+- **Watchlist guard rails**: empty → `ValueError("requires a non-empty watchlist")`; >20 → `ValueError("caps the watchlist at 20")`. The CLI errors with exit 2 when both `--watchlist` is empty AND `Config.watchlist` is unset.
+- **Failure mode**: a single senior-analyst call that raises → tag=ERROR in that ticker's slot, the flow continues. A FLIP write that fails → logged, not raised (so the briefing still completes; the user can re-run to retry the auto-update).
+- **Pilot**: `docs/runtime/smokes/f10_smoke.py` — **58/58 assertions** across 14 sections covering list_open_catalysts (sort + filter), execute_flow_f10 signature + guard rails, argparse + dry-run wave_plan, main() dispatch + watchlist fallback, _FLOW_AGENTS['f10'], end-to-end mocked flow with REITERATE/UPDATE/FLIP/NO_PRIOR routing + auto-update, fan-out error fallback, render_memo_markdown compatibility.
+- **Combined regression**: 29 smokes + 17 evals = 46 pilots, ~1,800 assertions, 0 failures.
+
+---
+
 ## How to pick the next one (revised priority after the runtime audit)
 
 The new sections above re-order everything. When picking the next thing:

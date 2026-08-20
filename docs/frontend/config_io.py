@@ -73,6 +73,10 @@ class Config:
     connectors: dict[str, ConnectorConfig] = field(default_factory=dict)
     defaults_depth: Literal["STANDARD", "DEEP"] = "STANDARD"
     defaults_compressed: bool = False
+    # Persistent watchlist used by f10 (daily briefing) when no
+    # --watchlist flag is supplied. Empty list = "no watchlist
+    # configured; user must pass --watchlist every run".
+    watchlist: list[str] = field(default_factory=list)
     # Streaming UX — when stream_chunks=True the runtime iterates each
     # adapter's .stream() and emits one AgentChunk per text delta. The
     # TUI's chat bubble grows incrementally instead of waiting for the
@@ -103,6 +107,7 @@ class Config:
             "defaults": {
                 "depth": self.defaults_depth,
                 "compressed": self.defaults_compressed,
+                "watchlist": list(self.watchlist),
             },
             "streaming": {
                 "chunks": self.stream_chunks,

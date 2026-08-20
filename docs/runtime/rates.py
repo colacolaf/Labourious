@@ -231,6 +231,10 @@ _AGENT_TOKEN_ESTIMATES: dict[str, dict[str, tuple[int, int]]] = {
 }
 
 # Flow → agents invoked (in order). Used to size the estimate.
+# f10 has N senior-analyst calls (one per watchlist ticker) + 1
+# final-report. We model the canonical case (N=5) — estimates are
+# scaled per call_agent invocation, so the footer cost is approximately
+# right for watchlists of 3-10 names.
 _FLOW_AGENTS: dict[str, tuple[str, ...]] = {
     "f1": (
         "orchestrator", "senior-analyst",
@@ -273,6 +277,14 @@ _FLOW_AGENTS: dict[str, tuple[str, ...]] = {
     "f9": (
         "orchestrator", "model-build",
         "forensic-accounting", "devils-advocate",
+        "final-report",
+    ),
+    # f10 — N senior-analyst (one per watchlist ticker, model as 5
+    # canonical) + 1 final-report.
+    "f10": (
+        "orchestrator",
+        "senior-analyst", "senior-analyst", "senior-analyst",
+        "senior-analyst", "senior-analyst",
         "final-report",
     ),
 }

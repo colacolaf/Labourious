@@ -2482,6 +2482,263 @@ def execute_flow_f9(
 
 
 # --------------------------------------------------------------------------- #
+# Flow f10 — Daily Briefing (watchlist re-check)
+# --------------------------------------------------------------------------- #
+def execute_flow_f10(
+    watchlist: list[str],
+    model: str,
+    paid_for: list[str] | None,
+    emit_event: "Callable[[Any], None] | None" = None,
+    per_agent_model: dict[str, str] | None = None,
+    stream_chunks: bool = False,
+    flow_context: dict[str, Any] | None = None,
+    since_days: int = 1,
+    depth: str = "SCAN",
+) -> dict[str, Any]:
+    """Daily watchlist briefing — f1 batched at scale.
+
+    For every ticker in `watchlist`, compares today's read against the
+    prior thesis stored in `thesis_register` and tags the result as one
+    of three states:
+
+      REITERATE — no material change; the prior thesis still holds.
+      UPDATE    — something meaningful shifted, but the directional
+                  view is intact. The user should re-read the memo
+                  today; nothing's broken.
+      FLIP      — material change; the prior thesis is now wrong.
+                  Auto-writes an `updates` row to thesis_register so
+                  f4 (earnings review) and future f10 runs see it.
+
+    The flow is intentionally cheap: SCAN depth per ticker, a single
+    final-report to combine the per-ticker paragraphs. A 5-name
+    watchlist costs ≈ $0.06 on Haiku, free on Ollama.
+
+    Wave plan:
+      pre-wave (sequential, IO-bound):
+        ➤ for each ticker in watchlist:
+              thesis_register.read_thesis(ticker, since_days=since_days * 7)
+              tag as "with_prior" or "no_prior" based on result
+        ➤ fetch open catalysts from thesis_register.list_open_catalysts
+      wave 1 (parallel fan-out via ThreadPoolExecutor):
+        ➤ for each ticker with a prior thesis:
+              senior-analyst (DEPTH=SCAN) — "what changed since <last_update>?"
+              brief carries: prior thesis text + bottom_line + last_update_date
+              + days_since + watchpoint list
+              emits tag ∈ {REITERATE, UPDATE, FLIP}
+      wave 2 (sequential):
+        ➤ final-report — assemble per-ticker sections into a single memo
+      post-flow:
+        ➤ for any FLIP: thesis_register.add_update(ticker, what_changed, reason)
+
+    Returns the same envelope shape as f1 plus ``f10_briefing`` (the
+    per-ticker tagged summary) at the top level.
+    """
+    flow_context = flow_context or {}
+    watchlist = [t.strip().upper() for t in watchlist if t.strip()]
+    if not watchlist:
+        raise ValueError(
+            "f10 requires a non-empty `watchlist`; got 0 tickers. "
+            "Pass --watchlist NVDA,AAPL,MSFT or set Config.watchlist."
+        )
+    if len(watchlist) > 20:
+        raise ValueError(
+            f"f10 caps the watchlist at 20 names; got {len(watchlist)}. "
+            "For wider universes, narrow via a thematic screen (f6) first."
+        )
+
+    register = ThesisRegister()
+    # Pre-wave: per-ticker prior-thesis lookup.
+    prior_by_ticker: dict[str, dict | None] = {}
+    for t in watchlist:
+        # Read with a wider window so the brief has the "since when" context.
+        rows = register.read_thesis(t, since_days=max(since_days * 7, 7))
+        prior_by_ticker[t] = rows[0] if rows else None
+
+    # Open catalysts across the watchlist (deterministic pull from the DB).
+    open_catalysts: list[dict] = []
+    for t in watchlist:
+        for cat in register.list_open_catalysts(t):
+            open_catalysts.append({"ticker": t, **cat})
+
+    # Wave 1 — parallel fan-out, one senior-analyst per ticker with a prior.
+    per_ticker_buffers: dict[str, list[Any]] = {t: [] for t in watchlist}
+    per_ticker_envelopes: dict[str, dict[str, Any]] = {}
+
+    def _run_one(tiker: str) -> dict[str, Any]:
+        local_buf: list[Any] = []
+        def _le(ev: Any) -> None:
+            local_buf.append(ev)
+            if emit_event is not None:
+                emit_event(ev)
+        prior = prior_by_ticker[tiker]
+        sa_id = f"senior-analyst-{tiker}"
+        if prior is None:
+            # No prior thesis — still emit an envelope so the final-report
+            # can list this ticker under the "no prior" section. The brief
+            # asks for an empty read + an "onboard" recommendation.
+            try:
+                env, cost = call_agent(
+                    "senior-analyst", json.dumps({
+                        "from": "orchestrator",
+                        "flow_id": "f10",
+                        "task": (
+                            f"No prior thesis for {tiker}. Emit a placeholder "
+                            f"envelope with tag='NO_PRIOR' and a one-sentence "
+                            f"recommendation to onboard via `analyze {tiker}`."
+                        ),
+                        "ticker": tiker,
+                        "depth": "SCAN",
+                        "compressed": True,
+                    }), model,
+                    paid_for=paid_for, emit_event=_le,
+                    per_agent_model=per_agent_model,
+                    stream_chunks=stream_chunks,
+                )
+            except Exception as exc:
+                env = {"agent_id": sa_id, "ticker": tiker, "depth": "SCAN",
+                       "compressed": True, "conclusion": f"failed: {exc}",
+                       "tag": "NO_PRIOR"}
+                cost = {"agent_id": sa_id, "in_tok": 0, "out_tok": 0,
+                        "cost_usd_estimate": 0.0}
+            per_ticker_buffers[tiker] = local_buf
+            per_ticker_envelopes[tiker] = env
+            return {"env": env, "cost": cost, "events": local_buf}
+
+        # Has a prior — brief the senior-analyst with everything.
+        last_update = prior.get("date", "unknown")
+        days_since = (dt.date.today() - dt.date.fromisoformat(last_update)).days \
+            if last_update != "unknown" else None
+        try:
+            env, cost = call_agent(
+                "senior-analyst", json.dumps({
+                    "from": "orchestrator",
+                    "flow_id": "f10",
+                    "task": (
+                        f"Re-check {tiker} vs the prior thesis. "
+                        f"Classify as REITERATE | UPDATE | FLIP and emit "
+                        f"one-paragraph read + tag + tag_reason."
+                    ),
+                    "ticker": tiker,
+                    "prior_thesis": prior,
+                    "prior_thesis_text": prior.get("thesis_text", ""),
+                    "prior_bottom_line": prior.get("bottom_line", {}),
+                    "prior_conviction": prior.get("conviction"),
+                    "last_update_date": last_update,
+                    "days_since_prior": days_since,
+                    "since_days": since_days,
+                    "depth": depth,
+                    "compressed": True,
+                    "flow_context": flow_context,
+                }), model,
+                paid_for=paid_for, emit_event=_le,
+                per_agent_model=per_agent_model,
+                stream_chunks=stream_chunks,
+            )
+        except Exception as exc:
+            env = {"agent_id": sa_id, "ticker": tiker, "depth": depth,
+                   "compressed": True, "conclusion": f"failed: {exc}",
+                   "tag": "ERROR"}
+            cost = {"agent_id": sa_id, "in_tok": 0, "out_tok": 0,
+                    "cost_usd_estimate": 0.0}
+        per_ticker_buffers[tiker] = local_buf
+        per_ticker_envelopes[tiker] = env
+        return {"env": env, "cost": cost, "events": local_buf}
+
+    # Fan out with a thread pool sized to the watchlist (cap 10 workers).
+    import concurrent.futures as _cf
+    pool_workers = min(max(len(watchlist), 1), 10)
+    results: list[dict[str, Any]] = []
+    with _cf.ThreadPoolExecutor(max_workers=pool_workers) as ex:
+        futures = {ex.submit(_run_one, t): t for t in watchlist}
+        for fut in _cf.as_completed(futures):
+            try:
+                results.append(fut.result())
+            except Exception as exc:
+                tiker = futures[fut]
+                # Surface as an error envelope so final-report can list it.
+                per_ticker_envelopes[tiker] = {
+                    "agent_id": f"senior-analyst-{tiker}",
+                    "ticker": tiker, "depth": depth, "compressed": True,
+                    "conclusion": f"f10 fan-out failed: {exc}",
+                    "tag": "ERROR",
+                }
+
+    # Wave 2 — final-report assembly.
+    fr_brief = json.dumps({
+        "from": "orchestrator",
+        "flow_id": "f10",
+        "task": (
+            "Assemble the daily briefing memo. Sections in order: "
+            "Header (counts), FLIP block (one paragraph each), UPDATE block, "
+            "REITERATE block (one sentence each), No-prior section, "
+            "Watchpoints, then a single-line Bottom Line."
+        ),
+        "watchlist": watchlist,
+        "per_ticker": per_ticker_envelopes,
+        "open_catalysts": open_catalysts,
+        "since_days": since_days,
+        "depth": depth,
+        "compressed": True,
+    })
+    fr_env, fr_cost = call_agent(
+        "final-report", fr_brief, model,
+        paid_for=paid_for, emit_event=emit_event,
+        per_agent_model=per_agent_model,
+        stream_chunks=stream_chunks,
+    )
+
+    # Post-flow: auto-write `updates` rows for any FLIP-tagged ticker.
+    flips_written: list[dict[str, Any]] = []
+    for tiker, env in per_ticker_envelopes.items():
+        tag = (env.get("tag") or "").upper()
+        if tag == "FLIP" and prior_by_ticker.get(tiker) is not None:
+            try:
+                what_changed = (
+                    env.get("what_changed")
+                    or env.get("read")
+                    or env.get("conclusion")
+                    or "f10 auto-detected material change"
+                )
+                update_id = register.add_update(
+                    ticker=tiker,
+                    what_changed=str(what_changed)[:500],
+                    reason="auto: f10 daily briefing tagged FLIP",
+                )
+                flips_written.append({
+                    "ticker": tiker,
+                    "update_id": update_id,
+                    "what_changed": str(what_changed)[:500],
+                })
+            except Exception:
+                # Don't fail the whole flow on a register write error;
+                # the user can re-run f10 to retry, or f1 to write manually.
+                pass
+
+    # Cost rollup.
+    costs: list[dict[str, Any]] = [r["cost"] for r in results]
+    costs.append(fr_cost)
+
+    # Attach the per-ticker summary at the top level for downstream consumers.
+    f10_briefing = {
+        "watchlist": watchlist,
+        "since_days": since_days,
+        "per_ticker": per_ticker_envelopes,
+        "open_catalysts": open_catalysts,
+        "flips_written": flips_written,
+    }
+
+    return {
+        "final_envelope": fr_env,
+        "f10_briefing": f10_briefing,
+        "costs": costs,
+        "envelopes": {
+            **per_ticker_envelopes,
+            "final-report": fr_env,
+        },
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Flow f2 — Compare Tickers (concurrent fan-out + comparator)
 # --------------------------------------------------------------------------- #
 def execute_flow_f2(
@@ -3377,9 +3634,14 @@ def _run_cli_call_tool(args: argparse.Namespace) -> int:
 def main() -> int:
     p = argparse.ArgumentParser(description="Labourious runtime — Analyst's Bench skeleton")
     p.add_argument("--flow", required=("--call-tool" not in sys.argv and "--list-tools" not in sys.argv),
-                   choices=["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"])
+                   choices=["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10"])
     p.add_argument("--ticker", help="Single ticker (e.g. NVDA)")
     p.add_argument("--tickers", help="Comma-separated tickers (for f2)")
+    p.add_argument("--watchlist", help="Comma-separated tickers for f10 (daily briefing). "
+                   "Falls back to Config.watchlist if unset.")
+    p.add_argument("--briefing-days", type=int, default=1,
+                   help="For f10: look-back window in days (default 1 = since yesterday). "
+                        "Named differently from the tool-kwarg --since-days to avoid argparse conflict.")
     p.add_argument("--thesis", help="Thesis text (for f6)")
     p.add_argument("--model", required=("--dry-run" not in sys.argv and "--call-tool" not in sys.argv and "--list-tools" not in sys.argv),
                    help="e.g. ollama/llama3.3:70b, groq/llama-3.3-70b-versatile, anthropic/claude-sonnet-4-5 (skippable with --dry-run / --call-tool / --list-tools)")
@@ -3485,6 +3747,8 @@ def main() -> int:
             "f6": ["for each candidate: senior-analyst(SCAN)", "for shortlisted: forensic(SCAN) + devil(SCAN)", "final-report (screen rubric)"],
             "f7": ["senior-analyst", "forensic-accounting(SCAN) + devils-advocate(SCAN)", "final-report"],
             "f8": ["senior-analyst (loads thesis_ids)", "for each thesis: forensic(SCAN) + devil (parallel)", "final-report (macro overlay rubric)"],
+            "f9": ["senior-analyst", "model-builder (DCF + comps)", "devils-advocate", "final-report"],
+            "f10": ["for each watchlist ticker: senior-analyst (SCAN, re-check vs prior thesis)", "final-report (assemble REITERATE/UPDATE/FLIP tags)", "post: auto-write updates for FLIPs"],
         }
         plan_path = FLOWS_DIR / f"{args.flow}.md"
         print(f"# dry-run: {args.flow}")
@@ -3621,6 +3885,31 @@ def main() -> int:
             model=args.model, paid_for=paid_for,
             depth=getattr(args, "depth", "SCAN") or "SCAN",
             skip_devil=args.skip_devil,
+        )
+    elif args.flow == "f10":
+        # Resolve watchlist: --watchlist flag wins, otherwise Config.watchlist,
+        # otherwise error. Empty watchlist is the only required-arg failure
+        # beyond --model (which argparse already enforces).
+        watchlist_str = (args.watchlist or "").strip()
+        if not watchlist_str:
+            try:
+                from frontend.config_io import load_config  # type: ignore
+                cfg = load_config()
+                watchlist_str = ",".join(cfg.watchlist or [])
+            except Exception:
+                watchlist_str = ""
+        if not watchlist_str:
+            print("error: --watchlist 'NVDA,AAPL,...' is required for f10 "
+                  "(or set Config.watchlist)", file=sys.stderr)
+            return 2
+        watchlist = [t.strip() for t in watchlist_str.split(",") if t.strip()]
+        since_days = max(1, int(getattr(args, "briefing_days", 1) or 1))
+        result = execute_flow_f10(
+            watchlist=watchlist,
+            model=args.model,
+            paid_for=paid_for,
+            since_days=since_days,
+            depth=getattr(args, "depth", "SCAN") or "SCAN",
         )
     else:
         print(f"unknown flow: {args.flow}", file=sys.stderr)

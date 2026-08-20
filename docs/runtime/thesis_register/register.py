@@ -174,6 +174,36 @@ class ThesisRegister:
         )
         self._conn.commit()
 
+    def list_open_catalysts(self, ticker: str | None = None) -> list[dict]:
+        """Return all unresolved catalysts (resolved_date IS NULL).
+
+        If ``ticker`` is supplied, filter to that ticker only. Otherwise
+        return every open catalyst across the universe — used by f10's
+        daily briefing to populate the watchpoints block.
+
+        Returned shape: list of dicts with keys ``id``, ``ticker``,
+        ``event``, ``expected_date``, ``what_to_watch``, ``created_at``.
+        Ordered by ``expected_date`` (NULL last) so the user sees the
+        nearest catalyst first.
+        """
+        cur = self._conn.cursor()
+        if ticker is not None:
+            rows = cur.execute(
+                """SELECT id, ticker, event, expected_date, what_to_watch, created_at
+                   FROM catalysts
+                   WHERE ticker=? AND resolved_date IS NULL
+                   ORDER BY (expected_date IS NULL), expected_date, id""",
+                (ticker.upper(),),
+            ).fetchall()
+        else:
+            rows = cur.execute(
+                """SELECT id, ticker, event, expected_date, what_to_watch, created_at
+                   FROM catalysts
+                   WHERE resolved_date IS NULL
+                   ORDER BY (expected_date IS NULL), expected_date, id""",
+            ).fetchall()
+        return [dict(r) for r in rows]
+
 
 # --------------------------------------------------------------------------- #
 # CLI
