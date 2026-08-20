@@ -408,6 +408,27 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
 - Pilot 14/14 ok: parallel speedup (4.0s for 4-wave f1 vs 5.0s+ serial),
   AgentStarted ordering, both AgentFinished events, partial failure path.
 
+### [eval-v2] **Eval suite v2 — 6 more disciplines, teeth included**  ✅ DONE
+Six additional tests on top of the v1 suite (which runs at 7/7 green):
+1. `test_citation_coverage_per_section` — every prose section must
+   anchor a citation ref inline.
+2. `test_bear_case_minimum_unique_arguments` — bear must bring an
+   argument NOT in bull (heuristic + long-word diff fallback).
+3. `test_abstention_on_connector_failure` — when connector_status
+   has FAILED, gaps must name the failure.
+4. `test_high_conviction_requires_citations` — conviction ≥ 4 needs
+   ≥ 3 citations.
+5. `test_citation_url_authority` — every cited URL is on the
+   authoritative allowlist OR backed by the snippet cache.
+6. `test_ticker_anchor_throughout` — every prose section anchors
+   the ticker.
+
+Plus 4 negative-control tests (regression_*_fires_on_corrupted_*)
+that prove each discipline test fires when its specific mutation is
+injected — calibration guarantee. Seeds upgraded to satisfy the new
+disciplines: `[f1]`/`[f2]`/`[f3]` inline anchors + 3 citations per
+section + ticker in `what_an_attacker_would_say`.
+
 ### [real-eval] **The 5-test eval suite** — every test is `pytest.skip()` today  ✅ DONE
 - `docs/runtime/evals/_seed_mock_runs.py` writes 6 deterministic envelopes
   (5×f1 on NVDA/AAPL/MSFT/GOOGL/AMZN + 1×f2 basket) into

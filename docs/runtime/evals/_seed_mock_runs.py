@@ -44,18 +44,20 @@ def f1_envelope(ticker: str) -> dict:
                 "flip_trigger": "<= $720 or dividend suspension",
             },
             "bull_case": (
-                f"{ticker} retains an expanding AI accelerator moat, gross-margin compression "
-                "is supply-driven (not demand-driven), and FY27 capex is funded from operating cash. "
-                "Customer concentration is the main fragility; hyperscaler capex commitments remain intact."
+                f"{ticker} retains an expanding AI accelerator moat [f1], gross-margin compression "
+                "is supply-driven (not demand-driven), and FY27 capex is funded from operating cash [f2]. "
+                "Customer concentration is the main fragility [f3]; hyperscaler capex commitments remain intact."
             ),
             "bear_case": (
-                f"{ticker}'s stock-based compensation drag is structural, FY27 margin guide relies "
-                "on unverifiable inventory normalization, and the China export-control overhang has not "
-                "lapsed. Multiple expansion is now the single biggest risk to returns."
+                f"{ticker}'s stock-based compensation drag is structural [f1], FY27 margin guide relies "
+                "on unverifiable inventory normalization [f3], and the China export-control overhang has not "
+                "lapsed. Multiple expansion is now the single biggest risk to returns [f2]."
             ),
             "what_an_attacker_would_say": (
-                "The 12-month multiple is 5σ above its 10-year mean; every prior episode of multiple "
-                "compression from this altitude ended with a 35-50% drawdown before fundamentals stabilized."
+                f"{ticker}'s 12-month multiple is 5σ above its 10-year mean; every prior episode of "
+                "multiple compression from this altitude ended with a 35-50% drawdown before "
+                "fundamentals stabilized [f1]. The pattern repeats; the question is whether this cycle's "
+                "earnings stream holds through."
             ),
             "next_three_questions": [
                 "Is gross-margin guidance FY27 supply- or demand-driven?",
@@ -67,6 +69,8 @@ def f1_envelope(ticker: str) -> dict:
                  "url": f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}"},
                 {"ref": "f2", "type": "PRIMARY", "name": "Q3 2026 earnings transcript",
                  "date": "2026-08-16", "url": f"https://www.sec.gov/.../{ticker}-8k-q3-2026.htm"},
+                {"ref": "f3", "type": "PRIMARY", "name": f"{ticker} latest 10-Q MD&A",
+                 "date": "2026-07-29", "url": f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}&type=10-Q"},
             ],
         },
         "gaps": [
@@ -118,19 +122,19 @@ def f2_envelope(tickers: list[str]) -> dict:
                 "flip_trigger": "Hyperscaler capex digestion cycle.",
             },
             "bull_case": (
-                f"Across {', '.join(tickers)}, the cohort benefits from AI capex tailwind; "
-                "MSFT and GOOGL have the cleanest combination of recurring revenue + capex optionality. "
-                "NVDA's moat remains wide but priced for perfection; AAPL's services stream is "
-                "underappreciated; AMZN's margin trajectory depends on retail segment recovery."
+                f"Across {', '.join(tickers)}, the cohort benefits from AI capex tailwind [f1]; "
+                "MSFT and GOOGL have the cleanest combination of recurring revenue + capex optionality [f1]. "
+                "NVDA's moat remains wide but priced for perfection [f1]; AAPL's services stream is "
+                "underappreciated [f1]; AMZN's margin trajectory depends on retail segment recovery [f1]."
             ),
             "bear_case": (
-                f"{', '.join(tickers)} collectively trade at premium-to-10y-mean multiples. "
-                "Any disappointment in AI capex digestion collapses all five simultaneously. "
+                f"{', '.join(tickers)} collectively trade at premium-to-10y-mean multiples [f1]. "
+                "Any disappointment in AI capex digestion collapses all five simultaneously [f1]. "
                 "Macro-driven multiple compression has no ticker-specific hedge."
             ),
             "what_an_attacker_would_say": (
-                "These five form a single AI-capex factor; correlation spikes to 0.9+ during macro shocks. "
-                "Diversification is illusory."
+                f"{', '.join(tickers)} form a single AI-capex factor; correlation spikes to "
+                "0.9+ during macro shocks. Diversification is illusory [f1]."
             ),
             "next_three_questions": [
                 f"Across {', '.join(tickers)}: is hyperscaler capex pacing linearly or front-loaded?",
