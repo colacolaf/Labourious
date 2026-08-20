@@ -29,6 +29,7 @@ from typing import Any, Callable, Mapping
 
 from .events import ConnectorCompleted, ConnectorFailed, ConnectorRequested
 from .tools import ToolResult
+from .tools.calendars import CalendarsTool
 from .tools.comparator import ComparatorTool
 from .tools.comps import CompsTool
 from .tools.consensus import ConsensusTool
@@ -196,6 +197,18 @@ TOOL_REGISTRY: dict[str, ToolBinding] = {
         default_method="price_target",
         arg_keys=("ticker", "freq", "limit"),
         summary_field="target_mean",
+    ),
+    # ── calendars: Finnhub earnings + IPO calendar (free-with-key)
+    # Default method is earnings — the most common calendar anchor
+    # ("when is the next print?"). The ipo method exposes the IPO
+    # calendar without `ticker` filtering. Same FINNHUB pool as
+    # quotes_realtime; user with one key gets all four Finnish tools.
+    "calendars": ToolBinding(
+        tool_id="calendars",
+        tool_class=CalendarsTool,
+        default_method="earnings",
+        arg_keys=("ticker", "start", "end"),
+        summary_field="row_count",
     ),
     # ── web_fetch: any URL → text ──
     "web_fetch": ToolBinding(

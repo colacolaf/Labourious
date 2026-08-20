@@ -968,7 +968,7 @@ after `[smoke-1]`).
 | `conn-6` | `quotes_realtime.py` | 53/53 | `pending this commit` | ✅ shipped |
 | `conn-7` | `fundamentals.py` | 106/106 | `<this commit>` | ✅ shipped |
 | `conn-8` | `consensus.py` | 103/103 | `<this commit>` | ✅ shipped |
-| `conn-9` | `calendars.py` | — | — | ⏳ pending (Finnhub earnings/IPO calendar) |
+| `conn-9` | `calendars.py` | 79/79 | `<this commit>` | ✅ shipped |
 | `conn-10` | `newsapi.py` | — | — | ⏳ pending (NewsAPI.org 100 req/day) |
 | `conn-11` | `macro.py` | — | — | ⏳ pending (FRED free w/ key — extract from `market_data.py`) |
 
@@ -1154,6 +1154,65 @@ after `[smoke-1]`).
   - f2 (comps) can rank peers by revenue_growth deltas instead of
     historical EPS only.
 - **Combined regression**: 10 smokes + 7 pytest evals = 546+
+  total assertions, ZERO failures.
+
+#### [conn-9] `calendars.py` — Finnhub earnings + IPO calendar  ✅ DONE
+- **What shipped**: two declarative calendars on a single dataclass
+  (``runtime.tools.calendars.CalendarsTool``). Same
+  ``FINNHUB_API_KEY`` as ``consensus`` and ``quotes_realtime`` —
+  one key covers all four Finnish tools.
+- **Two endpoints**, two public methods:
+  1. `earnings(ticker=None, start=None, end=None)` —
+     `GET /calendar/earnings?from=YYYY-MM-DD&to=YYYY-MM-DD&symbol=AAPL`
+     — upcoming earnings prints within `[start, end]` window.
+     `ticker` is OPTIONAL — when None, returns whole-market prints.
+     `hour` is one of `bmo` / `dmh` / `amc` (before, during, after
+     market). Default method of the tool because "when is the next
+     print?" is the most-asked calendar question.
+  2. `ipo(start=None, end=None)` — `GET /calendar/ipo?from=…&to=…` —
+     upcoming IPOs within the window. No ticker filter.
+- **Date-window semantics**: valid ISO `YYYY-MM-DD` strings.
+  Defaults are today UTC + 30-day window when caller doesn't
+  specify. Three failure modes rejected cleanly:
+  1. end < start → FAILED with "must span forward in time"
+  2. span > 90 days (Finnhub free-tier cap) → FAILED with
+     "window too wide; max 90 days"
+  3. invalid date format → FAILED with "not a valid YYYY-MM-DD
+     date"
+- **Response shape**: Finnhub wraps the rows under two literal
+  keys (`earningsCalendar`, `ipoCalendar`). We extract, schema-
+  normalise each row, and attach a `meta.ticker`, `meta.scope`
+  (ticker / all), `meta.start`, `meta.end`, `meta.window_days`,
+  `meta.row_count` block on every SUCCESS row. Defensive row
+  casting skips malformed entries silently rather than letting
+  one bad row crash the whole pull (verified in pilot §11).
+- **Two independent caches** (prefixed `earnings::` / `ipo::`) —
+  each includes ticker + start + end in the cache key. Verified
+  that hitting one method does NOT warm the other (pilot §20).
+- **Auth + redaction**: same `?token=…` query protocol as
+  `quotes_realtime`. `_redact_token()` strips token from notes
+  before log. Pilot §26 verifies raw secret NEVER leaks for
+  either method.
+- **HTTP error mapping**: 401 → "invalid FINNHUB_API_KEY",
+  403 → "free-tier rate limit likely hit (60 req/min)",
+  429 → "rate-limited". `{"error": "…"}` or `{"Error": "…"}`
+  payload echoed verbatim. Non-dict payload → FAILED with type
+  hint. Non-list `earningsCalendar` payload → FAILED with
+  "expected list" hint.
+- **Catalog**: `frontend/connectors_catalog.py` gained the
+  `calendars` entry — tier 2 (free w/ key), `FINNHUB_API_KEY`,
+  `citation_kind="calendar"`, `recommended=True`. Settings
+  panel autopicks.
+- **What it unblocks**:
+  - `docs/prompts/strategy/position-sizing-hedging/system-prompt.md`
+    can ask the chat: "is the next print within the analysis
+    window?" and timeline the brief accordingly.
+  - PM bodyguard gets a hard "this ticker reports in 3 days"
+    fact to attach to every DCF/Comps brief.
+  - Recommender agent can surface "earnings in N days" as a
+    conviction detractor: "EPS guidance is overhanging, wait
+    for the print."
+- **Combined regression**: 11 smokes + 7 pytest evals = 625+
   total assertions, ZERO failures.
 
 ### Tier 3 — defer until flow f7 ships
