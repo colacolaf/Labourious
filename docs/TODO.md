@@ -1000,6 +1000,21 @@ section + ticker in `what_an_attacker_would_say`.
 - Today's footer hint shows model + depth + compressed + paid-for
 - Add: "≈ $0.32 / run · 5 agents" based on per-model rate tables
 
+#### `[ux-2]` Cost footer estimator — DONE
+
+- **What shipped**: `runtime/rates.py` — a unified per-model rate table (USD per 1M tokens, in/out) covering Anthropic (4.x + 3.x), OpenAI (incl. o1), Groq free tier, Gemini (2.x + 1.x), Cohere, Ollama. Unknown models fall back to a conservative Opus-class estimate ($5 / $15) so the footer never silently reads "$0.00" for an un-catalogued model.
+- **Per-agent token estimates** by depth (SCAN/STANDARD/DEEP) for every agent in f1..f9, calibrated against the real `cost.json` artifacts from the `20260819*` smoke runs (median ±30% across 11 runs).
+- **`estimate_run_cost(flow, model, paid_for, depth)`** → `(usd, agent_count, is_free)`. Mirrors the runtime's hybrid convention: `paid_for=["final-report"]` routes only final-report to Sonnet; everything else stays on the default (free) model.
+- **`format_cost_for_footer(...)`** → three output shapes:
+  - `"free · 5 agents"` — ollama + groq free tier
+  - `"≈ $0.16 · 5 agents"` — known paid model, rounded to 2 dp
+  - `"? · 5 agents"` — unknown model, not free (user can override)
+- **Wired into `ChatScreen._update_footer_hint`** — the footer now reads (for the default ollama setup):
+  `f1 · ollama/llama3.3:70b · paid-for: none · depth: STANDARD · free · 5 agents`
+  Switch to Sonnet → `f1 · anthropic/claude-sonnet-4-5 · ... · ≈ $0.16 · 5 agents`. Hybrid (ollama + paid_for final-report) → `≈ $0.05 · 5 agents`.
+- **Pilot**: `docs/runtime/smokes/cost_footer_smoke.py` — **165/165 assertions** across 11 sections covering rate lookups (15 known slugs), longest-prefix match for dated model slugs, conservative fall-back, free detection, hybrid routing, footer formatter three shapes, f1-f9 coverage, depth scaling, chat.py wiring.
+- **Combined regression**: 27 smokes + 17 evals = 44 pilots, ~1,700 assertions, 0 failures.
+
 ### [ux-3] TUI on macOS / Windows parity
 - We test on macOS via the desktop HTML preview. Windows keyboard
   navigation (alt-key bindings) and Linux colour-palette quirks

@@ -905,7 +905,25 @@ class ChatScreen(Screen):
     def _update_footer_hint(self, suffix: str = "") -> None:
         paid = ",".join(self.paid_for) if self.paid_for else "none"
         connector_prefix = self._connector_footer_segment()
-        base = f"{connector_prefix}{self.flow_id} · {self.model} · paid-for: {paid} · depth: {self.depth}"
+        # Predict the cost of one run of `self.flow_id` on `self.model`.
+        # For the hybrid case, paid_for means "use Sonnet for those
+        # agents" — see docs/runtime/rates.py for the convention.
+        try:
+            from runtime.rates import format_cost_for_footer  # type: ignore
+            cost_segment = format_cost_for_footer(
+                self.flow_id,
+                self.model,
+                paid_for=self.paid_for,
+                depth=self.depth,
+                per_agent_model=self.per_agent_model or None,
+            )
+        except Exception:
+            cost_segment = "? · ? agents"  # never break the footer
+        base = (
+            f"{connector_prefix}{self.flow_id} · {self.model} "
+            f"· paid-for: {paid} · depth: {self.depth} "
+            f"· {cost_segment}"
+        )
         self.set_status_footer(base + suffix)
 
     def _connector_footer_segment(self) -> str:
