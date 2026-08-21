@@ -78,12 +78,29 @@ _LOCAL = (
         display="OmniRoute",
         tier="local",
         auth="none",
-        base_url="http://localhost:8317/v1",
+        # OmniRoute is a local OpenAI-compatible gateway (npm i -g omniroute).
+        # Default port per upstream docs: 20128 (NOT 8317 — that was an old
+        # version we tracked before re-reading the npm page in 2026-08).
+        base_url="http://localhost:20128/v1",
         env_var=None,
-        default_model="omniroute/auto",
-        models=("omniroute/auto",),
+        # Default model: `auto` is OmniRoute's "you pick the best free
+        # combo" mode. The prefix variants below tune the routing strategy
+        # (latency vs cost vs offline quota etc.). All OpenAI-compatible.
+        default_model="auto",
+        models=(
+            "auto",
+            "auto/coding",
+            "auto/fast",
+            "auto/cheap",
+            "auto/offline",
+            "auto/smart",
+        ),
         shape="openai",
-        description="Local router — `npm i -g omniroute` unlocks 237 providers through one endpoint",
+        description=(
+            "Local OpenAI-compat gateway — `npm i -g omniroute` unlocks "
+            "~1.5B free tokens/month across 43 provider pools / 516 models, "
+            "auto-routing + zero config"
+        ),
         recommended=True,
     ),
     ProviderEntry(

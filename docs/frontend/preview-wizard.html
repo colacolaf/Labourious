@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Labourious — Welcome wizard preview (Template B, interactive)</title>
+<style>
+  :root {
+    /* Exact TUI palette from docs/frontend/style.tcss */
+    --bg:        #0e1014;
+    --bg-soft:   #11141a;
+    --bg-mid:    #161a20;
+    --bg-deep:   #050608;
+    --line:      #465262;
+    --line-soft: #2a3441;
+    --fg:        #d4d4d4;
+    --fg2:       #a0a5af;
+    --fg3:       #6e7887;
+    --brand:     #8cdcdc;
+    --sage:      #8cd296;
+    --amber:     #e6c87e;
+    --warn:      #e19194;
+    --accent:    #d4b485;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    padding: 0;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  body { padding: 22px; }
+  h1 {
+    font-size: 15px; color: var(--brand); font-weight: 600;
+    margin: 0 0 4px; letter-spacing: -0.01em;
+  }
+  .lede { color: var(--fg3); margin: 0 0 22px; max-width: 760px; }
+  .lede code { color: var(--brand); }
+
+  /* ------- TUI-shaped frame, no rounded corners ------- */
+  .frame {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    width: 980px;
+    max-width: 100%;
+  }
+
+  /* ------- HEAD bar ------- */
+  .head {
+    background: var(--bg);
+    color: var(--fg);
+    border-bottom: 1px solid var(--line);
+    padding: 0 8px;
+    height: 24px;
+    line-height: 24px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .head .brand { color: var(--brand); }
+  .head .here  { color: var(--brand); }
+  .head .info  { color: var(--fg3); }
+  .head .info .k { color: var(--brand); }
+
+  /* ------- BODY: sidebar + chat-pane ------- */
+  .body-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    background: var(--bg-deep);
+    min-height: 380px;
+    position: relative;
+  }
+  .sidebar {
+    background: var(--bg-soft);
+    border-right: 1px solid var(--line);
+    padding: 8px 10px;
+    color: var(--fg2);
+  }
+  .sidebar .h {
+    color: var(--fg3); text-transform: uppercase; font-size: 10.5px;
+    letter-spacing: 0.08em; margin: 0 0 4px;
+  }
+  .sidebar .meta { color: var(--fg3); font-size: 11.5px; }
+
+  /* Chat pane — fades to dim when wizard is open */
+  .chat-pane {
+    padding: 12px 16px;
+    color: var(--fg);
+  }
+  .chat-pane.dimmed .welcome-bubble { opacity: 0.35; }
+  .chat-pane.dimmed .chips-row    { opacity: 0.35; }
+  .chat-pane.dimmed .welcome-actions { opacity: 0.35; }
+
+  .welcome-bubble {
+    background: var(--bg-mid);
+    border: 1px solid var(--line);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    color: var(--fg);
+  }
+  .welcome-bubble h1 {
+    font-size: 14px;
+    margin: 0 0 6px;
+    color: var(--brand);
+  }
+  .welcome-bubble .pill {
+    color: var(--fg3); font-size: 11.5px;
+  }
+  .welcome-bubble .pill .v { color: var(--amber); }
+  .chips-row {
+    margin-top: 6px;
+    display: flex; gap: 6px;
+  }
+  .chip {
+    background: var(--bg-soft);
+    color: var(--amber);
+    border: 1px solid var(--line);
+    padding: 1px 8px;
+    font-size: 11.5px;
+  }
+
+  /* ------- Footer strip ------- */
+  .strip {
+    background: var(--bg-soft);
+    color: var(--fg2);
+    border-top: 1px solid var(--line-soft);
+    height: 22px;
+    line-height: 22px;
+    padding: 0 8px;
+    font-size: 11.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .strip .left { color: var(--fg2); }
+  .strip .left .k { color: var(--brand); }
+  .strip .left .sep { color: var(--fg3); padding: 0 6px; }
+  .strip .left .cost-free { color: var(--sage); }
+  .strip .right { color: var(--brand); }
+
+  /* ====================================================== */
+  /* MODAL OVERLAY — single wizard shown at a time           */
+  /* ====================================================== */
+  .modal-stack {
+    position: relative;
+    background: var(--bg-deep);
+    min-height: 380px;
+    isolation: isolate;
+  }
+  .modal-stack .dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 6, 8, 0.72);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .modal-stack .dim.off { display: none; }
+
+  /* Each wizard is a separate panel; only one shown at a time. */
+  .wizard {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 560px;
+    background: var(--bg-mid);
+    border: 1px solid var(--brand);
+    z-index: 10;
+    box-shadow: 0 0 0 2px rgba(140, 220, 220, 0.18);
+  }
+  .wizard.hidden { display: none; }
+
+  .wizard-head {
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--line);
+    color: var(--brand);
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 0 12px;
+    height: 28px;
+    line-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .wizard-head .skip {
+    text-transform: none;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--fg3);
+    font-size: 11.5px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .wizard-head .skip .x { color: var(--fg2); padding-left: 4px; }
+
+  .wizard-body { padding: 18px 24px 22px; }
+
+  .step-counter {
+    color: var(--fg3);
+    font-size: 11px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .step-counter .dots { display: inline-flex; gap: 6px; align-items: center; }
+  .step-counter .dot {
+    width: 14px; height: 4px; background: var(--line);
+    cursor: pointer;
+  }
+  .step-counter .dot.on  { background: var(--brand); }
+  .step-counter .dot.done { background: var(--sage); }
+
+  /* API key entry panel — only shown when provider requires a key. */
+  .key-panel {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    padding: 10px 12px 8px;
+    margin-bottom: 14px;
+  }
+  .key-panel[data-state="ok"] { border-left: 2px solid var(--sage); }
+  .key-panel[data-state="bad"] { border-left: 2px solid var(--warn); }
+  .key-panel[hidden] { display: none; }
+  .key-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 70px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .key-label {
+    color: var(--brand);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .key-input {
+    background: var(--bg-deep);
+    border: 1px solid var(--line);
+    color: var(--fg);
+    padding: 4px 8px;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    width: 100%;
+  }
+  .key-input:focus { border-color: var(--brand); outline: none; }
+  .btn.test {
+    background: var(--bg-deep);
+    color: var(--brand);
+    border: 1px solid var(--line);
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .btn.test:hover { background: var(--bg-mid); border-color: var(--brand); }
+  .key-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11.5px;
+    color: var(--fg2);
+    margin-top: 4px;
+  }
+  .key-status .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+  .key-status[data-state="ok"]  .dot { background: var(--sage); }
+  .key-status[data-state="bad"] .dot { background: var(--warn); }
+  .key-status[data-state="loading"] .dot { background: var(--brand); animation: pulse 0.8s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+  .key-hint {
+    color: var(--fg3);
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .step-title {
+    color: var(--fg);
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .step-sub {
+    color: var(--fg3);
+    font-size: 11.5px;
+    margin: 0 0 14px;
+  }
+
+  /* Choice list */
+  .choices {
+    border: 1px solid var(--line);
+    background: var(--bg-soft);
+    margin-bottom: 14px;
+  }
+  .choice {
+    display: grid;
+    grid-template-columns: 22px 100px 75px 1fr;
+    gap: 10px;
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--line-soft);
+    cursor: pointer;
+    color: var(--fg);
+    user-select: none;
+  }
+  .choice:last-child { border-bottom: 0; }
+  .choice .radio {
+    color: var(--fg3);
+    text-align: center;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .choice.selected {
+    background: var(--bg-mid);
+    border-left: 2px solid var(--brand);
+  }
+  .choice.selected .radio { color: var(--brand); }
+  .choice .name { color: var(--brand); font-weight: 600; }
+  .choice .tier {
+    color: var(--amber);
+    font-size: 11px;
+    text-align: right;
+  }
+  .choice .tier.free  { color: var(--sage); }
+  .choice .tier.local { color: var(--sage); }
+  .choice .tier.paid  { color: var(--warn); }
+  .choice .desc { color: var(--fg3); font-size: 11.5px; }
+
+  /* Info panel beneath choices */
+  .info-panel {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    color: var(--fg2);
+    font-size: 11.5px;
+    margin-bottom: 18px;
+  }
+  .info-panel .label {
+    color: var(--brand); font-weight: 600; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .info-panel ul { margin: 4px 0 0 0; padding-left: 18px; }
+  .info-panel li { margin: 1px 0; color: var(--fg2); }
+
+  /* Footer nav */
+  .wizard-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px 18px;
+  }
+  .wizard-foot .nav { display: flex; gap: 10px; }
+  .btn {
+    background: var(--bg-soft);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    padding: 4px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--bg-mid); }
+  .btn.primary {
+    background: var(--brand);
+    color: var(--bg-deep);
+    border-color: var(--brand);
+    font-weight: 600;
+  }
+  .btn.primary:hover { background: #a8eaea; }
+  .btn .k { color: var(--brand); padding-right: 4px; font-weight: 600; }
+  .btn.primary .k { color: var(--bg-deep); }
+
+  /* Step-recap row */
+  .recap {
+    display: flex; gap: 16px;
+    font-size: 11px;
+    color: var(--fg3);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line-soft);
+  }
+  .recap .item .k { color: var(--brand); font-weight: 600; padding-right: 4px; }
+  .recap .item .v { color: var(--amber); }
+
+  .footnote {
+    color: var(--fg3); font-size: 11px; margin: 12px 0 0;
+  }
+  .footnote code {
+    color: var(--brand);
+    background: var(--bg-soft);
+    padding: 0 4px;
+  }
+
+  /* Confirm checkmark animation when wizard finishes */
+  .confirm {
+    text-align: center;
+    padding: 26px 24px 30px;
+  }
+  .confirm .check {
+    font-size: 32px;
+    color: var(--sage);
+    margin-bottom: 8px;
+  }
+  .confirm .big {
+    color: var(--fg);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .confirm .sub {
+    color: var(--fg3);
+    font-size: 11.5px;
+    margin-bottom: 18px;
+  }
+  .confirm .summary {
+    display: inline-block;
+    text-align: left;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    padding: 10px 14px;
+    margin: 0 auto 18px;
+    color: var(--fg2);
+    font-size: 11.5px;
+  }
+  .confirm .summary .k { color: var(--brand); font-weight: 600; }
+  .confirm .summary .v { color: var(--amber); }
+  .confirm .summary .row { margin: 2px 0; }
+</style>
+</head>
+<body>
+
+<h1>Welcome wizard preview · Template B (interactive, one step at a time)</h1>
+<p class="lede">
+  Use <code>←</code> / <code>→</code> keys, click <strong>Next →</strong> / <strong>← Back</strong>, or click the step dots at the top. <strong>Skip for now ×</strong> dismisses the wizard and returns to chat.
+</p>
+
+<div class="frame" id="frame">
+  <div class="head">
+    <span><span class="brand">labourious</span> <span class="here">/ chat</span> · new run</span>
+    <span class="info"><span class="k">Tab</span> focus input · <span class="k">?</span> help</span>
+  </div>
+  <div class="body-row">
+    <div class="sidebar">
+      <div class="h">Activity</div>
+      <div class="meta">(idle)</div>
+      <div class="h" style="margin-top: 12px;">Cost</div>
+      <div class="meta">$0.0000 · 0 in / 0 out</div>
+      <div class="h" style="margin-top: 12px;">Thesis register</div>
+      <div class="meta">(empty)</div>
+    </div>
+
+    <div class="chat-pane" id="chatPane">
+      <div class="welcome-bubble" id="welcomeBubble">
+        <h1>Welcome</h1>
+        <div class="pill" id="welcomePill">
+          <strong id="welcomeState">Ready</strong> ·
+          model <span class="v" id="welcomeModel">ollama/llama3.3:70b</span> ·
+          depth STANDARD · paid-for none
+        </div>
+        <p style="color: var(--fg2); margin: 8px 0 0;" id="welcomeBlurb">
+          Pick a ticker below to start the flagship flow, or type your own prompt.
+        </p>
+        <div class="chips-row">
+          <span class="chip">NVDA</span><span class="chip">AAPL</span><span class="chip">MSFT</span>
+          <span class="chip">GOOG</span><span class="chip">AMZN</span><span class="chip">META</span>
+          <span class="chip">TSLA</span>
+        </div>
+      </div>
+      <div style="color: var(--fg3); font-size: 11px; margin-top: 12px;" class="welcome-actions">
+        <span style="color: var(--brand);">s</span> open Settings ·
+        <span style="color: var(--brand);">h</span> open History ·
+        <span style="color: var(--brand);">?</span> open Help ·
+        <span style="color: var(--brand);">/setup</span> re-run this wizard
+      </div>
+
+      <!-- ============= WIZARD MOUNT ============= -->
+      <div class="modal-stack" id="modalStack">
+        <div class="dim" id="dimLayer"></div>
+
+        <!-- ============ STEP 1: Provider ============ -->
+        <div class="wizard hidden" id="wizard-1" data-step="1">
+          <div class="wizard-head">
+            <span>SET UP LABOURIOUS · FIRST RUN</span>
+            <span class="skip" data-action="skip">Skip for now<span class="x">×</span></span>
+          </div>
+          <div class="wizard-body">
+            <div class="step-counter">
+              <span>Step 1 of 3</span>
+              <span class="dots">
+                <span class="dot on"  data-jump="1"></span>
+                <span class="dot"     data-jump="2"></span>
+                <span class="dot"     data-jump="3"></span>
+              </span>
+            </div>
+            <h3 class="step-title">Which provider should Labourious talk to first?</h3>
+            <p class="step-sub">Pick one — you can switch anytime from Settings. The first row is the recommended default.</p>
+
+            <div class="choices" data-step-choices="1">
+              <div class="choice selected" data-pick="Ollama">
+                <span class="radio">●</span><span class="name">Ollama</span>
+                <span class="tier local">local</span>
+                <span class="desc">Runs locally with zero config. Free, private, no API key needed.</span>
+              </div>
+              <div class="choice" data-pick="OmniRoute">
+                <span class="radio">○</span><span class="name">OmniRoute</span>
+                <span class="tier local">local</span>
+                <span class="desc">`npm i -g omniroute` — routes 43 free pools / 516 models. No key needed.</span>
+              </div>
+              <div class="choice" data-pick="OpenRouter">
+                <span class="radio">○</span><span class="name">OpenRouter</span>
+                <span class="tier free">free</span>
+                <span class="desc">One key gives access to 500+ models; free tier rotates daily.</span>
+              </div>
+              <div class="choice" data-pick="Groq">
+                <span class="radio">○</span><span class="name">Groq</span>
+                <span class="tier free">free</span>
+                <span class="desc">Fastest free cloud inference. Rate-limited but no card required.</span>
+              </div>
+              <div class="choice" data-pick="Anthropic">
+                <span class="radio">○</span><span class="name">Anthropic</span>
+                <span class="tier paid">paid</span>
+                <span class="desc">Claude Sonnet / Opus. Requires API key and a billing setup.</span>
+              </div>
+              <div class="choice" data-pick="OpenAI">
+                <span class="radio">○</span><span class="name">OpenAI</span>
+                <span class="tier paid">paid</span>
+                <span class="desc">GPT-4o / o1. Requires API key and a billing setup.</span>
+              </div>
+            </div>
+
+            <!-- Inline API key entry — only shown for cloud providers. -->
+            <div class="key-panel" id="keyPanel" data-state="local" hidden>
+              <div class="key-row">
+                <span class="key-label">API key</span>
+                <input type="password" class="key-input" id="keyInput"
+                       placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false" />
+                <button class="btn test" id="testBtn">Test ↻</button>
+              </div>
+              <div class="key-status" id="keyStatus">
+                <span class="dot" id="keyDot"></span>
+                <span id="keyStatusText">paste a key and hit Test to verify</span>
+              </div>
+              <div class="key-hint" id="keyHint">
+                <span style="color: var(--brand);">↪</span> Stored in OS keychain; never written to disk in plaintext.
+              </div>
+            </div>
+
+            <div class="info-panel" id="infoPanel">
+              <div class="label">Why Ollama?</div>
+              <ul>
+                <li>Zero config — runs locally; no API key, no account, no billing.</li>
+                <li>Free forever for unlimited analysis (subject to your hardware).</li>
+                <li>Your prompts + thesis_register stay on this machine.</li>
+                <li>Need ~6 GB of free disk for llama3.2:8b (recommended).</li>
+              </ul>
+            </div>
+
+            <div class="wizard-foot">
+              <span style="color: var(--fg3); font-size: 11.5px;">
+                <span style="color: var(--brand);">↑↓</span> navigate ·
+                <span style="color: var(--brand);">Enter</span> select ·
+                <span style="color: var(--brand);">→</span> next
+              </span>
+              <span class="nav">
+                <button class="btn primary" data-action="next">Next → <span class="k">↵</span></button>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ STEP 2: Model ============ -->
+        <div class="wizard hidden" id="wizard-2" data-step="2">
+          <div class="wizard-head">
+            <span>SET UP LABOURIOUS · FIRST RUN</span>
+            <span class="skip" data-action="skip">Skip for now<span class="x">×</span></span>
+          </div>
+          <div class="wizard-body">
+            <div class="step-counter">
+              <span>Step 2 of 3</span>
+              <span class="dots">
+                <span class="dot done" data-jump="1"></span>
+                <span class="dot on"   data-jump="2"></span>
+                <span class="dot"      data-jump="3"></span>
+              </span>
+            </div>
+
+            <div class="recap">
+              <span class="item"><span class="k">Provider</span><span class="v" id="recapProvider">Ollama</span></span>
+              <span class="item"><span class="k">Key</span><span class="v" id="recapKey">—</span></span>
+              <span class="item"><span class="k">Mode</span><span class="v">— pick in step 3 —</span></span>
+            </div>
+
+            <h3 class="step-title" id="step2Title">Which model should we use as the default?</h3>
+            <p class="step-sub" id="step2Sub">Models shown are curated for your chosen provider. You can swap per-run with <code>/model &lt;name&gt;</code>.</p>
+
+            <div class="choices" id="modelChoices" data-step-choices="2">
+              <div class="choice" data-pick="llama3.2:3b">
+                <span class="radio">○</span><span class="name">llama3.2:3b</span>
+                <span class="tier local">2 GB</span>
+                <span class="desc">Fastest; weak on nuanced thesis reasoning. Best for SCAN.</span>
+              </div>
+              <div class="choice selected" data-pick="llama3.2:8b">
+                <span class="radio">●</span><span class="name">llama3.2:8b</span>
+                <span class="tier local">5 GB</span>
+                <span class="desc">Best speed/quality balance. Recommended for first-time users.</span>
+              </div>
+              <div class="choice" data-pick="llama3.3:70b">
+                <span class="radio">○</span><span class="name">llama3.3:70b</span>
+                <span class="tier local">40 GB</span>
+                <span class="desc">Deepest local reasoning. Needs Apple Silicon / 64 GB+ RAM.</span>
+              </div>
+              <div class="choice" data-pick="qwen2.5-coder:32b">
+                <span class="radio">○</span><span class="name">qwen2.5-coder:32b</span>
+                <span class="tier local">20 GB</span>
+                <span class="desc">Strong on quant + financial text. Slower than llama3.3:70b.</span>
+              </div>
+              <div class="choice" data-pick="deepseek-r1:32b">
+                <span class="radio">○</span><span class="name">deepseek-r1:32b</span>
+                <span class="tier local">20 GB</span>
+                <span class="desc">Reasoning-tuned. Verbose; ~2x slower for the same output.</span>
+              </div>
+            </div>
+
+            <div class="info-panel">
+              <div class="label">Pick <strong style="color: var(--sage);">llama3.2:8b</strong> if unsure</div>
+              <ul>
+                <li>Runs comfortably on a 16 GB MacBook Air.</li>
+                <li>Scores ~80% of llama3.3:70b on the f1 memo rubric (per smoke runs).</li>
+                <li>You can upgrade to 70b later with one line in Settings.</li>
+              </ul>
+            </div>
+
+            <div class="wizard-foot">
+              <span style="color: var(--fg3); font-size: 11.5px;">
+                <span style="color: var(--brand);">↑↓</span> navigate ·
+                <span style="color: var(--brand);">Enter</span> select ·
+                <span style="color: var(--brand);">→</span> next ·
+                <span style="color: var(--brand);">←</span> back
+              </span>
+              <span class="nav">
+                <button class="btn" data-action="back"><span class="k">←</span> Back</button>
+                <button class="btn primary" data-action="next">Next → <span class="k">↵</span></button>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ STEP 3: Mode ============ -->
+        <div class="wizard hidden" id="wizard-3" data-step="3">
+          <div class="wizard-head">
+            <span>SET UP LABOURIOUS · FIRST RUN</span>
+            <span class="skip" data-action="skip">Skip for now<span class="x">×</span></span>
+          </div>
+          <div class="wizard-body">
+            <div class="step-counter">
+              <span>Step 3 of 3</span>
+              <span class="dots">
+                <span class="dot done" data-jump="1"></span>
+                <span class="dot done" data-jump="2"></span>
+                <span class="dot on"   data-jump="3"></span>
+              </span>
+            </div>
+
+            <div class="recap">
+              <span class="item"><span class="k">Provider</span><span class="v" id="recapProvider3">Ollama</span></span>
+              <span class="item"><span class="k">Model</span><span class="v" id="recapModel3">llama3.2:8b</span></span>
+            </div>
+
+            <h3 class="step-title">How should Labourious pay for runs?</h3>
+            <p class="step-sub">Free-only stays local forever. Hybrid routes just the final synthesis to a paid model — best of both, costs cents per run.</p>
+
+            <div class="choices" data-step-choices="3">
+              <div class="choice selected" data-pick="Free-only">
+                <span class="radio">●</span><span class="name">Free-only</span>
+                <span class="tier free">$0</span>
+                <span class="desc">Every agent on Ollama. Zero cost; quality depends on model size.</span>
+              </div>
+              <div class="choice" data-pick="Hybrid">
+                <span class="radio">○</span><span class="name">Hybrid</span>
+                <span class="tier paid">~$0.05/run</span>
+                <span class="desc">Free for research; Claude Sonnet synthesises the final memo. Costs ~5¢/run.</span>
+              </div>
+              <div class="choice" data-pick="All-paid">
+                <span class="radio">○</span><span class="name">All-paid</span>
+                <span class="tier paid">~$0.20/run</span>
+                <span class="desc">Every agent on Claude Sonnet. Best quality; ~20¢ per f1 memo.</span>
+              </div>
+            </div>
+
+            <div class="info-panel">
+              <div class="label">Pick <strong style="color: var(--sage);">Free-only</strong> to start</div>
+              <ul>
+                <li>You can switch any time with <code>/paid-for final-report</code> for hybrid, or <code>/model anthropic/claude-sonnet-4-5</code> for all-paid.</li>
+                <li>Hybrid is recommended once you've seen a few free memos and trust the citations.</li>
+                <li>Footer always shows live cost: <span style="color: var(--sage);">free · 5 agents</span> or <span style="color: var(--amber);">≈ $0.05 · 5 agents</span>.</li>
+              </ul>
+            </div>
+
+            <div class="wizard-foot">
+              <span style="color: var(--fg3); font-size: 11.5px;">
+                <span style="color: var(--brand);">↑↓</span> navigate ·
+                <span style="color: var(--brand);">Enter</span> select ·
+                <span style="color: var(--brand);">→</span> save ·
+                <span style="color: var(--brand);">←</span> back
+              </span>
+              <span class="nav">
+                <button class="btn" data-action="back"><span class="k">←</span> Back</button>
+                <button class="btn primary" data-action="next">Save &amp; start → <span class="k">↵</span></button>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ CONFIRMATION ============ -->
+        <div class="wizard hidden" id="wizard-done" data-step="4">
+          <div class="wizard-head">
+            <span>SET UP LABOURIOUS · FIRST RUN</span>
+            <span class="skip" data-action="skip">Done<span class="x">×</span></span>
+          </div>
+          <div class="confirm">
+            <div class="check">✓</div>
+            <div class="big">Setup saved</div>
+            <div class="sub">Your defaults are wired. Pick a ticker below or type a prompt to start.</div>
+            <div class="summary" id="confirmSummary">
+              <div class="row"><span class="k">Provider</span> · <span class="v" id="cfProvider">Ollama</span></div>
+              <div class="row"><span class="k">Model</span> · <span class="v" id="cfModel">llama3.2:8b</span></div>
+              <div class="row"><span class="k">Mode</span> · <span class="v" id="cfMode">Free-only</span></div>
+              <div class="row"><span class="k">Cost</span> · <span class="v" style="color: var(--sage);">free · 5 agents</span></div>
+            </div>
+            <div>
+              <button class="btn primary" data-action="restart">Run <code style="background:transparent;color:var(--bg-deep)">/setup</code> again</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /modal-stack -->
+    </div><!-- /chat-pane -->
+  </div><!-- /body-row -->
+  <div class="strip" id="footerStrip">
+    <span class="left">
+      <span>f1</span><span class="sep">·</span>
+      <span id="stripModel">ollama/llama3.3:70b</span><span class="sep">·</span>
+      paid-for: <span style="color: var(--fg3);">none</span><span class="sep">·</span>
+      depth: STANDARD<span class="sep">·</span>
+      <span class="cost-free" id="stripCost">free · 5 agents</span>
+    </span>
+    <span class="right">?  help</span>
+  </div>
+</div><!-- /frame -->
+
+<p class="footnote">
+  <strong>Try:</strong> click any choice in a step to select it (radio fills, left border turns brand-cyan). Click the dot row at the top to jump. Click <strong>Next →</strong> or <strong>← Back</strong> to navigate. Click <strong>Skip for now ×</strong> to dismiss.
+</p>
+
+<script>
+  // ------- State -------
+  const state = {
+    step: 1,                 // 1, 2, 3, 4 (4 = done)
+    selections: {
+      1: 'Ollama',           // provider
+      2: 'llama3.2:8b',      // model
+      3: 'Free-only',        // mode
+    },
+    key: '',                  // API key entered by the user (if any)
+    keyStatus: 'idle',        // 'idle' | 'loading' | 'ok' | 'bad'
+  };
+
+  // Provider metadata for the wizard Step 1.
+  // tier: 'local' (no key) | 'free' | 'paid' | 'gateway' (local proxy, no key)
+  // keyEnv: env var name + where to send the key
+  const PROVIDERS = {
+    'Ollama':     { tier: 'local',  label: 'Ollama',     needsKey: false,
+                   info: 'Zero config — runs locally; no API key, no account, no billing.\nFree forever for unlimited analysis (subject to your hardware).\nYour prompts + thesis_register stay on this machine.\nNeed ~6 GB of free disk for llama3.2:8b (recommended).' },
+    'OmniRoute':  { tier: 'gateway', label: 'OmniRoute', needsKey: 'optional',
+                   placeholder: '(optional — leave blank for built-in free pools)',
+                   info: '`npm i -g omniroute` then start the local gateway.\nDefault `auto` mode routes across 43 free provider pools / 516 models — no key needed.\nOptional: paste a provider key (e.g. Kimi / OpenAI / Anthropic) to use your own quota.\nManage provider keys with `omniroute login <provider>` from your terminal.' },
+    'OpenRouter': { tier: 'free',   label: 'OpenRouter', needsKey: true,
+                   keyEnv: 'OPENROUTER_API_KEY', placeholder: 'sk-or-v1-…',
+                   info: 'One key gives access to 500+ models.\nFree tier rotates daily; ~50 free models available at any time.\nGet a key at openrouter.ai/keys (free signup, no card).' },
+    'Groq':       { tier: 'free',   label: 'Groq',       needsKey: true,
+                   keyEnv: 'GROQ_API_KEY', placeholder: 'gsk_…',
+                   info: 'Free dev tier — 30 RPM, 6K TPM, 14.4K RPD.\nBlazing fast LPU inference; great for SCAN + iterative analysis.\nGet a key at console.groq.com (free, no card).' },
+    'Anthropic':  { tier: 'paid',   label: 'Anthropic',  needsKey: true,
+                   keyEnv: 'ANTHROPIC_API_KEY', placeholder: 'sk-ant-…',
+                   info: 'Claude Sonnet 4.5 / Opus 4 / Haiku 4.\nBest analytical writing & tool use.\nRequires API key + a billing setup at console.anthropic.com.' },
+    'OpenAI':     { tier: 'paid',   label: 'OpenAI',     needsKey: true,
+                   keyEnv: 'OPENAI_API_KEY', placeholder: 'sk-…',
+                   info: 'GPT-4o / o1 / o3.\nStrong tool-calling & coding workloads.\nRequires API key + a billing setup at platform.openai.com.' },
+  };
+
+  // ------- Element refs -------
+  const chatPane   = document.getElementById('chatPane');
+  const dimLayer   = document.getElementById('dimLayer');
+  const wizards    = {
+    1: document.getElementById('wizard-1'),
+    2: document.getElementById('wizard-2'),
+    3: document.getElementById('wizard-3'),
+    4: document.getElementById('wizard-done'),
+  };
+
+  // ------- Render -------
+  function show() {
+    Object.entries(wizards).forEach(([k, el]) => {
+      el.classList.toggle('hidden', Number(k) !== state.step);
+    });
+    const on = state.step < 4;
+    dimLayer.classList.toggle('off', !on);
+    chatPane.classList.toggle('dimmed', on);
+    // Footer cost chip — reflects the live model pick.
+    updateFooter();
+  }
+
+  function updateFooter() {
+    const model = state.selections[2];
+    const mode  = state.selections[3];
+    document.getElementById('stripModel').textContent = modelSlot(model);
+    const costChip = document.getElementById('stripCost');
+    if (mode === 'Free-only') {
+      costChip.textContent = 'free · 5 agents';
+      costChip.style.color = 'var(--sage)';
+    } else if (mode === 'Hybrid') {
+      costChip.textContent = '≈ $0.05 · 5 agents';
+      costChip.style.color = 'var(--amber)';
+    } else {
+      costChip.textContent = '≈ $0.20 · 5 agents';
+      costChip.style.color = 'var(--amber)';
+    }
+  }
+
+  function modelSlot(model) {
+    if (state.selections[1] === 'Anthropic') return `anthropic/${model}`;
+    if (state.selections[1] === 'OpenAI')    return `openai/${model}`;
+    return `ollama/${model}`;
+  }
+
+  // ------- Interactions -------
+  // Choice selection (within a step)
+  document.querySelectorAll('.choices').forEach((choicesEl) => {
+    const step = Number(choicesEl.dataset.stepChoices);
+    choicesEl.querySelectorAll('.choice').forEach((choice) => {
+      choice.addEventListener('click', () => {
+        choicesEl.querySelectorAll('.choice').forEach(c => {
+          c.classList.remove('selected');
+          c.querySelector('.radio').textContent = '○';
+        });
+        choice.classList.add('selected');
+        choice.querySelector('.radio').textContent = '●';
+        state.selections[step] = choice.dataset.pick;
+        // If the provider just changed in Step 1, refresh the key panel + info panel.
+        if (step === 1) onProviderChanged();
+        syncRecaps();
+      });
+    });
+  });
+
+  // Provider changed — update key panel visibility + info panel content + model defaults.
+  function onProviderChanged() {
+    const p = state.selections[1];
+    const meta = PROVIDERS[p];
+    const keyPanel = document.getElementById('keyPanel');
+    const keyInput = document.getElementById('keyInput');
+    const keyStatus = document.getElementById('keyStatus');
+    const keyHint = document.getElementById('keyHint');
+
+    // Show / hide the key panel based on whether this provider needs one.
+    if (meta.needsKey === true) {
+      // Required — e.g. OpenRouter / Anthropic / OpenAI / Groq
+      keyPanel.hidden = false;
+      keyPanel.dataset.state = 'idle';
+      keyInput.placeholder = meta.placeholder || 'paste your API key…';
+      keyInput.disabled = false;
+      keyInput.value = state.key || '';
+      keyStatus.dataset.state = 'idle';
+      document.getElementById('keyStatusText').textContent =
+        'paste a key and hit Test to verify';
+      keyHint.innerHTML = `<span style="color: var(--brand);">↪</span> Key saved as <code>${meta.keyEnv}</code> in OS keychain.`;
+    } else if (meta.needsKey === 'optional') {
+      // Optional — OmniRoute: blank uses free pools; key adds your quota
+      keyPanel.hidden = false;
+      keyPanel.dataset.state = state.key ? 'ok' : 'idle';
+      keyInput.placeholder = meta.placeholder;
+      keyInput.disabled = false;
+      keyInput.value = state.key || '';
+      if (state.key) {
+        keyStatus.dataset.state = 'ok';
+        document.getElementById('keyStatusText').textContent =
+          '✓ key saved — OmniRoute will route via your credentials';
+      } else {
+        keyStatus.dataset.state = 'idle';
+        document.getElementById('keyStatusText').textContent =
+          '○ optional — leave blank to use OmniRoute\u2019s built-in free pools';
+      }
+      keyHint.innerHTML = `<span style="color: var(--brand);">↪</span> Saved in OS keychain as <code>omniroute</code>. Manage provider keys via <code>omniroute login &lt;provider&gt;</code>.`;
+    } else {
+      // Pure local (Ollama, LM Studio): hide the panel entirely.
+      keyPanel.hidden = true;
+      keyInput.disabled = false;
+    }
+
+    // Refresh the info panel to be provider-specific.
+    const info = document.getElementById('infoPanel');
+    info.innerHTML = `
+      <div class="label">${meta.tier === 'local' ? 'Why ' + meta.label + '?' :
+                            meta.tier === 'gateway' ? 'About ' + meta.label :
+                            meta.tier === 'free' ? 'How ' + meta.label + ' works' :
+                            meta.label + ' — paid tier'}</div>
+      <ul>${meta.info.split('\n').map(line => `<li>${line}</li>`).join('')}</ul>
+    `;
+
+    // When provider flips, reset key test state and step-2 model defaults.
+    state.key = '';
+    state.keyStatus = 'idle';
+    syncStep2Models();
+  }
+
+  // Per-provider curated model lists (for Step 2 display + auto-pick).
+  const PROVIDER_MODELS = {
+    'Ollama':     ['llama3.2:3b', 'llama3.2:8b', 'llama3.3:70b',
+                   'qwen2.5-coder:32b', 'deepseek-r1:32b'],
+    'OmniRoute':  ['auto', 'auto/coding', 'auto/fast', 'auto/cheap', 'auto/offline', 'auto/smart'],
+    'OpenRouter': ['meta-llama/llama-3.3-70b-instruct:free',
+                   'meta-llama/llama-3.1-8b-instruct:free',
+                   'mistralai/mistral-7b-instruct:free',
+                   'qwen/qwen-2.5-72b-instruct:free',
+                   'deepseek/deepseek-r1:free'],
+    'Groq':       ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant',
+                   'mixtral-8x7b-32768', 'deepseek-r1-distill-llama-70b'],
+    'Anthropic':  ['claude-sonnet-4-5', 'claude-opus-4', 'claude-haiku-4'],
+    'OpenAI':     ['gpt-4o', 'gpt-4.1', 'o3', 'o4-mini', 'gpt-4.1-mini'],
+  };
+
+  // Test button — simulate a key-check round-trip (mock latency 600ms).
+  const testBtn = document.getElementById('testBtn');
+  if (testBtn) {
+    testBtn.addEventListener('click', () => {
+      const p = state.selections[1];
+      const meta = PROVIDERS[p];
+      if (!meta || meta.needsKey === false) return;
+      const v = document.getElementById('keyInput').value.trim();
+      const status = document.getElementById('keyStatus');
+      const statusText = document.getElementById('keyStatusText');
+      const panel = document.getElementById('keyPanel');
+      // Optional case (OmniRoute): blank input is valid → save "no key" and exit
+      if (meta.needsKey === 'optional' && !v) {
+        state.key = '';
+        state.keyStatus = 'idle';
+        status.dataset.state = 'idle';
+        statusText.textContent = '○ optional — leave blank to use OmniRoute\u2019s built-in free pools';
+        panel.dataset.state = 'idle';
+        syncRecaps();
+        return;
+      }
+      if (!v) {
+        state.keyStatus = 'bad';
+        status.dataset.state = 'bad';
+        statusText.textContent = '× paste a key first';
+        panel.dataset.state = 'bad';
+        return;
+      }
+      // Simulated probe
+      state.keyStatus = 'loading';
+      status.dataset.state = 'loading';
+      statusText.textContent = `probing ${meta.label}…`;
+      panel.dataset.state = 'idle';
+      setTimeout(() => {
+        const looksValid = v.length >= 12 && !v.includes(' ');
+        if (looksValid) {
+          state.keyStatus = 'ok';
+          state.key = v;
+          status.dataset.state = 'ok';
+          statusText.textContent = meta.needsKey === 'optional'
+            ? `✓ key saved — OmniRoute will route via your credentials`
+            : `✓ saved — ${meta.label} accepted this key`;
+          panel.dataset.state = 'ok';
+        } else {
+          state.keyStatus = 'bad';
+          status.dataset.state = 'bad';
+          statusText.textContent = `× ${meta.label} rejected (check format)`;
+          panel.dataset.state = 'bad';
+        }
+        syncRecaps();
+      }, 650);
+    });
+  }
+
+  function syncRecaps() {
+    const r2 = document.getElementById('recapProvider');
+    if (r2) r2.textContent = state.selections[1];
+    const r3p = document.getElementById('recapProvider3');
+    if (r3p) r3p.textContent = state.selections[1];
+    const r3m = document.getElementById('recapModel3');
+    if (r3m) r3m.textContent = state.selections[2];
+    // Key recap (Step 2)
+    const rk = document.getElementById('recapKey');
+    if (rk) {
+      const meta = PROVIDERS[state.selections[1]];
+      if (!meta || !meta.needsKey) rk.textContent = 'n/a';
+      else if (state.keyStatus === 'ok') rk.innerHTML = '<span style="color: var(--sage);">✓ saved</span>';
+      else rk.textContent = '—';
+    }
+    document.getElementById('cfProvider').textContent = state.selections[1];
+    document.getElementById('cfModel').textContent    = state.selections[2];
+    document.getElementById('cfMode').textContent     = state.selections[3];
+    // The welcome bubble model line tracks the picked model too.
+    document.getElementById('welcomeModel').textContent = modelSlot(state.selections[2]);
+  }
+
+  // Re-render the Step 2 model list to match the picked provider.
+  function syncStep2Models() {
+    const provider = state.selections[1];
+    const models = PROVIDER_MODELS[provider] || [];
+    const choicesEl = document.getElementById('modelChoices');
+    if (!choicesEl) return;
+    choicesEl.innerHTML = '';
+    models.forEach((m, i) => {
+      const div = document.createElement('div');
+      div.className = 'choice' + (i === 0 ? ' selected' : '');
+      div.dataset.pick = m;
+      div.innerHTML = `
+        <span class="radio">${i === 0 ? '●' : '○'}</span>
+        <span class="name">${m}</span>
+        <span class="tier ${PROVIDERS[provider]?.tier === 'local' || PROVIDERS[provider]?.tier === 'gateway' ? 'free' : (PROVIDERS[provider]?.tier === 'paid' ? 'paid' : 'free')}">${tierChip(provider)}</span>
+        <span class="desc">${modelDesc(provider, m)}</span>
+      `;
+      choicesEl.appendChild(div);
+    });
+    state.selections[2] = models[0];
+    // Re-bind click handlers.
+    choicesEl.querySelectorAll('.choice').forEach(choice => {
+      choice.addEventListener('click', () => {
+        choicesEl.querySelectorAll('.choice').forEach(c => {
+          c.classList.remove('selected');
+          c.querySelector('.radio').textContent = '○';
+        });
+        choice.classList.add('selected');
+        choice.querySelector('.radio').textContent = '●';
+        state.selections[2] = choice.dataset.pick;
+        syncRecaps();
+      });
+    });
+    // Step 2 title.
+    const t2 = document.getElementById('step2Title');
+    const s2 = document.getElementById('step2Sub');
+    if (t2) t2.textContent = provider === 'OmniRoute'
+      ? 'Which OmniRoute routing strategy?'
+      : `Which ${provider} model should we use as the default?`;
+    if (s2) s2.textContent = provider === 'OmniRoute'
+      ? '`auto` picks the best free combo live; prefixes tune the routing strategy.'
+      : 'Smaller = faster + less RAM. Larger = smarter analysis. You can swap per-run.';
+    syncRecaps();
+  }
+
+  function tierChip(provider) {
+    const meta = PROVIDERS[provider];
+    if (!meta) return 'free';
+    if (meta.tier === 'local') return 'free';
+    if (meta.tier === 'gateway') return 'free';
+    if (meta.tier === 'free') return 'free';
+    return 'paid';
+  }
+
+  function modelDesc(provider, m) {
+    // One-liner hint per model.
+    const descs = {
+      'llama3.2:3b':           'Fastest; weak on nuanced reasoning. Best for SCAN.',
+      'llama3.2:8b':           'Best speed/quality balance. Recommended for first-time users.',
+      'llama3.3:70b':          'Deepest local reasoning. Needs 64 GB+ RAM.',
+      'qwen2.5-coder:32b':     'Strong on quant + financial text. Slower than llama3.3:70b.',
+      'deepseek-r1:32b':       'Reasoning-tuned. Verbose; ~2x slower.',
+      'auto':                  'Balanced — OmniRoute picks the best free combo live.',
+      'auto/coding':           'Quality-first weights for code generation.',
+      'auto/fast':             'Lowest-latency free backend.',
+      'auto/cheap':            'Cheapest per-token free backend.',
+      'auto/offline':          'Best quota / rate-limit headroom.',
+      'auto/smart':            'Quality-first + 10% exploration.',
+      'meta-llama/llama-3.3-70b-instruct:free':  'Open-weight Llama 3.3 70B; OpenRouter free tier.',
+      'meta-llama/llama-3.1-8b-instruct:free':   'Small + fast; OpenRouter free tier.',
+      'mistralai/mistral-7b-instruct:free':       'Mistral 7B; OpenRouter free tier.',
+      'qwen/qwen-2.5-72b-instruct:free':         'Qwen 2.5 72B; OpenRouter free tier.',
+      'deepseek/deepseek-r1:free':               'DeepSeek R1 reasoning; OpenRouter free tier.',
+      'llama-3.3-70b-versatile':                 'Groq LPU; fastest free inference.',
+      'llama-3.1-8b-instant':                    'Groq LPU; tiny + fast.',
+      'mixtral-8x7b-32768':                      'Mixtral MoE; 32K context.',
+      'deepseek-r1-distill-llama-70b':           'Distilled R1 reasoning on Groq LPU.',
+      'claude-sonnet-4-5':                       'Claude Sonnet 4.5; best analytical writing.',
+      'claude-opus-4':                           'Claude Opus 4; deepest reasoning, ~$15/M in.',
+      'claude-haiku-4':                          'Claude Haiku 4; fast + cheap.',
+      'gpt-4o':                                  'GPT-4o; multimodal; strong tool use.',
+      'gpt-4.1':                                 'GPT-4.1; improved long-context.',
+      'o3':                                      'o3 reasoning; slow but deep.',
+      'o4-mini':                                 'o4-mini reasoning; cheaper than o3.',
+      'gpt-4.1-mini':                            'GPT-4.1 mini; fast + cheap.',
+    };
+    return descs[m] || 'curated model';
+  }
+
+  // Footer button + step dot click delegation
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-action], [data-jump]');
+    if (!target) return;
+    if (target.dataset.action === 'next') {
+      if (state.step < 3) state.step += 1;
+      else if (state.step === 3) state.step = 4;
+      show();
+    } else if (target.dataset.action === 'back') {
+      if (state.step > 1 && state.step < 4) state.step -= 1;
+      show();
+    } else if (target.dataset.action === 'skip') {
+      // Dismiss — hide dim, hide wizards, refresh chat.
+      Object.values(wizards).forEach(el => el.classList.add('hidden'));
+      dimLayer.classList.add('off');
+      chatPane.classList.remove('dimmed');
+      // Update welcome bubble to reflect "skipped" state.
+      document.getElementById('welcomeState').textContent = 'Ready';
+      document.getElementById('welcomeBlurb').innerHTML =
+        '<strong style="color: var(--sage);">✓</strong> Setup skipped — using defaults. Pick a ticker below or type your own prompt.';
+    } else if (target.dataset.action === 'restart') {
+      state.step = 1;
+      show();
+    } else if (target.dataset.jump) {
+      state.step = Number(target.dataset.jump);
+      show();
+    }
+  });
+
+  // Keyboard: ← / → navigate; Esc = skip
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (state.step < 4) { state.step += 1; show(); }
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (state.step > 1 && state.step < 4) { state.step -= 1; show(); }
+    } else if (e.key === 'Escape') {
+      Object.values(wizards).forEach(el => el.classList.add('hidden'));
+      dimLayer.classList.add('off');
+      chatPane.classList.remove('dimmed');
+    }
+  });
+
+  // ------- Boot -------
+  // Build the initial Step 2 model list for the default provider (Ollama).
+  syncStep2Models();
+  show();
+</script>
+
+</body>
+</html>
