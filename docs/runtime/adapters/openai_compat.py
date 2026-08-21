@@ -61,7 +61,7 @@ _OPENAI_COMPAT_SPECS: dict[str, _Spec] = {
     "lm_studio":   _Spec("lm_studio",   "http://localhost:1234/v1",                None,                      streaming=False),
     "vllm":        _Spec("vllm",        "http://localhost:8000/v1",                None,                      streaming=True),
     "custom_openai": _Spec("custom_openai", "http://localhost:9999/v1",            "CUSTOM_API_KEY",          streaming=True),
-    "omniroute":   _Spec("omniroute",   "http://localhost:8317/v1",                None,                      streaming=False),  # CLI; default to no-stream
+    "omniroute":   _Spec("omniroute",   "http://localhost:20128/v1",              "OMNIROUTE_API_KEY",        streaming=True),  # local gateway; key optional
     # tier 2 — free cloud
     "openrouter":  _Spec("openrouter",  "https://openrouter.ai/api/v1",            "OPENROUTER_API_KEY",      streaming=True),
     "mistral":     _Spec("mistral",     "https://api.mistral.ai/v1",               "MISTRAL_API_KEY",         streaming=True),
@@ -214,7 +214,9 @@ class OpenAICompatAdapter:
         # Auth resolution: explicit override → keychain → env → legacy fallback.
         if self.api_key is None:
             self.api_key = _resolve_key(self.spec.name, self.spec.env_var)
-        if not self.api_key:
+        # OmniRoute's fresh install serves keyless free pools. Other
+        # OpenAI-compatible providers still require a credential.
+        if not self.api_key and self.provider != "omniroute":
             raise AuthMissing(provider=self.spec.name)
 
     # --------------------------------------------------------------- call
@@ -222,12 +224,11 @@ class OpenAICompatAdapter:
         options = options or {}
         body = _build_body(messages, system, options, stream=False)
         body["model"] = self._model_only
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
-        }
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
         try:
-            with httpx.Client(timeout=120, transport=self.transport) as client:
+            with httpx.Client(timeout=options.get("_timeout", 120), transport=self.transport) as client:
                 r = client.post(f"{self.base_url}/chat/completions", json=body, headers=headers)
         except httpx.RequestError as exc:
             raise AdapterHTTPError(provider=self.spec.name, status=0,
@@ -257,11 +258,12 @@ class OpenAICompatAdapter:
         body["model"] = self._model_only
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
             "Accept": "text/event-stream",
         }
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
         try:
-            with httpx.Client(timeout=120, transport=self.transport) as client:
+            with httpx.Client(timeout=options.get("_timeout", 120), transport=self.transport) as client:
                 with client.stream("POST",
                                    f"{self.base_url}/chat/completions",
                                    json=body, headers=headers) as r:

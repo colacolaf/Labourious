@@ -530,6 +530,58 @@ InlineTextEditor .editor-input,
     padding: 1 0;
 }
 
+/* ============================================================ OmniRoute setup
+   (inline Settings form; endpoint/model/key/test/save all fit one pane) */
+
+.omniroute-setup {
+    height: auto;
+    background: #0e1014;
+    border: round #465262;
+    padding: 1 2;
+}
+
+.omni-title {
+    color: #8cdcdc;
+    text-style: bold;
+    height: 1;
+}
+
+.omni-help, .omni-label, .omni-status {
+    color: #6e7887;
+    height: 1;
+}
+
+.omni-fields {
+    height: auto;
+    padding: 1 0;
+}
+
+.omni-fields Input {
+    background: #11141a;
+    color: #d4d4d4;
+    border: solid #465262;
+    height: 1;
+    margin: 0 0 1 0;
+}
+
+.omni-fields Input:focus {
+    border: solid #8cdcdc;
+}
+
+.omni-actions {
+    height: 1;
+    align: left middle;
+}
+
+.omni-actions Button {
+    min-width: 18;
+    height: 1;
+    margin: 0 1 0 0;
+}
+
+.omni-status.success { color: #8cd296; }
+.omni-status.error { color: #e19194; }
+
 /* ============================================================ Citation modal
    (one-screen full-width modal opened from a CitationChip) */
 

@@ -13,6 +13,7 @@ from .inline_editor import (                               # type: ignore
     TextEditCommitted, TextEditReverted, ToggleEditCommitted, ToggleEditDone,
 )
 from .message_bubble import MessageBubble                  # type: ignore
+from .omniroute_setup import OmniRouteSetup                # type: ignore
 from .picker_overlay import PickerItem, PickerOverlay      # type: ignore
 from .section_card import SectionCard                      # type: ignore
 from .setting_row import render_row                        # type: ignore
@@ -34,6 +35,7 @@ __all__ = [
     "InlineTextEditor",
     "InlineToggleEditor",
     "MessageBubble",
+    "OmniRouteSetup",
     "PickerItem",
     "PickerOverlay",
     "SectionCard",

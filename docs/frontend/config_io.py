@@ -328,6 +328,7 @@ KNOWN_PROVIDERS: list[tuple[str, str, str, str | None]] = [
     # (name, description, base_url, api_key_env or None for local)
     ("anthropic",    "Anthropic Claude API (paid)", "https://api.anthropic.com", "ANTHROPIC_API_KEY"),
     ("ollama",       "Local models via Ollama (free)", "http://localhost:11434", None),
+    ("omniroute",    "Local OpenAI-compatible gateway (optional key, free pools)", "http://localhost:20128/v1", None),
     ("groq",         "Groq Cloud (OpenAI-compatible, free tier)", "https://api.groq.com/openai/v1", "GROQ_API_KEY"),
     ("openrouter",   "Multi-provider router (credit system)", "https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
     ("openai",       "OpenAI (paid)", "https://api.openai.com/v1", "OPENAI_API_KEY"),

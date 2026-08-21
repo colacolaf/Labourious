@@ -37,9 +37,14 @@ import time
 from dataclasses import dataclass
 from typing import Any, Iterable
 
-from .adapters import get_adapter
-from .adapters._streaming import AuthMissing, AdapterHTTPError
-from ..frontend.keys_storage import probe_endpoint, get_key, key_present
+try:
+    from .adapters import get_adapter
+    from .adapters._streaming import AuthMissing, AdapterHTTPError
+    from ..frontend.keys_storage import probe_endpoint, get_key, key_present
+except ImportError:  # source-tree TUI imports `runtime` and `frontend` as siblings
+    from runtime.adapters import get_adapter  # type: ignore
+    from runtime.adapters._streaming import AuthMissing, AdapterHTTPError  # type: ignore
+    from frontend.keys_storage import probe_endpoint, get_key, key_present  # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -159,7 +164,9 @@ def _provider_has_key(provider: str) -> bool | None:
     local Ollama). Returns False when no key was found.
     """
     # Local providers don't need keys.
-    if provider in ("ollama",):
+    if provider in ("ollama", "omniroute"):
+        # OmniRoute accepts keyless requests on a fresh install; a saved
+        # dashboard key is optional and is resolved by its adapter.
         return None
     if provider == "":
         return None
@@ -336,6 +343,101 @@ def probe_provider(
 
 
 # ---------------------------------------------------------------------------
+# OmniRoute setup probe
+# ---------------------------------------------------------------------------
+
+def probe_omniroute(
+    base_url: str,
+    model: str = "auto",
+    *,
+    api_key: str | None = None,
+    timeout_s: float = DEFAULT_TIMEOUT_S,
+) -> ProbeResult:
+    """Probe a user-configured OmniRoute gateway with a real chat request.
+
+    OmniRoute is unusual among local providers: a fresh install accepts no
+    Authorization header, while a dashboard-issued key is also valid. The
+    setup screen therefore tests the exact endpoint/model/key combination
+    instead of relying on a generic catalog probe.
+    """
+    provider = "omniroute"
+    model_name = f"{provider}/{model.strip() or 'auto'}"
+    base_url = base_url.rstrip("/")
+    if not base_url:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_FAIL, latency_ms=None,
+            error_message="OmniRoute endpoint is empty",
+        )
+    if not probe_endpoint(base_url, timeout=SOCKET_TIMEOUT_S):
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_UNREACHABLE, latency_ms=None,
+            error_message=f"endpoint {base_url} is not reachable",
+            note="TCP probe failed before chat request",
+        )
+
+    try:
+        from .adapters.openai_compat import OpenAICompatAdapter
+    except ImportError:  # source-tree TUI import path
+        from runtime.adapters.openai_compat import OpenAICompatAdapter  # type: ignore
+    started = time.monotonic()
+    try:
+        adapter = OpenAICompatAdapter(
+            model=model_name,
+            base_url=base_url,
+            api_key=api_key or None,
+        )
+        response = adapter.call(
+            messages=[{"role": "user", "content": "Reply with the single word 'ok'."}],
+            system="Reply with the single word 'ok'. Do not add commentary.",
+            options={"max_tokens": 4, "temperature": 0.0, "_timeout": timeout_s},
+        )
+    except AuthMissing as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_AUTH_MISSING, latency_ms=None,
+            error_message=str(e),
+        )
+    except AdapterHTTPError as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_FAIL,
+            latency_ms=int((time.monotonic() - started) * 1000),
+            error_message=str(e),
+        )
+    except (socket.timeout, TimeoutError) as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_TIMEOUT,
+            latency_ms=int((time.monotonic() - started) * 1000),
+            error_message=f"timed out after {timeout_s}s",
+        )
+    except (ConnectionError, OSError) as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_UNREACHABLE, latency_ms=None,
+            error_message=f"connection error: {e}",
+        )
+    except Exception as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_FAIL,
+            latency_ms=int((time.monotonic() - started) * 1000),
+            error_message=f"{type(e).__name__}: {e}",
+        )
+
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    return ProbeResult(
+        provider_name=provider, model_name=model_name,
+        status=STATUS_OK, latency_ms=elapsed_ms,
+        in_tokens=getattr(response, "in_tokens", None),
+        out_tokens=getattr(response, "out_tokens", None),
+        note=("response text: " + (getattr(response, "text", "") or "")[:30]),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Batch convenience
 # ---------------------------------------------------------------------------
 
@@ -361,6 +463,7 @@ def probe_many(
 __all__ = [
     "ProbeResult",
     "probe_provider",
+    "probe_omniroute",
     "probe_many",
     "STATUS_OK", "STATUS_FAIL", "STATUS_AUTH_MISSING",
     "STATUS_TIMEOUT", "STATUS_UNREACHABLE",

@@ -25,7 +25,7 @@ from typing import Literal
 
 
 Tier = Literal["local", "free", "paid", "custom"]
-AuthKind = Literal["none", "bearer", "header", "oauth", "pat"]
+AuthKind = Literal["none", "optional", "bearer", "header", "oauth", "pat"]
 
 
 @dataclass(frozen=True)
@@ -35,7 +35,7 @@ class ProviderEntry:
     display: str                       # human label shown in the panel
     tier: Tier
     auth: AuthKind
-    base_url: str | None               # None when the provider is a CLI tool (OmniRoute)
+    base_url: str | None               # configured HTTP base URL; None for custom entry
     env_var: str | None                # env var name holding the API key
     default_model: str                 # initial model
     models: tuple[str, ...]            # curated list shown in the model dropdown
@@ -77,12 +77,13 @@ _LOCAL = (
         name="omniroute",
         display="OmniRoute",
         tier="local",
-        auth="none",
+        auth="optional",
         # OmniRoute is a local OpenAI-compatible gateway (npm i -g omniroute).
+        # It can serve keyless free pools, but accepts an optional gateway key.
         # Default port per upstream docs: 20128 (NOT 8317 — that was an old
         # version we tracked before re-reading the npm page in 2026-08).
         base_url="http://localhost:20128/v1",
-        env_var=None,
+        env_var="OMNIROUTE_API_KEY",
         # Default model: `auto` is OmniRoute's "you pick the best free
         # combo" mode. The prefix variants below tune the routing strategy
         # (latency vs cost vs offline quota etc.). All OpenAI-compatible.

@@ -33,6 +33,7 @@ class LabouriousApp(App):
 
     TITLE = "Labourious"
     SUB_TITLE = "analyst's bench · v0"
+    CSS_PATH = Path(__file__).with_name("style.tcss")
     BINDINGS = APP_BINDINGS
 
     def __init__(self, **kwargs) -> None:

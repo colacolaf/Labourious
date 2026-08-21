@@ -1081,6 +1081,18 @@ section + ticker in `what_an_attacker_would_say`.
 
 ---
 
+### `[omniroute-setup]` Inline OmniRoute setup — DONE
+
+- **Frontend**: Settings → Providers → `Ctrl+N` → `omniroute` opens one compact inline form for endpoint, model strategy, optional gateway key, Test connection, Save, and Cancel. Press `e` while the OmniRoute row is focused to edit it later.
+- **Real test gate**: Save stays disabled until the exact current endpoint/model/key values pass a real OpenAI-compatible `POST /v1/chat/completions` probe. Keyless installs are supported; keyed requests send `Authorization: Bearer …`.
+- **Persistence**: endpoint and selected `omniroute/<model>` are written atomically to `~/.labourious/config.json`; the API key goes through `frontend.keys_storage` (OS keychain when available, test-safe fallback otherwise) and is never serialized into config or rendered into rows.
+- **Runtime**: OmniRoute now uses `http://localhost:20128/v1`, supports streaming, accepts `auto` plus the five documented `auto/*` strategies, and does not require a key for fresh free-pool installs.
+- **Validation**: rejects malformed URLs, embedded credentials, whitespace model IDs, and whitespace/oversized keys. Any edit invalidates the prior test so Save cannot persist an untested change.
+- **Pilot**: `docs/runtime/smokes/omniroute_setup_smoke.py` — **35/35 assertions** covering catalog values, endpoint/model validation, keyless and keyed request bodies/headers, atomic config + keychain separation, Textual form test→save flow, and runtime streaming registry.
+- **Known limitation**: the pilot uses a mocked HTTP transport. A live `OK` result requires OmniRoute running locally (`npm install -g omniroute && omniroute`); when it is absent, the real probe correctly reports `UNREACHABLE` rather than claiming success.
+
+---
+
 ## How to pick the next one (revised priority after the runtime audit)
 
 The new sections above re-order everything. When picking the next thing:
