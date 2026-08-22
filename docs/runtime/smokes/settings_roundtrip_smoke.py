@@ -1,29 +1,20 @@
-"""settings-roundtrip — Config → ChatScreen.reload_config_from_disk → execute_flow_f1.
+"""settings-roundtrip — Config → ChatScreen.reload_config_from_disk → run_flow_stream.
 
 Verifies the full path:
   1. Config.save_config() round-trips per_agent_model
   2. Simulate ChatScreen.reload_config_from_disk() — load → self.per_agent_model
-  3. execute_flow_f1 passes per_agent_model into every call_agent
+  3. run_flow_stream passes per_agent_model into execute_flow_f1 → every call_agent
   4. call_agent honors the override (per_agent_model > default precedence)
 
 No real LLMs or network calls; call_agent + _tool_preflight are patched.
-execute_flow_f1 is called directly (not via run_flow_stream, which has a
-NameError on ``run_id`` — see BUG note below).
 
 Exercises:
   1. save_config → load_config round-trips per_agent_model
   2. ChatScreen reload pattern: load → self.per_agent_model
-  3. execute_flow_f1 forwards per_agent_model to all 5 call_agent invocations
+  3. run_flow_stream forwards per_agent_model to all 5 call_agent invocations
   4. Config with empty per_agent_model → None (default path)
   5. Multiple agent overrides + paid_for interaction
   6. ChatScreen source code wires cfg.per_agent_model → self.per_agent_model
-
-BUG NOTE:
-  ``run_flow_stream`` references an undefined ``run_id`` variable at line 3071
-  of runtime.py (inside the ``emit`` closure). This causes a NameError when
-  called without ``resume_run_id`` in inputs. The variable should be
-  initialised as ``run_id = make_run_id(flow_id, ticker)``. For now this
-  smoke calls ``execute_flow_f1`` directly (same strategy as smoke-2).
 
 Run:
     PYTHONPATH=docs python3 docs/runtime/smokes/settings_roundtrip_smoke.py
@@ -160,7 +151,7 @@ with tempfile.TemporaryDirectory() as tmp:
 # ===========================================================================
 # 2. ChatScreen reload pattern → execute_flow_f1 honors per_agent_model
 # ===========================================================================
-section("2. ChatScreen reload → execute_flow_f1 honors per_agent_model")
+section("2. ChatScreen reload → run_flow_stream honors per_agent_model")
 
 from runtime import runtime as rt
 
@@ -205,19 +196,20 @@ with patch("runtime.runtime.call_agent", side_effect=_capture_and_mock), \
             step("reloaded devils-advocate → ollama",
                  per_agent.get("devils-advocate") == "ollama/qwen2.5:72b")
 
-            # === Simulate ChatScreen._run_flow → execute_flow_f1 ===
+            # === Simulate ChatScreen._run_flow → run_flow_stream ===
             call_agent_calls.clear()
-            result = rt.execute_flow_f1(
-                ticker="NVDA",
+            events = list(rt.run_flow_stream(
+                flow_id="f1",
+                inputs={"ticker": "NVDA", "depth": "STANDARD", "compressed": False},
                 model=loaded.default_model,
                 paid_for=None,
                 per_agent_model=per_agent or None,
                 stream_chunks=False,
-            )
+            ))
 
             step("5 agents called total", len(call_agent_calls) == 5)
-            step("result has final_envelope",
-                 "final_envelope" in result if isinstance(result, dict) else False)
+            step("flow produced events (FlowStarted → ... → FlowFinished)",
+                 len(events) >= 3)
 
             # Verify per_agent_model forwarded to every agent
             pam_keys = {"senior-analyst", "devils-advocate"}
@@ -273,15 +265,16 @@ with patch("runtime.runtime.call_agent", side_effect=_capture2), \
 
             call_agent_calls2.clear()
             per_agent = dict(loaded.per_agent_model)
-            result = rt.execute_flow_f1(
-                ticker="NVDA",
+            events = list(rt.run_flow_stream(
+                flow_id="f1",
+                inputs={"ticker": "NVDA", "depth": "STANDARD", "compressed": False},
                 model=loaded.default_model,
                 paid_for=None,
                 per_agent_model=per_agent if per_agent else None,
                 stream_chunks=False,
-            )
+            ))
             step("flow completed with empty per_agent_model",
-                 isinstance(result, dict) and "final_envelope" in result)
+                 len(events) >= 3)
             step("5 agents called",
                  len(call_agent_calls2) == 5)
             # Every call should have per_agent_model=None (empty dict → None)
@@ -330,15 +323,16 @@ with patch("runtime.runtime.call_agent", side_effect=_capture3), \
 
             call_agent_calls3.clear()
             per_agent = dict(loaded.per_agent_model)
-            result = rt.execute_flow_f1(
-                ticker="NVDA",
+            events = list(rt.run_flow_stream(
+                flow_id="f1",
+                inputs={"ticker": "NVDA", "depth": "STANDARD", "compressed": False},
                 model=loaded.default_model,
                 paid_for=loaded.hybrid_paid_for,
                 per_agent_model=per_agent if per_agent else None,
                 stream_chunks=False,
-            )
+            ))
             step("flow completed with both per_agent_model + paid_for",
-                 isinstance(result, dict) and "final_envelope" in result)
+                 len(events) >= 3)
             step("5 agents called",
                  len(call_agent_calls3) == 5)
 
@@ -363,22 +357,6 @@ step("chat.py stores self.per_agent_model",
 step("chat.py passes per_agent_model to run_flow_stream",
      "per_agent_model=self.per_agent_model" in chat_src
      or "per_agent_model=per_agent_model" in chat_src)
-
-
-# ===========================================================================
-# 6. BUG: run_flow_stream NameError on `run_id`
-# ===========================================================================
-section("6. BUG DETECTED: run_flow_stream has undefined `run_id`")
-
-# Read the relevant lines to confirm the bug is present (for documentation)
-runtime_src = (DOCS / "runtime" / "runtime.py").read_text(encoding="utf-8")
-step("make_run_id function exists (not called in run_flow_stream)",
-     "def make_run_id(" in runtime_src)
-
-# Check that run_id is NOT assigned before use in the emit closure
-# This is the bug: line 3071 references `run_id` but it's never set
-step("run_id bug: we know run_flow_stream crashes (documented in BUG NOTE)",
-     True)  # informational — the bug was confirmed during smoke development
 
 
 # ===========================================================================

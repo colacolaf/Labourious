@@ -3040,6 +3040,8 @@ def run_flow_stream(
 
     partial: dict[str, dict[str, Any]] = {}
 
+    run_id = make_run_id(flow_id, ticker) if ticker else make_run_id(flow_id, "no-ticker")
+
     def emit(ev: Any) -> None:
         """Hook passed into execute_flow_f1 → call_agent. Wraps AgentFinished
         with a CostDelta so the TUI sidebar updates as each agent completes.
