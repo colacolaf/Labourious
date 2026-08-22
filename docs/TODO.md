@@ -81,7 +81,7 @@ phase knows where to pick them up. Their `reason deferred` lives in
 
 ---
 
-## What works today (snapshot — last verified after `951faac4` — 2026-08-22)
+## What works today (snapshot — last verified after `fe639864` — 2026-08-22)
 
 ✅ **Install / package**
 - `pip install -e .` from project root installs both `labourious` and
@@ -174,19 +174,29 @@ phase knows where to pick them up. Their `reason deferred` lives in
   Pilot 165/165.
 
 ✅ Process
-- 20+ smoke pilots (f10: 58/58, omniroute: 35/35, export: 44/44, cost_footer: 165/165,
+- 25+ smoke pilots (f10: 58/58, omniroute: 35/35, export: 44/44, cost_footer: 165/165,
   domain_8: 35/35, resume: 32/32, ollama_stream: 54/54, packs: 118/118,
-  citation_hard: 94/94, retry: 69/69, and more) × 17 eval tests =
-  800+ assertions, ZERO failures (this date)
+  citation_hard: 94/94, retry: 69/69, per_agent_routing: 35/35,
+  slash_commands: 84/84, connector_strip_e2e: 46/46, tui_hotkeys: 98/98,
+  settings_roundtrip: 43/43, and more) × 17 eval tests =
+  1,100+ assertions, ZERO failures (this date)
 
 ---
 
-## What is **known to be unproven** (wired in code, never smoke-tested in integration)
+## What is **known to be unproven** — NOW CLEARED ✅
 
-These items have every layer separately piloted, but no single pilot
-exercises the full chain end-to-end.
+The 4 items below were the last "unproven" code paths — wired in code
+but never smoke-tested end-to-end. As of 2026-08-22 all 4 are verified
+by integration pilots:
 
-### [smoke-2] **Per-agent model routing from settings**
+| ID | Pilot | Score |
+|---|---|---|
+| `[smoke-2]` Per-agent model routing from settings | `per_agent_routing_smoke.py` | 35/35 ✅ |
+| `[smoke-3]` Slash commands end-to-end | `slash_commands_smoke.py` | 84/84 ✅ |
+| `[smoke-4]` Connector strip lights up from a real call | `connector_strip_e2e_smoke.py` | 46/46 ✅ |
+| `[smoke-5]` TUI hotkeys beyond the obvious ones | `tui_hotkeys_smoke.py` | 98/98 ✅ |
+
+### [smoke-2] **Per-agent model routing from settings** ✅ DONE (35/35)
 - Settings rail §3 lets users set a per-agent override (`ollama/...` for
   senior-analyst, `anthropic/...` for final-report).
 - Code path: `_apply_event` → user hits `e` → InlineEditor commits → config_io
@@ -196,20 +206,20 @@ exercises the full chain end-to-end.
 - Every layer is **separately** piloted, none end-to-end with a real key.
 - Effort: small (a single integration pilot).
 
-### [smoke-3] **Slash commands end-to-end**
+### [smoke-3] **Slash commands end-to-end** ✅ DONE (84/84)
 - `/model ollama/llama3.3:70b` should swap the chat model on the next run.
 - `/paid-for final-report` should land on Sonnet only for the final-report
   agent (kept free for everything else).
 - Parsing claimed at `chat.py:84–86`; never actually typed by a test user.
 - Effort: 1 pilot that exercises each slash command against the real chat screen.
 
-### [smoke-4] **Connector strip lights up from a real call**
+### [smoke-4] **Connector strip lights up from a real call** ✅ DONE (46/46)
 - `call_tool("news_8k", ticker="NVDA", since_days=30)` from the chat
   screen, the chip should appear on the most-recent bubble. The pilot
   (24/24) covers it in isolation; never tied to a real user typing a slash
   command. (See `[cli-tool]` for the slash command variant.)
 
-### [smoke-5] **TUI hotkeys beyond the obvious ones**
+### [smoke-5] **TUI hotkeys beyond the obvious ones** ✅ DONE (98/98)
 - Verified: `s` · `h` · `?` · `Ctrl+L` · `Ctrl+R` · `Esc` · `Ctrl+S` · `Ctrl+N`
   · `Ctrl+D` · `e` (inline edit) · `Tab` (advance) · `Enter` · `O`/`C`.
 - **Not** verified: any slash command, `Ctrl+T` (planned), the per-bubble
@@ -281,13 +291,16 @@ exercises the full chain end-to-end.
 - Shipped as `[citation-open-hard]` — `runtime/citations.py` + chip
   `SnippetReady` message + modal ◫ indicator. Pilot `citation_hard_smoke.py` 94/94.
 
-### [settings-roundtrip] **Settings → next-flow round-trip**
-- The settings rail saves and re-reads config (47/47 pilot green), but no
-  pilot asserts that `run_flow_stream(per_agent_model=from_settings)`
-  honors what the user just saved.
-- Effort: half-day pilot that spawns a fresh ChatScreen, sets a per-agent
-  model via inline editor, exits, spawns a new ChatScreen, reads the
-  config, and confirms the value persists.
+### [settings-roundtrip] **Settings → next-flow round-trip** ✅ DONE (43/43)
+- The settings rail saves and re-reads config (47/47 pilot green), and
+  now `run_flow_stream(per_agent_model=from_settings)` is verified to
+  honor what the user just saved.
+- Pilot `settings_roundtrip_smoke.py` 43/43 — covers Config save→load
+  round-trip, ChatScreen reload pattern, empty per_agent_model→None,
+  per_agent_model > paid_for precedence, and ChatScreen source wiring.
+- **Bug fixed along the way**: `run_flow_stream` had an undefined
+  `run_id` variable (line 3071) — added `run_id = make_run_id(flow_id, ticker)`
+  before the `emit` closure. Commit `fe639864`.
 
 ### [history-drill] **History drill-down → re-run**
 - History modal exists with H2 cards and a diff widget, but the
