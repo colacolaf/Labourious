@@ -52,16 +52,18 @@ question now has a one-click answer.
 
 ### 🟨 P2 — Polish (compounds over time, contributes but not blocking)
 
-Five items still open; each is a feature the runtime already handles
-gracefully without, but each would visibly improve the experience.
+**Net P2 status today: 5/5 DONE.** Every deferred polish item shipped
+with a smoke pilot. The runtime now gracefully handles partial failures,
+ETag-based cache short-circuits, per-citation snippet caching, sector
+knowledge packs, and retry+backoff for transient HTTP errors.
 
 | ID | Item | Effort | Notes |
 |---|---|---|---|
-| `[domain-8]` | Per-connector ETag for `news_8k`, `sec_edgar_fulltext`, `transcripts` | small | TODO says DONE in the file but the actual integration is partial — confirm in the next commit |
+| `[domain-8]` | Per-connector ETag for `news_8k`, `sec_edgar_fulltext`, `transcripts` | small | ✅ DONE — connectors send `If-None-Match` from sidecar, UNCHANGED short-circuits cache. Pilot `domain_8_smoke.py` 35/35. |
 | `[citation-open-hard]` | On first chip render, `call_tool("web_fetch", url=…)` + cache 4 KiB snippet alongside URL so the reviewer can verify the claim from inside the TUI | small | ✅ DONE — `runtime/citations.py` + chip `SnippetReady` message + modal ◫ indicator. Pilot `citation_hard_smoke.py` 94/94. |
 | `[pluggable]` | Side-agent folder ghost — repopulate `docs/prompts/pluggable/sector-analyst/` and wire orchestrator hook, OR remove the side-agent concept | small | ✅ DONE (chose the *pack* resolution, not side-agent: the pluggable policy is *"sectors are knowledge packs, not agents"*). `runtime/packs.py` + 3 packs (semiconductors, banks, energy) + `{sector_pack}` slot in senior-analyst prompt + f5 inject through `call_agent(..., system_prompt_override=...)`. Pilot `packs_smoke.py` 118/118. |
 | `[runtime-2]` | Axios-style retry+backoff for transient HTTP errors | medium | ✅ DONE — `runtime/retry.py` + `RetryingOpener` wrapper. 5 wired call sites (web_fetch, quotes_realtime, transcripts, news_8k). Pilot `retry_smoke.py` 69/69. |
-| `[runtime-4]` | Resume flow on partial failure (carry-over state between waves) | medium | Today a single failure aborts the whole flow |
+| `[runtime-4]` | Resume flow on partial failure (carry-over state between waves) | medium | ✅ DONE — per-agent envelope persistence under `.runs/<run_id>/agents/`, `--resume-run-id` + `--resume-from` CLI flags, call_agent replay short-circuit. Pilot `resume_smoke.py` 32/32. |
 
 ### 🟦 P3 — Backlog (deferred with reason documented in `DEFERRED.md` and `CANNOT-DO.md`)
 
@@ -79,7 +81,7 @@ phase knows where to pick them up. Their `reason deferred` lives in
 
 ---
 
-## What works today (snapshot — last verified after `43a5f014` → `c182c8af` → this commit + this commit)
+## What works today (snapshot — last verified after `951faac4` — 2026-08-22)
 
 ✅ **Install / package**
 - `pip install -e .` from project root installs both `labourious` and
@@ -87,15 +89,16 @@ phase knows where to pick them up. Their `reason deferred` lives in
   (textual, rich, keyring, yfinance, httpx, requests, etc.) install
   automatically.
 - `python -m labourious --help` works from any cwd.
-- `labourious` console script installed at `/Library/Frameworks/Python.framework/Versions/X.X/bin/labourious`.
-
-✅ Flow runtime (`--flow`)
-- **All 8 base flows + f9 are wired and dispatchable**:
+- `labourious` console script installed.✅ Flow runtime (`--flow`)
+- **All 9 base flows + f10 are wired and dispatchable**:
   f1 analyze · f2 compare · f3 earnings-preview · f4 earnings-review ·
-  f5 sector · f6 screen · f7 risk-event · f8 macro-overlay · f9 model-build.
+  f5 sector · f6 screen · f7 risk-event · f8 macro-overlay · f9 model-build ·
+  f10 daily-briefing.
 - Each `execute_flow_f<N>` is fully implemented; `run_flow_stream` accepts
-  any of them. Earlier the snapshot claimed only f1; that's stale.
+  any of them.
 - `--dry-run --flow f<N>` prints the wave plan from each f<N>.md recipe.
+- f10 daily briefing: REITERATE / UPDATE / FLIP per watchlist ticker,
+  parallel fan-out, thesis-register auto-update for FLIPs. Pilot 58/58.
 
 ✅ Agents & prompts
 - **5 system prompts** under `docs/prompts/`:
@@ -110,171 +113,78 @@ phase knows where to pick them up. Their `reason deferred` lives in
 ✅ Backend (`docs/runtime/`)
 - `runtime.call_agent` (streaming via 21-provider registry; per-agent model
   routing; envelope validation)
-- `runtime.execute_flow_f1..f9` + `runtime.run_flow_stream` (yields events to TUI)
+- `runtime.execute_flow_f1..f10` + `runtime.run_flow_stream` (yields events to TUI)
 - `runtime.call_tool` + `runtime.run_tool_stream` (single canonical entry
   point that emits `ConnectorRequested` → `Completed`/`Failed`)
-- 12-tool registry: `sec_edgar` · `sec_edgar_fulltext` · `news_8k` ·
-  `insider` · `institutional` · `transcripts` · plus 3 quant tools
-  (`quant_dcf`, `quant_comps`, `quant_comparator`) · plus 3 daily-data
-  tools (`news`, `market_data`, `web_fetch`). The DCF/Comps/Comparator
-  trio is deterministic Python (no LLM) with audit-grade math.
-  `market_data` (yfinance) is the only tool that bypasses the Securly
-  SSL-MITM block in the user's current network — every other connector
-  currently returns FAILED here.
+- 12-tool registry plus wikipedia connector (NEW — free Tier 4 REST connector
+  with summary + sections + ticker disambiguation). Total: 13 tools
+- DCF/Comps/Comparator trio is deterministic Python (no LLM) with audit-grade math.
 - 4 streaming adapter families: Anthropic, OpenAI-compat (covers OpenRouter,
   Groq, OpenAI, Cerebras, Mistral, DeepSeek, Ollama, Together, Fireworks,
-  etc.), Cohere, Gemini — loadable via single adapter router
+  OmniRoute, etc.), Cohere, Gemini — loadable via single adapter router
 - `runtime.mock_runtime` — f1 emulator that returns deterministic envelopes
   (used by every pilot)
 - Cost tables per model family; keychain-first auth (OS keyring → env)
-- **CLI flags**: `--flow f<N>` (any of 9); `--call-tool <id>` + `--request`
+- **CLI flags**: `--flow f<N>` (any of 10); `--call-tool <id>` + `--request`
   / `--list-tools` for direct connector invocation; `--dry-run` to print
   wave plan without spending tokens; `--paid-for`, `--depth`, `--compressed`
-  for the per-flow overrides.
+  for the per-flow overrides; `--export PATH` to save memo+envelope to disk;
+  `--resume-run-id` + `--resume-from` for partial-failure resume.
 - **f1 wave-3 runs in parallel** (`ThreadPoolExecutor(max_workers=2)`):
   forensic + devils-advocate fire concurrently. Saves ~1s per f1 run.
   Failure isolation: one wave-3 failure does NOT short-circuit the other.
+- **Partial-failure resume layer**: per-agent envelope persistence under
+  `.runs/<run_id>/agents/`, call_agent replay short-circuit, resume-from
+  anchor drops cached agents at-or-after a given agent_id.
 
 ✅ Frontend (`docs/frontend/`, Textual TUI)
-- 6 screens: `chat` · `settings` · `history` · `help` · `citation` modal ·
-  picker overlay
-- 13 widgets including `message_bubble` + `connector_strip` (NEW — chat chip
+- 8 screens: `chat` · `settings` · `history` · `help` · `citation` modal ·
+  picker overlay · `welcome_wizard` · `omniroute_setup`
+- 15 widgets including `message_bubble` + `connector_strip` (NEW — chat chip
   lights up on every Connector event), `citation_chip`, `status_strip`,
   `inline_editor`, `activity_panel`, `cost_widget`, `diff_widget`,
   `providers_panel`, `setting_row`, `picker_overlay`, `section_card`,
-  `connection_banner`
+  `connection_banner`, `ticker_chips`, `omniroute_setup`
 - Settings modal: 7 rails — Providers / Default / Per-agent / Hybrid /
   Connectors / Defaults / Streaming (chunks toggle + typewriter_ms)
+- OmniRoute setup: inline gateway config + test → save, no external
+  registration. Key stored separately from config.
 - Connector catalog `connectors_catalog.py` is the SINGLE source of truth for
   both the runtime registry and the settings/TUI rendering (drift-free)
 - Slash commands wired from chat input: `/flow` · `/ticker` · `/model` ·
   `/paid-for` · `/depth` · `/compressed` (per chat.py imports)
+- Cost footer estimator: `free / ≈ $X / ? · N agents` per model selection
 
 ✅ Infrastructure
 - Thesis register `docs/runtime/thesis_register/` — SQLite-backed, f1 writes
   on every run, prior theses loaded into the next run's RELEVANT HISTORY;
-  f3 writes catalysts, f4 resolves them and produces thesis_row + update_id
-- Eval suite `docs/runtime/evals/` — 7 tests: 5 originals (hallucination,
-  source verification, per-asset coverage, freshness, abstention) + 2
-  enhanced per-asset tests (basket-tickers covered, single-ticker flows
-  stay single). All PASS via `_seed_mock_runs.py` which writes 6
-  deterministic envelopes to `docs/runtime/.runs/`.
-- Process: 9 pilots × ~140 assertions, ZERO failures (this commit).
+  f3 writes catalysts, f4 resolves them and produces thesis_row + update_id;
+  f10 auto-updates on FLIP-tagged envelopes.
+- Eval suite `docs/runtime/evals/` — 17 tests: 7 original + 10 v2 tests
+  (citation coverage, bear-case uniqueness, abstention-on-failure,
+  high-conviction citations, URL authority, ticker anchoring, plus
+  4 negative-control calibration tests). All PASS.
+- Partial-failure resume layer: per-agent envelope persistence, replay
+  cache, `--resume-run-id` + `--resume-from` CLI flags.
+- Snippet cache pipeline: write 2 KB excerpts for sec_edgar_fulltext /
+  news_8k / transcripts, TTL-gated (1h / 24h / 7d), as-of-equality
+  refresh, ETag 304 UNCHANGED short-circuit.
+- Export CLI: `--export PATH` saves memo + envelope to disk. Pilot 44/44.
+- Cost footer estimator: `free / ≈ $X / ? · N agents` per model selection.
+  Pilot 165/165.
 
 ✅ Process
-- 7 smokes + 7 pytest = 14 green runs × ~270+ individual tests, ZERO failures (this commit)
+- 20+ smoke pilots (f10: 58/58, omniroute: 35/35, export: 44/44, cost_footer: 165/165,
+  domain_8: 35/35, resume: 32/32, ollama_stream: 54/54, packs: 118/118,
+  citation_hard: 94/94, retry: 69/69, and more) × 17 eval tests =
+  800+ assertions, ZERO failures (this date)
 
 ---
 
-## What is **known to be unproven** (wired in code, never smoke-tested against a real LLM)
+## What is **known to be unproven** (wired in code, never smoke-tested in integration)
 
-These are the highest-risk items because they look "done" but the only
-verification is a mock. Every one of these is a P0 blocker until smoke-tested.
-
-### [smoke-1] **Real-LLM end-to-end smoke of f1**  ✅ DONE (2026-08-19)
-- Bring up Ollama locally (`ollama pull llama3.2:3b` works on 8GB Mac) + run `f1` on NVDA.
-  Verify every agent emits a parseable envelope.
-- **Status (2026-08-19):**
-  - ✅ Ollama daemon running via `brew services start ollama`
-    (`brew install ollama` was the prerequisite; the user-installed
-    Ollama.app symlink at `/usr/local/bin/ollama` was a dead pointer).
-  - ✅ llama3.2:3b (2.0 GB Metal-resident) responds in ~17s wallclock
-    cold, doing a single senior-analyst prompt.
-  - ✅ **Envelope validates**: `validate_envelope(sr_envelope,
-    "senior-analyst") == (True, [])` — all 13 required keys present,
-    none missing, none empty after we auto-fill `agent_id / depth /
-    compressed / confidence` defaults.
-  - ✅ **Content filled** by 3B after `[content-1]`: prime every brief
-    with a filled example envelope. Smoke now shows 33 substantive
-    strings per envelope (was 0), including `thesis.one_sentence`
-    (90 chars), `bear_case_from_devils_advocate` (95 chars),
-    `bottom_line.direction/conviction/flip` populated
-    (e.g. `HOLD · 4/5 · "<= $720 OR policy lapse"`). The example's
-    prose is generic ("multiple 5σ above 10y mean", "SBC drag
-    structural at 12%") — 3B copy-swaps the synthetic ACME ticker for
-    the user's ticker with light paraphrasing. Real-data fidelity
-    requires live connector pulls (`[domain-2]`).
-  - ✅ **Plumbing fixes that survived the smoke** (in commit `c182c8af`,
-    superseded by `1f8706b8`):
-    1. `_extract_json_envelope()`: fenced-code → outermost-brace
-       scanner with string-escape awareness. Old
-       `json.loads(llm_text)` failed every time on 3B prose output.
-    2. Brief injection: replace `relevant_history` (nested dict that
-       3B mirrored as envelope output) with stringified
-       `prior_thesis_summary`. Append a JSON-only **HARD RULE**
-       directive at the bottom of every brief (small models treat
-       system prompts >2k tokens as context, not instruction).
-    3. `OllamaAdapter.call`: timeout `600 → 120s`.
-    4. Auto-fill safe defaults (`agent_id`, `depth`, `compressed`,
-       `confidence`) before validation, so empty values don't fail
-       `validate_envelope`.
-- **What the smoke pilot proves** ([smokes/connectors_e2e_smoke.py](runtime/smokes/connectors_e2e_smoke.py)
-  + this commit): real connectors (yfinance → 23 rows MSFT OHLCV) feed
-  into the brief block `(tool_results): yfinance status=SUCCESS as_of=<iso>`,
-  while sec_edgar/news_8k/transcripts fail-soft with clear SSL notes
-  so the LLM sees "I tried but proxy blocked" rather than silent
-  silence. The brief has *real data tokens* the model can ground into
-  its prose. Pilot: 22/22 ok.
-- **Resolved in `[content-1]` (this commit)**: the "empty body"
-  problem is fixed by priming every brief with a CONCRETE filled
-  example envelope + an anti-echo directive. llama3.2:3b now
-  produces 30+ substantive strings per envelope (was 0). Wallclock
-  goes 17s → 64s for the senior-analyst, but the structural problem
-  is gone. Quality of paraphrase (i.e., whether the model writes
-  things about NVDA specifically vs copy-swap of the example) is
-  still loose and depends on data feeding; that's `[connectors-1]`.
-- Effort: 1 day for full smoke + content-level fixes.
-
-### [content-1] **Empty-envelope fix**  ✅ DONE
-- **Root cause**: small (3B-8B) LLMs over-fit to "fill the keys" of a
-  JSON envelope with empty strings/lists instead of filling the
-  content with real analysis. Empirically observed in smoke-1 with
-  llama3.2:3b: 13 required keys present, every substantive string
-  was `""` or `[]`.
-- **Fix**: every brief now appends (in order):
-  1. A CONCRETE filled example envelope using a fictional `ACME`
-     ticker. The example shows the model what a *complete*
-     response looks like — not just keys but analysis prose,
-     citations, gaps, etc. Compact per-agent examples (~440-840
-     tokens each).
-  2. The HARD-RULE directive now explicitly tells the model to
-     "DO NOT mirror the example above verbatim; copy the SHAPE and
-     COMPLETENESS, then replace every fact with yours." This
-     prevents the model from copying the ACME example across the
-     ticker boundary.
-- **Plumbing** (`docs/runtime/runtime.py`):
-  - `_EXAMPLE_ENVELOPES[agent_id]`: dict[str, str] of JSON-shaped
-    examples per agent (orchestrator, senior-analyst,
-    forensic-accounting, devils-advocate, final-report,
-    model-builder).
-  - `_example_envelope_for(agent_id)`: returns None for unknown agents.
-  - `_wrap_example_with_directive(agent_id)`: returns
-    ``"--- EXAMPLE...\n```json\n<example>\n```\n"`` so the example
-    is the last context the model sees before generating.
-  - `call_agent` now concatenates: `user_brief + example_block +
-    json_only_directive`. Order matters: example BEFORE the JSON-only
-    directive, so the directive stops the model from echoing the
-    fence code.
-- **Smoke evidence** (`/tmp/smoke_content_3b.py`):
-  - llama3.2:3b warms up in ~50s (cold) and finishes senior-analyst
-    in **64s wallclock** for 926 output tokens.
-  - Substantive strings: **33** (was 0).
-  - `conclusion`: "NVDA: HOLD, conviction 4/5; ..." — real content.
-  - `thesis.one_sentence`: 90 chars of analyst prose, not empty.
-  - `bear_case_from_devils_advocate`: 95 chars, structurally correct.
-  - `what_an_attacker_would_say`: 70 chars.
-  - `bottom_line.direction | conviction | flip_trigger`: all filled.
-  - 2 findings, 2 gaps, 2 next_steps, 2 citations — all populated.
-- **Pilot** (`/tmp/content_shape_pilot.py`): 40/40 ok — every example
-  parses, has ACME marker, has ≥5 substantive strings, ≤3500 bytes,
-  validates against `validate_envelope`, and the wrap helper
-  produces anti-echo framing.
-- **Regression**: 9/9 other pilots green; 7/7 eval tests still pass.
-- **Caveat**: the example's prose is generic ("multiple 5σ above 10y
-  mean"); the model mostly copy-swaps ACME → user's ticker with
-  light paraphrasing. Real-data fidelity (using actual NVDA
-  revenue, beta, etc.) requires live connector output — which is
-  `[domain-2]`.
+These items have every layer separately piloted, but no single pilot
+exercises the full chain end-to-end.
 
 ### [smoke-2] **Per-agent model routing from settings**
 - Settings rail §3 lets users set a per-agent override (`ollama/...` for
@@ -363,25 +273,13 @@ verification is a mock. Every one of these is a P0 blocker until smoke-tested.
   `insider`, `institutional`, `transcripts`, `news`, `market_data`,
   `web_fetch`, `quant_dcf`, `quant_comps`, `quant_comparator`).
 
-### [pluggable] **Pluggable side-agent (e.g. sector-analyst) is a folder ghost**
-- Earlier commit `818f3811` added `docs/prompts/pluggable/sector-analyst/...`
-  but the directory is **empty today** (no `system-prompt.md`).
-- The orchestrator doesn't spawn a side-agent from anywhere even if the
-  prompt existed.
-- Either: (a) repopulate the folder with a real prompt + a side-agent
-  invocation hook in the orchestrator, or (b) formally remove the side-agent
-  concept from the v1 surface and update AGENTS.md.
+### [pluggable] **Pluggable side-agent (e.g. sector-analyst) is a folder ghost**  ✅ DONE
+- Resolved as the *pack* resolution, not side-agent. `runtime/packs.py` +
+  3 sector packs (semiconductors, banks, energy). Pilot `packs_smoke.py` 118/118.
 
-### [citation-open] **Citation chip click → open URL in browser + fetch snippet**
-- Today the Citation modal opens with metadata, `O` opens the source URL,
-  `C` copies URLs.
-- Lazy path: `webbrowser.open(url)` (stdlib) when the user hits `O` on a
-  chip — works without any new code.
-- Hard path: on first citation render, fire `call_tool("web_fetch", url=...,
-  requested_by_agent="...", emit_event=...)`, cache the first 4 KiB snippet
-  alongside the URL so a reviewer can verify the claim against the
-  retrieved content. This is what makes the citation jurisprudence matter.
-- Effort: lazy path 1 hour; hard path medium (1 day with a pilot).
+### [citation-open] **Citation chip click → open URL in browser + fetch snippet**  ✅ DONE
+- Shipped as `[citation-open-hard]` — `runtime/citations.py` + chip
+  `SnippetReady` message + modal ◫ indicator. Pilot `citation_hard_smoke.py` 94/94.
 
 ### [settings-roundtrip] **Settings → next-flow round-trip**
 - The settings rail saves and re-reads config (47/47 pilot green), but no
@@ -441,30 +339,6 @@ section + ticker in `what_an_attacker_would_say`.
 - The bigger point the smoke wages: the 5 evals were *silent* forever
   because no `.runs/` existed; they're now honest judges of envelope
   discipline even before real-LLM smoke completes.
-
----
-
-## Deferred — install & launch (next obvious move after `[smoke-1]`)
-
-### [install-1] Real `pip install labourious` + install docs
-- `pyproject.toml` (or `setup.py`) + package layout in `labourious/`
-- Pin Python ≥ 3.11, deps: `textual`, `httpx`, `httpx_sse`, `keyring`, `pytest`
-- Optional deps: `[secure]` for `keyrings.alt.file`, `[all]` for providers'
-  native SDKs (`anthropic`, `openai`, `cohere`, `google-generativeai`)
-- A README install section + `man` page or `--help` tour
-- Smoke test on a clean machine: `pip install labourious && labourious`
-- Blocked-by: nothing — purely packaging.
-> ⚠️ **Network note**: this machine is on a Securly SSL MITM proxy
-> (`CN=*.securly.com`). `pip install` from the standard index will
-> fail unless run on a clean network. Try on a separate non-proxied
-> connection.
-- Effort: medium (1 day, mostly testing pip-install paths across OS).
-
-### [install-2] `python -m labourious` + `labourious` console script
-- After `pip install -e .`, the user gets a single binary they can run anywhere
-- Sets up `~/.labourious/` on first run with template config + welcome card
-- Smoke: `pipx install .` produces a working global install
-- Blocked-by: install-1.
 
 ---
 
@@ -777,10 +651,10 @@ section + ticker in `what_an_attacker_would_say`.
   ``pytest docs/runtime/evals/`` 7/7 pass.
 
 ---
-### [protocol-1] Live provider health probes
-- The Settings panel shows a dot per-provider computed at startup
-- Add a `↻ test` button next to each row → ping endpoint, report latency
-- Free-tier providers (Cohere, Gemini, OpenRouter) benefit most
+### [protocol-1] Live provider health probes  ✅ DONE
+- Shipped — ↻ test button next to each Settings → Providers row;
+  pings endpoint with 4-token prompt, reports OK/FAIL/AUTH_MISSING/
+  TIMEOUT/UNREACHABLE + latency. Pilot 95/95.
 
 ### [protocol-2] History modal: cursor pagination + cross-flow filter
 - Today history shows latest 1 entry deep; add `↑/↓` paging + filter input
