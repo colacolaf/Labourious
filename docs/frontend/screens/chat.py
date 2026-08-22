@@ -244,6 +244,42 @@ class ChatScreen(Screen):
             pass
         self._update_footer_hint()
 
+    def set_stream(self, value: str) -> None:
+        """Handle /stream on|off|<ms> — toggle or set the typewriter delay.
+
+        Accepts:
+          on   → stream_chunks=True, typewriter_ms=0 (instant)
+          off  → stream_chunks=False (bundled full-body emission)
+          <N>  → stream_chunks=True, typewriter_ms=N (human-readable pace)
+        """
+        arg = value.lower().strip() if value else "on"
+        if arg == "on":
+            self.stream_chunks = True
+            self.stream_typewriter_ms = 0
+        elif arg == "off":
+            self.stream_chunks = False
+            self.stream_typewriter_ms = 0
+        else:
+            try:
+                ms = int(arg)
+            except ValueError:
+                return  # ignore garbage silently
+            if ms < 0:
+                ms = 0
+            if ms > 500:
+                ms = 500
+            self.stream_chunks = True
+            self.stream_typewriter_ms = ms
+        # Persist to on-disk config.
+        try:
+            cfg = load_config()
+            cfg.stream_chunks = self.stream_chunks
+            cfg.stream_typewriter_ms = self.stream_typewriter_ms
+            save_config(cfg)
+        except Exception:
+            pass
+        self._update_footer_hint()
+
     def reload_config_from_disk(self) -> None:
         """Re-read ~/.labourious/config.json into this ChatScreen's session
         state. Called on mount and after the Settings modal pops."""
@@ -398,6 +434,9 @@ class ChatScreen(Screen):
             return
         if cmd == "compressed":
             self.set_compressed(not self.compressed)
+            return
+        if cmd == "stream":
+            self.set_stream(arg)
             return
         # Unrecognised — surface in a bubble.
         bubble = MessageBubble(role="agent", agent_id="devils-advocate")
