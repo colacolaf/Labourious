@@ -25,6 +25,7 @@ _THIS = Path(__file__).resolve()
 sys.path.insert(0, str(_THIS.parent.parent))                # docs/  — lets docs.frontend + docs.runtime work as packages
 
 from frontend.screens import ChatScreen  # type: ignore
+from frontend.screens.history import ReRunRequested  # type: ignore
 from frontend.keys import APP_BINDINGS  # type: ignore
 
 
@@ -67,6 +68,11 @@ class LabouriousApp(App):
         """Push the History modal on top of the current screen."""
         from frontend.screens import HistoryScreen  # type: ignore
         self.push_screen(HistoryScreen())
+
+    def on_rerun_requested(self, message: ReRunRequested) -> None:
+        """Forward re-run request from HistoryScreen to ChatScreen."""
+        if isinstance(self.screen, ChatScreen):
+            self.screen.run_from_history(message.ticker, message.flow_id)
 
     def action_open_help(self) -> None:
         """Toggle behavior: if the Help modal is on top, pop it; otherwise push."""

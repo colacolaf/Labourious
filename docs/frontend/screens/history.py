@@ -213,8 +213,9 @@ class HistoryScreen(Screen):
     """
 
     BINDINGS = [
-        Binding("escape",   "back",        "Back"),
-        Binding("r",        "rerun",       "Re-run"),
+        Binding("escape",     "back",        "Back"),
+        Binding("r",          "rerun",       "Re-run"),
+        Binding("ctrl+enter", "rerun",       "Re-run"),
     ]
 
 
@@ -513,7 +514,12 @@ class HistoryScreen(Screen):
         if not visible:
             return
         row = visible[min(self._index, len(visible) - 1)]
-        self.post_message(ReRunRequested(row.ticker, row.flow_id))
+        ticker, flow_id = row.ticker, row.flow_id
+        # Pop the history modal so the user returns to ChatScreen.
+        self.app.pop_screen()
+        # Post the re-run request to the App; ChatScreen picks it up via
+        # the App's on_rerun_requested → ChatScreen.run_from_history path.
+        self.post_message(ReRunRequested(ticker, flow_id))
 
     def action_search_open(self) -> None:
         self._search_open = True

@@ -321,6 +321,15 @@ class ChatScreen(Screen):
             self.query_one("#prompt", Input).value = self.last_user_prompt
             await self.action_submit()
 
+    def run_from_history(self, ticker: str, flow_id: str) -> None:
+        """Called by App.on_rerun_requested when user presses r/Ctrl+Enter
+        in the history drill-down view. Sets the prompt and submits a fresh
+        f1 run on the same ticker."""
+        self.ticker = ticker
+        self.flow_id = flow_id
+        self.query_one("#prompt", Input).value = f"analyze {ticker}"
+        self.run_worker(self.action_submit(), exclusive=False)
+
     # ------------------------------------------------- ticker-shortcut chip handler
     def on_ticker_shortcuts_pressed(self, event: TickerShortcuts.Pressed) -> None:
         """User clicked a ticker chip on the welcome screen.
