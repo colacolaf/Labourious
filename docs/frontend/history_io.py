@@ -145,7 +145,8 @@ def _row_to_thesis_row(row: sqlite3.Row) -> ThesisRow:
 
 
 # --------------------------------------------------------------- reads
-def read_theses_all(db_path: Path | str = DEFAULT_DB, *, limit: int | None = None) -> list[ThesisRow]:
+def read_theses_all(db_path: Path | str = DEFAULT_DB, *, limit: int | None = None,
+                    ticker_filter: str | None = None) -> list[ThesisRow]:
     """Return all theses, newest first.
 
     Sorted by `created_at desc` so cartesian-catalog lookup doesn't lose
@@ -168,11 +169,20 @@ def read_theses_all(db_path: Path | str = DEFAULT_DB, *, limit: int | None = Non
                     con.execute(f"ALTER TABLE theses ADD COLUMN {col} {decl}")
                 except sqlite3.OperationalError:
                     pass
+        ticker_clause = ""
+        ticker_params: tuple = ()
+        if ticker_filter:
+            ticker_clause = " WHERE ticker = ?"
+            ticker_params = (ticker_filter.upper(),)
+        limit_clause = f" LIMIT {int(limit)}" if limit else ""
         rows = con.execute(
             "SELECT id, ticker, date, thesis_text, conviction, bottom_line, "
             "evidence_urls, flow_id, version, created_at, model, paid_for "
-            "FROM theses ORDER BY created_at DESC, id DESC"
-            + (f" LIMIT {int(limit)}" if limit else "")
+            "FROM theses"
+            + ticker_clause
+            + " ORDER BY created_at DESC, id DESC"
+            + limit_clause,
+            ticker_params,
         ).fetchall()
         return [_row_to_thesis_row(r) for r in rows]
     except sqlite3.DatabaseError:
@@ -182,6 +192,116 @@ def read_theses_all(db_path: Path | str = DEFAULT_DB, *, limit: int | None = Non
             con.close()
         except Exception:
             pass
+
+
+def read_theses_page(db_path: Path | str = DEFAULT_DB, *,
+                     limit: int = 20,
+                     cursor: tuple | None = None,
+                     ticker_filter: str | None = None) -> list[ThesisRow]:
+    """Keyset-paginated read — newest first.
+
+    `cursor` is a `(created_at, id)` tuple marking the row *after* which to
+    continue. Pass the last returned row's `(datetime, id)` to fetch the next
+    page. Returns an empty list when the end is reached.
+
+    Ticker filter narrows to a single ticker (case-insensitive), so the
+    History modal can page across one symbol without loading the whole table.
+    """
+    p = Path(db_path)
+    if not p.exists() or p.stat().st_size == 0:
+        return []
+    con = None
+    try:
+        con = sqlite3.connect(str(p))
+        con.row_factory = sqlite3.Row
+        # Ensure optional columns exist (mirror read_theses_all)
+        cols = [r[1] for r in con.execute("PRAGMA table_info(theses)").fetchall()]
+        for col, decl in [("model", "TEXT"), ("paid_for", "INTEGER")]:
+            if col not in cols:
+                try:
+                    con.execute(f"ALTER TABLE theses ADD COLUMN {col} {decl}")
+                except sqlite3.OperationalError:
+                    pass
+
+        where = []
+        params: list = []
+        if ticker_filter:
+            where.append("ticker = ?")
+            params.append(ticker_filter.upper())
+        if cursor is not None:
+            where.append("(created_at < ? OR (created_at = ? AND id < ?))")
+            params.extend([cursor[0], cursor[0], cursor[1]])
+        where_clause = f" WHERE {' AND '.join(where)}" if where else ""
+
+        rows = con.execute(
+            "SELECT id, ticker, date, thesis_text, conviction, bottom_line, "
+            "evidence_urls, flow_id, version, created_at, model, paid_for "
+            "FROM theses"
+            + where_clause
+            + " ORDER BY created_at DESC, id DESC LIMIT ?",
+            params + [int(limit)],
+        ).fetchall()
+        return [_row_to_thesis_row(r) for r in rows]
+    except sqlite3.DatabaseError:
+        return []
+    finally:
+        if con is not None:
+            try:
+                con.close()
+            except Exception:
+                pass
+
+
+def list_tickers(db_path: Path | str = DEFAULT_DB) -> list[str]:
+    """Distinct tickers in the register, newest-activity first."""
+    p = Path(db_path)
+    if not p.exists() or p.stat().st_size == 0:
+        return []
+    con = None
+    try:
+        con = sqlite3.connect(str(p))
+        con.row_factory = sqlite3.Row
+        rows = con.execute(
+            "SELECT ticker, MAX(created_at) AS latest FROM theses "
+            "GROUP BY ticker ORDER BY latest DESC"
+        ).fetchall()
+        return [str(r["ticker"]) for r in rows]
+    except sqlite3.DatabaseError:
+        return []
+    finally:
+        if con is not None:
+            try:
+                con.close()
+            except Exception:
+                pass
+
+
+def count_theses(db_path: Path | str = DEFAULT_DB,
+                 *, ticker_filter: str | None = None) -> int:
+    """Total thesis count, optionally narrowed by ticker."""
+    p = Path(db_path)
+    if not p.exists() or p.stat().st_size == 0:
+        return 0
+    con = None
+    try:
+        con = sqlite3.connect(str(p))
+        con.row_factory = sqlite3.Row
+        if ticker_filter:
+            row = con.execute(
+                "SELECT COUNT(*) AS n FROM theses WHERE ticker = ?",
+                (ticker_filter.upper(),),
+            ).fetchone()
+        else:
+            row = con.execute("SELECT COUNT(*) AS n FROM theses").fetchone()
+        return int(row["n"]) if row else 0
+    except sqlite3.DatabaseError:
+        return 0
+    finally:
+        if con is not None:
+            try:
+                con.close()
+            except Exception:
+                pass
 
 
 # --------------------------------------------------------------- diff

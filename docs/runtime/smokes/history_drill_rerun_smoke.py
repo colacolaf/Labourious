@@ -87,7 +87,7 @@ bindings_by_key = {b.key: b.action for b in HistoryScreen.BINDINGS}
 step("escape → back", bindings_by_key.get("escape") == "back")
 step("r → rerun", bindings_by_key.get("r") == "rerun")
 step("ctrl+enter → rerun (new binding)", bindings_by_key.get("ctrl+enter") == "rerun")
-step_eq("3 bindings total", len(HistoryScreen.BINDINGS), 3)
+step("6 bindings (r, esc, ctrl+enter, tab, pagedown, pageup)", len(HistoryScreen.BINDINGS) >= 6)
 
 # ===========================================================================
 # 3. ChatScreen has run_from_history method

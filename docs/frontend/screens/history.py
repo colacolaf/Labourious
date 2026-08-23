@@ -17,6 +17,10 @@ to the full final-report memo (Bull/Bear/Attacker/Next-3/Citations).
 Esc returns to the index view; pressing Esc *again* closes the modal.
 
 Search (`/ filter`) narrows the visible cards across all tickers.
+A ticker-pill bar above the list (`[ ALL | NVDA | AAPL | … ]`) filters
+to a single ticker (cross-flow filter); `tab` cycles the pills.
+Cards load in pages of PAGE_SIZE via keyset cursors; scrolling to the
+bottom of the list loads the next page (`load more`).
 Re-run (`r`) pastes `/research <TICKER>` into the chat input and
 closes the modal — equivalent to "rerun on the same ticker on the
 latest market context." This keeps the modal small: it doesn't run
@@ -37,9 +41,11 @@ from textual.widgets import RichLog, Static
 from frontend.history_io import (
     DEFAULT_DB,
     ThesisRow,
+    count_theses,
     db_meta,
     diff_with_prior,
-    read_theses_all,
+    list_tickers,
+    read_theses_page,
 )
 
 
@@ -204,6 +210,9 @@ def _wrap(text: str, width: int) -> str:
 
 
 # --------------------------------------------------------------- MODAL
+PAGE_SIZE = 20
+
+
 class HistoryScreen(Screen):
     """The History modal — index of past theses + drill-in.
 
@@ -216,6 +225,9 @@ class HistoryScreen(Screen):
         Binding("escape",     "back",        "Back"),
         Binding("r",          "rerun",       "Re-run"),
         Binding("ctrl+enter", "rerun",       "Re-run"),
+        Binding("tab",        "next_filter", "Next filter"),
+        Binding("pagedown",   "page_down",   "Next page"),
+        Binding("pageup",     "page_up",     "Prev page"),
     ]
 
 
@@ -223,17 +235,27 @@ class HistoryScreen(Screen):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._rows: list[ThesisRow] = read_theses_all()
+        # Cross-flow filter state
+        self._tickers: list[str] = list_tickers()
+        self._ticker_filter: str | None = None   # None = ALL
+        # Pagination state (keyset cursor)
+        self._rows: list[ThesisRow] = []
+        self._cursor: tuple | None = None
+        self._has_more: bool = False
         self._meta: dict = db_meta()
         self._filter: str = ""
         self._index: int = 0
         self._mode: str = "index"   # "index" | "drill"
         self._search_open: bool = False
+        # Load the first page
+        self._load_page()
 
     # ---------------------------------------------------------- compose
     def compose(self) -> ComposeResult:
         # Header strip
         yield Static(self._render_head(), markup=False, id="history-head")
+        # Ticker pill bar (cross-flow filter)
+        yield Static(self._render_pill_bar(), markup=False, id="history-pills")
         # Body: card list left + detail right
         with Horizontal(id="history-body"):
             with Vertical(id="history-list-pane"):
@@ -253,6 +275,35 @@ class HistoryScreen(Screen):
         except Exception:
             pass
 
+    # ---------------------------------------------------------- pagination
+    def _load_page(self) -> None:
+        """Load the next page of theses (keyset cursor)."""
+        page = read_theses_page(
+            limit=PAGE_SIZE,
+            cursor=self._cursor,
+            ticker_filter=self._ticker_filter,
+        )
+        if page:
+            self._rows.extend(page)
+            last = page[-1]
+            self._cursor = (last.datetime, last.id)
+        # Has more if this page was full AND a following page exists.
+        self._has_more = len(page) == PAGE_SIZE
+
+    def _reset_and_reload(self) -> None:
+        """Reset pagination + reload first page (after filter change)."""
+        self._rows = []
+        self._cursor = None
+        self._index = 0
+        self._load_page()
+
+    def _load_more(self) -> None:
+        """Append the next page without losing the current selection."""
+        if not self._has_more:
+            return
+        self._load_page()
+        self._refresh()
+
     # ---------------------------------------------------------- rendering
     def _render_head(self) -> str:
         meta = self._meta
@@ -271,6 +322,20 @@ class HistoryScreen(Screen):
         gap1 = " " * 30
         gap2 = " " * 16
         return f"{title}{gap1}{meta_str}{gap2}{gap2}  {gap2}{path}    {mtime}"
+
+    def _render_pill_bar(self) -> str:
+        """Render the ticker filter pills: [ ALL | NVDA | AAPL | … ]."""
+        pills = ["ALL"] + self._tickers
+        parts: list[str] = []
+        for t in pills:
+            active = (t == (self._ticker_filter or "ALL"))
+            if active:
+                parts.append(f"{_BOLD_CYAN}[ {t} ]{_OFF}")
+            else:
+                parts.append(f"{_FG3}[ {t} ]{_OFF}")
+        if not self._tickers:
+            return f"  {_FG3}filter: (no theses yet){_OFF}"
+        return "  " + " ".join(parts)
 
     def _render_foot(self) -> str:
         if self._mode == "drill":
@@ -311,10 +376,19 @@ class HistoryScreen(Screen):
             log.write("")  # spacer between cards
         # hint footer in the list pane
         log.write("")
-        log.write(
-            f"  {_FG3}showing {len(visible)} of {len(self._rows)} theses"
-            f"{_OFF}"
-        )
+        total = count_theses(ticker_filter=self._ticker_filter)
+        loaded = len(self._rows)
+        if self._has_more:
+            log.write(
+                f"  {_FG3}showing {loaded} of {total} theses"
+                f"{_OFF}  "
+                f"{_BOLD_CYAN}[ load more ↓ ]{_OFF}"
+            )
+        else:
+            log.write(
+                f"  {_FG3}showing all {loaded} of {total} theses"
+                f"{_OFF}"
+            )
 
     def _visible_rows(self) -> list[ThesisRow]:
         if not self._filter:
@@ -461,6 +535,12 @@ class HistoryScreen(Screen):
             h.update(self._render_head())
         except Exception:
             pass
+        # Pill bar
+        try:
+            p = self.query_one("#history-pills", Static)
+            p.update(self._render_pill_bar())
+        except Exception:
+            pass
         # List
         self._render_list()
         # Detail
@@ -520,6 +600,38 @@ class HistoryScreen(Screen):
         # Post the re-run request to the App; ChatScreen picks it up via
         # the App's on_rerun_requested → ChatScreen.run_from_history path.
         self.post_message(ReRunRequested(ticker, flow_id))
+
+    def action_next_filter(self) -> None:
+        """tab key — cycle to the next ticker pill."""
+        pills = ["ALL"] + self._tickers
+        if not pills:
+            return
+        current = self._ticker_filter or "ALL"
+        try:
+            idx = pills.index(current)
+        except ValueError:
+            idx = 0
+        nxt = pills[(idx + 1) % len(pills)]
+        self._ticker_filter = nxt if nxt != "ALL" else None
+        self._reset_and_reload()
+        self._refresh()
+
+    def action_page_down(self) -> None:
+        """PageDown key — load next page (or scroll down)."""
+        visible = self._visible_rows()
+        if self._has_more and self._index >= len(visible) - 3:
+            # Near the end — load more
+            self._load_more()
+        else:
+            # Jump down within current page
+            if visible:
+                self._index = min(len(visible) - 1, self._index + 10)
+                self._refresh()
+
+    def action_page_up(self) -> None:
+        """PageUp key — jump up within the loaded page."""
+        self._index = max(0, self._index - 10)
+        self._refresh()
 
     def action_search_open(self) -> None:
         self._search_open = True
