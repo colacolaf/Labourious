@@ -504,7 +504,7 @@ class ChatScreen(Screen):
             log.mount(bubble)
             self._bubble_index[event.agent_id] = bubble
             bubble.mark_started(model=event.model)
-            activity.mark_running(event.agent_id)
+            activity.mark_running(event.agent_id, model=event.model)
 
         elif isinstance(event, AgentChunk):
             bubble = self._bubble_index.get(event.agent_id)
@@ -568,10 +568,18 @@ class ChatScreen(Screen):
                     confidence=confidence,
                     citations=citations,
                 )
-            activity.mark_finished(event.agent_id, wallclock_s=event.wallclock_s)
+            activity.mark_finished(
+                event.agent_id,
+                wallclock_s=event.wallclock_s,
+                cost_usd=event.cost_usd_estimate,
+                tokens_in=event.in_tokens,
+                tokens_out=event.out_tokens,
+            )
 
         elif isinstance(event, CostDelta):
             cost.update_totals(event.cumulative_in, event.cumulative_out, event.cumulative_cost)
+            activity.update_cost(event.agent_id, event.cost_usd_estimate,
+                                 event.cumulative_cost)
 
         elif isinstance(event, ThesisWritten):
             snap = self.query_one("#thesis-snapshot")
