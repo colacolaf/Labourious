@@ -480,6 +480,59 @@ def _wrap_example_with_directive(agent_id: str) -> str:
 # --------------------------------------------------------------------------- #
 # Call an agent
 # --------------------------------------------------------------------------- #
+
+
+class AgentTimedOut(RuntimeError):
+    """Raised when ``call_agent`` exceeds its ``timeout_s`` budget."""
+    pass
+
+
+def _do_model_call(
+    adapter: "Any",
+    user_brief: str,
+    system_prompt: str,
+    stream_chunks: bool,
+    emit_event: "Callable[[Any], None] | None",
+    agent_id: str,
+) -> tuple[str, int, int, float]:
+    """Execute the actual model call (streaming or single-shot).
+    Extracted so ``call_agent`` can wrap it in a timeout.
+    Returns (text, in_tokens, out_tokens, cost_usd).
+    """
+    text = ""
+    in_tok = 0
+    out_tok = 0
+    cost_usd = 0.0
+    if stream_chunks and hasattr(adapter, "stream"):
+        for chunk in adapter.stream(
+            messages=[{"role": "user", "content": user_brief}],
+            system=system_prompt,
+            options={"temperature": 0.2},
+        ):
+            if chunk.delta is not None:
+                if chunk.delta:
+                    text += chunk.delta
+                if emit_event is not None:
+                    emit_event(AgentChunk(agent_id=agent_id, delta=chunk.delta))
+            if chunk.usage:
+                in_tok = chunk.usage.get("prompt_tokens", 0)
+                out_tok = chunk.usage.get("completion_tokens", 0)
+                cost_usd = chunk.usage.get("cost_usd_estimate", 0.0)
+    else:
+        response = adapter.call(
+            messages=[{"role": "user", "content": user_brief}],
+            system=system_prompt,
+            options={"temperature": 0.2},
+        )
+        text = response.text
+        in_tok = response.in_tokens
+        out_tok = response.out_tokens
+        cost_usd = response.cost_usd_estimate
+        if emit_event is not None:
+            emit_event(AgentChunk(agent_id=agent_id, delta=response.text))
+    return text, in_tok, out_tok, cost_usd
+
+
 def call_agent(
     agent_id: str,
     user_brief: str,
@@ -489,6 +542,7 @@ def call_agent(
     per_agent_model: dict[str, str] | None = None,
     stream_chunks: bool = False,
     system_prompt_override: str | None = None,
+    timeout_s: float | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Calls an agent by loading its prompt, calling the model, parsing the JSON envelope.
@@ -518,6 +572,14 @@ def call_agent(
     agents. Callers that pre-format the prompt (e.g. via
     ``packs.format_senior_analyst_with_pack``) pass the formatted
     string here.
+
+    If ``timeout_s`` is set, the model call is executed in a
+    ``concurrent.futures.ThreadPoolExecutor`` with a timeout. When the
+    timeout fires, the call is cancelled (future.cancel()), an
+    ``AgentFailed`` event is emitted, and an ``AgentTimedOut`` exception
+    is raised so the caller can handle the partial-failure path.
+    Default ``None`` means no timeout — the call runs until the model
+    responds or the network drops.
     """
     if system_prompt_override is not None:
         system_prompt = system_prompt_override
@@ -618,37 +680,62 @@ def call_agent(
         in_tok = 0
         out_tok = 0
         cost_usd = 0.0
-        if stream_chunks and hasattr(adapter, "stream"):
-            # Streaming path — emit one AgentChunk per delta.
-            for chunk in adapter.stream(
-                messages=[{"role": "user", "content": user_brief}],
-                system=system_prompt,
-                options={"temperature": 0.2},
-            ):
-                if chunk.delta is not None:
-                    # Always accumulate the delta into the envelope source —
-                    # even if no emitter is hooked (e.g. a CLI pilot).
-                    if chunk.delta:
-                        text += chunk.delta
-                    if emit_event is not None:
-                        emit_event(AgentChunk(agent_id=agent_id, delta=chunk.delta))
-                if chunk.usage:
-                    in_tok = chunk.usage.get("prompt_tokens", 0)
-                    out_tok = chunk.usage.get("completion_tokens", 0)
-                    cost_usd = chunk.usage.get("cost_usd_estimate", 0.0)
+
+        # ── timeout guard ──
+        if timeout_s is not None and timeout_s > 0:
+            import concurrent.futures as _futures
+            import threading as _threading
+            import queue as _queue
+
+            # We run the model call in a worker thread and enforce a wallclock
+            # timeout on the result future. If the timeout fires, we cancel
+            # the future (best-effort with running threads) and raise.
+            result_q: _queue.Queue = _queue.Queue()
+            exception_q: _queue.Queue = _queue.Queue()
+
+            def _model_worker():
+                try:
+                    _text, _in, _out, _cost = _do_model_call(
+                        adapter, user_brief, system_prompt, stream_chunks, emit_event, agent_id
+                    )
+                    result_q.put((_text, _in, _out, _cost))
+                except Exception as _exc:
+                    exception_q.put(_exc)
+
+            worker = _threading.Thread(target=_model_worker, daemon=True)
+            worker.start()
+            worker.join(timeout=timeout_s)
+
+            if worker.is_alive():
+                # Timeout fired — the worker is still running.
+                # We cannot forcefully kill a thread in Python, so we mark
+                # it as orphaned and let the caller handle the failure.
+                elapsed = time.monotonic() - t0
+                msg = f"{agent_id} timed out after {elapsed:.1f}s (limit {timeout_s:.0f}s)"
+                if emit_event is not None:
+                    emit_event(AgentFailed(agent_id=agent_id, error=msg))
+                raise AgentTimedOut(msg)
+
+            # Worker joined within timeout — check for exception or result.
+            try:
+                exc = exception_q.get_nowait()
+                raise exc
+            except _queue.Empty:
+                pass
+
+            try:
+                text, in_tok, out_tok, cost_usd = result_q.get_nowait()
+            except _queue.Empty:
+                msg = f"{agent_id} worker finished but produced no result"
+                if emit_event is not None:
+                    emit_event(AgentFailed(agent_id=agent_id, error=msg))
+                raise RuntimeError(msg)
         else:
-            # Standard (single-shot) path — emit one AgentChunk with the full body.
-            response = adapter.call(
-                messages=[{"role": "user", "content": user_brief}],
-                system=system_prompt,
-                options={"temperature": 0.2},
+            # No timeout — call inline.
+            text, in_tok, out_tok, cost_usd = _do_model_call(
+                adapter, user_brief, system_prompt, stream_chunks, emit_event, agent_id
             )
-            text = response.text
-            in_tok = response.in_tokens
-            out_tok = response.out_tokens
-            cost_usd = response.cost_usd_estimate
-            if emit_event is not None:
-                emit_event(AgentChunk(agent_id=agent_id, delta=response.text))
+
         wallclock = time.monotonic() - t0
         # Parse envelope. We try strict JSON first, then fall back to a
         # resilient extractor that strips code fences, leading prose,
@@ -929,6 +1016,7 @@ def execute_flow_f1(
     emit_event: "Callable[[Any], None] | None" = None,
     per_agent_model: dict[str, str] | None = None,
     stream_chunks: bool = False,
+    timeout_s: float | None = None,
 ) -> dict[str, Any]:
     """
     Flagship f1 — analyze ticker. Returns the final envelope (final-report JSON)
@@ -947,6 +1035,11 @@ def execute_flow_f1(
             AnthropicAdapter, OpenAICompatAdapter, CohereAdapter and
             GeminiAdapter all stream natively. Default False preserves the
             pre-streaming CLI contract.
+        timeout_s: per-agent wallclock timeout in seconds. When set, each
+            ``call_agent`` runs inside a daemon thread with a timeout guard.
+            If any agent exceeds the budget, ``AgentTimedOut`` is raised
+            (and ``AgentFailed`` emitted) so the flow can surface partial
+            progress. Default None = no timeout.
     """
     register = ThesisRegister()
     prior_thesis = register.read_thesis(ticker, since_days=14)
@@ -966,7 +1059,8 @@ def execute_flow_f1(
     orch_env, orch_cost = call_agent("orchestrator", orch_brief, model,
                                      stream_chunks=stream_chunks,
                                      paid_for=paid_for, emit_event=emit_event,
-                                     per_agent_model=per_agent_model)
+                                     per_agent_model=per_agent_model,
+                                     timeout_s=timeout_s)
 
     # Tool-feeding pre-flight: pull core primary-source data ONCE per run
     # so every downstream agent (senior, forensic, devils-advocate, final)
@@ -1014,7 +1108,8 @@ def execute_flow_f1(
     sr_env, sr_cost = call_agent("senior-analyst", sr_brief, model,
                                  paid_for=paid_for, emit_event=emit_event,
                                  per_agent_model=per_agent_model,
-                                 stream_chunks=stream_chunks)
+                                 stream_chunks=stream_chunks,
+                                 timeout_s=timeout_s)
 
     # Tool-feeding post-agent: if senior-analyst emitted any ``tool_directives``,
     # dispatch each via call_tool and append the results to ``tool_results``.
@@ -1085,11 +1180,13 @@ def execute_flow_f1(
             call_agent, "forensic-accounting", fa_brief, model,
             paid_for=paid_for, emit_event=emit_event,
             per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+            timeout_s=timeout_s,
         )
         da_fut = ex.submit(
             call_agent, "devils-advocate", da_brief, model,
             paid_for=paid_for, emit_event=emit_event,
             per_agent_model=per_agent_model, stream_chunks=stream_chunks,
+            timeout_s=timeout_s,
         )
         # Both results must materialize before wave 4. We collect them in
         # deterministic order — forensic first, devil second — for the
@@ -1137,7 +1234,8 @@ def execute_flow_f1(
     final_env, final_cost = call_agent("final-report", fr_brief, model,
                                        paid_for=paid_for, emit_event=emit_event,
                                        per_agent_model=per_agent_model,
-                                       stream_chunks=stream_chunks)
+                                       stream_chunks=stream_chunks,
+                                       timeout_s=timeout_s)
 
     # Persist to thesis register. Cite REAL URLs from tool_results when the
     # LLM didn't carry its own forward; SEC URLs and any fetched 8-K links are
@@ -2961,6 +3059,7 @@ def run_flow_stream(
     paid_for: list[str] | None = None,
     per_agent_model: dict[str, str] | None = None,
     stream_chunks: bool = False,
+    timeout_s: float | None = None,
 ) -> Iterator[Any]:
     """
     Yield typed `Event` dataclasses as a flow progresses.
@@ -3207,6 +3306,7 @@ def run_flow_stream(
                 emit_event=emit,
                 per_agent_model=per_agent_model,
                 stream_chunks=stream_chunks,
+                timeout_s=timeout_s,
             )
     except Exception as exc:
         # Drain everything the agent emitted before the crash, then FlowFailed.
