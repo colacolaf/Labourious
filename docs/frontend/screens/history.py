@@ -32,6 +32,9 @@ modal never writes; the runtime writes when an f1 run finishes.
 
 from __future__ import annotations
 
+from datetime import datetime
+from pathlib import Path
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -85,7 +88,8 @@ def _strip_ansi(s: str) -> str:
     return re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", s)
 
 
-def _card_line(row: ThesisRow, *, selected: bool, width: int) -> str:
+def _card_line(row: ThesisRow, *, selected: bool, width: int,
+              multi_selected: bool = False) -> str:
     """Build the ANSI string for one card row in the left list.
 
     Layout (target 460 cols wide):
@@ -93,7 +97,8 @@ def _card_line(row: ThesisRow, *, selected: bool, width: int) -> str:
       Price $890  →  base $820  ·  80% confidence
       claude-sonnet-4-5 · hybrid · 2.1k in / 1.1k out
     """
-    left_marker = (_BOLD_CYAN + "▌ " + _OFF) if selected else "  "
+    select_marker = f"{_AMBER}● {_OFF}" if multi_selected else "  "
+    left_marker = select_marker + ((_BOLD_CYAN + "▌ " + _OFF) if selected else "  ")
     placement_fg = _PLACEMENT_FG.get(row.placement, _FG3)
     placement_bg = _PLACEMENT_BG.get(row.placement, "")
     badge = f"{placement_bg}{placement_fg} {row.placement:6s} {_RESET_BG}"
@@ -222,12 +227,17 @@ class HistoryScreen(Screen):
     """
 
     BINDINGS = [
-        Binding("escape",     "back",        "Back"),
-        Binding("r",          "rerun",       "Re-run"),
-        Binding("ctrl+enter", "rerun",       "Re-run"),
-        Binding("tab",        "next_filter", "Next filter"),
-        Binding("pagedown",   "page_down",   "Next page"),
-        Binding("pageup",     "page_up",     "Prev page"),
+        Binding("escape",     "back",          "Back"),
+        Binding("r",          "rerun",         "Re-run"),
+        Binding("ctrl+enter", "rerun",         "Re-run"),
+        Binding("tab",        "next_filter",   "Next filter"),
+        Binding("pagedown",   "page_down",     "Next page"),
+        Binding("pageup",     "page_up",       "Prev page"),
+        Binding("space",      "toggle_select", "Select"),
+        Binding("ctrl+d",     "export_selected", "Export"),
+        Binding("ctrl+k",     "keyword_filter", "Keyword"),
+        Binding("ctrl+f",     "date_filter",   "Date range"),
+        Binding("ctrl+l",     "clear_filters", "Clear"),
     ]
 
 
@@ -238,6 +248,14 @@ class HistoryScreen(Screen):
         # Cross-flow filter state
         self._tickers: list[str] = list_tickers()
         self._ticker_filter: str | None = None   # None = ALL
+        # Keyword + date search state
+        self._keyword: str = ""
+        self._date_from: str = ""
+        self._date_to: str = ""
+        self._keyword_open: bool = False
+        self._date_open: bool = False
+        # Multi-select + export state
+        self._selected: set[int] = set()
         # Pagination state (keyset cursor)
         self._rows: list[ThesisRow] = []
         self._cursor: tuple | None = None
@@ -282,6 +300,9 @@ class HistoryScreen(Screen):
             limit=PAGE_SIZE,
             cursor=self._cursor,
             ticker_filter=self._ticker_filter,
+            keyword=self._keyword or None,
+            date_from=self._date_from or None,
+            date_to=self._date_to or None,
         )
         if page:
             self._rows.extend(page)
@@ -307,6 +328,16 @@ class HistoryScreen(Screen):
     # ---------------------------------------------------------- rendering
     def _render_head(self) -> str:
         meta = self._meta
+        extras: list[str] = []
+        if self._selected:
+            extras.append(f"{_AMBER}{len(self._selected)} selected{_OFF}")
+        if self._keyword:
+            extras.append(f"{_FG2}keyword:{self._keyword}{_OFF}")
+        if self._date_from or self._date_to:
+            df = self._date_from or "…"
+            dt = self._date_to or "…"
+            extras.append(f"{_FG2}{df}→{dt}{_OFF}")
+        extra_str = "  ".join(extras) if extras else ""
         meta_str = (
             f"{_SAGE}● {meta['count']} theses"
             f"{_OFF} {_FG3}·{_OFF} {_FG2}{meta['tickers']} tickers{_OFF}"
@@ -318,6 +349,8 @@ class HistoryScreen(Screen):
         path = f"{_FG3}{meta['path']}{_OFF}"
         if self._filter:
             title += f"  {_FG3}/{_OFF}  {_FG}filter:{_OFF}  {_FG2}{self._filter}{_OFF}"
+        if extra_str:
+            title += f"  {extra_str}"
         mtime = f"{_FG3}{meta['mtime']}{_OFF}"
         gap1 = " " * 30
         gap2 = " " * 16
@@ -338,6 +371,7 @@ class HistoryScreen(Screen):
         return "  " + " ".join(parts)
 
     def _render_foot(self) -> str:
+        sel = f"{_AMBER}{len(self._selected)} selected{_OFF}  " if self._selected else ""
         if self._mode == "drill":
             return (
                 f"  {_FG3}Esc{_OFF} back to list  ·  "
@@ -345,13 +379,19 @@ class HistoryScreen(Screen):
                 f"{_FG3}r{_OFF} re-run  ·  "
                 f"{_FG3}c{_OFF} open citations modal"
             )
-        return (
-            f"  {_FG3}↑/↓{_OFF} cards  ·  "
-            f"{_FG3}⏎{_OFF} drill in  ·  "
+        base = (
+            f"  {sel}"
+            f"{_FG3}↑/↓{_OFF} cards  ·  "
+            f"{_FG3}⏎{_OFF} drill  ·  "
+            f"{_FG3}space{_OFF} select  ·  "
             f"{_FG3}r{_OFF} re-run  ·  "
             f"{_FG3}/{_OFF} search  ·  "
+            f"{_FG3}Ctrl+K{_OFF} keyword  ·  "
+            f"{_FG3}Ctrl+F{_OFF} date  ·  "
+            f"{_FG3}Ctrl+D{_OFF} export  ·  "
             f"{_FG3}Esc{_OFF} close"
         )
+        return base
 
     def _render_list(self) -> None:
         """Render the left card list to current index/filter."""
@@ -371,7 +411,7 @@ class HistoryScreen(Screen):
             log.write(f"  {_FG3}No theses match {_FG2}{self._filter}{_OFF}.")
             return
         for i, row in enumerate(visible):
-            line = _card_line(row, selected=(i == self._index), width=46)
+            line = _card_line(row, selected=(i == self._index), width=46, multi_selected=(row.id in self._selected))
             log.write(line)
             log.write("")  # spacer between cards
         # hint footer in the list pane
@@ -638,14 +678,120 @@ class HistoryScreen(Screen):
         self._filter = ""
         self._refresh()
 
+    def action_toggle_select(self) -> None:
+        """space — toggle selection of current card for bulk export."""
+        visible = self._visible_rows()
+        if not visible:
+            return
+        row = visible[min(self._index, len(visible) - 1)]
+        if row.id in self._selected:
+            self._selected.discard(row.id)
+        else:
+            self._selected.add(row.id)
+        self._refresh()
+
+    def action_export_selected(self) -> None:
+        """Ctrl+D — export selected theses to markdown file."""
+        from frontend.history_io import export_theses_by_ids, export_theses_markdown
+        if not self._selected:
+            return
+        rows = export_theses_by_ids(ids=self._selected)
+        if not rows:
+            return
+        md = export_theses_markdown(rows)
+        export_path = Path(DEFAULT_DB).parent / "exports"
+        export_path.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        out = export_path / f"theses-export-{ts}.md"
+        out.write_text(md, encoding="utf-8")
+        self.notify(f"Exported {len(rows)} theses to {out.name}")
+
+    def action_date_filter(self) -> None:
+        """Ctrl+F — open date-range filter prompt."""
+        self._date_open = True
+        self._refresh()
+
+    def action_keyword_filter(self) -> None:
+        """Ctrl+K — open keyword filter prompt."""
+        self._keyword_open = True
+        self._refresh()
+
+    def action_clear_filters(self) -> None:
+        """Ctrl+L — clear all active filters."""
+        self._keyword = ""
+        self._date_from = ""
+        self._date_to = ""
+        self._selected.clear()
+        self._ticker_filter = None
+        self._reset_and_reload()
+        self._refresh()
+
     # ---------------------------------------------------------- typing + nav
     def on_key(self, event) -> None:
-        """Driving loop for arrows / search / enter.
+        """Driving loop for arrows / search / enter / keyword / date.
 
         Bindings only handle `escape` and `r` here. Arrows + enter + `/`
         are all dispatched from this handler so we can avoid Textual 3.7's
         focus-routing flakiness with priority bindings.
         """
+        # Keyword mode: type to set keyword filter, esc/enter to commit
+        if self._keyword_open:
+            if event.key == "escape" or event.key == "enter":
+                self._keyword_open = False
+                self._reset_and_reload()
+                self._refresh()
+                return
+            if event.key == "backspace":
+                self._keyword = self._keyword[:-1]
+                self._index = 0
+                self._refresh()
+                return
+            if event.character and len(event.character) == 1 and event.character.isprintable():
+                self._keyword += event.character
+                self._index = 0
+                self._refresh()
+                return
+            return  # swallow anything else while keyword input is open
+
+        # Date mode: type YYYY-MM-DD..YYYY-MM-DD, esc/enter to commit
+        if self._date_open:
+            if event.key == "escape" or event.key == "enter":
+                self._date_open = False
+                self._reset_and_reload()
+                self._refresh()
+                return
+            if event.key == "backspace":
+                # delete last char from whichever field is being filled
+                if self._date_to:
+                    self._date_to = self._date_to[:-1]
+                elif self._date_from:
+                    self._date_from = self._date_from[:-1]
+                self._index = 0
+                self._refresh()
+                return
+            if event.character == "..":
+                # switch to date_to
+                pass  # just keep parsing
+            if event.character and len(event.character) == 1:
+                ch = event.character
+                if ch.isdigit() or ch == "-":
+                    if not self._date_from or len(self._date_from) < 10:
+                        if ch == "-" and len(self._date_from or "") in (4,):
+                            self._date_from = (self._date_from or "") + "-"
+                        elif ch == "-" and len(self._date_from or "") == 7:
+                            self._date_from = (self._date_from or "") + "-"
+                        elif ch.isdigit() and len(self._date_from or "") < 10:
+                            self._date_from = (self._date_from or "") + ch
+                    elif len(self._date_from or "") >= 10:
+                        # filling date_to
+                        if ch.isdigit() and len(self._date_to or "") < 10:
+                            if len(self._date_to or "") in (4, 7):
+                                self._date_to = (self._date_to or "") + "-"
+                            self._date_to = (self._date_to or "") + ch
+                self._refresh()
+                return
+            return
+
         # Search mode: type to filter, esc/enter to commit
         if self._search_open:
             if event.key == "escape" or event.key == "enter":

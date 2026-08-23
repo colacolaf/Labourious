@@ -197,15 +197,19 @@ def read_theses_all(db_path: Path | str = DEFAULT_DB, *, limit: int | None = Non
 def read_theses_page(db_path: Path | str = DEFAULT_DB, *,
                      limit: int = 20,
                      cursor: tuple | None = None,
-                     ticker_filter: str | None = None) -> list[ThesisRow]:
-    """Keyset-paginated read — newest first.
+                     ticker_filter: str | None = None,
+                     keyword: str | None = None,
+                     date_from: str | None = None,
+                     date_to: str | None = None) -> list[ThesisRow]:
+    """Keyset-paginated read — newest first, with optional filters.
 
     `cursor` is a `(created_at, id)` tuple marking the row *after* which to
-    continue. Pass the last returned row's `(datetime, id)` to fetch the next
-    page. Returns an empty list when the end is reached.
+    continue.  Pass the last returned row's `(datetime, id)` to fetch the next
+    page.  Returns an empty list when the end is reached.
 
-    Ticker filter narrows to a single ticker (case-insensitive), so the
-    History modal can page across one symbol without loading the whole table.
+    Ticker filter narrows to a single ticker (case-insensitive).
+    Keyword does a LIKE search across ticker, thesis_text, and bottom_line.
+    date_from / date_to are ISO dates (YYYY-MM-DD) inclusive.
     """
     p = Path(db_path)
     if not p.exists() or p.stat().st_size == 0:
@@ -228,6 +232,16 @@ def read_theses_page(db_path: Path | str = DEFAULT_DB, *,
         if ticker_filter:
             where.append("ticker = ?")
             params.append(ticker_filter.upper())
+        if keyword:
+            kw = f"%{keyword}%"
+            where.append("(ticker LIKE ? OR thesis_text LIKE ? OR bottom_line LIKE ?)")
+            params.extend([kw, kw, kw])
+        if date_from:
+            where.append("date >= ?")
+            params.append(date_from)
+        if date_to:
+            where.append("date <= ?")
+            params.append(date_to)
         if cursor is not None:
             where.append("(created_at < ? OR (created_at = ? AND id < ?))")
             params.extend([cursor[0], cursor[0], cursor[1]])
@@ -302,6 +316,55 @@ def count_theses(db_path: Path | str = DEFAULT_DB,
                 con.close()
             except Exception:
                 pass
+
+
+# --------------------------------------------------------------- exports
+def export_theses_by_ids(db_path: Path | str = DEFAULT_DB,
+                          *, ids: set[int]) -> list[dict]:
+    """Return raw row dicts for the given ids (for bulk export)."""
+    if not ids:
+        return []
+    p = Path(db_path)
+    if not p.exists() or p.stat().st_size == 0:
+        return []
+    con = None
+    try:
+        con = sqlite3.connect(str(p))
+        con.row_factory = sqlite3.Row
+        placeholders = ",".join("?" for _ in ids)
+        rows = con.execute(
+            f"SELECT * FROM theses WHERE id IN ({placeholders}) ORDER BY created_at DESC",
+            tuple(ids),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    except sqlite3.DatabaseError:
+        return []
+    finally:
+        if con is not None:
+            try:
+                con.close()
+            except Exception:
+                pass
+
+
+def export_theses_markdown(rows: list[dict]) -> str:
+    """Render a list of raw thesis rows as a markdown string."""
+    parts: list[str] = ["# Labourious — Exported Theses\n"]
+    for i, r in enumerate(rows):
+        ticker = r.get("ticker", "?")
+        date = r.get("date", "")
+        placement = "ABSTAIN"
+        try:
+            bl = json.loads(r.get("bottom_line", "{}"))
+            placement = (bl.get("direction") or "ABSTAIN").upper()
+        except (json.JSONDecodeError, TypeError):
+            pass
+        conviction = r.get("conviction", "?")
+        thesis = r.get("thesis_text", "")
+        parts.append(f"## {i+1}. {ticker} — {placement} · {conviction}/5 · {date}\n")
+        parts.append(thesis)
+        parts.append("\n---\n")
+    return "\n".join(parts)
 
 
 # --------------------------------------------------------------- diff

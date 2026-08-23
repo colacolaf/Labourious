@@ -234,7 +234,8 @@ hs_mod.list_tickers = lambda: ["TSLA", "NVDA", "AAPL"]
 _mp_calls: list[dict] = []
 _next_ids = [100, 80, 60, 40, 20]  # ids for each page
 
-def _mp_read_page(db_path=None, *, limit=7, cursor=None, ticker_filter=None):
+def _mp_read_page(db_path=None, *, limit=7, cursor=None, ticker_filter=None,
+                  keyword=None, date_from=None, date_to=None):
     _mp_calls.append({"cursor": cursor, "ticker_filter": ticker_filter, "limit": limit})
     if len(_mp_calls) > len(_next_ids):
         return []
