@@ -26,6 +26,7 @@ Run:
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -34,6 +35,20 @@ from unittest.mock import MagicMock, patch
 THIS = Path(__file__).resolve()
 DOCS = THIS.parents[2]
 sys.path.insert(0, str(DOCS))
+
+# Isolate config so ChatScreen.on_mount's wizard auto-push can't fire from the
+# user's real ~/.labourious/config.json (which would push the wizard on this
+# machine and hide #chat-log from the pilot). We seed a provider so the
+# wizard isn't triggered; the pilot targets _apply_event routing only.
+_TMP_CFG = Path(tempfile.mkdtemp(prefix="strip-smoke-")) / "config.json"
+_TMP_CFG.write_text(
+    '{"providers": {"ollama": {"name": "ollama",'
+    + ' "base_url": "http://localhost:11434", "api_key_env": null}}, '
+    + '"default_model": "ollama/llama3.3:70b"}'
+)
+os.environ["LABOURIOUS_CONFIG"] = str(_TMP_CFG)
+import frontend.config_io as _cio
+_cio.CONFIG_PATH = _TMP_CFG
 
 _OK = 0
 _FAIL = 0
@@ -237,12 +252,28 @@ class _SmokeChatApp(App):
         super().__init__()
         self._screen_cls = screen_cls
 
-    def on_mount(self):
-        self.push_screen(self._screen_cls())
+    def get_default_screen(self):
+        # Return the test screen (with onboarding suppressed) instead of the
+        # real ChatScreen — otherwise the wizard gets pushed on this machine
+        # and the pilot drives the wrong screen.
+        return self._screen_cls()
 
 
 class _TestChatScreen(ChatScreen):
-    """Subclass that skips real config I/O so the pilot doesn't touch ~/.labourious."""
+    """Subclass so the pilot doesn't touch ~/.labourious and doesn't get the
+    welcome wizard pushed on top (which would hide #chat-log from the pilot
+    and break every event-routing assertion).
+
+    load_config() runs against the user's real ~/.labourious/config.json, so
+    this environment (which may have no providers configured) would push the
+    wizard on mount. Skipping on_mount's onboarding is honest: the pilot
+    targets _apply_event routing, not first-run UX."""
+    def on_mount(self) -> None:
+        # Manually apply the pieces ChatScreen.on_mount does that matter here.
+        self.reload_config_from_disk()
+        self._show_welcome()
+        self._update_footer_hint()
+
     def reload_config_from_disk(self):
         self.model = "ollama/llama3.3:70b"
         self.depth = "STANDARD"

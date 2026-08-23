@@ -103,9 +103,12 @@ class _AgentRow(Vertical):
             self._body_log = self.query_one(f"#body-{self.agent_id}", RichLog)
         except Exception:
             self._body_log = None
-        self._render()
+        self._update_row()
 
-    def _render(self) -> None:
+    # NOTE: named `_update_row`, NOT `_render` — overriding Textual's
+    # internal Widget._render() (which must return a Rich renderable)
+    # with a None-returning method crashes the paint pipeline.
+    def _update_row(self) -> None:
         if self._body_log is None:
             return
         icon = _STATE_ICON.get(self.state, "○")
@@ -137,9 +140,9 @@ class _AgentRow(Vertical):
         self.tokens_in = 0
         self.tokens_out = 0
         if self._body_log is None:
-            self.call_after_refresh(self._render)
+            self.call_after_refresh(self._update_row)
         else:
-            self._render()
+            self._update_row()
 
     def mark_finished(self, wallclock_s: float, cost_usd: float = 0.0,
                       tokens_in: int = 0, tokens_out: int = 0) -> None:
@@ -149,22 +152,22 @@ class _AgentRow(Vertical):
         self.tokens_in = tokens_in
         self.tokens_out = tokens_out
         if self._body_log is None:
-            self.call_after_refresh(self._render)
+            self.call_after_refresh(self._update_row)
         else:
-            self._render()
+            self._update_row()
 
     def mark_failed(self) -> None:
         self.state = "failed"
         if self._body_log is None:
-            self.call_after_refresh(self._render)
+            self.call_after_refresh(self._update_row)
         else:
-            self._render()
+            self._update_row()
 
     def update_cost(self, cost_usd: float) -> None:
         """Update live cost while the agent is running (from CostDelta)."""
         self.cost_usd = cost_usd
         if self._body_log is not None:
-            self._render()
+            self._update_row()
 
 
 class ActivityPanel(Container):
@@ -241,7 +244,7 @@ class ActivityPanel(Container):
             row.tokens_in = 0
             row.tokens_out = 0
             if row._body_log is not None:
-                row._render()
+                row._update_row()
         self._completed_wallclocks.clear()
         self._remaining_count = len(AGENT_IDS)
         self._cumulative_cost = 0.0

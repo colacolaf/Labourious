@@ -58,6 +58,9 @@ class WelcomeWizardScreen(Screen):
         self._provider: dict | None = None
         self._model: str = ""
         self._api_key: str = ""
+        self._provider_input: str = ""   # typed on step 0, resolved on Enter
+        self._model_input: str = ""       # typed on step 1, resolved on Enter
+        self._pending_error: str = ""     # last validation message
 
     def compose(self) -> ComposeResult:
         yield Static("", id="wizard-progress")
@@ -67,10 +70,14 @@ class WelcomeWizardScreen(Screen):
             yield Button("Next →", id="wiz-next", variant="primary")
 
     def on_mount(self) -> None:
-        self._render()
+        self.redraw()
 
     # -------------------------------------------------- rendering
-    def _render(self) -> None:
+    # NOTE: named `redraw`, NOT `_render` — overriding Textual's internal
+    # Widget._render() (which must return a Rich renderable) with a
+    # None-returning method crashes the paint pipeline with
+    # `AttributeError: 'NoneType' object has no attribute 'render_strips'`.
+    def redraw(self) -> None:
         self._render_progress()
         self._render_step()
         self._render_actions()
@@ -117,7 +124,10 @@ class WelcomeWizardScreen(Screen):
             tag = "[green]free · no key[/]" if not p["key_needed"] else "[yellow]key required[/]"
             lines.append(f"  [bold cyan]{p['id']}[/]  {p['label']}  {tag}")
             lines.append(f"    [dim]{p['desc']}[/]\n")
-        lines.append("\n[dim]Type a provider ID and press Enter, or Esc to skip.[/]")
+        lines.append("\n[bold cyan]▶ " + (self._provider_input or "type a provider id…") + "[/]")
+        lines.append("[dim]Type a provider ID above and press Enter, or Esc to skip.[/]")
+        if self._pending_error:
+            lines.append(f"\n[yellow]⚠ {self._pending_error}[/]")
         return "\n".join(lines)
 
     def _model_step(self) -> str:
@@ -132,7 +142,11 @@ class WelcomeWizardScreen(Screen):
         for m in models:
             marker = "[green]✓[/]" if m == self._provider["default_model"] else " "
             lines.append(f"  {marker} [cyan]{m}[/]")
-        lines.append("\n[dim]Type a model name and press Enter, or press Enter for default.[/]")
+        current = self._model_input or self._provider["default_model"]
+        lines.append("\n[bold cyan]Type> " + current + "[/]")
+        lines.append("[dim]Type a model name and press Enter (blank = default).[/]")
+        if self._pending_error:
+            lines.append(f"\n[yellow]⚠ {self._pending_error}[/]")
         return "\n".join(lines)
 
     def _key_step(self) -> str:
@@ -157,21 +171,74 @@ class WelcomeWizardScreen(Screen):
         return "\n".join(lines)
 
     # -------------------------------------------------- actions
+    def _resolve_provider(self) -> dict | None:
+        """Match the typed provider id (case-insensitive) against the catalog.
+
+        Blank input returns the previously chosen provider (so Back → Next
+        keeps the selection); returns None only when a non-blank id doesn't
+        match anything.
+        """
+        query = self._provider_input.strip().lower()
+        if not query:
+            return self._provider
+        for p in WIZARD_PROVIDERS:
+            if p["id"] == query:
+                return p
+        return None
+
+    def _resolve_model(self) -> str | None:
+        """Return the chosen model for the provider.
+
+        Blank input → the provider's default model. Otherwise the typed
+        name must be in the provider's curated model list (case-insensitive).
+        """
+        if not self._provider:
+            return None
+        query = self._model_input.strip().lower()
+        if not query:
+            return self._provider["default_model"]
+        for m in WIZARD_MODELS.get(self._provider["id"], []):
+            if m.lower() == query:
+                return m
+        return None
+
     def action_next(self) -> None:
         if self._step == 0:
+            provider = self._resolve_provider()
+            if provider is None:
+                self._pending_error = (
+                    "unknown provider — type one of: "
+                    + ", ".join(p["id"] for p in WIZARD_PROVIDERS)
+                )
+                self._render_step()
+                return
+            if provider is not self._provider:
+                self._provider = provider
+                self._model_input = ""
+            self._pending_error = ""
             self._step = 1
-            self._model = self._provider["default_model"]
-        elif self._step == 1:
+            self.redraw()
+            return
+        if self._step == 1:
+            model = self._resolve_model()
+            if model is None:
+                self._pending_error = "unknown model — pick one from the list (or leave blank for default)"
+                self._render_step()
+                return
+            self._model = model
+            self._pending_error = ""
             self._step = 2
-        elif self._step == 2:
+            self.redraw()
+            return
+        if self._step == 2:
             self._save_and_dismiss()
             return
-        self._render()
 
     def action_back(self) -> None:
         if self._step > 0:
             self._step -= 1
-            self._render()
+            self._pending_error = ""
+            self.redraw()
 
     def action_skip(self) -> None:
         self.dismiss(None)
@@ -183,23 +250,25 @@ class WelcomeWizardScreen(Screen):
             self.action_back()
 
     def on_key(self, event) -> None:
+        """Accumulate typed input per step. Enter is handled by the BINDINGS
+        ('enter' → action_next), so resolution lives in action_next."""
         if self._step == 0:
-            if event.key == "enter":
-                self.action_next()
-                return
-            if event.character and event.character.isprintable() and event.character not in ("\r", "\n", "/"):
-                # Accumulate typed provider id
-                pass  # Provider selection is done by typing + Enter on the input
+            if event.key == "backspace":
+                self._provider_input = self._provider_input[:-1]
+                self._pending_error = ""
+            elif event.character and event.character.isprintable():
+                self._provider_input += event.character
+                self._pending_error = ""
+            self._render_step()
         elif self._step == 1:
-            if event.key == "enter":
-                self.action_next()
-                return
-            if event.character and event.character.isprintable():
-                pass  # Model input
+            if event.key == "backspace":
+                self._model_input = self._model_input[:-1]
+                self._pending_error = ""
+            elif event.character and event.character.isprintable():
+                self._model_input += event.character
+                self._pending_error = ""
+            self._render_step()
         elif self._step == 2:
-            if event.key == "enter":
-                self.action_next()
-                return
             if self._provider and self._provider["key_needed"]:
                 if event.character and event.character.isprintable():
                     self._api_key += event.character

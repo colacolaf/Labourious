@@ -58,6 +58,12 @@ scr._step = 0
 scr._provider = None
 scr._model = ""
 scr._api_key = ""
+scr._provider_input = ""
+scr._model_input = ""
+scr._pending_error = ""
+scr._render_progress = lambda: None
+scr._render_step = lambda: None
+scr._render_actions = lambda: None
 step("screen object created", True)
 
 # ===========================================================================
@@ -161,6 +167,12 @@ try:
     scr2._provider = WIZARD_PROVIDERS[0]  # ollama
     scr2._model = "llama3.3:70b"
     scr2._api_key = ""
+    scr2._provider_input = ""
+    scr2._model_input = ""
+    scr2._pending_error = ""
+    scr2._render_progress = lambda: None
+    scr2._render_step = lambda: None
+    scr2._render_actions = lambda: None
 
     # Test config write directly (dismiss() needs full Textual app)
     cfg = load_config()
@@ -206,6 +218,12 @@ scr3._step = 0
 scr3._provider = WIZARD_PROVIDERS[0]
 scr3._model = ""
 scr3._api_key = ""
+scr3._provider_input = ""
+scr3._model_input = ""
+scr3._pending_error = ""
+scr3._render_progress = lambda: None
+scr3._render_step = lambda: None
+scr3._render_actions = lambda: None
 
 step_eq("starts at step 0", scr3._step, 0)
 # Simulate next press
@@ -226,6 +244,82 @@ bindings = {b.key: b.action for b in WelcomeWizardScreen.BINDINGS}
 step("Esc binding → skip", bindings.get("escape") == "skip")
 step("Enter binding → next", bindings.get("enter") == "next")
 step_eq("2 BINDINGS total", len(WelcomeWizardScreen.BINDINGS), 2)
+
+# ===========================================================================
+# 12. Selection flow — resolution + validation (no DOM needed)
+# ===========================================================================
+section("12. Provider/model resolution + validation")
+
+scr4 = WelcomeWizardScreen.__new__(WelcomeWizardScreen)
+scr4._step = 0
+scr4._provider = None
+scr4._model = ""
+scr4._api_key = ""
+scr4._provider_input = ""
+scr4._model_input = ""
+scr4._pending_error = ""
+scr4._render_progress = lambda: None
+scr4._render_step = lambda: None
+scr4._render_actions = lambda: None
+scr4._save_and_dismiss = lambda: None
+
+# Guard: Next with no selection must NOT crash, must show an error, stay on step 0
+scr4.action_next()
+step("step-0 Next without provider → guarded", scr4._step == 0 and scr4._pending_error)
+
+# Unknown provider id → error, stays
+scr4._provider_input = "nope"
+scr4.action_next()
+step("unknown provider → error + stays", scr4._step == 0 and "unknown provider" in scr4._pending_error)
+
+# Valid provider id → advances to step 1, model input reset
+scr4._provider_input = "ollama"
+scr4.action_next()
+step("valid provider advances to step 1", scr4._step == 1)
+step("provider resolved to ollama", scr4._provider["id"] == "ollama")
+
+# Blank model → default model
+scr4.action_next()
+step("blank model → default_model", scr4._model == "llama3.3:70b")
+step("advances to step 2", scr4._step == 2)
+
+# Bad model → error, stays on step 1
+scr4.action_back()
+scr4._model_input = "bogus-model-xyz"
+scr4.action_next()
+step("unknown model → error + stays", scr4._step == 1 and "unknown model" in scr4._pending_error)
+
+# Back keeps prior provider; blank input re-selects it
+scr4.action_back()
+scr4._provider_input = ""
+scr4.action_next()
+step("blank provider input keeps prior selection", scr4._provider["id"] == "ollama" and scr4._step == 1)
+
+# Changing provider resets model input
+scr4.action_back()
+scr4._provider_input = "anthropic"
+scr4.action_next()
+step("re-select anthropic", scr4._provider["id"] == "anthropic" and scr4._model_input == "")
+scr4.action_next()
+step("anthropic default model", scr4._model == "claude-sonnet-4-5" and scr4._step == 2)
+
+# Key step — key needed provider accumulates api key via on_key
+scr4._api_key = ""
+from textual.events import Key as _Key
+scr4.on_key(_Key("k", character="s"))
+scr4.on_key(_Key("k", character="k"))
+scr4.on_key(_Key("k", character="-"))
+scr4.on_key(_Key("k", character="1"))
+step("api key accumulates", scr4._api_key == "sk-1")
+scr4.on_key(_Key("backspace", character=""))
+step("backspace trims api key", scr4._api_key == "sk-")
+
+# Key step — keyless provider never touches API key
+scr4._api_key = ""
+scr4._provider = WIZARD_PROVIDERS[0]  # ollama, no key
+scr4.on_key(_Key("k", character="x"))
+step("no-key provider ignores key input", scr4._api_key == "")
+
 
 # ===========================================================================
 # Summary

@@ -90,7 +90,7 @@ docs = ["prompts/**/*.md", "flows/*.md", "ARCHITECTURE.md", "CONTEXT.md", "R*.md
 [tool.setuptools.exclude-package-data]
 docs = ["runtime/smokes/*", "runtime/__pycache__/*", "runtime/.runs/*",
         "frontend/__pycache__/*", "runtime/evals/_seed_mock_runs.py",
-        "runtime/evals/__pycache__/*", "prompts/leads/*",
+        "runtime/evals/__pycache__/*",
         "prompts/ARCHIVE/*", ".pytest_cache/*"]
 
 

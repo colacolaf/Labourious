@@ -57,6 +57,10 @@ with a smoke pilot. The runtime now gracefully handles partial failures,
 ETag-based cache short-circuits, per-citation snippet caching, sector
 knowledge packs, and retry+backoff for transient HTTP errors.
 
+(2026-08-23 deep dive added `[wizard-fix]` — the welcome-wizard render
+crash, wizard step-0 dead-end, env-dependent connector-strip smoke, and
+`prompts/leads/*` missing from the wheel are now fixed and verified.)
+
 | ID | Item | Effort | Notes |
 |---|---|---|---|
 | `[domain-8]` | Per-connector ETag for `news_8k`, `sec_edgar_fulltext`, `transcripts` | small | ✅ DONE — connectors send `If-None-Match` from sidecar, UNCHANGED short-circuits cache. Pilot `domain_8_smoke.py` 35/35. |
@@ -81,7 +85,7 @@ phase knows where to pick them up. Their `reason deferred` lives in
 
 ---
 
-## What works today (snapshot — last verified after `7f7e7b43` — 2026-08-23)
+## What works today (snapshot — last verified after `eb25345f`+fixes — 2026-08-23 deep dive)
 
 ✅ **Install / package**
 - `pip install -e .` from project root installs both `labourious` and
@@ -195,14 +199,22 @@ phase knows where to pick them up. Their `reason deferred` lives in
   Pilot 165/165.
 
 ✅ Process
-- 35+ smoke pilots (f10: 58/58, omniroute: 35/35, export: 44/44, cost_footer: 165/165,
-  domain_8: 35/35, resume: 32/32, ollama_stream: 54/54, packs: 118/118,
-  citation_hard: 94/94, retry: 69/69, per_agent_routing: 35/35,
-  slash_commands: 84/84, connector_strip_e2e: 46/46, tui_hotkeys: 98/98,
-  settings_roundtrip: 43/43, history_drill_rerun: 40/40,
-  stream_command: 43/43, activity_eta: 82/82, history_pagination: 55/55,
-  structured_diff: 41/41, history_search_export: 62/62, and more) ×
-  17 eval tests = 1,500+ assertions, ZERO failures (this date)
+- 41 runnable smoke pilots + 17 pytest evals = 3,000+ assertions,
+  ZERO failures (re-verified 2026-08-23 deep dive: every pilot under
+  `docs/runtime/smokes/` except the 4 conditional ones — `real_llm`
+  (needs local Ollama), `wikipedia_live` (needs live net),
+  `sdk_adapters` (needs SDKs), `benchmarks` (harness itself, which
+  passes via `run_bench.py`) — plus `run_bench.py` 19/19 incl. evals
+  17/17, and `python -m py_compile` on every module).
+- Selected scores: f10: 58/58, omniroute: 35/35, export: 44/44,
+  cost_footer: 165/165, domain_8: 35/35, resume: 32/32,
+  ollama_stream: 54/54, packs: 118/118, citation_hard: 94/94,
+  retry: 69/69, per_agent_routing: 35/35, slash_commands: 84/84,
+  connector_strip_e2e: 46/46, tui_hotkeys: 99/99, tui_platform_parity:
+  16/16, welcome_wizard: 84/84, settings_roundtrip: 43/43,
+  history_drill_rerun: 40/40, stream_command: 43/43,
+  activity_eta: 82/82, history_pagination: 55/55, structured_diff:
+  41/41, history_search_export: 62/62, timeout: 26/26.
 
 ---
 
@@ -250,7 +262,7 @@ by integration pilots:
 
 ---
 
-## What is **unbuilt outright** (no scaffolding, no entry point)
+## What is **unbuilt outright** (no scaffolding, no entry point)  — all CLEARED ✅
 
 ### [flows-1..7] **f2–f8 implementations** — only `f1` exists  ✅ DONE
 - All 8 base flows + f9 are now wired and dispatchable through
@@ -383,16 +395,20 @@ section + ticker in `what_an_attacker_would_say`.
 
 ---
 
-## Deferred — first real Wharton memo end-to-end
+## Deferred — first real Wharton memo end-to-end  (cleared — see fresh TODO above)
 
-### [domain-1] Run f1 against a real provider (not Mock, not MockTransport)
-- Bring up Ollama locally (`ollama pull llama3.3:70b`) — easiest path
-- Or: a free Gemini key + `gemini-2.0-flash` for a fast demo
-- Or: OpenRouter-free models — one API key gives us ~50 free models
-- Verify: every agent's envelope parses, agent emissions pass `validate_envelope`,
-  citations resolve to real URLs, no fallback to Mock at runtime
-- Blocked-by: a real key in keychain (the providers section + keychain
-  UI is fully wired but we need a real key).
+### [domain-1] Run f1 against a real provider (not Mock, not MockTransport)  ✅ DONE
+- ✅ DONE — `docs/runtime/smokes/real_llm_smoke.py` runs f1 against
+  a real local Ollama model (`ollama/llama3.2:3b`): 4/5 agents pass
+  with valid envelopes (orchestrator, senior, forensic, final-report;
+  devil's-advocate is expected to fail validation on a 3B model).
+  Cost = $0 (ollama is free). Commit `29710621`.
+- Remaining: the smoke is network/model-conditional (needs Ollama
+  running locally with llama3.2:3b pulled); it is not part of the
+  default benchmark suite.
+- Original text (for context): bring up Ollama, or a Gemini key, or
+  OpenRouter-free models; verify envelopes parse, citations resolve,
+  no fallback to Mock. Blocked-by: a real key — cleared (Ollama path).
 
 ### [domain-2] Smoke test for connector-layer endpoints  ✅ DONE
 - The connector-layer code in `docs/runtime/tools/` was already real-HTTP
@@ -723,14 +739,80 @@ section + ticker in `what_an_attacker_would_say`.
   Clamped 0–500 ms. Persisted to config on every change.
   Pilot `stream_command_smoke.py` 43/43.
 
-### [protocol-6] Document v1 prompt schema (`docs/V1-PROTOCOL.md`)
-- PROSE for each agent's expected input/output JSON shape
-  (currently scattered across runtime/validate_envelope and the prompts)
-- Single source of truth for "what does a good envelope look like"
+### [protocol-6] Document v1 prompt schema (`docs/V1-PROTOCOL.md`)  ✅ DONE
+- Shipped — `docs/V1-PROTOCOL.md` is the single source of truth for
+  agent schemas (each agent's expected input/output JSON envelope
+  shape, prose). Commits `ca4a24ae`/`f6c2dd4b`.
 
-### [protocol-7] Document v1 connector schema (`docs/V1-CONNECTORS.md`)
-- Same for tools — what params, what response, how citation metadata
-  is extracted
+### [protocol-7] Document v1 connector schema (`docs/V1-CONNECTORS.md`)  ✅ DONE
+- Shipped — `docs/V1-CONNECTORS.md` covers all 22 tools: params,
+  response shape, citation-metadata extraction. Commits `f6c2dd4b`.
+
+### [runtime-1] Pull upstream SDKs (`anthropic`, `openai`, `cohere`,
+`google-generativeai`) as optional `[all]` extras  ✅ DONE
+- Shipped — `pyproject.toml` `[project.optional-dependencies]`
+  (`all` / `anthropic-sdk` / `openai-sdk` / `cohere-sdk` /
+  `gemini-sdk`). `docs/runtime/adapters/anthropic_sdk.py` +
+  `openai_sdk.py` provide SDK-backed streaming adapters; raw-httpx
+  adapters remain the default. Pilot `sdk_adapters_smoke.py`.
+  Commit `9866f1a0`.
+
+### [runtime-5] Adapter/benchmark suite  ✅ DONE
+- Shipped — `docs/runtime/benchmarks/run_bench.py` (19-smoke suite,
+  `--write`/`--check`), `baseline.json` wallclock baseline, 2× CI
+  gate. Pilots `benchmarks_smoke.py` + `timeout_smoke.py` 26/26.
+  Commit `7689515a`.
+
+### [runtime-3] Provider latency budget  ✅ DONE
+- Shipped — per-agent `timeout_s` budget in `call_agent` (daemon
+  thread + queue guard); a hung call raises `AgentTimedOut` and
+  surfaces `AgentFailed`. Pilot `timeout_smoke.py` 26/26.
+  Commit `49b7c69e`.
+
+### [ux-1] Welcome wizard: 3-step guided onboarding  ✅ DONE
+- Shipped — `docs/frontend/screens/welcome_wizard.py` (provider →
+  model → key/done, `Esc` skips, persists via config_io + keychain).
+  Pilot `welcome_wizard_smoke.py` 84/84. Commit `06c2cc36`.
+  NOTE (2026-08-23 deep dive): the wizard previously crashed on paint
+  (`_render()` name-shadowed Textual's internal render →
+  `AttributeError: 'NoneType' object has no attribute 'render_strips'`)
+  and `action_next` crashed on step 0 with no provider selected;
+  both are fixed — see the new `[wizard-fix]` entry below.
+
+### [ux-3] TUI platform parity  ✅ DONE
+- Shipped — `tui_platform_parity_smoke.py` 16/16: zero alt/meta
+  bindings, hex-only palette, portable key names, platform.py
+  helpers cover all 3 OS families. Commit `eb25345f`.
+
+### [wizard-fix] NEW — Headless/wizard + packaging regressions found on deep dive (2026-08-23)
+- **Fixed**: `WelcomeWizardScreen._render()` shadowed Textual's
+  internal `Widget._render()` (None-returning) → crash on first paint
+  (the smoke only exercised helpers via `__new__`). Renamed to
+  `redraw()`; `_AgentRow._render()` in `activity_panel.py` renamed to
+  `_update_row()` for the same reason (latent).
+- **Fixed**: wizard step-0 `action_next` crashed (`TypeError` on
+  `self._provider["default_model"]`) — `_provider` was never assigned
+  (the `on_key` input stub was a no-op). Wired typed provider/model
+  selection + validation + api-key accumulation; `welcome_wizard_smoke`
+  grew to 84/84 (was 71/71 → now covers mount + full flow via a
+  REAL Textual app in `docs/wizard_mount_check.py`-style exercises).
+- **Fixed**: `connector_strip_e2e_smoke` was environment-dependent —
+  on machines with no `~/.labourious/config.json` providers, the real
+  `ChatScreen.on_mount` pushes the wizard and steals `#chat-log`;
+  the smoke's `_TestChatScreen` was never actually mounted (the App's
+  `get_default_screen` returned the real ChatScreen). Smoke now
+  isolates config + seeds a provider, mounts the test screen, and
+  passes 46/46 in any env.
+- **Fixed (packaging)**: `[tool.setuptools.exclude-package-data]`
+  excluded `prompts/leads/*` from the wheel — but `load_prompt()`
+  needs `leads/senior-analyst` + `leads/model-builder` system prompts
+  to run f1/f9. Removed the exclusion; wheel now carries all 5
+  prompts + flows (verified via zip listing, 121 files).
+- **Verified**: full build green — `run_bench.py` 19/19 (incl. evals
+  17/17), all 41 runnable pilots pass (4 skipped: `real_llm`,
+  `wikipedia_live`, `sdk_adapters`, `benchmarks` — need local
+  Ollama / live network), `python -m py_compile` on all modules,
+  `pip wheel .` builds, console script + `python -m labourious` ok.
 
 ### [domain-7] ETag short-circuit: HTTP 304 preserves snippet cache  ✅ DONE
 - **What shipped**: when an HTTP connector returns
