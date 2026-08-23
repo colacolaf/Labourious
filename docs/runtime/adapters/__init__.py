@@ -28,8 +28,12 @@ def get_adapter(model_name: str):
     """
     prefix = model_name.split("/", 1)[0].lower()
     if prefix == "anthropic":
-        from .anthropic import AnthropicAdapter
-        return AnthropicAdapter(model=model_name)
+        try:
+            from .anthropic_sdk import AnthropicSDKAdapter
+            return AnthropicSDKAdapter(model=model_name)
+        except ImportError:
+            from .anthropic import AnthropicAdapter
+            return AnthropicAdapter(model=model_name)
     if prefix == "ollama":
         from .ollama import OllamaAdapter
         return OllamaAdapter(model=model_name)
@@ -42,5 +46,10 @@ def get_adapter(model_name: str):
     if prefix in ("google_ai_studio", "gemini_vertex"):
         from .gemini import GeminiAdapter
         return GeminiAdapter(model=model_name)
-    from .openai_compat import OpenAICompatAdapter
-    return OpenAICompatAdapter(model=model_name)
+    # OpenAI-compat: try SDK, fall back to httpx
+    try:
+        from .openai_sdk import OpenAISDKAdapter
+        return OpenAISDKAdapter(model=model_name)
+    except ImportError:
+        from .openai_compat import OpenAICompatAdapter
+        return OpenAICompatAdapter(model=model_name)
