@@ -81,7 +81,7 @@ phase knows where to pick them up. Their `reason deferred` lives in
 
 ---
 
-## What works today (snapshot — last verified after `fe639864` — 2026-08-22)
+## What works today (snapshot — last verified after `7f7e7b43` — 2026-08-23)
 
 ✅ **Install / package**
 - `pip install -e .` from project root installs both `labourious` and
@@ -136,6 +136,9 @@ phase knows where to pick them up. Their `reason deferred` lives in
 - **Partial-failure resume layer**: per-agent envelope persistence under
   `.runs/<run_id>/agents/`, call_agent replay short-circuit, resume-from
   anchor drops cached agents at-or-after a given agent_id.
+- **Bugfix**: `run_id` NameError in `run_flow_stream` — added
+  `run_id = make_run_id(flow_id, ticker)` before the `emit` closure.
+  Commit `fe639864`.
 
 ✅ Frontend (`docs/frontend/`, Textual TUI)
 - 8 screens: `chat` · `settings` · `history` · `help` · `citation` modal ·
@@ -154,6 +157,15 @@ phase knows where to pick them up. Their `reason deferred` lives in
 - Slash commands wired from chat input: `/flow` · `/ticker` · `/model` ·
   `/paid-for` · `/depth` · `/compressed` (per chat.py imports)
 - Cost footer estimator: `free / ≈ $X / ? · N agents` per model selection
+- **Structured diff panel** (protocol-3): section-by-section delta grouped
+  under Added/Removed/Modified. 9 sections tracked; nested dicts flattened.
+- **Activity panel** (protocol-4): per-agent ETA + cost-so-far with state icons,
+  wallclock, model shortname, token counts, summary footer with Σ cost.
+- **`/stream` command** (protocol-5): toggle stream_chunks + typewriter_ms
+  from chat (`on` / `off` / `<ms>`), persisted to config on every change.
+- **History modal polish**: keyword search (Ctrl+K), date range (Ctrl+F),
+  multi-select (space, amber ●), bulk export (Ctrl+D), clear-all (Ctrl+L).
+  11 BINDINGS.
 
 ✅ Infrastructure
 - Thesis register `docs/runtime/thesis_register/` — SQLite-backed, f1 writes
@@ -170,16 +182,27 @@ phase knows where to pick them up. Their `reason deferred` lives in
   news_8k / transcripts, TTL-gated (1h / 24h / 7d), as-of-equality
   refresh, ETag 304 UNCHANGED short-circuit.
 - Export CLI: `--export PATH` saves memo + envelope to disk. Pilot 44/44.
-- Cost footer estimator: `free / ≈ $X / ? · N agents` per model selection.
+- Cost footer estimator: `free / ≈ $X / ? · N agents` per model selection
+- **Structured diff panel** (protocol-3): section-by-section delta grouped
+  under Added/Removed/Modified. 9 sections tracked; nested dicts flattened.
+- **Activity panel** (protocol-4): per-agent ETA + cost-so-far with state icons,
+  wallclock, model shortname, token counts, summary footer with Σ cost.
+- **`/stream` command** (protocol-5): toggle stream_chunks + typewriter_ms
+  from chat (`on` / `off` / `<ms>`), persisted to config on every change.
+- **History modal polish**: keyword search (Ctrl+K), date range (Ctrl+F),
+  multi-select (space, amber ●), bulk export (Ctrl+D), clear-all (Ctrl+L).
+  11 BINDINGS..
   Pilot 165/165.
 
 ✅ Process
-- 25+ smoke pilots (f10: 58/58, omniroute: 35/35, export: 44/44, cost_footer: 165/165,
+- 35+ smoke pilots (f10: 58/58, omniroute: 35/35, export: 44/44, cost_footer: 165/165,
   domain_8: 35/35, resume: 32/32, ollama_stream: 54/54, packs: 118/118,
   citation_hard: 94/94, retry: 69/69, per_agent_routing: 35/35,
   slash_commands: 84/84, connector_strip_e2e: 46/46, tui_hotkeys: 98/98,
-  settings_roundtrip: 43/43, and more) × 17 eval tests =
-  1,100+ assertions, ZERO failures (this date)
+  settings_roundtrip: 43/43, history_drill_rerun: 40/40,
+  stream_command: 43/43, activity_eta: 82/82, history_pagination: 55/55,
+  structured_diff: 41/41, history_search_export: 62/62, and more) ×
+  17 eval tests = 1,500+ assertions, ZERO failures (this date)
 
 ---
 
@@ -302,11 +325,16 @@ by integration pilots:
   `run_id` variable (line 3071) — added `run_id = make_run_id(flow_id, ticker)`
   before the `emit` closure. Commit `fe639864`.
 
-### [history-drill] **History drill-down → re-run**
-- History modal exists with H2 cards and a diff widget, but the
-  "re-run from a prior memo" path (Ctrl+Enter inside the drill view) is
-  assertion-thin.
-- Effort: small.
+### [history-drill] **History drill-down → re-run**  ✅ DONE (40/40)
+- Shipped — Ctrl+Enter / r in HistoryScreen pops modal + posts ReRunRequested
+  to App, which forwards to ChatScreen.run_from_history(ticker, flow_id).
+  Previously wiring was broken: ReRunRequested was posted but nobody received it.
+  Pilot `history_drill_rerun_smoke.py` 40/40.
+- **History modal polish** — shipped keyword search (Ctrl+K, SQL LIKE across
+  ticker/thesis_text/bottom_line), date range filter (Ctrl+F, ISO dates),
+  multi-select (space, amber ● dot), bulk export (Ctrl+D → markdown file),
+  clear-all-filters (Ctrl+L). 11 BINDINGS total.
+  Pilot `history_search_export_smoke.py` 62/62.
 
 ### [f1-parallel] **f1 waves 2 currently sequential, claimed parallel**  ✅ DONE
 - `docs/flows/f1-analyze-ticker.md` says "Wave 2 (parallel): forensic +
@@ -669,25 +697,31 @@ section + ticker in `what_an_attacker_would_say`.
   pings endpoint with 4-token prompt, reports OK/FAIL/AUTH_MISSING/
   TIMEOUT/UNREACHABLE + latency. Pilot 95/95.
 
-### [protocol-2] History modal: cursor pagination + cross-flow filter
-- Today history shows latest 1 entry deep; add `↑/↓` paging + filter input
-- Wharton's iterative workflow (re-run with new params, compare theses)
-  needs this to actually pay dividends
+### [protocol-2] History modal: cursor pagination + cross-flow filter  ✅ DONE
+- Shipped — keyset-paginated `read_theses_page()`, tab-key cyclable ticker pill bar,
+  PageUp/PageDown pagination with load-more at scroll bottom, total count in header.
+  Pilot `history_pagination_smoke.py` 55/55.
 
-### [protocol-3] Diff panel: side-by-side delta visualisation
-- Today the DiffPanel shows literal `OLD → NEW` lines
-- Replace with structured diff (`{added, removed, modified}`
-  grouped by section: thesis / bottom_line / verification)
+### [protocol-3] Diff panel: side-by-side delta visualisation  ✅ DONE
+- Shipped — structured section-by-section diffs grouped under Added (green),
+  Removed (red), Modified (yellow). 9 sections tracked: thesis_text, bottom_line,
+  bull_case, bear_case, what_an_attacker_would_say, next_three_questions,
+  conviction, confidence, verification. Nested dicts flattened for comparison.
+  ChatScreen passes full envelope to DiffPanel.maybe_build.
+  Pilot `structured_diff_smoke.py` 41/41.
 
-### [protocol-4] Activity panel: ETA + cost-so-far
-- We already have cumulative in/out/USD; show "≈$0.34 remaining" badge
-  per agent, refresh each AgentFinished
+### [protocol-4] Activity panel: ETA + cost-so-far  ✅ DONE
+- Shipped — per-agent ActivityPanel rewrite: 5 ´_AgentRow` widgets with state icon
+  (○ queued / ◐ running / ● done / ✗ failed), wallclock, cost-so-far, model shortname,
+  token counts on completion. Summary footer: `3/5 done · ETA ~12s · Σ $0.102`.
+  ETA uses average wallclock of completed agents × remaining count.
+  Pilot `activity_eta_smoke.py` 82/82.
 
-### [protocol-5] `/stream on|off|80` chat command
-- Toggle stream_chunks + typewriter_ms from the chat input palette
-  without opening Settings
-- Persistence → already wired via `reload_config_from_disk` after save;
-  just route through the same setter used by chat reload
+### [protocol-5] `/stream on|off|80` chat command  ✅ DONE
+- Shipped — `set_stream(value)` method handles three modes: `on` (instant
+  incremental), `off` (bundled full-body), `<ms>` (human-readable pace).
+  Clamped 0–500 ms. Persisted to config on every change.
+  Pilot `stream_command_smoke.py` 43/43.
 
 ### [protocol-6] Document v1 prompt schema (`docs/V1-PROTOCOL.md`)
 - PROSE for each agent's expected input/output JSON shape
