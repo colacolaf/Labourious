@@ -188,6 +188,13 @@ class ChatScreen(Screen):
             self.query_one(_SS).update_for(self)
         except Exception:
             pass
+        # [ux-1] Welcome wizard: on first run with no providers configured,
+        # push the guided onboarding modal. After completion (or skip),
+        # the chat reloads the fresh config.
+        cfg = load_config()
+        if not cfg.providers:
+            from frontend.screens.welcome_wizard import WelcomeWizardScreen
+            self.app.push_screen(WelcomeWizardScreen(), callback=self._on_wizard_done)
 
     # ------------------------------------------------------------- public hooks (called by parent App)
     def set_status_footer(self, msg: str) -> None:
@@ -880,6 +887,15 @@ class ChatScreen(Screen):
         return
 
     # ---------------------------------------------------------- internal helpers
+    def _on_wizard_done(self, result: str | None) -> None:
+        """Called when the welcome wizard is dismissed.
+        If the user completed the wizard (result is the model string),
+        reload the config and show the welcome card with the new provider.
+        """
+        if result:
+            self.reload_config_from_disk()
+        self._update_footer_hint()
+
     def _show_welcome(self, force: bool = False) -> None:
         log = self.query_one("#chat-log", VerticalScroll)
         # Only show on first mount unless forced.
