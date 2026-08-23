@@ -50,7 +50,8 @@ def stubbed_load_prompt(agent_id: str) -> str:
     return f"# stub system prompt for {agent_id}"
 
 def stubbed_call_agent(agent_id, user_brief, model_name, paid_for=None,
-                        emit_event=None, per_agent_model=None, stream_chunks=False):
+                        emit_event=None, per_agent_model=None, stream_chunks=False,
+                        timeout_s=None, system_prompt_override=None):
     """Stubbed call_agent that records timing + emits typed events."""
     from runtime.events import (AgentStarted, AgentChunk, AgentFinished, AgentFailed)
     started_at = time.monotonic()
