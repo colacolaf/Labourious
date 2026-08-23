@@ -5,11 +5,11 @@
   },
   "connector_strip": {
     "n_assertions": 46,
-    "wallclock_s": 1.189
+    "wallclock_s": 1.163
   },
   "connectors_e2e": {
     "n_assertions": 0,
-    "wallclock_s": 15.393
+    "wallclock_s": 14.589
   },
   "cost_footer": {
     "n_assertions": 165,
@@ -17,19 +17,19 @@
   },
   "evals": {
     "n_assertions": 0,
-    "wallclock_s": 0.749
+    "wallclock_s": 0.772
   },
   "f1_parallel": {
     "n_assertions": 0,
-    "wallclock_s": 23.101
+    "wallclock_s": 22.802
   },
   "history_drill_rerun": {
     "n_assertions": 40,
-    "wallclock_s": 0.249
+    "wallclock_s": 0.213
   },
   "history_pagination": {
     "n_assertions": 55,
-    "wallclock_s": 0.225
+    "wallclock_s": 0.229
   },
   "history_search_export": {
     "n_assertions": 62,
@@ -37,42 +37,46 @@
   },
   "per_agent_routing": {
     "n_assertions": 35,
-    "wallclock_s": 0.127
+    "wallclock_s": 0.1
   },
   "resume": {
     "n_assertions": 0,
-    "wallclock_s": 0.176
+    "wallclock_s": 0.18
   },
   "retry": {
     "n_assertions": 0,
-    "wallclock_s": 0.093
+    "wallclock_s": 0.096
   },
   "settings_roundtrip": {
     "n_assertions": 43,
-    "wallclock_s": 0.11
+    "wallclock_s": 0.103
   },
   "slash_commands": {
     "n_assertions": 84,
-    "wallclock_s": 0.36
+    "wallclock_s": 0.223
   },
   "stream_command": {
     "n_assertions": 43,
-    "wallclock_s": 0.227
+    "wallclock_s": 0.222
   },
   "structured_diff": {
     "n_assertions": 41,
-    "wallclock_s": 0.154
+    "wallclock_s": 0.156
   },
   "ticker_shortcuts": {
     "n_assertions": 34,
-    "wallclock_s": 0.166
+    "wallclock_s": 0.164
   },
   "timeout_guard": {
     "n_assertions": 26,
-    "wallclock_s": 0.201
+    "wallclock_s": 0.181
   },
   "tui_hotkeys": {
-    "n_assertions": 98,
-    "wallclock_s": 0.033
+    "n_assertions": 99,
+    "wallclock_s": 0.034
+  },
+  "wizard_e2e": {
+    "n_assertions": 24,
+    "wallclock_s": 7.335
   }
 }

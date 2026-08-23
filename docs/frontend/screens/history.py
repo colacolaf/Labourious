@@ -38,6 +38,7 @@ from pathlib import Path
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import RichLog, Static
 
@@ -635,11 +636,12 @@ class HistoryScreen(Screen):
             return
         row = visible[min(self._index, len(visible) - 1)]
         ticker, flow_id = row.ticker, row.flow_id
-        # Pop the history modal so the user returns to ChatScreen.
+        # Post the re-run request to the App FIRST (while this screen is
+        # still attached, so the message bubbles reliably); the App's
+        # on_rerun_requested → ChatScreen.run_from_history handles it.
+        self.app.post_message(ReRunRequested(ticker, flow_id))
+        # Then pop the history modal so the user returns to ChatScreen.
         self.app.pop_screen()
-        # Post the re-run request to the App; ChatScreen picks it up via
-        # the App's on_rerun_requested → ChatScreen.run_from_history path.
-        self.post_message(ReRunRequested(ticker, flow_id))
 
     def action_next_filter(self) -> None:
         """tab key — cycle to the next ticker pill."""
@@ -832,15 +834,21 @@ class HistoryScreen(Screen):
             return
 
     # ---------------------------------------------------------- messages
-    class ReRunMessage:
-        """Posted when the user presses `r` on a thesis — chat picks it up."""
-        def __init__(self, ticker: str, flow_id: str) -> None:
-            self.ticker = ticker
-            self.flow_id = flow_id
 
 
-# Top-level alias for easy import
-ReRunRequested = HistoryScreen.ReRunMessage
+class ReRunRequested(Message):
+    """Posted when the user presses `r` on a thesis — the App's
+    ``on_rerun_requested`` handler forwards it to ChatScreen.run_from_history.
+
+    Must subclass ``textual.message.Message`` (with a ``super().__init__()``
+    call) — Textual's ``post_message`` validates this and the handler
+    dispatch (``on_rerun_requested``) keys off the class name.
+    """
+
+    def __init__(self, ticker: str, flow_id: str) -> None:
+        super().__init__()
+        self.ticker = ticker
+        self.flow_id = flow_id
 
 
 def re_run_label(model_short: str) -> str:

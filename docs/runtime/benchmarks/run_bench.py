@@ -37,6 +37,7 @@ SUITE: list[tuple[str, list[str]]] = [
     ("stream_command",     ["docs/runtime/smokes/stream_command_smoke.py"]),
     ("activity_eta",       ["docs/runtime/smokes/activity_eta_smoke.py"]),
     ("connector_strip",    ["docs/runtime/smokes/connector_strip_e2e_smoke.py"]),
+    ("wizard_e2e",         ["docs/runtime/smokes/wizard_e2e_smoke.py"]),
     # ── Frontend / UI layer ──
     ("history_pagination", ["docs/runtime/smokes/history_pagination_smoke.py"]),
     ("history_drill_rerun",["docs/runtime/smokes/history_drill_rerun_smoke.py"]),

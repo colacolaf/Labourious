@@ -12,12 +12,16 @@ Single API surface:
 Storage policy:
   1. Try OS keyring first (macOS Keychain / Linux Secret Service /
      Windows Credential Manager) via the `keyring` lib.
-  2. If `keyring` is not installed: fall back to
+  2. If `keyring` is not installed — OR the keyring fails at call time
+     (no keychain found, locked chain, redirected HOME): fall back to
      ~/.labourious/keys.json, written with chmod 600 (POSIX only).
   3. If both fail: in-memory dict only (no disk write) — useful in
      pilot / CI environments without a keychain backend.
 
-All three paths share the same functions; callers never branch.
+All backends share the same functions; callers never branch. The keyring
+path is re-validated at call time, so a degraded keychain (missing,
+locked, or redirected HOME) degrades to the on-disk file backend instead
+of silently dropping the key.
 """
 
 from __future__ import annotations
@@ -95,7 +99,8 @@ def get_key(provider: str) -> str | None:
         try:
             return _kr.get_password(SERVICE_NAME, provider)  # type: ignore
         except Exception:
-            return None
+            # Keychain unavailable at read time — check the file fallback.
+            return _file_load().get(provider)
     if _BACKEND == "file":
         return _file_load().get(provider)
     return _in_mem.get(provider)
@@ -110,7 +115,13 @@ def set_key(provider: str, key: str) -> None:
             _kr.set_password(SERVICE_NAME, provider, key)  # type: ignore
             return
         except Exception:
-            pass
+            # Keychain unavailable (no chain, locked, redirected HOME):
+            # degrade to the on-disk file backend instead of dropping the
+            # key into memory where a later read would miss it.
+            d = _file_load()
+            d[provider] = key
+            _file_save(d)
+            return
     if _BACKEND == "file":
         d = _file_load()
         d[provider] = key
@@ -123,9 +134,15 @@ def delete_key(provider: str) -> None:
     if _BACKEND == "keyring" or _BACKEND == "keyring-mock":
         try:
             _kr.delete_password(SERVICE_NAME, provider)  # type: ignore
-            return
         except Exception:
-            return
+            pass
+        # Also clear any file-fallback copy (covers a degraded keychain
+        # that was previously written via the on-disk fallback).
+        d = _file_load()
+        if provider in d:
+            del d[provider]
+            _file_save(d)
+        return
     if _BACKEND == "file":
         d = _file_load()
         if provider in d:

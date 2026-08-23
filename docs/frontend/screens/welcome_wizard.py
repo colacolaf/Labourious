@@ -16,7 +16,7 @@ from __future__ import annotations
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
-from textual.screen import Screen
+from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
 from frontend.config_io import load_config, save_config, Config, ProviderConfig
@@ -44,8 +44,13 @@ WIZARD_MODELS: dict[str, list[str]] = {
 }
 
 
-class WelcomeWizardScreen(Screen):
-    """First-run onboarding: provider → model → key → done."""
+class WelcomeWizardScreen(ModalScreen):
+    """First-run onboarding: provider → model → key → done.
+
+    Modal so app-level bindings (s → Settings, h → History) don't fire
+    while the wizard is open — otherwise typing "anthropic" would open
+    unrelated screens.
+    """
 
     BINDINGS = [
         Binding("escape", "skip", "Skip", key_display="Esc"),
@@ -251,29 +256,44 @@ class WelcomeWizardScreen(Screen):
 
     def on_key(self, event) -> None:
         """Accumulate typed input per step. Enter is handled by the BINDINGS
-        ('enter' → action_next), so resolution lives in action_next."""
+        ('enter' → action_next), so resolution lives in action_next.
+
+        Consumed characters stop propagation so they never reach parent
+        screens or the app (defense in depth on top of ModalScreen).
+        """
+        handled = False
         if self._step == 0:
             if event.key == "backspace":
                 self._provider_input = self._provider_input[:-1]
                 self._pending_error = ""
+                handled = True
             elif event.character and event.character.isprintable():
                 self._provider_input += event.character
                 self._pending_error = ""
-            self._render_step()
+                handled = True
+            if handled:
+                self._render_step()
         elif self._step == 1:
             if event.key == "backspace":
                 self._model_input = self._model_input[:-1]
                 self._pending_error = ""
+                handled = True
             elif event.character and event.character.isprintable():
                 self._model_input += event.character
                 self._pending_error = ""
-            self._render_step()
+                handled = True
+            if handled:
+                self._render_step()
         elif self._step == 2:
             if self._provider and self._provider["key_needed"]:
                 if event.character and event.character.isprintable():
                     self._api_key += event.character
+                    handled = True
                 elif event.key == "backspace":
                     self._api_key = self._api_key[:-1]
+                    handled = True
+        if handled:
+            event.stop()
 
     # -------------------------------------------------- persistence
     def _save_and_dismiss(self) -> None:
@@ -292,8 +312,8 @@ class WelcomeWizardScreen(Screen):
         # Save API key to keychain if provided
         if self._api_key and self._provider["key_needed"]:
             try:
-                from frontend.keys_storage import store_key
-                store_key(pid, self._api_key)
+                from frontend.keys_storage import set_key
+                set_key(pid, self._api_key)
             except Exception:
                 import os
                 os.environ[env_var] = self._api_key

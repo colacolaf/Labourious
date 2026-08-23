@@ -199,13 +199,14 @@ phase knows where to pick them up. Their `reason deferred` lives in
   Pilot 165/165.
 
 ✅ Process
-- 41 runnable smoke pilots + 17 pytest evals = 3,000+ assertions,
-  ZERO failures (re-verified 2026-08-23 deep dive: every pilot under
-  `docs/runtime/smokes/` except the 4 conditional ones — `real_llm`
-  (needs local Ollama), `wikipedia_live` (needs live net),
-  `sdk_adapters` (needs SDKs), `benchmarks` (harness itself, which
-  passes via `run_bench.py`) — plus `run_bench.py` 19/19 incl. evals
-  17/17, and `python -m py_compile` on every module).
+- 42 runnable smoke pilots + 17 pytest evals = 3,000+ assertions,
+  ZERO failures (re-verified 2026-08-23 deep dive + real-terminal
+  wizard E2E: every pilot under `docs/runtime/smokes/` except the 4
+  conditional ones — `real_llm` (needs local Ollama),
+  `wikipedia_live` (needs live net), `sdk_adapters` (needs SDKs),
+  `benchmarks` (harness itself, which passes via `run_bench.py`) —
+  plus `run_bench.py` 20/20 incl. evals 17/17, and
+  `python -m py_compile` on every module).
 - Selected scores: f10: 58/58, omniroute: 35/35, export: 44/44,
   cost_footer: 165/165, domain_8: 35/35, resume: 32/32,
   ollama_stream: 54/54, packs: 118/118, citation_hard: 94/94,
@@ -808,11 +809,31 @@ section + ticker in `what_an_attacker_would_say`.
   needs `leads/senior-analyst` + `leads/model-builder` system prompts
   to run f1/f9. Removed the exclusion; wheel now carries all 5
   prompts + flows (verified via zip listing, 121 files).
-- **Verified**: full build green — `run_bench.py` 19/19 (incl. evals
-  17/17), all 41 runnable pilots pass (4 skipped: `real_llm`,
+- **Verified**: full build green — `run_bench.py` 20/20 (incl. evals
+  17/17), all 42 runnable pilots pass (4 skipped: `real_llm`,
   `wikipedia_live`, `sdk_adapters`, `benchmarks` — need local
   Ollama / live network), `python -m py_compile` on all modules,
   `pip wheel .` builds, console script + `python -m labourious` ok.
+- **Added (2026-08-23 real-terminal E2E)**: `wizard_e2e_smoke.py` —
+  drives the REAL `LabouriousApp` with real key events (fresh-launch
+  push, ollama happy path, relaunch-no-wizard, Esc skip, anthropic +
+  typed API key); hermetic via temp HOME + `LABOURIOUS_TEST`.
+  Registered in `run_bench.py` (20/20), baseline updated. 24/24.
+- **Fixed (E2E findings)**: ① `HistoryScreen.action_rerun` posted a
+  plain class, not a `textual.Message` → crash on `r` on any history
+  row. `ReRunRequested` is now a real `Message` (post-before-pop).
+  ② Wizard typed a non-existent `store_key()` — the API key was
+  silently discarded (env-var fallback), because `keys_storage`
+  exposes `set_key`. Now calls `set_key`. ③ `keys_storage` keyring
+  backend `set`/`get` could diverge when the OS keychain fails at
+  call time (redirected HOME / locked chain) — key vanished into
+  memory. `set_key`/`delete_key` now degrade to the on-disk file
+  backend; `get_key` checks it too. Verified via forced-broken-keyring
+  probe. ④ Wizard typed input was swallowed by app-level `s`/`h`
+  bindings — `WelcomeWizardScreen` is now a `ModalScreen` (modal
+  binding chain drops app bindings) + `event.stop()` on consumed
+  chars (defense in depth). Typing "anthropic" previously opened
+  History and pressed `r` → crash #1.
 
 ### [domain-7] ETag short-circuit: HTTP 304 preserves snippet cache  ✅ DONE
 - **What shipped**: when an HTTP connector returns
