@@ -632,9 +632,18 @@ class ChatScreen(Screen):
                     prior = event.final_envelope.get("_prior_thesis", [])
                 except Exception:
                     prior = []
+                env = event.final_envelope
+                memo = env.get("memo", {}) if isinstance(env.get("memo"), dict) else {}
                 diff = DiffPanel.maybe_build(prior, {
-                    "thesis_text": event.final_envelope.get("thesis_text", ""),
-                    "conviction":  event.final_envelope.get("conviction", "?"),
+                    "thesis_text": env.get("thesis_text", ""),
+                    "conviction":  str(env.get("conviction", "?")),
+                    "confidence":  env.get("confidence", ""),
+                    "bottom_line": memo.get("bottom_line", env.get("bottom_line", {})),
+                    "bull_case":   memo.get("bull_case", ""),
+                    "bear_case":   memo.get("bear_case", ""),
+                    "what_an_attacker_would_say": memo.get("what_an_attacker_would_say", ""),
+                    "next_three_questions": str(memo.get("next_three_questions", "")),
+                    "verification": env.get("verification", {}),
                 })
                 if diff is not None:
                     log.mount(diff)
