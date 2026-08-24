@@ -269,6 +269,25 @@ Internally, the graph compiler (in the bridge, `app/bridge/compiler.py`) takes t
 
 The 10 built-in flows (`execute_flow_f1` … `f10`) are **unaffected** — they remain the TUI's path. `run_custom_flow_stream` is additive.
 
+### 4.1 Graph collapse — the decision ledger
+
+Before a run hands off to its terminal node (`final-report`), the bridge collapses all attached agent envelopes through **`docs/runtime/weights.py::compute_ledger`** — the canonical weighted-synthesis implementation shared with the TUI orchestrator. The ledger is passed to `final-report` as `_decision_ledger` (same mechanism as `_tool_results_full`), so the memo narrates deterministic arithmetic rather than vibes.
+
+**Weights are raw and do not sum to 1.** They normalize against whatever the graph attached: wiring two agents gives them a two-agent scale; wiring seven gives a seven-agent scale. A node the user never dragged does not dilute the nodes that ran.
+
+| Agent | Weight | Direction source |
+|---|---|---|
+| `senior-analyst` | 30 | `bottom_line` (BUY/SELL/HOLD) |
+| `quant` | 25 | price vs `valuation.range` |
+| `macro` | 10 | `regime_treatment` |
+| `technical` | 10 | `bias` (timing, separate horizon) |
+| `flow-and-transcript` | 10 | `insider.net` |
+| `forensic-accounting` | cap | FLAGGED → verdict CONTESTED |
+| `devils-advocate` | escalation | sourced fragility → confidence MIXED |
+| `sentiment` | 0 | noise — downgrade/annotate only |
+
+Confidence multiplier: HIGH 1.0 · MODERATE_HIGH 0.75 · MIXED 0.5 · LOW 0.25. `lean = Σ(weight × multiplier × sign) ÷ Σ(attached weights with a completed read)`; `|lean| ≥ 0.60` → LEAN_BULL/LEAN_BEAR, else CONTESTED. Abstained agents (FAILED/UNKNOWN) drop out of both numerator and denominator. The ledger is a **read-only** input: `final-report` narrates it, it never mutates an agent's own envelope.
+
 ---
 
 ## 5. Schema versioning

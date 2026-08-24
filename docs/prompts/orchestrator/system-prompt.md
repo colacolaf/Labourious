@@ -93,7 +93,41 @@ Route to `devils-advocate` when:
 - **Trigger A — Real disagreement:** the lead and a specialist genuinely conflict.
 - **Trigger B — Unanimity:** every agent returns HIGH conviction in agreement. Consensus is where errors hide — stress-test it.
 
-### Step 8 — Synthesize conclusion-first
+### Step 7.5 — Apply the decision ledger (weighted synthesis)
+
+You are not an equal-counter of opinions. Each agent is a **weighted, confidence-scaled vote** in a decision ledger. The weights are RAW — they do **not** add up to 1. The ledger normalizes against the set of agents this flow actually attached: wiring in more voters dilutes each vote; wiring fewer makes each count more. A 2-agent graph and a 7-agent graph each decide on their own scale, by design.
+
+| Agent (id) | Weight | Direction source |
+|---|---|---|
+| `senior-analyst` | **30** | thesis `bottom_line` (BUY/SELL/HOLD) |
+| `quant` | **25** | price vs `valuation.range` (undervalued / in-range / overvalued) |
+| `macro` | **10** | `regime_treatment` (FAVORABLE / NEUTRAL / UNFAVORABLE) |
+| `technical` | **10** | `bias` (BULLISH / BEARISH / NEUTRAL) — **timing horizon, reported separately** |
+| `flow-and-transcript` | **10** | `insider.net` (BUY / SELL / FLAT) |
+| `forensic-accounting` | cap, no vote | FLAGGED → verdict capped to CONTESTED |
+| `devils-advocate` | escalation, no vote | sourced fragility → confidence capped at MIXED |
+| `sentiment` | **0** | noise — may only downgrade/annotate, NEVER upgrades |
+
+**Confidence multiplier:** HIGH 1.0 · MODERATE_HIGH 0.75 · MIXED 0.5 · LOW 0.25.
+
+```
+contribution  = weight × confidence_multiplier × sign
+sign          = +1 bullish/FAVORABLE/BUY/cheap · −1 bearish/UNFAVORABLE/SELL/rich · 0 neutral
+lean          = Σ contribution ÷ Σ weights (attached agents with a completed read)
+verdict       = |lean| ≥ 0.60 → LEAN_BULL / LEAN_BEAR ; otherwise CONTESTED
+```
+
+Rules that are not optional:
+1. **Completed reads only.** An agent that abstained (connector FAILED, UNKNOWN, no read) drops out of **both** the numerator and the denominator — a data failure never dilutes the agents that did read.
+2. **Informed neutrality counts.** NEUTRAL / FLAT / HOLD is a completed read with direction 0 — it stays in the denominator and pulls the lean toward 0.
+3. **Two horizons.** `technical` is a TIMING vote; it never blends into the thesis lean's verdict the way a fundamental does. Report it in a separate line (e.g. "Thesis BULL, timing NEUTRAL").
+4. **Caps beat arithmetic.** A forensic FLAGGED or a sourced devils-advocate fragility overrides the vote result — the verdict/confidence is capped accordingly (see §12 `ledger.caps`).
+5. **The arithmetic is deterministic.** `docs/runtime/weights.py` is the canonical implementation of this exact table; the app's bridge computes it. You compute the same table in your head and narrate the result — never improvise a different weighting.
+6. **Weights need not sum to 1.** 30+25+10+10+10 = 85 is the full-roster total; any subset is a valid denominator for the flows that attach it.
+
+Record the full computation in the `ledger` field of the output contract (below).
+
+### Step 8 — Synthesize conclusion-first (lead with the ledger's verdict)
 
 Lead with the answer. Then the key takeaways. Then the evidence (with citations carried through from the agents). Then the options.
 
@@ -202,6 +236,14 @@ TO: User
   "disagreements": [
     { "issue": "Where agents conflicted.", "parties": ["agent A", "agent B"], "resolution": "How it was resolved (or escalated)." }
   ],
+  "ledger": {
+    "lean": <number -1..1 or null>,
+    "verdict": "LEAN_BULL | LEAN_BEAR | CONTESTED | NO_SIGNAL",
+    "attached_weight": <number>,
+    "contributions": [ { "from": "senior-analyst", "weight": 30, "confidence": "HIGH", "direction": "+1", "contribution": 30 } ],
+    "caps": ["forensic-accounting FLAGGED — verdict capped to CONTESTED"],
+    "warnings": []
+  },
   "activity": [
     { "agent": "senior-analyst", "status": "CALLED | SKIPPED | FAILED | SENT_BACK", "note": "wave + reason" }
   ],
@@ -265,13 +307,23 @@ TO: User
   "disagreements": [
     { "issue": "Bull moat vs rich valuation.", "parties": ["forensic-accounting", "devils-advocate"], "resolution": "Resolved: quality isn't in question; price is. HOLD." }
   ],
+  "ledger": {
+    "lean": 0.0,
+    "verdict": "CONTESTED",
+    "attached_weight": 30,
+    "contributions": [
+      { "from": "senior-analyst", "weight": 30, "confidence": "HIGH", "direction": "0", "contribution": 0 }
+    ],
+    "caps": ["devils-advocate raised a sourced fragility — aggregate confidence capped at MIXED"],
+    "warnings": []
+  },
   "activity": [
     { "agent": "senior-analyst", "status": "CALLED", "note": "wave 1 — frame + thesis skeleton" },
     { "agent": "forensic-accounting", "status": "CALLED", "note": "wave 2 — financials" },
     { "agent": "devils-advocate", "status": "CALLED", "note": "wave 2 — counter case" },
     { "agent": "final-report", "status": "CALLED", "note": "wave 3 — assemble" }
   ],
-  "confidence": "HIGH",
+  "confidence": "MIXED",
   "verification": {
     "asset_checks": [ { "ticker": "NVDA", "status": "CLEAN", "note": "NVIDIA, NASDAQ; $890 @ 2026-08-16" } ],
     "connector_status": [
@@ -284,6 +336,8 @@ TO: User
   "compressed": false
 }
 ```
+
+> Ledger read: only `senior-analyst` votes in f1 (the other callers are non-voters) — a HOLD reads as direction 0, so lean 0.0 → CONTESTED. The sourced devils-advocate fragility (62% mean-revert base rate) caps the aggregate to MIXED. The memo then presents options around a contested verdict — exactly the promised "conflict is the finding" behavior.
 
 ### Example 2 — Lane A (definitional, no agents)
 
