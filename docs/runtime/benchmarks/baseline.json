@@ -1,15 +1,15 @@
 {
   "activity_eta": {
     "n_assertions": 82,
-    "wallclock_s": 0.204
+    "wallclock_s": 0.203
   },
   "connector_strip": {
     "n_assertions": 46,
-    "wallclock_s": 1.128
+    "wallclock_s": 1.136
   },
   "connectors_e2e": {
     "n_assertions": 0,
-    "wallclock_s": 16.448
+    "wallclock_s": 15.959
   },
   "cost_footer": {
     "n_assertions": 165,
@@ -17,27 +17,27 @@
   },
   "evals": {
     "n_assertions": 0,
-    "wallclock_s": 0.692
+    "wallclock_s": 0.707
   },
   "f1_parallel": {
     "n_assertions": 0,
-    "wallclock_s": 22.723
+    "wallclock_s": 22.665
   },
   "history_drill_rerun": {
     "n_assertions": 40,
-    "wallclock_s": 0.205
+    "wallclock_s": 0.202
   },
   "history_pagination": {
     "n_assertions": 55,
-    "wallclock_s": 0.219
+    "wallclock_s": 0.22
   },
   "history_search_export": {
     "n_assertions": 62,
-    "wallclock_s": 0.203
+    "wallclock_s": 0.202
   },
   "per_agent_routing": {
     "n_assertions": 35,
-    "wallclock_s": 0.106
+    "wallclock_s": 0.093
   },
   "resume": {
     "n_assertions": 0,
@@ -47,21 +47,25 @@
     "n_assertions": 0,
     "wallclock_s": 0.072
   },
+  "settings_key": {
+    "n_assertions": 26,
+    "wallclock_s": 12.412
+  },
   "settings_roundtrip": {
     "n_assertions": 43,
-    "wallclock_s": 0.105
+    "wallclock_s": 0.111
   },
   "slash_commands": {
     "n_assertions": 84,
-    "wallclock_s": 0.254
+    "wallclock_s": 0.214
   },
   "stream_command": {
     "n_assertions": 43,
-    "wallclock_s": 0.213
+    "wallclock_s": 0.21
   },
   "structured_diff": {
     "n_assertions": 41,
-    "wallclock_s": 0.15
+    "wallclock_s": 0.149
   },
   "ticker_shortcuts": {
     "n_assertions": 34,
@@ -69,7 +73,7 @@
   },
   "timeout_guard": {
     "n_assertions": 26,
-    "wallclock_s": 0.171
+    "wallclock_s": 0.194
   },
   "tui_hotkeys": {
     "n_assertions": 99,
@@ -77,10 +81,10 @@
   },
   "wizard_e2e": {
     "n_assertions": 24,
-    "wallclock_s": 7.43
+    "wallclock_s": 7.364
   },
   "wizard_providers": {
     "n_assertions": 48,
-    "wallclock_s": 18.991
+    "wallclock_s": 18.784
   }
 }

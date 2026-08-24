@@ -199,14 +199,14 @@ phase knows where to pick them up. Their `reason deferred` lives in
   Pilot 165/165.
 
 ✅ Process
-- 42 runnable smoke pilots + 17 pytest evals = 3,000+ assertions,
+- 46 runnable smoke pilots + 17 pytest evals = 3,000+ assertions,
   ZERO failures (re-verified 2026-08-23 deep dive + real-terminal
-  wizard E2E: every pilot under `docs/runtime/smokes/` except the 4
-  conditional ones — `real_llm` (needs local Ollama),
-  `wikipedia_live` (needs live net), `sdk_adapters` (needs SDKs),
-  `benchmarks` (harness itself, which passes via `run_bench.py`) —
-  plus `run_bench.py` 20/20 incl. evals 17/17, and
-  `python -m py_compile` on every module).
+  wizard E2E + Settings key round-trip: every pilot under
+  `docs/runtime/smokes/` except the 4 conditional ones — `real_llm`
+  (needs local Ollama), `wikipedia_live` (needs live net),
+  `sdk_adapters` (needs SDKs), `benchmarks` (harness itself, which
+  passes via `run_bench.py`) — plus `run_bench.py` 22/22 incl. evals
+  17/17, and `python -m py_compile` on every module).
 - Selected scores: f10: 58/58, omniroute: 35/35, export: 44/44,
   cost_footer: 165/165, domain_8: 35/35, resume: 32/32,
   ollama_stream: 54/54, packs: 118/118, citation_hard: 94/94,
@@ -828,6 +828,16 @@ section + ticker in `what_an_attacker_would_say`.
   GeminiAdapter provider_name = model prefix. 48/48, registered in
   `run_bench.py` (21/21). Note: adapters prefer env var over stored
   key by design (e.g. `ANTHROPIC_API_KEY` beats the keychain).
+- **Added (2026-08-23 Settings key round-trip)**:
+  `settings_providers_key_smoke.py` drives Settings → Providers →
+  add omniroute → the OmniRoute setup form in the REAL app with real
+  key events, against a REAL local mock OmniRoute gateway (real HTTP
+  probe — no function mocking). Verifies the key round-trips through
+  the keychain: SAVE (set_key → get_key returns it, panel reports
+  key-loaded, secret ABSENT from config.json), KEEP (blank field
+  preserves the stored key), DELETE (delete_key → gone, panel
+  reflects it). 26/26, registered in `run_bench.py` (22/22). Also
+  verified Settings → Providers renders in a real pty.
 - **Fixed (E2E findings)**: ① `HistoryScreen.action_rerun` posted a
   plain class, not a `textual.Message` → crash on `r` on any history
   row. `ReRunRequested` is now a real `Message` (post-before-pop).
