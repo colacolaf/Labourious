@@ -819,6 +819,15 @@ section + ticker in `what_an_attacker_would_say`.
   push, ollama happy path, relaunch-no-wizard, Esc skip, anthropic +
   typed API key); hermetic via temp HOME + `LABOURIOUS_TEST`.
   Registered in `run_bench.py` (20/20), baseline updated. 24/24.
+- **Added (2026-08-23 provider-key audit)**: `wizard_providers_smoke.py`
+  drives the wizard through ALL SIX providers and verifies each
+  key-requiring provider (anthropic, openai, openrouter,
+  google_ai_studio) stores its key under the same name the runtime
+  adapter resolves (`get_key`): anthropic → hardcoded "anthropic",
+  openai/openrouter → openai-compat `spec.name`, google_ai_studio →
+  GeminiAdapter provider_name = model prefix. 48/48, registered in
+  `run_bench.py` (21/21). Note: adapters prefer env var over stored
+  key by design (e.g. `ANTHROPIC_API_KEY` beats the keychain).
 - **Fixed (E2E findings)**: ① `HistoryScreen.action_rerun` posted a
   plain class, not a `textual.Message` → crash on `r` on any history
   row. `ReRunRequested` is now a real `Message` (post-before-pop).

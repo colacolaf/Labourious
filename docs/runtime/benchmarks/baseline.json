@@ -1,15 +1,15 @@
 {
   "activity_eta": {
     "n_assertions": 82,
-    "wallclock_s": 0.211
+    "wallclock_s": 0.204
   },
   "connector_strip": {
     "n_assertions": 46,
-    "wallclock_s": 1.163
+    "wallclock_s": 1.128
   },
   "connectors_e2e": {
     "n_assertions": 0,
-    "wallclock_s": 14.589
+    "wallclock_s": 16.448
   },
   "cost_footer": {
     "n_assertions": 165,
@@ -17,59 +17,59 @@
   },
   "evals": {
     "n_assertions": 0,
-    "wallclock_s": 0.772
+    "wallclock_s": 0.692
   },
   "f1_parallel": {
     "n_assertions": 0,
-    "wallclock_s": 22.802
+    "wallclock_s": 22.723
   },
   "history_drill_rerun": {
     "n_assertions": 40,
-    "wallclock_s": 0.213
+    "wallclock_s": 0.205
   },
   "history_pagination": {
     "n_assertions": 55,
-    "wallclock_s": 0.229
+    "wallclock_s": 0.219
   },
   "history_search_export": {
     "n_assertions": 62,
-    "wallclock_s": 0.211
+    "wallclock_s": 0.203
   },
   "per_agent_routing": {
     "n_assertions": 35,
-    "wallclock_s": 0.1
+    "wallclock_s": 0.106
   },
   "resume": {
     "n_assertions": 0,
-    "wallclock_s": 0.18
+    "wallclock_s": 0.167
   },
   "retry": {
     "n_assertions": 0,
-    "wallclock_s": 0.096
+    "wallclock_s": 0.072
   },
   "settings_roundtrip": {
     "n_assertions": 43,
-    "wallclock_s": 0.103
+    "wallclock_s": 0.105
   },
   "slash_commands": {
     "n_assertions": 84,
-    "wallclock_s": 0.223
+    "wallclock_s": 0.254
   },
   "stream_command": {
     "n_assertions": 43,
-    "wallclock_s": 0.222
+    "wallclock_s": 0.213
   },
   "structured_diff": {
     "n_assertions": 41,
-    "wallclock_s": 0.156
+    "wallclock_s": 0.15
   },
   "ticker_shortcuts": {
     "n_assertions": 34,
-    "wallclock_s": 0.164
+    "wallclock_s": 0.158
   },
   "timeout_guard": {
     "n_assertions": 26,
-    "wallclock_s": 0.181
+    "wallclock_s": 0.171
   },
   "tui_hotkeys": {
     "n_assertions": 99,
@@ -77,6 +77,10 @@
   },
   "wizard_e2e": {
     "n_assertions": 24,
-    "wallclock_s": 7.335
+    "wallclock_s": 7.43
+  },
+  "wizard_providers": {
+    "n_assertions": 48,
+    "wallclock_s": 18.991
   }
 }
