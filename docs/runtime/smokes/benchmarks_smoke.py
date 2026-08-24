@@ -5,13 +5,13 @@ Verifies the benchmark runner, baseline persistence, and regression detection.
 
 Exercises:
   1. run_bench.py exists and is importable
-  2. SUITE covers 19 benchmarks
+  2. SUITE covers 22 benchmarks
   3. baseline.json exists and is valid JSON
-  4. All 19 baseline entries have wallclock_s > 0
+  4. All 22 baseline entries have wallclock_s > 0
   5. check_against_baseline — passes when within 2x
   6. check_against_baseline — fails when > 2x
   7. write_baseline round-trip
-  8. All 19 benchmarks in SUITE exist as smoke files
+  8. All 22 benchmarks in SUITE exist as smoke files
 """
 
 from __future__ import annotations
@@ -62,7 +62,7 @@ from run_bench import SUITE, BASELINE_PATH, load_baseline, write_baseline, check
 # 2. SUITE covers expected count
 # ===========================================================================
 section("2. SUITE coverage")
-step_eq("19 benchmarks", len(SUITE), 19)
+step_eq("22 benchmarks", len(SUITE), 22)
 
 names = {name for name, _ in SUITE}
 step("per_agent_routing in suite", "per_agent_routing" in names)
@@ -82,7 +82,7 @@ step("baseline.json exists", BASELINE_PATH.exists())
 
 bl = load_baseline()
 step("baseline is dict", isinstance(bl, dict))
-step_eq("19 entries", len(bl), 19)
+step_eq("22 entries", len(bl), 22)
 
 # ===========================================================================
 # 4. All baseline entries have positive wallclock

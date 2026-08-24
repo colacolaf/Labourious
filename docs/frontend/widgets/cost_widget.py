@@ -32,7 +32,9 @@ class CostWidget(Static):
 
     def compose(self):
         yield Static("Cost", classes="sidebar-heading")
-        yield RichLog(wrap=False, highlight=False, markup=False, classes="cost-body", id="cost-body")
+        rl = RichLog(wrap=False, highlight=False, markup=False, classes="cost-body", id="cost-body")
+        rl.can_focus = False  # display-only; Tab should skip to the prompt
+        yield rl
 
     def on_mount(self) -> None:
         self.render_text()

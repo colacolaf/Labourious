@@ -197,18 +197,6 @@ class ChatScreen(Screen):
             from frontend.screens.welcome_wizard import WelcomeWizardScreen
             self.app.push_screen(WelcomeWizardScreen(), callback=self._on_wizard_done)
 
-        # Focus the prompt so the user can type immediately. Without this,
-        # the welcome card's RichLog bodies + ticker chips sit earlier in the
-        # tab order, so Tab never reaches the input ("press Tab to focus the
-        # input" was broken) and typing did nothing until the input was
-        # clicked. Focus BEFORE pushing the wizard so popping the modal
-        # restores focus here.
-        try:
-            self.query_one("#prompt", Input).focus()
-        except Exception:
-            pass
-
-
     # ------------------------------------------------------------- public hooks (called by parent App)
     def set_status_footer(self, msg: str) -> None:
         """Publish a transient status into the StatusStrip (the universal

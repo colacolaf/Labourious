@@ -95,8 +95,10 @@ class _AgentRow(Vertical):
 
     def compose(self):
         yield Static(self.agent_id, classes="row-header")
-        yield RichLog(wrap=False, highlight=False, markup=False,
-                      classes="row-body", id=f"body-{self.agent_id}")
+        rl = RichLog(wrap=False, highlight=False, markup=False,
+                     classes="row-body", id=f"body-{self.agent_id}")
+        rl.can_focus = False  # display-only; Tab should skip to the prompt
+        yield rl
 
     def on_mount(self) -> None:
         try:
@@ -189,8 +191,10 @@ class ActivityPanel(Container):
             row = _AgentRow(agent_id)
             self._rows[agent_id] = row
             yield row
-        yield RichLog(wrap=False, highlight=False, markup=False,
-                      classes="activity-summary", id="activity-summary")
+        summ = RichLog(wrap=False, highlight=False, markup=False,
+                       classes="activity-summary", id="activity-summary")
+        summ.can_focus = False  # display-only; Tab should skip to the prompt
+        yield summ
 
     def on_mount(self) -> None:
         try:

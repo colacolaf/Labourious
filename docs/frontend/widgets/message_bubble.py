@@ -81,7 +81,9 @@ class MessageBubble(Vertical):
         # Header is a Static carrying the border_title (role/agent_id + timing + confidence).
         yield Static(self._title_text(), classes="bubble-header")
         # Body is a RichLog. Wrap=True for visual flow; highlight=False for plain text rendering speed.
-        yield RichLog(wrap=True, highlight=False, markup=False, classes="bubble-body")
+        rl = RichLog(wrap=True, highlight=False, markup=False, classes="bubble-body")
+        rl.can_focus = False  # Tab skips display-only bubbles, reaches prompt directly
+        yield rl
         # Connector strip (third child) — the '▾ via: A · B · C' line that
         # shows which data sources this agent pulled. Defaults to '(none fired)'
         # and gets updated by chat.py on ConnectorCompleted / ConnectorFailed.
