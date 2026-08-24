@@ -65,7 +65,7 @@ from frontend.events import (  # type: ignore
 from runtime.runtime import run_flow_stream  # type: ignore
 from runtime.mock_runtime import run_mock_flow_stream, mock_runtime_available  # type: ignore
 
-from frontend.config_io import load_config, save_config, Config  # type: ignore
+from frontend.config_io import load_config, save_config, Config, CONFIG_PATH  # type: ignore
 
 
 # --------------------------------------------------------------------------- #
@@ -188,11 +188,13 @@ class ChatScreen(Screen):
             self.query_one(_SS).update_for(self)
         except Exception:
             pass
-        # [ux-1] Welcome wizard: on first run with no providers configured,
-        # push the guided onboarding modal. After completion (or skip),
-        # the chat reloads the fresh config.
+        # [ux-1] Welcome wizard: on first run — no config file at all, OR a
+        # config with no providers — push the guided onboarding modal.
+        # (A missing file returns defaults that pre-populate providers, so
+        # checking `cfg.providers` alone would never fire for a fresh user.)
+        # After completion (or skip), the chat reloads the fresh config.
         cfg = load_config()
-        if not cfg.providers:
+        if not CONFIG_PATH.exists() or not cfg.providers:
             from frontend.screens.welcome_wizard import WelcomeWizardScreen
             self.app.push_screen(WelcomeWizardScreen(), callback=self._on_wizard_done)
 

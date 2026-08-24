@@ -822,6 +822,13 @@ section + ticker in `what_an_attacker_would_say`.
 - **Fixed (E2E findings)**: ① `HistoryScreen.action_rerun` posted a
   plain class, not a `textual.Message` → crash on `r` on any history
   row. `ReRunRequested` is now a real `Message` (post-before-pop).
+- **Fixed (real-terminal verification 2026-08-23)**: the wizard never
+  auto-pushed for a genuinely fresh user — `load_config()` returns
+  defaults that pre-populate `anthropic` + `ollama` when the config
+  file is missing, so `if not cfg.providers` never fired. ChatScreen
+  now triggers on `not CONFIG_PATH.exists() or not cfg.providers`.
+  Verified in a real pty: fresh HOME → wizard draws; pre-seeded
+  config → chat screen direct, no wizard.
   ② Wizard typed a non-existent `store_key()` — the API key was
   silently discarded (env-var fallback), because `keys_storage`
   exposes `set_key`. Now calls `set_key`. ③ `keys_storage` keyring
