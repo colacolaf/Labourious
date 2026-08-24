@@ -47,9 +47,14 @@ class AnthropicSDKAdapter:
         if not key:
             try:
                 from frontend.keys_storage import get_key
-                key = get_key("anthropic")
-            except Exception:
-                pass
+            except ImportError:
+                pass  # headless / CLI — no frontend available, env var only
+            else:
+                try:
+                    key = get_key("anthropic")
+                except Exception:
+                    # Keychain / file backend transient failure — env fallback
+                    pass
         if not key:
             raise AuthMissing(provider="anthropic")
         model_id = self.model.split("/", 1)[1] if "/" in self.model else self.model

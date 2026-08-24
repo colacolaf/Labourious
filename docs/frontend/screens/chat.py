@@ -187,8 +187,7 @@ class ChatScreen(Screen):
         try:
             self.query_one(_SS).update_for(self)
         except Exception:
-            pass
-        # [ux-1] Welcome wizard: on first run — no config file at all, OR a
+            pass        # [ux-1] Welcome wizard: on first run — no config file at all, OR a
         # config with no providers — push the guided onboarding modal.
         # (A missing file returns defaults that pre-populate providers, so
         # checking `cfg.providers` alone would never fire for a fresh user.)
@@ -197,6 +196,18 @@ class ChatScreen(Screen):
         if not CONFIG_PATH.exists() or not cfg.providers:
             from frontend.screens.welcome_wizard import WelcomeWizardScreen
             self.app.push_screen(WelcomeWizardScreen(), callback=self._on_wizard_done)
+
+        # Focus the prompt so the user can type immediately. Without this,
+        # the welcome card's RichLog bodies + ticker chips sit earlier in the
+        # tab order, so Tab never reaches the input ("press Tab to focus the
+        # input" was broken) and typing did nothing until the input was
+        # clicked. Focus BEFORE pushing the wizard so popping the modal
+        # restores focus here.
+        try:
+            self.query_one("#prompt", Input).focus()
+        except Exception:
+            pass
+
 
     # ------------------------------------------------------------- public hooks (called by parent App)
     def set_status_footer(self, msg: str) -> None:
@@ -351,6 +362,17 @@ class ChatScreen(Screen):
 
         # Reset input.
         self.query_one("#prompt", Input).value = ""
+
+    async def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Enter on the prompt Input posts Input.Submitted.
+
+        Textual's ``Input`` has its own ``enter → submit`` binding, which
+        consumes the key BEFORE the screen's ``('enter', 'submit')`` binding
+        can fire (bindings are resolved focused-widget first). So the only
+        signal that reaches us is this message — without this handler,
+        pressing Enter in the prompt did nothing.
+        """
+        await self.action_submit()
 
     async def action_clear_chat(self) -> None:
         await self.query_one("#chat-log", VerticalScroll).remove_children()
