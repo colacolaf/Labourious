@@ -80,6 +80,12 @@ def load_prompt(agent_id: str) -> str:
         "devils-advocate": PROMPTS_DIR / "specialists" / "devils-advocate" / "system-prompt.md",
         "model-builder": PROMPTS_DIR / "leads" / "model-builder" / "system-prompt.md",
         "final-report": PROMPTS_DIR / "cross-cutting" / "final-report" / "system-prompt.md",
+        # App agent-library agents (Desktop Studio custom graphs)
+        "technical": PROMPTS_DIR / "library" / "technical" / "system-prompt.md",
+        "quant": PROMPTS_DIR / "library" / "quant" / "system-prompt.md",
+        "macro": PROMPTS_DIR / "library" / "macro" / "system-prompt.md",
+        "flow-and-transcript": PROMPTS_DIR / "library" / "flow-and-transcript" / "system-prompt.md",
+        "sentiment": PROMPTS_DIR / "library" / "sentiment" / "system-prompt.md",
     }
     path = candidates.get(agent_id)
     if path is None or not path.exists():
@@ -111,6 +117,19 @@ def validate_envelope(envelope: dict[str, Any], agent_id: str) -> tuple[bool, li
                          "citations", "gaps", "verification"],
         "final-report": ["agent_id", "flow_id", "depth", "compressed", "memo", "confidence",
                          "gaps", "verification"],
+        # App agent-library agents (Desktop Studio custom graphs)
+        "technical": ["agent_id", "depth", "compressed", "conclusion", "confidence",
+                      "technical_analysis", "findings", "gaps", "verification",
+                      "citations", "next_steps"],
+        "quant": ["agent_id", "depth", "compressed", "conclusion", "confidence",
+                  "valuation", "findings", "gaps", "verification", "citations", "next_steps"],
+        "macro": ["agent_id", "depth", "compressed", "conclusion", "confidence",
+                  "macro_context", "findings", "gaps", "verification", "citations", "next_steps"],
+        "flow-and-transcript": ["agent_id", "depth", "compressed", "conclusion", "confidence",
+                                "flow_and_transcript", "findings", "gaps", "verification",
+                                "citations", "next_steps"],
+        "sentiment": ["agent_id", "depth", "compressed", "conclusion", "confidence",
+                      "sentiment", "findings", "gaps", "verification", "citations", "next_steps"],
     }
     if envelope.get("agent_id") != agent_id:
         failures.append(f"agent_id mismatch: expected {agent_id}, got {envelope.get('agent_id')}")

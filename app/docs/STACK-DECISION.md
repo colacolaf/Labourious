@@ -143,7 +143,7 @@ The bridge is a **stateless translator** between WS JSON and the Python `Event` 
 
 ## Layer 4: the agent-library catalog — JSON, not code
 
-Agent-library nodes (technical, quant, macro, flow-and-transcript, research-forcer) are **defined as JSON files** in `app/agent-library/`, not as compiled-in code. Each file declares a node's `id`, `display_name`, `description`, `inputs`, `outputs`, `default_model`, `system_prompt_ref` (a path into `docs/prompts/` or a forked variant), and `connectors_consumed`. The app loads the catalog at startup; users install a node by dragging it from the library panel onto the canvas. **No app rebuild to add a node** — drop a JSON file in the folder, restart, it appears. See [`AGENT-LIBRARY.md`](AGENT-LIBRARY.md).
+Agent-library nodes (technical, quant, macro, flow-and-transcript, sentiment, research-forcer) are **defined as JSON files** in `app/agent-library/`, not as compiled-in code. Each file declares a node's `id`, `display_name`, `description`, `inputs`, `outputs`, `default_model`, `system_prompt_ref` (a path into `docs/prompts/` or a forked variant), and `connectors_consumed`. The app loads the catalog at startup; users install a node by dragging it from the library panel onto the canvas. **No app rebuild to add a node** — drop a JSON file in the folder, restart, it appears. See [`AGENT-LIBRARY.md`](AGENT-LIBRARY.md).
 
 ---
 

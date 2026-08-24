@@ -38,7 +38,8 @@ Then the rest, by role:
 |------|---------|
 | [`SPEC.md`](docs/SPEC.md) | The three-pane layout, agent-node types, left/right panel contents, keybindings, empty/error states. |
 | [`PROTOCOL.md`](docs/PROTOCOL.md) | The `.labourious-flow.json` graph schema, the WebSocket event bridge contract, node-type registry. |
-| [`AGENT-LIBRARY.md`](docs/AGENT-LIBRARY.md) | The curated catalog of installable agent nodes (technical, quant, macro, flow-and-transcript, research-forcer). |
+| [`AGENT-LIBRARY.md`](docs/AGENT-LIBRARY.md) | The curated catalog of installable agent nodes (technical, quant, macro, flow-and-transcript, sentiment, research-forcer). |
+| [`CONNECTORS-AUDIT.md`](docs/CONNECTORS-AUDIT.md) | What connectors exist (22), what the app's agent-library nodes need, the gaps, and recommended additions (quant_indicators, edgartools refactor, sentiment_social relabel). |
 
 ---
 
@@ -63,7 +64,7 @@ $ pip install labourious                  # install the runtime separately
 $ labourious serve --port 8765           # start the WS bridge manually
 ```
 
-Expected first experience: an empty canvas with the 5 built-in agent nodes in the left-side library panel, ready to drag onto the canvas. Wire them up, press Run, watch the right-side panel stream the f1-equivalent memo for NVDA.
+Expected first experience: an empty canvas with the 5 built-in agent nodes in the left-side library panel, ready to drag onto the canvas. Wire them up, press Run, watch the right-side panel stream the f1-equivalent memo for NVDA. The agent-library catalog (technical, quant, macro, flow-and-transcript, sentiment, research-forcer) is one drag away — see [`CONNECTORS-AUDIT.md`](docs/CONNECTORS-AUDIT.md) for what connectors each needs.
 
 ---
 

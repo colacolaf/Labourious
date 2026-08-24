@@ -113,9 +113,31 @@ The order below makes these failures impossible to miss, in that order.
 - Settings panel full content — model dropdowns work; provider key editing is still via the TUI or config.json.
 - History panel.
 
-**Unblocks:** Phase 4. The library is the substrate the research-forcer plugs into.
+**Unblocks:** Phase 3.5 (Sentiment) and Phase 4 (Research-forcer).
 
-**Estimated effort:** 2–3 weeks. The bulk is writing the 4 new prompts (technical, quant, macro, flow-and-transcript) + the JSON catalog + the per-node dropdown UI.
+**Estimated effort:** 2–3 weeks. The bulk is writing the 4 new prompts (technical, quant, macro, flow-and-transcript) + the JSON catalog + the per-node dropdown UI + the `quant_indicators` connector (see [`CONNECTORS-AUDIT.md`](CONNECTORS-AUDIT.md) §3.1).
+
+---
+
+## Phase 3.5 — Sentiment agent + connector relabel (mini-phase)
+
+**Goal:** Ship the Sentiment agent-library node (self-skeptical) and relabel `sentiment_social` from Tier 3 to Tier 1 in the connector catalog.
+
+**Deliverable:**
+- A new agent-library entry `app/agent-library/sentiment.json` + a new prompt `docs/prompts/library/sentiment/system-prompt.md`.
+- The prompt is explicitly self-skeptical: it surfaces the noise floor alongside the signal (per `docs/USER-JOBS.md`'s no-build note: "Sentiment is mostly noise… the system is skeptical of itself by design").
+- `docs/V1-CONNECTORS.md` updated: `sentiment_social` moves from §2.3 (Tier 3) to §2.1 (Tier 1 — free, no key). The Stocktwits API is free, no auth, 30 messages/request (api-docs.stocktwits.com).
+- The Sentiment agent consumes `sentiment_social` + `news` and produces a `sentiment` section with retail message tone, buzz trend, and a self-skeptical confidence label.
+
+**Acceptance:**
+- The Sentiment agent appears in the left panel and drags onto the canvas.
+- Wired into a graph with a real ticker (NVDA), it produces a `sentiment` section with a bullish/bearish count + a "noise floor" note.
+- `sentiment_social` works without an API key (the Stocktwits public stream).
+- The prompt conforms to `docs/prompts/V2-PROMPT-STANDARD.md`.
+
+**Unblocks:** Nothing structural — this is a catalog expansion. It validates that the agent-library pattern works for a self-skeptical agent.
+
+**Estimated effort:** 1 week. One new prompt + one JSON file + one catalog relabel.
 
 ---
 

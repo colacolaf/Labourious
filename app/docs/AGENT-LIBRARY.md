@@ -26,7 +26,7 @@ The library is **curated by the maintainers**, not user-uploaded. User-forkabili
 
 ## 2. The v1 catalog
 
-Five entries ship in Phase 3 (technical, quant, macro, flow-and-transcript) and Phase 4 (research-forcer).
+Six entries ship in Phase 3 (technical, quant, macro, flow-and-transcript) + Phase 3.5 (sentiment) and Phase 4 (research-forcer).
 
 ### 2.1 Technical agent
 
@@ -34,17 +34,19 @@ Five entries ship in Phase 3 (technical, quant, macro, flow-and-transcript) and 
 |---|---|
 | `id` | `technical` |
 | `display_name` | "Technical Analysis" |
-| `description` | "Deep-dive on price action, support/resistance, volume profile, momentum. Consumes market_data output." |
+| `description` | "Deep-dive on price action, support/resistance, volume profile, momentum. Consumes market_data OHLCV + quant_indicators (RSI/MACD/MA)." |
 | `node_type` | `agent` |
 | `source` | `library` |
 | `default_model` | `ollama/llama3.3:70b` |
 | `system_prompt_ref` | `docs/prompts/library/technical/system-prompt.md` |
-| `connectors_consumed` | `["market_data"]` |
+| `connectors_consumed` | `["market_data", "quant_indicators"]` |
 | `inputs` | `["envelope"]` (the upstream agent's envelope) |
 | `outputs` | `["envelope"]` (with `technical_analysis` section added) |
 | `accent_color` | `#9b59b6` (purple) |
 
-**What it does:** Reads the upstream agent's envelope (typically senior-analyst's thesis skeleton) + the `market_data` connector's OHLCV output, and produces a technical-analysis section: price action relative to 50/200-day moving averages, momentum (RSI, MACD), volume profile, key support/resistance levels, and a short-term directional bias. The section is added to the envelope under `technical_analysis` and flows to downstream agents.
+**What it does:** Reads the upstream agent's envelope (typically senior-analyst's thesis skeleton) + the `market_data` connector's OHLCV + the `quant_indicators` connector's computed indicators (RSI, MACD, MA, VWAP, Bollinger), and produces a technical-analysis section: price action relative to 50/200-day moving averages, momentum (RSI, MACD), volume profile, key support/resistance levels, and a short-term directional bias. The section is added to the envelope under `technical_analysis` and flows to downstream agents.
+
+**Connector dependency:** `quant_indicators` is a new deterministic connector wrapping `pandas-ta` (free, no key, local compute). See [`CONNECTORS-AUDIT.md`](CONNECTORS-AUDIT.md) §3.1 — it ships in Phase 3 alongside this agent.
 
 **Gate passed:** Distinct data/tool surface — interprets `market_data`'s raw OHLCV in a way no built-in does. (One of the deferred leads from `docs/DEFERRED.md` — the `technical-lead` gate was "Re-hire if a user asks for entry-timing on a flow other than f4." The app's custom-graph canvas *is* that flow.)
 
@@ -79,12 +81,14 @@ Five entries ship in Phase 3 (technical, quant, macro, flow-and-transcript) and 
 | `source` | `library` |
 | `default_model` | `ollama/llama3.3:70b` |
 | `system_prompt_ref` | `docs/prompts/library/macro/system-prompt.md` |
-| `connectors_consumed` | `["market_data"]` (FRED is keyed separately) |
+| `connectors_consumed` | `["market_data", "macro", "institutional"]` |
 | `inputs` | `["envelope"]` |
 | `outputs` | `["envelope"]` (with `macro_context` section added) |
 | `accent_color` | `#e67e22` (orange) |
 
-**What it does:** Reads FRED macro data (rates, money supply, if a FRED key is configured) + `market_data` for the ticker, and produces a `macro_context` section: current rate regime, the ticker's beta to the sector and to the market, interest-rate sensitivity, and a regime classification (risk-on / risk-off / transition). The section flows to downstream agents.
+**What it does:** Reads FRED macro data via the `macro` connector (rates, money supply — needs `FRED_API_KEY`) + `market_data` for the ticker's price action + `institutional` (13F holdings, for ownership concentration context), and produces a `macro_context` section: current rate regime, the ticker's beta to the sector and to the market, interest-rate sensitivity, institutional ownership shifts, and a regime classification (risk-on / risk-off / transition). The section flows to downstream agents.
+
+**Connector dependency:** `institutional` should be refactored to use `edgartools` for SEC-direct structured data (free, no key) instead of HTML scraping — see [`CONNECTORS-AUDIT.md`](CONNECTORS-AUDIT.md) §3.2. Ships Phase 3.
 
 **Gate passed:** Distinct data/tool surface — FRED macro data is a different source than what the 5 built-ins consume. (The `macro-lead` from `docs/DEFERRED.md` — gate was "Re-hire if f5 or f8 needs a dedicated macro voice." The app's custom canvas lets a user *add* a macro voice to any graph.)
 
@@ -104,11 +108,35 @@ Five entries ship in Phase 3 (technical, quant, macro, flow-and-transcript) and 
 | `outputs` | `["envelope"]` (with `flow_and_transcript` section added) |
 | `accent_color` | `#3498db` (blue) |
 
-**What it does:** Calls the `insider` connector (OpenInsider data — recent cluster trades, 10b5-1 plan changes) + the `transcripts` connector (recent earnings-call transcripts), and produces a `flow_and_transcript` section: insider sentiment (net buy/sell, cluster activity), transcript tone shift vs prior Q, forward-guide changes, and any contradictions between the two. The section flows to downstream agents.
+**What it does:** Calls the `insider` connector (SEC Form 4 data — recent cluster trades, 10b5-1 plan changes) + the `transcripts` connector (recent earnings-call transcripts), and produces a `flow_and_transcript` section: insider sentiment (net buy/sell, cluster activity), transcript tone shift vs prior Q, forward-guide changes, and any contradictions between the two. The section flows to downstream agents.
+
+**Connector dependency:** `insider` should be refactored to use `edgartools` (SEC-direct structured Form 4 data, free, no key) instead of OpenInsider HTML scraping — see [`CONNECTORS-AUDIT.md`](CONNECTORS-AUDIT.md) §3.2. Ships Phase 3. The `ToolResult` shape is unchanged; only the backend swaps.
 
 **Gate passed:** Distinct data/tool surface — insider flow + transcript deep-read is a combined surface none of the 5 built-ins own. (A hybrid of the `options-flow-insider` and `sec-filings` deferred specialists from `docs/DEFERRED.md`.)
 
-### 2.5 Research-forcer (directive injector)
+### 2.5 Sentiment agent (Phase 3.5 — self-skeptical)
+
+| Field | Value |
+|---|---|
+| `id` | `sentiment` |
+| `display_name` | "Sentiment (self-skeptical)" |
+| `description` | "News tone + social mood (Stocktwits). Self-skeptical by design — surfaces the noise floor alongside the signal." |
+| `node_type` | `agent` |
+| `source` | `library` |
+| `default_model` | `ollama/llama3.3:70b` |
+| `system_prompt_ref` | `docs/prompts/library/sentiment/system-prompt.md` |
+| `connectors_consumed` | `["sentiment_social", "news"]` |
+| `inputs` | `["envelope"]` |
+| `outputs` | `["envelope"]` (with `sentiment` section added) |
+| `accent_color` | `#e91e63` (pink) |
+
+**What it does:** Reads `sentiment_social` (Stocktwits message stream — bullish/bearish counts, message volume trend) + `news` (Google News RSS headlines), and produces a `sentiment` section: retail message tone, message-volume trend (rising/falling buzz), a self-skeptical confidence label, and an explicit "noise floor" note ("this signal is mostly noise per the social-sentiment literature; treat as a tertiary input"). The section flows to downstream agents.
+
+**Gate passed:** Distinct data/tool surface — Stocktwits + news tone is a different surface than the 5 built-ins consume. (The `sentiment-lead` from `docs/DEFERRED.md` — gate was "Re-hire if the news tool layer matures past keyword mentions." The app's canvas lets a user *add* a sentiment voice; the agent's prompt is explicitly self-skeptical per `docs/USER-JOBS.md`'s no-build note on sentiment.)
+
+**Catalog fix:** `sentiment_social` is currently mislabeled as Tier 3 ("Paid/specialty") in `docs/V1-CONNECTORS.md` §2.3. The Stocktwits API is **free, no auth, 30 messages/request** (api-docs.stocktwits.com). It should be relabeled Tier 1 (free, no key) — see [`CONNECTORS-AUDIT.md`](CONNECTORS-AUDIT.md) §3.3.1.
+
+### 2.6 Research-forcer (directive injector)
 
 | Field | Value |
 |---|---|
@@ -145,7 +173,7 @@ Each catalog entry is a file `app/agent-library/<id>.json`:
   "source": "library",
   "default_model": "ollama/llama3.3:70b",
   "system_prompt_ref": "docs/prompts/library/technical/system-prompt.md",
-  "connectors_consumed": ["market_data"],
+  "connectors_consumed": ["market_data", "quant_indicators"],
   "inputs": ["envelope"],
   "outputs": ["envelope"],
   "accent_color": "#9b59b6",
@@ -165,7 +193,7 @@ Each catalog entry is a file `app/agent-library/<id>.json`:
 | `source` | `"library"` | yes | Always `library` for catalog entries (the 5 built-ins are `source: "builtin"` and not in this folder). |
 | `default_model` | string \| null | yes for `agent` | The model the node uses by default. The user can override per-node. |
 | `system_prompt_ref` | string | yes for `agent` | Path (relative to repo root) to the prompt file. Must be under `docs/prompts/library/`. |
-| `connectors_consumed` | array of strings | yes | Tool ids the agent will call. Must exist in `docs/runtime/connectors_catalog.py`. |
+| `connectors_consumed` | array of strings | yes | Tool ids the agent will call. Must exist in `docs/V1-CONNECTORS.md` and `docs/runtime/call_tool.py`'s `TOOL_REGISTRY` (the single source of truth for tools, drift-free). |
 | `inputs` / `outputs` | array of strings | yes | What the node accepts/produces. Currently always `["envelope"]` for agents, `["edge"]` for the forcer. |
 | `accent_color` | string (hex) | yes | Node accent color. |
 | `config_schema` | object | no | JSON schema for per-node config fields (Phase 4+). Empty for v1. |
@@ -176,7 +204,7 @@ Each catalog entry is a file `app/agent-library/<id>.json`:
 
 1. `id` must be unique across the catalog.
 2. `system_prompt_ref` must point to a file that exists and conforms to `docs/prompts/V2-PROMPT-STANDARD.md` (the shared envelope schema).
-3. Every `connectors_consumed` entry must exist in `docs/runtime/connectors_catalog.py` (the single source of truth for tools, drift-free).
+3. Every `connectors_consumed` entry must exist in `docs/runtime/call_tool.py`'s `TOOL_REGISTRY` (the single source of truth for tools, drift-free; see `docs/V1-CONNECTORS.md` for the human-readable mirror).
 4. `accent_color` must be a valid hex color (the app enforces a hex-only palette for platform parity, per `docs/frontend/keys.py`).
 5. The catalog is loaded at app startup; a malformed entry is skipped with a console warning (not a crash).
 
@@ -192,9 +220,11 @@ This catalog is the long-promised home for pluggable agents. The policy from `do
 
 What the library **does** ship: focused deep-dive agents that pass the distinct-data-or-control-flow gate (technical, quant, macro, flow-and-transcript, research-forcer). What the library **may** ship in future versions, if a gate opens:
 
-- **Sentiment** (deferred `sentiment-lead`) — gate: news tool layer matures past keyword mentions to need NL tone-judgment.
+- **Sentiment** — ✅ NOW SHIPS in Phase 3.5 (see §2.5 above). The gate ("news tool layer matures past keyword mentions") is met by the app's canvas + the self-skeptical prompt design.
 - **Strategy / allocation** (deferred `strategy-lead`) — gate: a flow's output becomes allocation advice (requires revising `docs/CANNOT-DO.md` §2's RIA boundary — unlikely).
 - **Critique / base-rate** (deferred `critique-lead`) — gate: a flow's disagreements grow past what devil's-advocate + senior-analyst can resolve.
+- **Options-flow** (deferred `options-flow-insider` specialist) — gate: a user pays for an options-flow data source. The data is reachable via Finnhub free tier, but the signal is contested (per `docs/CANNOT-DO.md` "Will always be lossy" §2). Defer until the Quant + Macro agents prove the pattern.
+- **Altdata** (deferred `altdata-lead`) — gate: a paid data source or scrape pipeline goes live. No free altdata source exists in 2026. Leave deferred.
 
 Each of these would land as a new JSON file under `app/agent-library/` + a new prompt under `docs/prompts/library/<agent>/system-prompt.md` — the same pattern the v1 catalog establishes.
 
