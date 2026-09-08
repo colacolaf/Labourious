@@ -438,6 +438,132 @@ def probe_omniroute(
 
 
 # ---------------------------------------------------------------------------
+# Generic per-provider connect-form probe
+# ---------------------------------------------------------------------------
+
+def probe_provider_form(
+    provider: str,
+    model: str,
+    *,
+    api_key: str | None = None,
+    base_url: str | None = None,
+    timeout_s: float = DEFAULT_TIMEOUT_S,
+) -> ProbeResult:
+    """Probe ONE provider with a real round-trip — the backend for the
+    per-provider `connect` form in Settings → Providers (the generic
+    sibling of :func:`probe_omniroute`).
+
+    Every provider gets its own connection settings (endpoint, model,
+    key) because they genuinely differ — local vs cloud, native vs
+    OpenAI-compatible, bearer vs query-param auth. This function tests
+    the exact (provider, model, key, endpoint) tuple the user is about
+    to save, using the same adapter the production flow would use.
+
+    Args:
+        provider: bare provider id ("anthropic", "groq", "openrouter", …).
+        model: model id with or without the provider prefix.
+        api_key: pasted key to test (None = use whatever the adapter
+            resolves from keychain/env — needed for local providers).
+        base_url: endpoint override; None = adapter default.
+        timeout_s: wall-clock budget for the chat call.
+    """
+    provider = (provider or "").strip().lower()
+    model = (model or "").strip()
+    model_name = model if "/" in model else f"{provider}/{model}"
+    if not provider or not model:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_FAIL, latency_ms=None,
+            error_message="provider and model are required",
+        )
+
+    # Local tiers need no key; everything else requires a credential.
+    if provider not in ("ollama", "omniroute", "lm_studio", "vllm") and not api_key:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_AUTH_MISSING, latency_ms=None,
+            error_message="paste an API key to test this provider",
+        )
+
+    started = time.monotonic()
+    try:
+        adapter = get_adapter(model_name)
+    except Exception as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_FAIL, latency_ms=None,
+            error_message=f"adapter construction failed: {type(e).__name__}: {e}",
+        )
+
+    # Explicit override wins (the form tests the pasted key, not the
+    # stored one); local adapters keep their resolved defaults.
+    if api_key and hasattr(adapter, "api_key"):
+        adapter.api_key = api_key
+    if base_url and hasattr(adapter, "base_url"):
+        adapter.base_url = base_url.rstrip("/")
+
+    # Cheap endpoint up-check first so a dead endpoint reports
+    # UNREACHABLE instead of a hung chat call.
+    url = getattr(adapter, "base_url", None)
+    if url and not probe_endpoint(url, timeout=SOCKET_TIMEOUT_S):
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_UNREACHABLE, latency_ms=None,
+            error_message=f"endpoint {url} is not reachable",
+            note="TCP probe failed before chat call",
+        )
+
+    try:
+        response = adapter.call(
+            messages=[{"role": "user", "content": "Reply with the single word 'ok'."}],
+            system="Reply with the single word 'ok'. Do not add commentary.",
+            options={"max_tokens": 4, "temperature": 0.0, "_timeout": timeout_s},
+        )
+    except AuthMissing as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_AUTH_MISSING, latency_ms=None,
+            error_message=str(e),
+        )
+    except AdapterHTTPError as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_FAIL,
+            latency_ms=int((time.monotonic() - started) * 1000),
+            error_message=str(e),
+        )
+    except (socket.timeout, TimeoutError) as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_TIMEOUT,
+            latency_ms=int((time.monotonic() - started) * 1000),
+            error_message=f"timed out after {timeout_s}s",
+        )
+    except (ConnectionError, OSError) as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_UNREACHABLE, latency_ms=None,
+            error_message=f"connection error: {e}",
+        )
+    except Exception as e:
+        return ProbeResult(
+            provider_name=provider, model_name=model_name,
+            status=STATUS_FAIL,
+            latency_ms=int((time.monotonic() - started) * 1000),
+            error_message=f"{type(e).__name__}: {e}",
+        )
+
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    return ProbeResult(
+        provider_name=provider, model_name=model_name,
+        status=STATUS_OK, latency_ms=elapsed_ms,
+        in_tokens=getattr(response, "in_tokens", None),
+        out_tokens=getattr(response, "out_tokens", None),
+        note=("response text: " + (getattr(response, "text", "") or "")[:30]),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Batch convenience
 # ---------------------------------------------------------------------------
 
@@ -463,6 +589,7 @@ def probe_many(
 __all__ = [
     "ProbeResult",
     "probe_provider",
+    "probe_provider_form",
     "probe_omniroute",
     "probe_many",
     "STATUS_OK", "STATUS_FAIL", "STATUS_AUTH_MISSING",

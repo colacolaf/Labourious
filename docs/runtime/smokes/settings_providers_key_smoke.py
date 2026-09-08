@@ -158,7 +158,9 @@ async def main() -> None:
             await pilot.pause(0.8)  # real HTTP round-trip
             step("test connection passed (real HTTP)",
                  form.query_one("#omni-save", Button).disabled is False)
-            status = form.query_one("#omni-status").renderable
+            # Textual 8: Static.renderable was removed; `visual` holds the
+            # current renderable.
+            status = form.query_one("#omni-status").visual
             step("status shows connected", "connected" in str(status))
             await pilot.click("#omni-save")
             await pilot.pause(0.4)
@@ -218,7 +220,7 @@ async def main() -> None:
             form.query_one("#omni-key", Input).value = "omni-secret-456"
             await pilot.click("#omni-test")
             await pilot.pause(0.8)
-            _st = str(form.query_one("#omni-status").renderable)
+            _st = str(form.query_one("#omni-status").visual)
             print(f"      (debug C status: {_st!r})")
             step("re-test passed after delete",
                  form.query_one("#omni-save", _Btn).disabled is False)

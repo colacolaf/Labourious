@@ -117,7 +117,7 @@ async def main() -> None:
         await pilot.pause(0.5)
 
         # Poll for completion. FlowFinished calls set_status_footer with
-        # " · run complete" (written to #status-left, a Static → has .renderable).
+        # " · run complete" (written to #status-left, a Static → has .visual).
         # FlowFailed calls banner.set_error(...) which we can detect via the
         # ConnectionBanner's renderable.
         scr = app.screen
@@ -130,7 +130,7 @@ async def main() -> None:
             try:
                 left = scr.query_one("#status-left")
                 if left is not None and hasattr(left, "renderable"):
-                    s = str(left.renderable)
+                    s = str(left.visual)
                     if "run complete" in s:
                         done = True
             except Exception:
@@ -140,10 +140,10 @@ async def main() -> None:
                 from frontend.widgets.connection_banner import ConnectionBanner
                 banner = scr.query_one(ConnectionBanner)
                 if banner is not None and hasattr(banner, "renderable"):
-                    s = str(banner.renderable).lower()
+                    s = str(banner.visual).lower()
                     if "flow failed" in s or "error" in s:
                         failed = True
-                        reason = str(banner.renderable)
+                        reason = str(banner.visual)
             except Exception:
                 pass
             agents_seen.update(scr._bubble_index.keys())
@@ -174,7 +174,7 @@ async def main() -> None:
         # Cost footer reflects the real run
         try:
             step("cost footer updated", "· run complete" in str(
-                scr.query_one(StatusStrip).renderable))
+                scr.query_one(StatusStrip).visual))
         except Exception:
             pass
 

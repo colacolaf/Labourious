@@ -200,7 +200,7 @@ async def _run_strip_test():
             as_of="2026-08-22T15:00:00Z", note="23 rows OHLCV",
         )
         await pilot.pause(0.05)
-        updated = strip.renderable
+        updated = strip.visual
         step_w("after record_fired: strip now has a chip",
                len(strip._state.chips) >= 1)
 
@@ -210,14 +210,14 @@ async def _run_strip_test():
             as_of="2026-08-22T15:00:00Z", note="10-K retrieved",
         )
         await pilot.pause(0.05)
-        updated2 = strip.renderable
+        updated2 = strip.visual
         step_w("after second record_fired: 2 chips",
                len(strip._state.chips) == 2)
 
         # Fail one
         strip.record_failed(tool="news_8k", error="SSL error")
         await pilot.pause(0.05)
-        updated3 = strip.renderable
+        updated3 = strip.visual
         step_w("after record_failed: 3 chips total",
                len(strip._state.chips) == 3)
 

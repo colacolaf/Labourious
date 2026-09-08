@@ -64,9 +64,10 @@ from frontend.widgets.providers_panel import (
     ProvidersPanel, render_empty_state,
 )
 from frontend.widgets.omniroute_setup import OmniRouteSetup
+from frontend.widgets.provider_setup import ProviderSetup
 from frontend.keys_storage import get_key, set_key, delete_key, key_present
 from frontend.providers import (
-    ALL_PROVIDERS, by_tier, TIER_ORDER, total_count,
+    ALL_PROVIDERS, by_name, by_tier, TIER_ORDER, total_count,
     status_for, ProviderEntry,
 )
 
@@ -148,6 +149,9 @@ class SettingsScreen(Screen):
         self._provider_focus_idx: int = 0          # focused row within visible list
         self._omniroute_setup_open: bool = False
         self._omniroute_setup: OmniRouteSetup | None = None
+        self._provider_setup_open: bool = False
+        self._provider_setup: ProviderSetup | None = None
+        self._provider_setup_entry: ProviderEntry | None = None
         self._key_cache: dict[str, bool] | None = None  # built lazily; see _key_present_map
 
     def compose(self) -> ComposeResult:
@@ -259,7 +263,8 @@ class SettingsScreen(Screen):
         return section
 
     def action_rail_next(self) -> None:
-        if self._picker_open or self._omniroute_setup_open:
+        if (self._picker_open or self._omniroute_setup_open
+                or self._provider_setup_open):
             return  # ignore while picker is up
         self._rail_index = (self._rail_index + 1) % len(SECTIONS)
         self._refresh_rail_selection()
@@ -268,7 +273,8 @@ class SettingsScreen(Screen):
         self._update_strip()
 
     def action_rail_prev(self) -> None:
-        if self._picker_open or self._omniroute_setup_open:
+        if (self._picker_open or self._omniroute_setup_open
+                or self._provider_setup_open):
             return
         self._rail_index = (self._rail_index - 1) % len(SECTIONS)
         self._refresh_rail_selection()
@@ -279,7 +285,8 @@ class SettingsScreen(Screen):
     # ---------------------------------------------------------- L3 chip navigation
     def action_next_filter(self) -> None:
         """`tab` key cycles the chip filter when on the providers section."""
-        if self._picker_open or self._editing:
+        if (self._picker_open or self._editing
+                or self._omniroute_setup_open or self._provider_setup_open):
             return
         if SECTIONS[self._rail_index] != "providers":
             return
@@ -296,7 +303,8 @@ class SettingsScreen(Screen):
 
     def action_prev_filter(self) -> None:
         """`shift+tab` cycles the chip filter backward."""
-        if self._picker_open or self._editing:
+        if (self._picker_open or self._editing
+                or self._omniroute_setup_open or self._provider_setup_open):
             return
         if SECTIONS[self._rail_index] != "providers":
             return
@@ -312,7 +320,8 @@ class SettingsScreen(Screen):
 
     def action_toggle_expand(self) -> None:
         """Enter on the providers section toggles expand on the focused row."""
-        if self._picker_open or self._editing:
+        if (self._picker_open or self._editing
+                or self._omniroute_setup_open or self._provider_setup_open):
             return
         if SECTIONS[self._rail_index] != "providers":
             return
@@ -328,6 +337,9 @@ class SettingsScreen(Screen):
         self._refresh_providers_panel(flash=None)
 
     def action_provider_focus_next(self) -> None:
+        if (self._picker_open or self._editing
+                or self._omniroute_setup_open or self._provider_setup_open):
+            return
         if SECTIONS[self._rail_index] != "providers":
             return
         visible = self._visible_providers()
@@ -337,6 +349,9 @@ class SettingsScreen(Screen):
         self._refresh_providers_panel()
 
     def action_provider_focus_prev(self) -> None:
+        if (self._picker_open or self._editing
+                or self._omniroute_setup_open or self._provider_setup_open):
+            return
         if SECTIONS[self._rail_index] != "providers":
             return
         visible = self._visible_providers()
@@ -628,6 +643,11 @@ class SettingsScreen(Screen):
         if self._omniroute_setup_open:
             badge = "\x1b[38;2;230;200;130m● testing setup\x1b[0m"
             crumb = "Settings / providers / omniroute"
+        elif self._provider_setup_open:
+            who = (self._provider_setup_entry.display
+                   if self._provider_setup_entry else "provider")
+            badge = "\x1b[38;2;230;200;130m● connect " + who + "\x1b[0m"
+            crumb = "Settings / providers / connect"
         elif self._picker_open:
             badge = "\x1b[38;2;230;200;130m● adding " + (self._picker_section or "") + "\x1b[0m"  # noqa: E501
             crumb = f"Settings / {section} / add"
@@ -669,7 +689,7 @@ class SettingsScreen(Screen):
 
     def _refresh_foot(self) -> None:
         section = SECTIONS[self._rail_index]
-        if self._omniroute_setup_open:
+        if self._omniroute_setup_open or self._provider_setup_open:
             foot = (
                 "\x1b[38;2;110;120;135m  Test connection must pass before Save \u00b7 "
                 "keys go to OS keychain \u00b7 Esc cancel\x1b[0m"
@@ -719,7 +739,7 @@ class SettingsScreen(Screen):
 
     # ---------------------------------------------------------- action: add (open picker)
     def action_open_picker(self) -> None:
-        if self._omniroute_setup_open:
+        if self._omniroute_setup_open or self._provider_setup_open:
             return
         section = SECTIONS[self._rail_index]
         # Only collection sections get a picker
@@ -728,10 +748,12 @@ class SettingsScreen(Screen):
         self._picker_section = section
         # Build picker items from the catalog, excluding already-configured
         if section == "providers":
+            # Full 20-provider catalog, not the legacy 9-entry config list —
+            # the picker must offer every router/provider the runtime speaks.
             existing = set(self._cfg.providers.keys())
             items = [
-                PickerItem(key=val[0], label=val[0], description=val[1])
-                for val in KNOWN_PROVIDERS if val[0] not in existing
+                PickerItem(key=e.name, label=e.display, description=e.description)
+                for e in ALL_PROVIDERS if e.name not in existing
             ]
         elif section == "connectors":
             existing = set(self._cfg.connectors.keys())
@@ -794,6 +816,10 @@ class SettingsScreen(Screen):
         # Input.Submitted handler. Don't preempt it.
         if self._editing:
             return
+        # While a connect form is open, its Inputs own Enter — don't
+        # toggle-expand behind the form.
+        if self._omniroute_setup_open or self._provider_setup_open:
+            return
         # On providers section, Enter toggles expand on the focused row.
         # The focus check stops the Input's own Enter-to-submit from
         # swallowing the key when the editor's text field has focus.
@@ -807,16 +833,21 @@ class SettingsScreen(Screen):
 
     # ---------------------------------------------------------- inline-edit action
     def action_start_edit(self) -> None:
-        """`e` key: edit a normal field or open OmniRoute setup."""
-        if self._picker_open or self._editing or self._omniroute_setup_open:
+        """`e` key: open the focused provider's connect form (OmniRoute keeps
+        its bespoke form) or edit a normal field."""
+        if (self._picker_open or self._editing
+                or self._omniroute_setup_open or self._provider_setup_open):
             return
         section = SECTIONS[self._rail_index]
         if section == "providers":
             visible = self._visible_providers()
             if visible:
                 idx = max(0, min(self._provider_focus_idx, len(visible) - 1))
-                if visible[idx].name == "omniroute":
+                entry = visible[idx]
+                if entry.name == "omniroute":
                     self._open_omniroute_setup()
+                else:
+                    self._open_provider_setup(entry)
             return
         if self._is_editable_section(section):
             self._enter_or_advance_edit()
@@ -880,6 +911,79 @@ class SettingsScreen(Screen):
     @on(OmniRouteSetup.Cancelled)
     def on_omniroute_setup_cancelled(self, _message: OmniRouteSetup.Cancelled) -> None:
         self._close_omniroute_setup()
+
+    # ---------------------------------------------------------- per-provider connect form
+    def _open_provider_setup(self, entry: ProviderEntry) -> None:
+        """Swap the providers body for THIS provider's connect form.
+
+        Each router/provider differs — endpoint, model list, key handling —
+        so every row gets its own connection settings. The form tests a
+        pasted key with a real round-trip before Save is enabled; keys are
+        written to the OS keychain, never config.json.
+        """
+        existing = self._cfg.providers.get(entry.name)
+        endpoint_override = None
+        if (existing and existing.base_url
+                and existing.base_url != (entry.base_url or "")):
+            endpoint_override = existing.base_url
+        setup = ProviderSetup(
+            entry,
+            has_key=key_present(entry.name),
+            endpoint_override=endpoint_override,
+            id="provider-setup-form",
+        )
+        try:
+            main = self.query_one("#settings-main")
+            main.remove_children()
+            main.mount(setup)
+        except Exception as exc:
+            self._set_status(f"connect form failed: {exc}")
+            return
+        self._provider_setup = setup
+        self._provider_setup_entry = entry
+        self._provider_setup_open = True
+        self._refresh_head()
+        self._refresh_foot()
+
+    def _close_provider_setup(self) -> None:
+        self._provider_setup = None
+        self._provider_setup_entry = None
+        self._provider_setup_open = False
+        try:
+            main = self.query_one("#settings-main")
+            main.remove_children()
+            self._mount_providers_panel()
+        except Exception:
+            pass
+        self._refresh_head()
+        self._refresh_foot()
+
+    @on(ProviderSetup.Saved)
+    def on_provider_setup_saved(self, message: ProviderSetup.Saved) -> None:
+        """Persist endpoint/model in config; the pasted key goes to the OS
+        keychain — never into config.json."""
+        entry = by_name(message.provider)
+        self._cfg.providers[message.provider] = ProviderConfig(
+            name=message.provider,
+            base_url=message.endpoint or (entry.base_url if entry else ""),
+            api_key_env=entry.env_var if entry else None,
+        )
+        self._cfg.default_model = f"{message.provider}/{message.model}"
+        # Blank key on save means "no key stored" — delete any stale one so
+        # the panel's dot stays honest.
+        if message.api_key:
+            set_key(message.provider, message.api_key)
+        else:
+            delete_key(message.provider)
+        self._persist()
+        self._close_provider_setup()
+        self._set_status(
+            f"{message.provider} connected · default model "
+            f"{message.provider}/{message.model}")
+
+    @on(ProviderSetup.Cancelled)
+    def on_provider_setup_cancelled(self, _message: ProviderSetup.Cancelled) -> None:
+        self._close_provider_setup()
 
     def _is_editable_section(self, section: str) -> bool:
         return section in _EDITABLE_ROWS
@@ -1151,7 +1255,8 @@ class SettingsScreen(Screen):
         last one in dict order). Falls back to last if no selection state
         is tracked for that section.
         """
-        if self._picker_open:
+        if (self._picker_open or self._omniroute_setup_open
+                or self._provider_setup_open):
             return
         section = SECTIONS[self._rail_index]
 
@@ -1218,7 +1323,8 @@ class SettingsScreen(Screen):
         # (running on the focused widget first) intercepts tab/escape; but
         # arrows still bubble here. While editing, arrows must edit text,
         # not move rows — swallow them.
-        if self._editing or self._omniroute_setup_open:
+        if (self._editing or self._omniroute_setup_open
+                or self._provider_setup_open):
             if event.key in ("up", "down", "left", "right"):
                 event.stop()
             return
@@ -1301,19 +1407,25 @@ class SettingsScreen(Screen):
     def _apply_pick(self, sel: PickerItem) -> None:
         section = self._picker_section
         if section == "providers":
-            # OmniRoute needs its endpoint/model/key form before it becomes
-            # active, so do not persist a half-configured provider row.
-            if sel.key == "omniroute":
+            # OmniRoute keeps its bespoke gateway form; other keyed providers
+            # open their connect form immediately so the API key is pasted
+            # (and tested) in the same flow instead of persisting a row that
+            # can never authenticate. Keyless local providers persist catalog
+            # defaults right away — no test gate for a server that may simply
+            # not be started yet.
+            entry = by_name(sel.key)
+            if entry is not None:
                 self._picker_open = False
                 self._picker_overlay = None
-                self._open_omniroute_setup()
-                return
-            # find catalog row by key
-            entry = next((v for v in KNOWN_PROVIDERS if v[0] == sel.key), None)
-            if entry is not None:
-                _, _, base_url, api_key_env = entry
-                self._cfg.providers[sel.key] = ProviderConfig(
-                    name=sel.key, base_url=base_url, api_key_env=api_key_env,
+                if entry.name == "omniroute":
+                    self._open_omniroute_setup()
+                    return
+                if entry.env_var:
+                    self._open_provider_setup(entry)
+                    return
+                self._cfg.providers[entry.name] = ProviderConfig(
+                    name=entry.name, base_url=entry.base_url or "",
+                    api_key_env=None,
                 )
         elif section == "connectors":
             entry = next((v for v in KNOWN_CONNECTORS if v[0] == sel.key), None)
@@ -1380,6 +1492,9 @@ class SettingsScreen(Screen):
         if self._omniroute_setup_open:
             self._close_omniroute_setup()
             return
+        if self._provider_setup_open:
+            self._close_provider_setup()
+            return
         # On providers L3, Esc collapses the expanded row first.
         if (not self._picker_open
             and not self._editing
@@ -1396,7 +1511,6 @@ class SettingsScreen(Screen):
         """Display a transient status message in the footer."""
         try:
             head = self.query_one("#settings-head", Static)
-            head.update(head.renderable if hasattr(head, "renderable") else "")
             # Override the head with a status line:
             head.update("\x1b[38;2;230;200;130m● " + msg + "\x1b[0m")
         except Exception:

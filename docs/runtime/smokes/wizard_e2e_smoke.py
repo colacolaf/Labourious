@@ -73,7 +73,7 @@ async def main() -> None:
     async with launch() as (pilot, app):
         step("wizard is the current screen", isinstance(app.screen, WelcomeWizardScreen))
         step("wizard painted (no render crash)", app.screen._step == 0)
-        body = app.screen.query_one("#wizard-body").renderable
+        body = app.screen.query_one("#wizard-body").visual
         step("step 0 lists providers", "ollama" in str(body) and "anthropic" in str(body))
         await pilot.press("escape")
         await pilot.pause(0.2)

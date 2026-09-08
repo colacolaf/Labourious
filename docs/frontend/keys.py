@@ -14,11 +14,16 @@ divergence between the strip's "what can I press" and the help modal's
 from __future__ import annotations
 
 # Single-letter shortcuts active from any focus except the chat Input.
+# Ctrl+C is bound to quit alongside Ctrl+Q: Textual's default Ctrl+C
+# shows a "Do you want to quit?" toast instead of quitting, which read
+# like an error dialog over the providers panel. Users expect Ctrl+C to
+# exit a TUI.
 APP_BINDINGS = [
     ("s",            "open_settings", "Settings"),
     ("h",            "open_history",  "History"),
     ("question_mark", "open_help",     "Help"),
     ("ctrl+q",       "quit",          "Quit"),
+    ("ctrl+c",       "quit",          "Quit"),
 ]
 
 

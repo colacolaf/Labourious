@@ -16,6 +16,7 @@ from __future__ import annotations
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
+from textual.events import Paste
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
@@ -58,6 +59,24 @@ class WelcomeWizardScreen(ModalScreen):
     _model_cursor: int = 0
     _provider_chosen: bool = False   # True once ↑/↓ moved the cursor
 
+    # The key-paste Input lives in the flow (not a modal) so Esc/Enter
+    # bindings keep working; hide it except on the key step.
+    DEFAULT_CSS = """
+    #wizard-key-input {
+        display: none;
+        height: 1;
+        margin: 0 2 1 2;
+    }
+    """
+
+    # Opt out of App.AUTO_FOCUS ("*"): auto-focus grabs the first focusable
+    # widget on mount, and a display:none Input still counts as focusable —
+    # it silently swallowed every typed provider id. Note `None` would just
+    # inherit the App's "*" — an empty string is what actually disables it.
+    # The wizard manages focus itself: none on steps 0/1 (screen bindings own
+    # Enter/typing), the key Input focused when the key step shows it.
+    AUTO_FOCUS = ""
+
     BINDINGS = [
         Binding("escape", "skip", "Skip", key_display="Esc"),
         Binding("enter",  "next", "Next", key_display="⏎"),
@@ -83,12 +102,30 @@ class WelcomeWizardScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         yield Static("", id="wizard-progress")
         yield Static("", id="wizard-body")
+        # Step 2 (key entry) mounts a real Input over the body so long API
+        # keys can be pasted; hidden on other steps.
+        yield Input(
+            placeholder="paste your API key here (right-click / Ctrl+V)",
+            password=True,
+            id="wizard-key-input",
+        )
         with Horizontal(id="wizard-actions"):
             yield Button("← Back", id="wiz-back", variant="default", disabled=True)
             yield Button("Next →", id="wiz-next", variant="primary")
 
     def on_mount(self) -> None:
         self.redraw()
+
+    def on_focus(self, _event) -> None:  # noqa: N802 — Textual handler name
+        # Guard against the hidden key Input grabbing focus on mount: a
+        # focused-but-hidden Input silently swallows every typed key
+        # (provider ids, model ids), which bricked steps 0 and 1.
+        try:
+            key_input = self.query_one("#wizard-key-input", Input)
+            if not key_input.display and self.focused is key_input:
+                self.set_focus(None)
+        except Exception:
+            pass
 
     # -------------------------------------------------- rendering
     # NOTE: named `redraw`, NOT `_render` — overriding Textual's internal
@@ -131,6 +168,23 @@ class WelcomeWizardScreen(ModalScreen):
             next_btn.label = "✓ Save & start"
         else:
             next_btn.label = "Next →"
+        # The paste field only exists on the key step. A display:none
+        # widget can still HOLD focus in Textual, so when hiding it we
+        # explicitly move focus back to the screen — otherwise typed keys
+        # vanish into the hidden buffer.
+        try:
+            key_input = self.query_one("#wizard-key-input", Input)
+            key_input.display = (
+                self._step == 2 and self._provider is not None
+                and bool(self._provider["key_needed"])
+            )
+            if key_input.display:
+                key_input.value = self._api_key
+                key_input.focus()
+            elif self.focused is key_input:
+                self.set_focus(None)
+        except Exception:
+            pass
 
     # -------------------------------------------------- step content
     def _provider_step(self) -> str:
@@ -184,13 +238,16 @@ class WelcomeWizardScreen(ModalScreen):
                 f"\n[dim]This will set {self._provider['id']}/{self._model} as your default.[/]",
             ]
             return "\n".join(lines)
+        masked = ("•" * min(len(self._api_key), 48)) if self._api_key else "(nothing pasted yet)"
         lines = [
             f"[bold]Provider:[/] [cyan]{self._provider['label']}[/]\n",
             f"[bold]Model:[/] [cyan]{self._model}[/]\n",
-            "\n[bold]Enter your API key:[/]\n",
-            f"\n[dim]Paste your {self._provider['id'].upper()}_API_KEY below and press Enter.[/]",
-            f"[dim]The key is stored in your OS keychain (not in plaintext).[/]\n",
-            f"\n[dim]Skip with Esc — you can add keys later in Settings → Providers.[/]",
+            "\n[bold]Paste your API key into the field below:[/]\n",
+            f"[dim]Right-click → Paste, or Ctrl+V — bracketed paste is supported, "
+            f"multi-line pastes are flattened.[/]\n",
+            f"\n[dim]Key on file: {masked}[/]",
+            f"\n[dim]The key is stored in your OS keychain (not in plaintext).[/]",
+            f"[dim]Skip with Esc — you can add keys later in Settings → Providers.[/]",
         ]
         return "\n".join(lines)
 
@@ -269,6 +326,57 @@ class WelcomeWizardScreen(ModalScreen):
             self._save_and_dismiss()
             return
 
+    # -------------------------------------------------- key input wiring
+    def _sync_key_input(self) -> None:
+        """Pull the Input's value into `_api_key` (keeps the smoke-tested
+        `_api_key` attribute as the single source of truth)."""
+        try:
+            self._api_key = self.query_one("#wizard-key-input", Input).value.strip()
+        except Exception:
+            pass
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        if event.input.id == "wizard-key-input":
+            # Flatten multi-line pastes: keys never contain newlines.
+            cleaned = "".join(str(event.value).split())
+            if cleaned != event.value:
+                event.input.value = cleaned
+            self._api_key = cleaned
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Enter inside the key Input advances the wizard.
+
+        The focused Input consumes Enter (its own submit binding) before
+        the screen's `enter → next` binding can fire, so the final Enter
+        after pasting a key would otherwise do nothing.
+        """
+        if event.input.id == "wizard-key-input":
+            self._sync_key_input()
+            event.stop()
+            event.prevent_default()
+            self.action_next()
+
+    def on_paste(self, event: Paste) -> None:
+        """Bracketed-paste safety net for the key step.
+
+        Textual delivers a terminal paste as a Paste event. The focused
+        Input consumes it natively when focused; this handler covers the
+        case where focus is elsewhere (or the driver splits the paste) so
+        the key still lands in `_api_key` instead of being eaten char by
+        char by on_key's printable-character capture.
+        """
+        if (self._step == 2 and self._provider is not None
+                and self._provider["key_needed"]):
+            text = "".join(str(event.text).split())
+            self._api_key = text
+            try:
+                self.query_one("#wizard-key-input", Input).value = text
+            except Exception:
+                pass
+            self._render_step()
+            event.stop()
+            event.prevent_default()
+
     def action_back(self) -> None:
         if self._step > 0:
             self._step -= 1
@@ -328,18 +436,36 @@ class WelcomeWizardScreen(ModalScreen):
             if handled:
                 self._render_step()
         elif self._step == 2:
-            if self._provider and self._provider["key_needed"]:
+            # The paste Input owns keyboard entry on the key step when it is
+            # visible (a widget-level on_key runs before this screen handler
+            # and Input stops printable keys itself) — anything reaching here
+            # is a stray key while focus is elsewhere. Don't echo it into a
+            # hidden buffer: the visible masked state comes from _api_key via
+            # on_input_changed / on_paste only.
+            if (self._provider is not None and self._provider["key_needed"]
+                    and not self._key_input_visible()):
                 if event.character and event.character.isprintable():
                     self._api_key += event.character
                     handled = True
                 elif event.key == "backspace":
                     self._api_key = self._api_key[:-1]
                     handled = True
+                if handled:
+                    self._render_step()
         if handled:
             event.stop()
 
     # -------------------------------------------------- persistence
+    def _key_input_visible(self) -> bool:
+        try:
+            return self.query_one("#wizard-key-input", Input).display
+        except Exception:
+            return False
+
     def _save_and_dismiss(self) -> None:
+        if (self._step == 2 and self._provider is not None
+                and self._provider["key_needed"]):
+            self._sync_key_input()
         cfg = load_config()
         pid = self._provider["id"]
         base_url = self._provider["base_url"]

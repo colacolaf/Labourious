@@ -15,6 +15,8 @@ from __future__ import annotations
 from textual.containers import Vertical
 from textual.widgets import RichLog, Static
 
+from frontend.utils.ansi import visible_len
+
 
 class SectionCard(Vertical):
     """A bordered section group. Header strip + body row container."""
@@ -52,6 +54,24 @@ class SectionCard(Vertical):
             except Exception:
                 pass
 
+    def on_resize(self, event) -> None:  # noqa: N802 — Textual handler name
+        """Re-render on resize: rows were composed for the old width, and
+        RichLog (wrap=False) crops longer-than-widget lines, which showed
+        as hints cut mid-sentence after any terminal resize."""
+        if callable(self.on_render):
+            try:
+                self._render_header_now()
+                self.on_render()
+            except Exception:
+                pass
+
+    def _render_header_now(self) -> None:
+        try:
+            head = self.query_one(".section-card-head", Static)
+            head.update(self._render_header())
+        except Exception:
+            pass
+
     def _ensure_body_attached(self) -> RichLog:
         try:
             return self.query_one(RichLog)
@@ -65,8 +85,16 @@ class SectionCard(Vertical):
         meta_part = (
             f"\x1b[38;2;110;120;135m{self._meta}\x1b[0m" if self._meta else ""
         )
-        # Left-aligned title, right-aligned meta with 110-col budget
-        gap = " " * max(1, 110 - len(self._title) - len(self._meta) - 4)
+        # Width budget: the card's real container width when laid out,
+        # else the 110-col design width. visible-width math so any future
+        # ANSI in title/meta can't skew the gap.
+        try:
+            width = self.size.width or 110
+        except Exception:
+            width = 110
+        width = max(40, width - 2)  # card padding
+        used = len(self._title.upper()) + len(self._meta) + 2
+        gap = " " * max(1, width - used)
         return title_part + gap + meta_part
 
     def update_meta(self, meta: str) -> None:

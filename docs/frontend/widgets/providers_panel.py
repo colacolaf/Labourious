@@ -26,17 +26,28 @@ Public surface:
 
 The panel is render-only. SettingsScreen owns the state and the
 bindings; this widget just paints.
+
+v2 rendering notes (the bug list this rewrite closes):
+  * Every row is composed through frontend.utils.ansi helpers, which
+    measure *visible* width (escape sequences cost 0 columns). The old
+    code mixed raw len() math with ANSI-laden strings, so rows wrapped
+    and painted stray blocks at any width below ~140 columns.
+  * The expanded box used a box_close string that was a lone ESC
+    sequence ("" + box sides) — Rich rendered it as a run of stray
+    colored blocks down the panel. Box top/bottom are now plain
+    strings.
+  * The panel tracks its container width on resize and re-renders, so
+    shrinking the terminal reflows instead of clipping.
 """
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Vertical
 from textual.widget import Widget
-from textual.widgets import Input, Static
+from textual.widgets import Static
 
 from frontend.providers import (
     ALL_PROVIDERS,
@@ -47,11 +58,16 @@ from frontend.providers import (
     recommended,
     status_for,
 )
+from frontend.utils.ansi import (
+    DEFAULT_WIDTH,
+    fit_to,
+    reset_at_end,
+    two_columns,
+    visible_len,
+)
 
 
-# Helper: tiny inline-ANSI helpers so we can compose the panel rows in
-# tight, fixed-width strings (matches what the rest of the settings screen
-# does — no full CSS layout for these).
+# ANSI tokens — mirror style.tcss palette.
 _FG = "\x1b[38;2;212;212;212m"
 _DIM = "\x1b[38;2;110;120;135m"
 _FAINT = "\x1b[38;2;80;88;100m"
@@ -63,10 +79,15 @@ _BG_SURFACE = "\x1b[48;2;22;26;33m"
 _BG_HOVER = "\x1b[48;2;30;36;46m"
 _RESET = "\x1b[0m"
 _UL = "\u2500"  # ─
-_ARROW = "\u2192"  # →
-_BULLET = "\u2022"  # •
 _CARET_OPEN = "\u25be"  # ▾
 _CARET_CLOSED = "\u25b8"  # ▸
+
+# Expanded-pane box drawing (plain strings — no bare escape runs).
+_BOX_V = f"{_BRAND}\u2502{_RESET}"          # │
+_BOX_TL = f"{_BRAND}\u256d{_RESET}"          # ╭
+_BOX_TR = f"{_BRAND}\u256e{_RESET}"          # ╮
+_BOX_BL = f"{_BRAND}\u2570{_RESET}"          # ╰
+_BOX_BR = f"{_BRAND}\u256f{_RESET}"          # ╯
 
 
 @dataclass
@@ -75,15 +96,8 @@ class ProviderRowState:
     entry: ProviderEntry
     state: str       # ready | key-loaded | auth-missing | not-running | etc
     detail: str
-    configured: bool # user has explicitly added it to config.json
+    configured: bool  # user has explicitly added it to config.json
     key_present: bool
-
-
-def _wid(s: str, n: int) -> str:
-    """Widen a string with spaces to n columns (auto-strips ANSI)."""
-    visible = re.sub(r"\x1b\[[0-9;]*m", "", s)
-    pad = max(0, n - len(visible))
-    return s + " " * pad
 
 
 def _dot(state: str) -> str:
@@ -110,6 +124,7 @@ class ProvidersPanel(Widget):
         self._configured: dict[str, bool] = {}  # name -> present in config.json
         self._key_present: dict[str, bool] = {}
         self._focus_idx: int = 0
+        self._last_width: int = 0
 
     # ---------------------------------------------------- public API
     def update(
@@ -144,10 +159,26 @@ class ProvidersPanel(Widget):
     def on_mount(self) -> None:
         self._repaint()
 
+    def on_resize(self, event) -> None:  # noqa: N802 — Textual handler name
+        """Re-render when the container width changes so rows reflow
+        instead of wrapping into stray blocks."""
+        width = getattr(event, "size", None)
+        width = getattr(width, "width", 0) if width is not None else 0
+        if width and width != self._last_width:
+            self._repaint()
+
     # ---------------------------------------------------- rendering
+    def _width(self) -> int:
+        """Render budget = container width - padding, clamped."""
+        w = self._last_width or self.size.width or 0
+        if w <= 20:  # not laid out yet (or a smoke-driven bare instance)
+            w = DEFAULT_WIDTH
+        return max(40, w - 4)
+
     def _repaint(self) -> None:
         """Render the whole panel from current state."""
         try:
+            self._last_width = self.size.width or self._last_width
             self.query_one("#providers-chips", Static).update(
                 self._render_chips())
             self.query_one("#providers-tiers", Static).update(
@@ -175,11 +206,12 @@ class ProvidersPanel(Widget):
                 chips.append(
                     f"{_DIM}\u25c6 {label} · {count}{_RESET}")
         visible_n = self._visible_count()
-        total = len(ALL_PROVIDERS)
-        meta = f"{_FAINT}\u2500\u2500\u2500 {visible_n} visible \u2500\u2500\u2500 {_RESET}"
-        line = "  " + "  ".join(chips) + "  " + meta
-        # Pad to a stable width so the next rows align
-        return _wid(line, 110)
+        meta = (f"{_FAINT}\u2500\u2500\u2500 {visible_n} visible "
+                f"\u2500\u2500\u2500{_RESET}")
+        line = "  " + "   ".join(chips) + "   " + meta
+        # Crop to the panel budget so a narrow terminal wraps nothing;
+        # the meta segment is first to go thanks to its trailing position.
+        return reset_at_end(fit_to(line, self._width()))
 
     def _visible_count(self) -> int:
         if self._filter_tier is None:
@@ -190,82 +222,83 @@ class ProvidersPanel(Widget):
     def _render_tiers(self) -> str:
         out: list[str] = []
         idx_so_far = 0
+        width = self._width()
         for tier in TIER_ORDER:
             entries = by_tier(tier)  # type: ignore[arg-type]
             if self._filter_tier is not None and tier != self._filter_tier:
                 # When a single tier is active, skip divider headers so the
                 # list reads continuously.
                 continue
-            out.append(self._render_tier_header(tier, len(entries)))
+            out.append(self._render_tier_header(tier, len(entries), width))
             for entry in entries:
                 is_focused = idx_so_far == self._focus_idx
-                out.append(self._render_row(entry, is_focused=is_focused))
+                out.append(self._render_row(entry, is_focused=is_focused,
+                                            width=width))
                 if self._expanded == entry.name:
-                    out.append(self._render_expanded(entry))
+                    out.append(self._render_expanded(entry, width))
                 idx_so_far += 1
             out.append("")
         return "\n".join(out).rstrip()
 
-    def _render_tier_header(self, tier: str, count: int) -> str:
-        return (
-            f"{_FAINT}{TIER_LABEL[tier]}  {count}"
-            f"{_RESET}"
-            + " " * max(1, 110 - len(TIER_LABEL[tier]) - 4)
-            + f"{_FAINT}{_UL * 60}{_RESET}"
-        )
+    def _render_tier_header(self, tier: str, count: int, width: int) -> str:
+        label = f"{TIER_LABEL[tier]}  {count}"
+        prefix = f"  {_FAINT}{label}{_RESET}  "
+        rule = max(8, width - visible_len(prefix) - 2)
+        return (f"  {_FAINT}{label}{_RESET}"
+                f"  {_FAINT}{_UL * rule}{_RESET}")
 
     # ---------------------------------------------------- collapsed row
-    def _render_row(self, entry: ProviderEntry, *, is_focused: bool = False) -> str:
-        status = status_for(entry)
+    def _row_status_text(self, entry: ProviderEntry, status) -> str:
         if entry.tier == "local":
-            running = status.state == "ready"
-            st_text = status.detail if running else "— not running"
-        else:
-            present = self._key_present.get(entry.name, False)
-            if present:
-                st_text = "● ready · key in keychain"
-            else:
-                st_text = "— no API key"
+            return status.detail if status.state == "ready" else "\u2014 not running"
+        present = self._key_present.get(entry.name, False)
+        if present:
+            return "\u25cf ready · key in keychain"
+        return "\u2014 no API key"
+
+    def _render_row(self, entry: ProviderEntry, *, is_focused: bool = False,
+                    width: int | None = None) -> str:
+        width = width if width is not None else self._width()
+        status = status_for(entry)
+        st_text = self._row_status_text(entry, status)
         is_open = self._expanded == entry.name
         caret = _CARET_OPEN if is_open else _CARET_CLOSED
         dot = _dot(status.state)
-        name_part = entry.display
         # Focus bar marker (left rail)
         focus_bar = f"{_BRAND}\u2588{_RESET}" if is_focused else " "
         # open rows: brand-colored name; collapsed muted ones when no key
         if is_open:
-            name_styled = f"{_BRAND}{name_part}{_RESET}"
+            name_styled = f"{_BRAND}{entry.display}{_RESET}"
             row_bg = _BG_SURFACE
         elif is_focused:
-            name_styled = f"{_BRAND}{name_part}{_RESET}"
+            name_styled = f"{_BRAND}{entry.display}{_RESET}"
             row_bg = _BG_HOVER
         elif self._key_present.get(entry.name) or status.state == "ready":
-            name_styled = f"{_FG}{name_part}{_RESET}"
+            name_styled = f"{_FG}{entry.display}{_RESET}"
             row_bg = ""
         else:
-            name_styled = f"{_DIM}{name_part}{_RESET}"
+            name_styled = f"{_DIM}{entry.display}{_RESET}"
             row_bg = ""
         # tier tag (one character height)
         tag = f"{_FAINT}[{entry.tier}]{_RESET}"
-        # row line
-        left = (f"{row_bg}{focus_bar} {caret} {row_bg}{dot} {row_bg}"
-                f"{name_styled}{row_bg} {tag}{row_bg}")
-        right = f"{_DIM}{st_text}{_RESET}"
-        gap = " " * max(1, 100 - len(re.sub(r"\x1b\[[0-9;]*m", "", left))
-                          - len(re.sub(r"\x1b\[[0-9;]*m", "", right)))
-        return left + gap + right + _RESET
+        left = (f" {focus_bar} {caret} {dot} {name_styled} {tag}")
+        left = left.replace(" ", "\u00a0") if False else left  # keep plain spaces
+        return reset_at_end(two_columns(left, st_text, width))
 
     # ---------------------------------------------------- expanded pane
-    def _render_expanded(self, entry: ProviderEntry) -> str:
-        bar = f"{_BRAND}|{_RESET}"
-        box_open = f"{_BRAND}\u256d{_UL * 60}\u256e{_RESET}"
-        box_close = f"{_BRAND}\u256f{_UL * 60}\u256d{_RESET}"[0] + f"{_UL * 60}\u2570{_RESET}"
+    def _render_expanded(self, entry: ProviderEntry, width: int | None = None) -> str:
+        width = width if width is not None else self._width()
+        # All pane rows are pre-indented by 2 and fitted to the full width.
+        inner = max(24, width - 10)
+        top = f"  {_BOX_TL}{_BRAND}{_UL * inner}{_BOX_TR}{_RESET}"
+        bottom = f"  {_BOX_BL}{_BRAND}{_UL * inner}{_BOX_BR}{_RESET}"
+        bar = _BOX_V
 
-        rows: list[str] = []
-        rows.append(box_open)
+        rows: list[str] = [top]
         # base URL
         rows.append(self._exp_field(bar, "base URL",
-                                    entry.base_url or "(set your custom URL)"))
+                                    entry.base_url or "(set your custom URL)",
+                                    width))
         # model
         if entry.models:
             models_str = "  ".join(entry.models[:5])
@@ -273,48 +306,48 @@ class ProvidersPanel(Widget):
                 models_str += f"  +{len(entry.models) - 5}"
             rows.append(self._exp_field(bar, "model",
                                         f"\u25be {entry.default_model}",
-                                        hint=f"{_FAINT}  available: {models_str}{_RESET}"))
+                                        width,
+                                        hint=f"{_FAINT}available: {models_str}{_RESET}"))
         # auth
         if entry.env_var is None:
-            auth_field = (f"{_OK}none{_RESET}  {_FAINT}[no-key]{_RESET}")
-            rows.append(self._exp_field(bar, "auth", auth_field))
+            auth_field = f"{_OK}none{_RESET}  {_FAINT}[no-key]{_RESET}"
+            rows.append(self._exp_field(bar, "auth", auth_field, width))
         else:
             present = self._key_present.get(entry.name, False)
             if present:
                 auth_field = (f"{_OK}\u25cf ready · key in keychain{_RESET} "
                               f"{_FAINT}[{entry.env_var}]{_RESET}")
-                rows.append(self._exp_field(bar, "auth", auth_field))
             else:
                 auth_field = (f"{_WARN}\u26a0 no key{_RESET}  "
                               f"{_FAINT}[{entry.env_var}]{_RESET}  "
-                              f"{_BRAND}+ add key{_RESET}")
-                rows.append(self._exp_field(bar, "auth", auth_field))
+                              f"{_BRAND}press e to connect + paste key{_RESET}")
+            rows.append(self._exp_field(bar, "auth", auth_field, width))
         # status / connection
         status = status_for(entry)
-        if status.state == "ready":
-            rows.append(self._exp_field(bar, "status",
-                                        f"{_OK}{status.detail}{_RESET}",
-                                        ))
-        else:
-            rows.append(self._exp_field(bar, "status",
-                                        f"{_WARN}{status.detail}{_RESET}"))
-        # separator + buttons
-        rows.append(f"  {_DIM}{_UL * 60}{_RESET}")
+        status_color = _OK if status.state == "ready" else _WARN
+        rows.append(self._exp_field(bar, "status",
+                                    f"{status_color}{status.detail}{_RESET}",
+                                    width))
+        # separator + actions
+        rows.append(f"  {bar} {_DIM}{_UL * max(8, inner - 4)}{_RESET}")
         rows.append(self._exp_field(
             bar, "",
-            f"{_DIM}[Test]{_RESET}   {_DIM}[Reset]{_RESET}   {_DIM}[Save]{_RESET}"))
-        rows.append(box_close)
-        return "  " + "\n  ".join(rows)
+            f"{_DIM}[e connect · Enter collapse · Ctrl+Y remove]{_RESET}",
+            width))
+        rows.append(bottom)
+        return "\n".join(reset_at_end(fit_to(r, width)) for r in rows)
 
-    def _exp_field(self, bar: str, label: str, value: str,
+    def _exp_field(self, bar: str, label: str, value: str, width: int,
                    hint: str = "") -> str:
         if hint:
-            return (f"  {bar} {_FAINT}{label:<11}{_RESET} "
+            line = (f"  {bar} {_FAINT}{label:<11}{_RESET} "
                     f"{_FG}{value}{_RESET}  {hint}")
-        if not label:
-            return f"  {bar} {value}"
-        return (f"  {bar} {_FAINT}{label:<11}{_RESET} "
-                f"{_FG}{value}{_RESET}")
+        elif not label:
+            line = f"  {bar} {value}"
+        else:
+            line = (f"  {bar} {_FAINT}{label:<11}{_RESET} "
+                    f"{_FG}{value}{_RESET}")
+        return fit_to(line, width)
 
 
 # ----------------------------------------------------------- welcome state
@@ -334,10 +367,10 @@ def render_empty_state() -> str:
     out = [head, body]
     for entry in recommended():
         if entry.tier == "local":
-            tag = "● recommended · zero config"
+            tag = "\u25cf recommended · zero config"
             color = _OK
         else:
-            tag = "○ recommended"
+            tag = "\u25cb recommended"
             color = _BRAND
         caret = _CARET_OPEN if entry.name == "ollama" else _CARET_CLOSED
         out.append(f"  {caret} {_OK}\u25cf{_RESET} "
@@ -354,6 +387,6 @@ if __name__ == "__main__":
              configured_names=set(), key_present={})
     print(p._render_chips())
     print()
-    print(p._render_tier_header("local", 5))
+    print(p._render_tier_header("local", 5, 110))
     print(p._render_row(ALL_PROVIDERS[0]))
-    print(p._render_expanded(ALL_PROVIDERS[0]))
+    print(p._render_expanded(ALL_PROVIDERS[0], 110))

@@ -152,7 +152,9 @@ class ChatScreen(Screen):
         # Configurable via Settings → streaming → typewriter_ms.
         self.stream_typewriter_ms: int = 0
         # Last ThesisWritten event captured (used to populate the
-        # citation chip with real data, not just a count).        self._last_thesis: dict | None = None
+        # Last ThesisWritten event captured (used to populate the
+        # citation chip with real data, not just a count).
+        self._last_thesis: dict | None = None
 
     # --------------------------------------------------------------- compose
     def compose(self) -> ComposeResult:

@@ -17,9 +17,27 @@ class GroqAdapter:
     def __post_init__(self):
         if "/" in self.model:
             self.model = self.model.split("/", 1)[1]
-        self.api_key = os.environ.get("GROQ_API_KEY")
+        self.api_key = self._resolve_key()
         if not self.api_key:
-            raise RuntimeError("GROQ_API_KEY not set")
+            raise RuntimeError(
+                "GROQ_API_KEY not set — add a key in Settings → Providers → "
+                "Groq (press `e` to connect) or export GROQ_API_KEY."
+            )
+
+    @staticmethod
+    def _resolve_key() -> str | None:
+        """Auth precedence: keychain (pasted key) → env. Mirrors the other
+        adapters so a key saved through Settings / the wizard actually
+        reaches this adapter instead of only env vars working."""
+        try:
+            from frontend.keys_storage import get_key  # type: ignore
+            k = get_key("groq")
+            if k:
+                return k
+        except Exception:
+            # Headless / CLI — frontend not importable; env fallback below.
+            pass
+        return os.environ.get("GROQ_API_KEY")
 
     def call(self, messages: list[dict], system: str, options: dict | None = None) -> Response:
         options = options or {}
