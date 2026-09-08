@@ -69,6 +69,12 @@ _FILE_PATH = Path.home() / ".labourious" / "keys.json"
 
 _in_mem: dict[str, str] = {}
 
+# Read cache for keychain lookups. On macOS every get_password() call
+# round-trips the Security agent; the providers panel repaints on every
+# arrow key, so uncached reads made the UI sluggish (and could pop
+# repeated keychain permission dialogs). Writes invalidate the cache.
+_key_cache: dict[str, str | None] = {}
+
 
 def _file_load() -> dict[str, str]:
     if not _FILE_PATH.exists():
@@ -95,18 +101,25 @@ SERVICE_NAME = "labourious"
 
 
 def get_key(provider: str) -> str | None:
+    if provider in _key_cache:
+        return _key_cache[provider]
+    value: str | None
     if _BACKEND == "keyring" or _BACKEND == "keyring-mock":
         try:
-            return _kr.get_password(SERVICE_NAME, provider)  # type: ignore
+            value = _kr.get_password(SERVICE_NAME, provider)  # type: ignore
         except Exception:
             # Keychain unavailable at read time — check the file fallback.
-            return _file_load().get(provider)
-    if _BACKEND == "file":
-        return _file_load().get(provider)
-    return _in_mem.get(provider)
+            value = _file_load().get(provider)
+    elif _BACKEND == "file":
+        value = _file_load().get(provider)
+    else:
+        value = _in_mem.get(provider)
+    _key_cache[provider] = value
+    return value
 
 
 def set_key(provider: str, key: str) -> None:
+    _key_cache.pop(provider, None)
     if not key:
         delete_key(provider)
         return
@@ -131,6 +144,7 @@ def set_key(provider: str, key: str) -> None:
 
 
 def delete_key(provider: str) -> None:
+    _key_cache.pop(provider, None)
     if _BACKEND == "keyring" or _BACKEND == "keyring-mock":
         try:
             _kr.delete_password(SERVICE_NAME, provider)  # type: ignore
@@ -162,14 +176,33 @@ def backend_name() -> str:
 
 
 # ---------------------------------------------------------- endpoint probe
-def probe_endpoint(base_url: str | None, timeout: float = 0.4) -> bool:
+# Short-TTL cache so the providers panel doesn't fire a network probe
+# on every repaint. 30s keeps the dot honest if the user starts Ollama
+# while the TUI is open.
+_PROBE_TTL_S = 30.0
+_probe_cache: dict[str, tuple[float, bool]] = {}
+
+
+def probe_endpoint(base_url: str | None, timeout: float = 0.12) -> bool:
     """Cheap connectivity probe used by the panel dot.
 
     For local: try a TCP connect to host:port.
     For cloud: HEAD request via urllib (no body, no key).
+    Cached for _PROBE_TTL_S per URL.
     """
     if not base_url:
         return False
+    import time as _time
+    now = _time.monotonic()
+    cached = _probe_cache.get(base_url)
+    if cached is not None and now - cached[0] < _PROBE_TTL_S:
+        return cached[1]
+    ok = _probe_endpoint_uncached(base_url, timeout)
+    _probe_cache[base_url] = (now, ok)
+    return ok
+
+
+def _probe_endpoint_uncached(base_url: str, timeout: float) -> bool:
     try:
         if base_url.startswith("http://localhost") or base_url.startswith("http://127."):
             # Strip scheme + path; parse host:port

@@ -52,6 +52,12 @@ class WelcomeWizardScreen(ModalScreen):
     unrelated screens.
     """
 
+    # Class-level cursor defaults so render helpers work even on a bare
+    # __new__-constructed instance (the smokes introspect them directly).
+    _provider_cursor: int = 0
+    _model_cursor: int = 0
+    _provider_chosen: bool = False   # True once ↑/↓ moved the cursor
+
     BINDINGS = [
         Binding("escape", "skip", "Skip", key_display="Esc"),
         Binding("enter",  "next", "Next", key_display="⏎"),
@@ -66,6 +72,13 @@ class WelcomeWizardScreen(ModalScreen):
         self._provider_input: str = ""   # typed on step 0, resolved on Enter
         self._model_input: str = ""       # typed on step 1, resolved on Enter
         self._pending_error: str = ""     # last validation message
+        # ↑/↓ selection cursors. Arrows move the ▶ cursor and mark the
+        # provider as chosen; Enter then picks the item under the cursor.
+        # Typing still works (explicit id). A fresh wizard with no arrow
+        # press and no typed id stays on step 0 with a helpful error.
+        self._provider_cursor: int = 0
+        self._model_cursor: int = 0
+        self._provider_chosen: bool = False
 
     def compose(self) -> ComposeResult:
         yield Static("", id="wizard-progress")
@@ -129,8 +142,14 @@ class WelcomeWizardScreen(ModalScreen):
             tag = "[green]free · no key[/]" if not p["key_needed"] else "[yellow]key required[/]"
             lines.append(f"  [bold cyan]{p['id']}[/]  {p['label']}  {tag}")
             lines.append(f"    [dim]{p['desc']}[/]\n")
-        lines.append("\n[bold cyan]▶ " + (self._provider_input or "type a provider id…") + "[/]")
-        lines.append("[dim]Type a provider ID above and press Enter, or Esc to skip.[/]")
+        # Selection list: ▶ marks the arrow-key cursor; ✓ marks the default.
+        for i, p in enumerate(WIZARD_PROVIDERS):
+            marker = "[bold cyan]▶[/]" if i == self._provider_cursor else " "
+            lines.append(f"  {marker} [bold cyan]{p['id']}[/]  {p['label']}")
+        lines.append("")
+        lines.append("[dim]↑/↓ to choose · Enter to confirm · or type a provider id · Esc skips[/]")
+        lines.append("")
+        lines.append("[bold cyan]▶ " + (self._provider_input or "type a provider id…") + "[/]")
         if self._pending_error:
             lines.append(f"\n[yellow]⚠ {self._pending_error}[/]")
         return "\n".join(lines)
@@ -179,12 +198,17 @@ class WelcomeWizardScreen(ModalScreen):
     def _resolve_provider(self) -> dict | None:
         """Match the typed provider id (case-insensitive) against the catalog.
 
-        Blank input returns the previously chosen provider (so Back → Next
-        keeps the selection); returns None only when a non-blank id doesn't
-        match anything.
+        Blank input resolves to the item under the ↑/↓ cursor (default:
+        the first provider), so pure arrow-key selection works. A non-blank
+        id that matches nothing returns None.
         """
         query = self._provider_input.strip().lower()
         if not query:
+            # Blank input: the ↑/↓ cursor's item, but only if the user
+            # actually moved the cursor (or picked earlier). Otherwise
+            # nothing is chosen yet — error out with the id list.
+            if self._provider_chosen or self._provider is not None:
+                return WIZARD_PROVIDERS[self._provider_cursor % len(WIZARD_PROVIDERS)]
             return self._provider
         for p in WIZARD_PROVIDERS:
             if p["id"] == query:
@@ -211,10 +235,16 @@ class WelcomeWizardScreen(ModalScreen):
         if self._step == 0:
             provider = self._resolve_provider()
             if provider is None:
-                self._pending_error = (
-                    "unknown provider — type one of: "
-                    + ", ".join(p["id"] for p in WIZARD_PROVIDERS)
-                )
+                if not self._provider_input.strip():
+                    self._pending_error = (
+                        "no provider selected — press ↑/↓ to choose, or type an id: "
+                        + ", ".join(p["id"] for p in WIZARD_PROVIDERS)
+                    )
+                else:
+                    self._pending_error = (
+                        "unknown provider — type one of: "
+                        + ", ".join(p["id"] for p in WIZARD_PROVIDERS)
+                    )
                 self._render_step()
                 return
             if provider is not self._provider:
@@ -263,7 +293,19 @@ class WelcomeWizardScreen(ModalScreen):
         """
         handled = False
         if self._step == 0:
-            if event.key == "backspace":
+            if event.key == "up":
+                n = len(WIZARD_PROVIDERS)
+                self._provider_cursor = (self._provider_cursor - 1) % n
+                self._provider_chosen = True
+                self._pending_error = ""
+                handled = True
+            elif event.key == "down":
+                n = len(WIZARD_PROVIDERS)
+                self._provider_cursor = (self._provider_cursor + 1) % n
+                self._provider_chosen = True
+                self._pending_error = ""
+                handled = True
+            elif event.key == "backspace":
                 self._provider_input = self._provider_input[:-1]
                 self._pending_error = ""
                 handled = True
@@ -272,6 +314,7 @@ class WelcomeWizardScreen(ModalScreen):
                 self._pending_error = ""
                 handled = True
             if handled:
+                event.stop()
                 self._render_step()
         elif self._step == 1:
             if event.key == "backspace":

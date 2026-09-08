@@ -49,6 +49,8 @@ BINDING_CATALOG: tuple[dict, ...] = (
         ("Ctrl+R",  "Re-run last flow",               ""),
         ("/",       "Command palette",                "/flow /ticker /model /paid-for /depth /compressed /settings /history /help /clear /quit"),
         ("↑",       "Recall previous prompt",         ""),
+        ("Ctrl+O",  "Open Settings",                  "works even while the input is focused"),
+        ("Ctrl+Y",  "Open History",                   "works even while the input is focused"),
     )},
     {"group": "Settings", "note": "modal scope",      "entries": _entries(
         ("Esc",          "Back to chat",            "cancels pending"),
@@ -105,8 +107,8 @@ STRIP_BY_SCREEN: dict[str, tuple] = {
             ("/",      "commands"),
         )),
         ("global", (
-            ("s", "settings"),
-            ("h", "history"),
+            ("Ctrl+O", "settings"),
+            ("Ctrl+Y", "history"),
         )),
     ),
     "historyscreen": (
@@ -163,16 +165,20 @@ STRIP_BY_SCREEN: dict[str, tuple] = {
 # providers section AND not in picker/edit mode.
 L3_PROVIDERS_STRIP: tuple = (
     ("providers", (
-        ("Tab",   "filter"),
-        ("↑/↓",   "row"),
+        ("↑/↓", "navigate"),
         ("⏎",     "expand"),
-        ("e",     "edit"),
+        ("Tab",   "filter"),
+    )),
+    ("actions", (
+        ("e",       "edit / test"),
+        ("Ctrl+O", "+ add"),
+        ("Ctrl+Y", "remove"),
     )),
     ("global", (
         ("Ctrl+S", "save & close"),
     )),
     ("exit", (
-        ("Esc", "collapse"),
+        ("Esc", "back"),
     )),
 )
 

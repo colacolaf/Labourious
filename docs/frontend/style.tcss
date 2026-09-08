@@ -350,6 +350,7 @@ Screen.-narrow     #sidebar { width: 18; }
     border: round #465262;
     background: #0e1014;
     height: auto;
+    max-height: 100%;
 }
 
 .section-card-head {
@@ -364,6 +365,8 @@ Screen.-narrow     #sidebar { width: 18; }
     background: #0e1014;
     color: #d4d4d4;
     height: auto;
+    max-height: 24;
+    overflow-y: auto;
     padding: 0 1 1 1;
 }
 
@@ -410,7 +413,26 @@ Screen.-narrow     #sidebar { width: 18; }
     background: #0e1014;
     color: #d4d4d4;
     height: auto;
+    max-height: 20;
+    overflow-y: auto;
     padding: 0 1 1 1;
+}
+
+/* ProvidersPanel — the L3 accordion on Settings → Providers.
+   Without an explicit height the Static clips to one row and the
+   catalog renders as a single line. */
+#providers-chips {
+    height: auto;
+}
+
+.providers-scroll {
+    height: 1fr;
+    overflow-y: auto;
+}
+
+.providers-tiers {
+    height: auto;
+    padding: 0 1;
 }
 
 /* ---------- Setting row visual classes (used by inline ANSI text) ---------- */

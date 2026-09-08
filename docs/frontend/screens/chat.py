@@ -84,7 +84,8 @@ Or set up first:
 - `/paid-for <agents>` — toggle per-agent paid routing
 
 Quick actions:
-- `s` open Settings · `h` open History · `?` open Help
+- `Ctrl+O` open Settings · `Ctrl+Y` open History · `?` open Help
+- or type `s` then Enter (`/settings`), `h` then Enter (`/history`)
 """
 QUICK_ACTION_HINT = (
     "(press `Tab` to focus the input — then type a prompt and press `Enter`)"
@@ -114,6 +115,13 @@ class ChatScreen(Screen):
         Binding("ctrl+l", "clear_chat", "Clear chat"),
         Binding("ctrl+r", "rerun_last", "Re-run last"),
         Binding("enter",  "submit",     "Submit"),
+        # Priority settings/history access. `s`/`h` alone can't fire while
+        # the prompt input is focused (they're typed into the chat), and on
+        # first launch the input is auto-focused — which is exactly when a
+        # new user goes looking for Settings. ctrl+o opens Settings, ctrl+y
+        # opens History; both work from any focus. `/settings` still works.
+        Binding("ctrl+o", "open_settings_priority", "Settings", priority=True),
+        Binding("ctrl+y", "open_history_priority",  "History",  priority=True),
     ]
 
     DEFAULT_CSS = ""  # the real theme lives in style.tcss
@@ -319,6 +327,12 @@ class ChatScreen(Screen):
         self._update_footer_hint()
 
     # ------------------------------------------------------------- chat actions
+    def action_open_settings_priority(self) -> None:
+        self.app.action_open_settings()
+
+    def action_open_history_priority(self) -> None:
+        self.app.action_open_history()
+
     async def action_submit(self) -> None:
         text = self.query_one("#prompt", Input).value.strip()
         if not text:

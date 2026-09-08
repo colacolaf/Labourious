@@ -118,6 +118,10 @@ class SettingsScreen(Screen):
         Binding("enter",      "confirm",      "Confirm"),
         Binding("ctrl+d",     "remove",       "Remove"),
         Binding("ctrl+n",     "open_picker",  "+ Add"),
+        # ctrl+o / ctrl+y mirror ctrl+n / ctrl+d because in real terminals the
+        # ctrl+n / ctrl+p Readline-style keys (and some tmux configs) eat them.
+        Binding("ctrl+o",     "open_picker",  "+ Add"),
+        Binding("ctrl+y",     "remove",       "Remove"),
         Binding("e",          "start_edit",   "Edit"),
         Binding("tab",        "next_filter",  "Next chip"),
         Binding("shift+tab",  "prev_filter",  "Prev chip"),
@@ -144,6 +148,7 @@ class SettingsScreen(Screen):
         self._provider_focus_idx: int = 0          # focused row within visible list
         self._omniroute_setup_open: bool = False
         self._omniroute_setup: OmniRouteSetup | None = None
+        self._key_cache: dict[str, bool] | None = None  # built lazily; see _key_present_map
 
     def compose(self) -> ComposeResult:
         # Header strip
@@ -159,10 +164,12 @@ class SettingsScreen(Screen):
                         id=f"rail-{s}",
                     )
             with Vertical(id="settings-main"):
-                yield SectionCard(
-                    title=SECTIONS[self._rail_index],
-                    meta=self._section_meta(SECTIONS[self._rail_index]),
-                )
+                # The body is mounted by on_mount → _swap_card(): the providers
+                # section gets the L3 ProvidersPanel, every other section gets
+                # a SectionCard. (Mounting the card here meant that on open the
+                # providers screen showed the legacy configured-only card and
+                # the full catalog panel only appeared after nav away+back.)
+                pass
         # Footer strip — universal StatusStrip, screen-aware key hints.
         from frontend.widgets.status_strip import StatusStrip   # type: ignore
         yield StatusStrip()
@@ -179,15 +186,34 @@ class SettingsScreen(Screen):
             panel = self.query_one(ProvidersPanel)
         except Exception:
             return  # not mounted yet (e.g., another section active)
+        visible = self._visible_providers()
+        # Clamp focus to the visible list so ↓ past the last row can't
+        # leave the highlight parked on a nonexistent index.
+        focus_idx = min(self._provider_focus_idx, max(0, len(visible) - 1))
         panel.update(
             filter_tier=self._provider_filter,
             expanded=self._provider_expanded,
             configured_names=set(self._cfg.providers.keys()),
-            key_present={entry.name: key_present(entry.name) for entry in ALL_PROVIDERS},
-            focus_idx=self._provider_focus_idx,
+            key_present=self._key_present_map(),
+            focus_idx=focus_idx,
             flash=flash,
         )
         self._update_strip()
+
+    def _key_present_map(self) -> dict[str, bool]:
+        """One keychain lookup per provider, cached per screen instance.
+
+        key_present() used to be called for all ~20 providers on every
+        repaint; on macOS each call round-trips the Security agent, which
+        made the panel visibly sluggish (and popped keychain permission
+        dialogs). keys_storage now caches reads, and this map is built
+        once per Settings open.
+        """
+        if self._key_cache is None:
+            self._key_cache = {
+                entry.name: key_present(entry.name) for entry in ALL_PROVIDERS
+            }
+        return self._key_cache
 
     def _mount_providers_panel(self) -> None:
         """Mount the L3 panel inside #settings-main, replacing any card."""
@@ -216,7 +242,8 @@ class SettingsScreen(Screen):
     def on_mount(self) -> None:
         self._refresh_head()
         self._refresh_rail_selection()
-        self._render_current_section()
+        # Mount the right body for the initial section (providers → L3 panel).
+        self._swap_card(SECTIONS[self._rail_index])
         # _refresh_foot() still updates the legacy per-screen foot Static (if
         # present) — the new StatusStrip below now drives the universal strip.
         self._refresh_foot()
@@ -238,6 +265,7 @@ class SettingsScreen(Screen):
         self._refresh_rail_selection()
         self._swap_card(SECTIONS[self._rail_index])
         self._refresh_head()
+        self._update_strip()
 
     def action_rail_prev(self) -> None:
         if self._picker_open or self._omniroute_setup_open:
@@ -246,6 +274,7 @@ class SettingsScreen(Screen):
         self._refresh_rail_selection()
         self._swap_card(SECTIONS[self._rail_index])
         self._refresh_head()
+        self._update_strip()
 
     # ---------------------------------------------------------- L3 chip navigation
     def action_next_filter(self) -> None:
@@ -364,9 +393,14 @@ class SettingsScreen(Screen):
                 title=section,
                 meta=self._section_meta(section),
             )
+            # Render from the card's own on_mount (children composed by
+            # then) — call_after_refresh from the screen raced the async
+            # compose and produced empty cards.
+            card.on_render = self._render_current_section
             main.mount(card)
         except Exception:
             pass
+        self._update_strip()
 
     def _render_current_section(self) -> None:
         section = SECTIONS[self._rail_index]
@@ -374,8 +408,15 @@ class SettingsScreen(Screen):
             card = self.query_one(SectionCard)
             body = card.body()
             if body is None:
-                return  # not yet mounted; defer to on_mount
+                # The card's RichLog body is composed one refresh after the
+                # card mounts (Textual composes children asynchronously).
+                # Retry on the next refresh instead of giving up — otherwise
+                # rail-navigated sections rendered an empty card.
+                self.call_after_refresh(self._render_current_section)
+                return
         except Exception:
+            # No SectionCard at all (e.g. the providers L3 panel is mounted
+            # instead) — nothing to render into.
             return
 
         # Render via body.write(); body.clear() resets the log
@@ -401,11 +442,18 @@ class SettingsScreen(Screen):
 
     # ---------------------------------------------------------- per-section renders
     def _render_providers(self, card: SectionCard) -> None:
+        """Legacy configured-only view. Kept for _render_current_section_into
+        (post-edit re-render), but never used as the initial providers body —
+        on_mount mounts the full L3 ProvidersPanel instead.\n\n        Rendering the empty-catalog hint here made it look like the
+        catalog was broken on first open (the card showed 'No providers
+        configured' even though the catalog has 20 entries)."""
         body = card.body()
+        if body is None:
+            return
         body.clear()
 
         if not self._cfg.providers:
-            body.write("\x1b[38;2;110;120;135m  No providers configured.\x1b[0m")
+            body.write("\x1b[38;2;110;120;135m  No providers configured — the full catalog is the default view.\x1b[0m")
             body.write("")
             self._render_add_row(card, "+ add provider", "groq · openrouter · openai · google · mistral · cohere")
             return
@@ -494,7 +542,7 @@ class SettingsScreen(Screen):
             body.write(
                 "\x1b[38;2;110;120;135m  No connectors configured — "
                 f"{n_rec} ship on by default. Press \x1b[1;38;2;140;220;220m"
-                "Ctrl+N\x1b[0m\x1b[38;2;110;120;135m below, then "
+                "Ctrl+O\x1b[0m\x1b[38;2;110;120;135m below, then "
                 "\x1b[1;38;2;140;220;220m↑/↓\x1b[0m\x1b[38;2;110;120;135m "
                 "to pick.\x1b[0m"
             )
@@ -581,7 +629,7 @@ class SettingsScreen(Screen):
             badge = "\x1b[38;2;230;200;130m● testing setup\x1b[0m"
             crumb = "Settings / providers / omniroute"
         elif self._picker_open:
-            badge = "\x1b[38;2;230;200;130m● adding " + (self._picker_section or "") + "\x1b[0m"
+            badge = "\x1b[38;2;230;200;130m● adding " + (self._picker_section or "") + "\x1b[0m"  # noqa: E501
             crumb = f"Settings / {section} / add"
         elif self._editing:
             crumb = f"Settings / {section} / editing"
@@ -647,12 +695,12 @@ class SettingsScreen(Screen):
                     "Esc cancel \u00b7 \x1b[1;38;2;140;220;220mtab\x1b[0m\x1b[38;2;110;120;135m save & "
                     "advance \u00b7 Ctrl+S save & close\x1b[0m"
                 )
-        elif section == "providers" or section == "connectors" or section == "per-agent" or section == "hybrid":
+        elif section in ("providers", "connectors", "per-agent", "hybrid"):
             foot = (
-                "\x1b[38;2;110;120;135m  \x1b[1;38;2;140;220;220m\u2191/\u2193\x1b[0m\x1b[38;2;110;120;135m rail \u00b7 "
+                "\x1b[38;2;110;120;135m  \x1b[1;38;2;140;220;220m\u2191/\u2193\x1b[0m\x1b[38;2;110;120;135m navigate \u00b7 "
                 "\u2192/\u2190 switch section \u00b7 "
-                "\x1b[1;38;2;140;220;220me\x1b[0m\x1b[38;2;110;120;135m edit (default/depth/compressed) \u00b7 "
-                "Ctrl+N + add \u00b7 Ctrl+D remove \u00b7 Ctrl+S save \u00b7 Esc back\x1b[0m"
+                "\x1b[1;38;2;140;220;220me\x1b[0m\x1b[38;2;110;120;135m edit \u00b7 "
+                "Ctrl+O + add \u00b7 Ctrl+Y remove \u00b7 Ctrl+S save \u00b7 Esc back\x1b[0m"
             )
         else:
             # default / defaults read-only view, when not editing
@@ -747,11 +795,13 @@ class SettingsScreen(Screen):
         if self._editing:
             return
         # On providers section, Enter toggles expand on the focused row.
-        if SECTIONS[self._rail_index] == "providers":
+        # The focus check stops the Input's own Enter-to-submit from
+        # swallowing the key when the editor's text field has focus.
+        if SECTIONS[self._rail_index] == "providers" and not self._editing:
             self.action_toggle_expand()
             return
         # No picker, not editing: Enter starts inline edit on editable sections.
-        if self._is_editable_section(SECTIONS[self._rail_index]):
+        if self._is_editable_section(SECTIONS[self._rail_index]) and not self._editing:
             self._enter_or_advance_edit()
             return
 
@@ -850,6 +900,7 @@ class SettingsScreen(Screen):
                 self._exit_edit_mode_no_remount()
                 self._edit_row += 1
                 self._editing = True
+                self._edit_section = section
             else:
                 # Single-row sections (default, defaults row 0/1): commit + exit
                 self._exit_edit_mode()
@@ -996,6 +1047,8 @@ class SettingsScreen(Screen):
             # For per-agent with N overrides, advance while next_row < len.
             # For single-row sections (default / defaults row 0 or 1), exit.
             if section == "per-agent":
+                # Guard against a removal shrinking the dict between
+                # entering and advancing edit mode.
                 agents = self._cfg.per_agent_model
                 if next_row < len(agents):
                     self._exit_edit_mode_no_remount()
@@ -1161,9 +1214,13 @@ class SettingsScreen(Screen):
         """Arrows + typing handled directly here so they don't depend on
         binding priority or focus. Bindings handle ctrl-* shortcuts only.
         """
-        # Edit mode: let the InlineEditor's on_key handlers drive everything.
-        # We do NOT touch rail nav or picker; keys flow into the editor.
+        # When the inline text editor's Input is focused, its on_key handler
+        # (running on the focused widget first) intercepts tab/escape; but
+        # arrows still bubble here. While editing, arrows must edit text,
+        # not move rows — swallow them.
         if self._editing or self._omniroute_setup_open:
+            if event.key in ("up", "down", "left", "right"):
+                event.stop()
             return
         # Picker mode: arrows + typing + backspace
         if self._picker_open and self._picker_overlay is not None:
@@ -1173,9 +1230,11 @@ class SettingsScreen(Screen):
                 return
             if event.key == "up":
                 overlay.select_prev()
+                event.stop()
                 return
             if event.key == "down":
                 overlay.select_next()
+                event.stop()
                 return
             if event.character and len(event.character) == 1 and event.character.isprintable():
                 if event.character not in ("\r", "\n"):
@@ -1213,6 +1272,32 @@ class SettingsScreen(Screen):
             return
 
     # ---------------------------------------------------------- apply pick + persist
+    def _close_picker(self) -> None:
+        """Dismiss the add-picker and restore the section body."""
+        self._picker_open = False
+        self._picker_overlay = None
+        try:
+            main = self.query_one("#settings-main")
+            main.remove_children()
+        except Exception:
+            pass
+        section = SECTIONS[self._rail_index]
+        if section == "providers":
+            self._mount_providers_panel()
+        else:
+            try:
+                main = self.query_one("#settings-main")
+                card = SectionCard(
+                    title=section,
+                    meta=self._section_meta(section),
+                )
+                main.mount(card)
+            except Exception:
+                pass
+            self.call_after_refresh(self._render_current_section)
+        self._refresh_head()
+        self._refresh_foot()
+
     def _apply_pick(self, sel: PickerItem) -> None:
         section = self._picker_section
         if section == "providers":
@@ -1249,23 +1334,30 @@ class SettingsScreen(Screen):
         self._picker_open = False
         self._picker_overlay = None
         self._persist()
-        # Re-mount the body with the section's card
+        # Re-mount the body: providers gets the L3 panel, others a card.
         try:
             main = self.query_one("#settings-main")
             main.remove_children()
         except Exception:
             pass
-        main = self.query_one("#settings-main")
-        card = SectionCard(
-            title=section,
-            meta=self._section_meta(section),
-        )
-        main.mount(card)
-        self._render_current_section()
+        if section == "providers":
+            self._mount_providers_panel()
+        else:
+            main = self.query_one("#settings-main")
+            card = SectionCard(
+                title=section,
+                meta=self._section_meta(section),
+            )
+            main.mount(card)
+            self.call_after_refresh(self._render_current_section)
         self._refresh_head()
         self._refresh_foot()
 
     def _persist(self) -> None:
+        # Key writes (OmniRoute form) happen just before persist; drop the
+        # screen-level keychain cache so the providers panel reflects the
+        # new key immediately.
+        self._key_cache = None
         try:
             save_config(self._cfg)
             self._health = health_check(self._cfg)
@@ -1280,6 +1372,11 @@ class SettingsScreen(Screen):
         self.app.pop_screen()
 
     def action_back_chat(self) -> None:
+        # Esc while the add-picker is up backs out of "add" only — it must
+        # not throw away the whole Settings screen.
+        if self._picker_open:
+            self._close_picker()
+            return
         if self._omniroute_setup_open:
             self._close_omniroute_setup()
             return
@@ -1308,8 +1405,10 @@ class SettingsScreen(Screen):
 
     # ---------------------------------------------------------- helpers for body re-rendering
     def _render_providers_body(self, body):
+        """Post-edit re-render body for the providers section (mirrors
+        _render_providers; the L3 panel owns the primary view)."""
         if not self._cfg.providers:
-            body.write("\x1b[38;2;110;120;135m  No providers configured.\x1b[0m")
+            body.write("\x1b[38;2;110;120;135m  No providers configured — the full catalog is the default view.\x1b[0m")
             body.write("")
             return
         for name, p in self._cfg.providers.items():

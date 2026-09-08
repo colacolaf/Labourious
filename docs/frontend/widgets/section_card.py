@@ -29,6 +29,11 @@ class SectionCard(Vertical):
         self.add_class("section-card")
         self._title = title
         self._meta = meta
+        # Optional callback (set by SettingsScreen before mount): invoked from
+        # on_mount, i.e. AFTER this card's children (incl. the RichLog body)
+        # have composed. Rendering from the screen via call_after_refresh races
+        # the async compose; rendering here never does.
+        self.on_render = None
 
     def compose(self):
         # Slug the title so the id has no slashes (Textual validator).
@@ -40,6 +45,12 @@ class SectionCard(Vertical):
     def on_mount(self) -> None:
         """Render an empty placeholder message if body has nothing yet."""
         self._ensure_body_attached()
+        # Body exists now (compose has run) — render the section content.
+        if callable(self.on_render):
+            try:
+                self.on_render()
+            except Exception:
+                pass
 
     def _ensure_body_attached(self) -> RichLog:
         try:
