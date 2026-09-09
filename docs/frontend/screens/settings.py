@@ -66,6 +66,7 @@ from frontend.widgets.providers_panel import (
 from frontend.widgets.omniroute_setup import OmniRouteSetup
 from frontend.widgets.provider_setup import ProviderSetup
 from frontend.keys_storage import get_key, set_key, delete_key, key_present
+from frontend.models_catalog import fetch_models_result
 from frontend.providers import (
     ALL_PROVIDERS, by_name, by_tier, TIER_ORDER, total_count,
     status_for, ProviderEntry,
@@ -98,13 +99,15 @@ _EDITABLE_ROWS: dict[str, tuple[tuple[str, str], ...]] = {
     "streaming": (("toggle", "chunks"), ("text", "typewriter_ms")),
 }
 
-# Preset chip strip shown beneath the text editor input.
-_MODEL_PRESETS = [
-    "ollama/llama3.3:70b",
+# Fallback preset chips shown beneath the text editor input when no live
+# model list is available. The ollama entries are replaced by REAL models
+# discovered from the local server (GET /api/tags) when it responds —
+# see SettingsScreen._model_presets().
+_MODEL_PRESETS_STATIC = [
     "anthropic/claude-sonnet-4-5",
     "groq/llama-3.3-70b-versatile",
     "openrouter/auto",
-]                                      
+]
 
 
 class SettingsScreen(Screen):
@@ -139,6 +142,9 @@ class SettingsScreen(Screen):
         self._picker_overlay: PickerOverlay | None = None
         self._row_lines_cache: list[str] = []      # cached ANSI for current section
         self._row_index: int = 0                   # selected row in current card
+        # Two-scope navigation: "rail" (left column) vs "pane" (body card).
+        # ←/→ switch scopes; ↑/↓ move within the active scope.
+        self._nav_scope: str = "rail"
         # Inline-edit state
         self._editing: bool = False                # editor is mounted?
         self._edit_section: str | None = None      # which section we're editing
@@ -256,6 +262,36 @@ class SettingsScreen(Screen):
             self.query_one(_SS).update_for(self)
         except Exception:
             pass
+        # Prewarm the live model cache in a worker thread so preset chips
+        # and the provider panel show REAL installed models without ever
+        # blocking the UI on a network call.
+        self.run_worker(self._prewarm_models(), exclusive=False,
+                        group="prewarm-models", exit_on_error=False)
+
+    async def _prewarm_models(self) -> None:
+        import asyncio
+        try:
+            await asyncio.to_thread(fetch_models_result, "ollama")
+        except Exception:
+            pass  # discovery failures are fine — curated lists remain
+
+    def _model_presets(self) -> list[str]:
+        """Preset chips for the model text editor.
+
+        Live ollama models first (fetched in a worker on open; the cache
+        makes this call instant), then a couple of cloud defaults. Falls
+        back to the static list when ollama is down."""
+        try:
+            result = fetch_models_result("ollama")
+        except Exception:
+            result = None
+        presets: list[str] = []
+        if result is not None and result.status == "ok":
+            presets.extend(f"ollama/{m}" for m in result.models[:4])
+        else:
+            presets.append("ollama/llama3.2:3b")
+        presets.extend(_MODEL_PRESETS_STATIC)
+        return presets
 
     # ---------------------------------------------------------- rail
     def _rail_label(self, section: str) -> str:
@@ -281,6 +317,71 @@ class SettingsScreen(Screen):
         self._swap_card(SECTIONS[self._rail_index])
         self._refresh_head()
         self._update_strip()
+
+    # ---------------------------------------------------------- two-scope nav
+    # RAIL scope: ↑/↓ walk the left section column.
+    # PANE scope: ↑/↓ walk the rows of the body card (providers entries,
+    # config rows, editable fields). → enters the pane, ← returns to rail.
+    # Mouse clicks set the scope directly (click rail = rail, click pane = pane).
+    def _enter_pane(self) -> None:
+        """→ from the rail: focus the section's body pane."""
+        if self._picker_open or self._editing \
+                or self._omniroute_setup_open or self._provider_setup_open:
+            return
+        self._nav_scope = "pane"
+        self._refresh_rail_selection()
+        self._update_strip()
+
+    def _leave_pane(self) -> None:
+        """← from the pane: back to the section rail."""
+        self._nav_scope = "rail"
+        self._refresh_rail_selection()
+        self._update_strip()
+
+    def _pane_rows(self) -> int:
+        """How many focusable rows the current section's pane has."""
+        section = SECTIONS[self._rail_index]
+        if section == "providers":
+            return len(self._visible_providers())
+        if section == "per-agent":
+            return max(1, len(self._cfg.per_agent_model))
+        if section == "hybrid":
+            return max(1, len(self._cfg.hybrid_paid_for))
+        if section == "connectors":
+            return max(1, len(self._cfg.connectors))
+        if section == "default":
+            return 1
+        if section == "defaults":
+            return 2
+        if section == "streaming":
+            return 2
+        return 1
+
+    def action_pane_next(self) -> None:
+        """↓ inside the pane: advance the pane's row cursor."""
+        if self._picker_open or self._editing \
+                or self._omniroute_setup_open or self._provider_setup_open:
+            return
+        n = self._pane_rows()
+        section = SECTIONS[self._rail_index]
+        if section == "providers":
+            self.action_provider_focus_next()
+            return
+        self._row_index = (self._row_index + 1) % n
+        self._render_current_section()
+
+    def action_pane_prev(self) -> None:
+        """↑ inside the pane: rewind the pane's row cursor."""
+        if self._picker_open or self._editing \
+                or self._omniroute_setup_open or self._provider_setup_open:
+            return
+        n = self._pane_rows()
+        section = SECTIONS[self._rail_index]
+        if section == "providers":
+            self.action_provider_focus_prev()
+            return
+        self._row_index = (self._row_index - 1) % n
+        self._render_current_section()
 
     # ---------------------------------------------------------- L3 chip navigation
     def action_next_filter(self) -> None:
@@ -361,12 +462,76 @@ class SettingsScreen(Screen):
         self._refresh_providers_panel()
 
     def _refresh_rail_selection(self) -> None:
+        pane = self._nav_scope == "pane"
         for i, s in enumerate(SECTIONS):
             try:
                 w = self.query_one(f"#rail-{s}", Static)
-                w.set_classes("rail-item" + (" sel" if i == self._rail_index else ""))
+                # Selected rail item dims when the pane has focus — the
+                # section is still active but navigation lives in the pane.
+                cls = "rail-item"
+                if i == self._rail_index:
+                    cls += " sel" if not pane else " sel-pane"
+                w.set_classes(cls)
             except Exception:
                 pass
+
+    # ---------------------------------------------------------- mouse support
+    # Every settings surface is click-targetable: rail items switch
+    # sections, provider rows select/expand, card rows select, +add opens
+    # the picker. Handlers live here; rows identify themselves by id.
+    def on_click(self, event) -> None:  # noqa: N802 — Textual handler name
+        widget = event.widget
+        wid = getattr(widget, "id", None)
+        # 1) Rail items — click switches section (scope stays on rail).
+        if wid and str(wid).startswith("rail-"):
+            section = str(wid)[5:]
+            if section in SECTIONS:
+                self._nav_scope = "rail"
+                self._rail_index = SECTIONS.index(section)
+                self._refresh_rail_selection()
+                self._swap_card(section)
+                self._refresh_head()
+                self._update_strip()
+                event.stop()
+            return
+        # 2) Provider rows — the panel is one ANSI-painted Static, so map
+        # the click position back to a row index via the panel's paint
+        # records (works whichever descendant was clicked).
+        target = widget
+        while target is not None and target is not self:
+            if isinstance(target, ProvidersPanel):
+                idx = target._row_line_index()
+                if idx >= 0:
+                    self._nav_scope = "pane"
+                    self._provider_focus_idx = idx
+                    self._refresh_providers_panel()
+                    # Second click on the focused row expands/collapses it.
+                    if target._last_click_idx == idx:
+                        self.action_toggle_expand()
+                        target._last_click_idx = None
+                    else:
+                        target._last_click_idx = idx
+                    event.stop()
+                return
+            target = target.parent
+        # 3) '+ add' rows inside cards post SectionCard.AddClicked (bubbles
+        #    to the screen's @on handler) — nothing to do here.
+        # 4) Card clicks generally: enter the pane scope so ↑/↓ move rows.
+        try:
+            main = self.query_one("#settings-main")
+        except Exception:
+            return
+        pane_widget = widget
+        in_pane = False
+        while pane_widget is not None:
+            if pane_widget is main:
+                in_pane = True
+                break
+            pane_widget = pane_widget.parent
+        if in_pane:
+            self._nav_scope = "pane"
+            self._refresh_rail_selection()
+            event.stop()
 
     # ---------------------------------------------------------- sections
     def _section_meta(self, section: str) -> str:
@@ -437,6 +602,7 @@ class SettingsScreen(Screen):
         # Render via body.write(); body.clear() resets the log
         try:
             body.clear()
+            card._add_row_lines = set()  # stale '+add' hit-test lines go too
         except Exception:
             pass
 
@@ -804,6 +970,22 @@ class SettingsScreen(Screen):
         self._refresh_head()
         self._refresh_foot()
 
+    @on(SectionCard.AddClicked)
+    def on_card_add_clicked(self, _event: SectionCard.AddClicked) -> None:
+        """Mouse: user clicked a '+ add' row in the section card."""
+        self.action_open_picker()
+
+    @on(PickerOverlay.Selected)
+    def on_picker_selected(self, event: PickerOverlay.Selected) -> None:
+        """Mouse confirm from the picker: click-selected + click-confirmed
+        (or Enter on the selected row, which posts the same message)."""
+        if not self._picker_open:
+            return
+        sel = next((it for it in self._picker_overlay._visible
+                    if it.key == event.key), None)
+        if sel is not None:
+            self._apply_pick(sel)
+
     # ---------------------------------------------------------- action: pick / confirm
     def action_confirm(self) -> None:
         if self._picker_open and self._picker_overlay is not None:
@@ -1033,7 +1215,7 @@ class SettingsScreen(Screen):
             if section == "streaming" and key == "typewriter_ms":
                 presets = ["0", "10", "30", "80", "150"]
             else:
-                presets = _MODEL_PRESETS
+                presets = self._model_presets()
             editor = InlineTextEditor(
                 editor_id=editor_id,
                 initial=initial,
@@ -1347,34 +1529,43 @@ class SettingsScreen(Screen):
                     overlay.type_char(event.character)
                     return
             return  # picker is up; don't pass arrow to rail
-        # Rail mode: arrows drive rail nav (bindings are focus-flaky in 3.7)
-        # Providers section: ↑/↓ move the focused row, →/← move rail sections.
-        # Use Tab / Shift+Tab to cycle provider filter chips.
-        if SECTIONS[self._rail_index] == "providers":
-            if event.key == "up":
-                self.action_provider_focus_prev()
-                return
-            if event.key == "down":
-                self.action_provider_focus_next()
-                return
-            if event.key == "tab":
-                self.action_next_filter()
-                return
-            if event.key == "shift+tab":
-                self.action_prev_filter()
-                return
+        # Two-scope navigation — ← moves between scopes, ↓ moves within a scope:
+        #   RAIL scope:  ↑/↓ change section, → enters the section pane
+        #   PANE scope:  ↑/↓ move the focused row/entry in the card,
+        #                ← returns to the rail, → acts per-section
+        #                (providers: expand; editors: nothing).
+        # Tab / Shift+Tab still cycle the provider filter chips when the
+        # providers pane is active.
+        scope = self._nav_scope
         if event.key == "right":
-            self.action_rail_next()
+            if scope == "rail":
+                self._enter_pane()
+            elif SECTIONS[self._rail_index] == "providers":
+                self.action_toggle_expand()
             return
         if event.key == "left":
-            self.action_rail_prev()
+            if scope == "pane":
+                self._leave_pane()
             return
         if event.key == "up":
-            # nudge: same as left for now (no per-row nav needed)
-            self.action_rail_prev()
+            if scope == "rail":
+                self.action_rail_prev()
+            else:
+                self.action_pane_prev()
             return
         if event.key == "down":
-            self.action_rail_next()
+            if scope == "rail":
+                self.action_rail_next()
+            else:
+                self.action_pane_next()
+            return
+        if event.key == "tab" and scope == "pane" \
+                and SECTIONS[self._rail_index] == "providers":
+            self.action_next_filter()
+            return
+        if event.key == "shift+tab" and scope == "pane" \
+                and SECTIONS[self._rail_index] == "providers":
+            self.action_prev_filter()
             return
 
     # ---------------------------------------------------------- apply pick + persist

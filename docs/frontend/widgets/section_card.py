@@ -13,6 +13,7 @@ when we mutate a Static's renderable in place. We learned this in v1.
 from __future__ import annotations
 
 from textual.containers import Vertical
+from textual.message import Message
 from textual.widgets import RichLog, Static
 
 from frontend.utils.ansi import visible_len
@@ -20,6 +21,10 @@ from frontend.utils.ansi import visible_len
 
 class SectionCard(Vertical):
     """A bordered section group. Header strip + body row container."""
+
+    class AddClicked(Message):
+        """Posted when the user clicks a '+ add' row. SettingsScreen
+        opens the picker for the active section."""
 
     def __init__(
         self,
@@ -36,6 +41,11 @@ class SectionCard(Vertical):
         # have composed. Rendering from the screen via call_after_refresh races
         # the async compose; rendering here never does.
         self.on_render = None
+        # Mouse support: line numbers (within the body RichLog) that hold a
+        # '+ add' affordance row, plus whether an editor replaced the body.
+        # Populated by write_add_row(); consumed by on_click.
+        self._add_row_lines: set[int] = set()
+        self._editor_mounted: bool = False
 
     def compose(self):
         # Slug the title so the id has no slashes (Textual validator).
@@ -140,7 +150,29 @@ class SectionCard(Vertical):
         )
         b = self.body()
         if b is not None:
+            # Record the body line this +add row occupies so on_click can
+            # hit-test it. RichLog line 0 is the first write after clear().
+            self._add_row_lines.add(len(b.lines))
             b.write(line)
+
+    def on_click(self, event) -> None:  # noqa: N802 — Textual handler name
+        """Mouse support: a click on a RichLog-painted '+ add' row opens
+        the picker; clicks on data rows just stop (selection highlighting
+        is handled by SettingsScreen via the shared on_click)."""
+        try:
+            y_in_body = event.y - self.region.y
+            # The body starts after the 1-line header.
+            if y_in_body <= 0 or self._editor_mounted:
+                return
+            body = self.body()
+            if body is None:
+                return
+            line_no = y_in_body - 1  # minus header
+            if line_no in self._add_row_lines:
+                event.stop()
+                self.post_message(self.AddClicked())
+        except Exception:
+            pass
 
     def mount_editor(self, editor_widget) -> None:
         """Replace the RichLog body with an inline editor widget.
@@ -152,6 +184,7 @@ class SectionCard(Vertical):
             body.remove()
         except Exception:
             pass
+        self._editor_mounted = True
         self.add_class("editing")
         # Track the editor; do not give it our title slug — the editor
         # assigns its own id.
@@ -175,5 +208,7 @@ class SectionCard(Vertical):
             id=f"body-{slug}",
         )
         self.mount(body)
+        self._editor_mounted = False
+        self._add_row_lines = set()
         self.remove_class("editing")
         return body

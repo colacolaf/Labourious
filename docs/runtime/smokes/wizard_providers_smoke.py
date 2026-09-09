@@ -109,7 +109,16 @@ async def drive_one(pid: str, key_needed: bool, expected_model: str) -> None:
         step(f"[{pid}] wizard dismissed", isinstance(app.screen, ChatScreen))
         cfg = json.loads((_TMP / "config.json").read_text())
         step(f"[{pid}] provider in config", pid in cfg.get("providers", {}))
-        step(f"[{pid}] default_model persisted", cfg.get("default_model") == expected_model)
+        if pid == "ollama":
+            # Live discovery (GET /api/tags) now overrides the curated list
+            # when the local server answers — the persisted default may be
+            # ANY model the server actually serves. Assert the prefix and
+            # non-empty model id instead of one hardcoded tag.
+            dm = cfg.get("default_model") or ""
+            step(f"[{pid}] default_model persisted",
+                 dm.startswith("ollama/") and len(dm) > len("ollama/"))
+        else:
+            step(f"[{pid}] default_model persisted", cfg.get("default_model") == expected_model)
 
     if key_needed:
         # 1) key retrievable under the wizard's id
@@ -130,11 +139,15 @@ async def drive_one(pid: str, key_needed: bool, expected_model: str) -> None:
                 from runtime.adapters.openai_compat import _OPENAI_COMPAT_SPECS
                 spec = _OPENAI_COMPAT_SPECS[pid]
                 resolved = _resolve_key(spec.name, spec.env_var)
-            else:  # anthropic — SDK adapter holds the key inside the client;
+            elif hasattr(adapter, "_client_or_create"):
+                # anthropic — SDK adapter holds the key inside the client;
                 # force client creation (no network) to prove resolution.
                 client = adapter._client_or_create()
                 resolved = getattr(getattr(client, "_client", client), "api_key", None) or \
                     getattr(client, "api_key", None)
+            else:  # anthropic raw-httpx fallback (SDK extra not installed) —
+                # the adapter resolves the key onto .api_key at construction.
+                resolved = getattr(adapter, "api_key", None)
             step(f"[{pid}] adapter resolves key", resolved == test_key)
         except Exception as e:  # noqa: BLE001
             step(f"[{pid}] adapter resolves key (no exception)", False)

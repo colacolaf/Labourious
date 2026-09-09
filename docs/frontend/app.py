@@ -27,6 +27,13 @@ sys.path.insert(0, str(_THIS.parent.parent))                # docs/  — lets do
 from frontend.screens import ChatScreen  # type: ignore
 from frontend.screens.history import ReRunRequested  # type: ignore
 from frontend.keys import APP_BINDINGS  # type: ignore
+from frontend.theme import LABOURIOUS_THEME
+
+# The class attribute below + the register_theme call in __init__ activate
+# the restrained app theme before the first compose. Without it, Textual's
+# builtin dark theme (vivid blue #0178D4 primary) leaks through focused
+# Inputs, cursors, scrollbars and Buttons — the source of the stray blue
+# spots across the TUI.
 
 
 class LabouriousApp(App):
@@ -39,15 +46,29 @@ class LabouriousApp(App):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        # Default model — overridden by Settings; runtime-style config lives at
-        # ~/.labourious/config.json (PROTOCOL.md Appendix A).
-        # For v1 we just pass a CLI override or fall back to ollama.
+        # Textual 8: register_theme is an instance method, and the active
+        # theme is the `theme` reactive attribute. Register ours, then
+        # activate it BEFORE the first compose so no default-blue styling
+        # (builtin $primary #0178D4) ever paints.
+        self.register_theme(LABOURIOUS_THEME)
+        self.theme = "labourious"
+        # Default model resolution order:
+        #   1. LABOURIOUS_MODEL env override
+        #   2. default_model saved in ~/.labourious/config.json (canonical)
+        #   3. ollama/llama3.2:3b fallback (small, fast, common local pull)
         import os
+
+        from frontend.config_io import load_config
         env_model = os.environ.get("LABOURIOUS_MODEL")
         if env_model:
             self._initial_model = env_model
         else:
-            self._initial_model = "ollama/llama3.3:70b"
+            try:
+                self._initial_model = load_config().default_model
+            except Exception:
+                self._initial_model = ""
+            if not self._initial_model:
+                self._initial_model = "ollama/llama3.2:3b"
 
     # ---------------------------------------------------------- compose
     def get_default_screen(self) -> Screen:

@@ -130,7 +130,7 @@ class ChatScreen(Screen):
         super().__init__(**kwargs)
         # Session state
         self.flow_id: str = "f1"
-        self.model: str = "ollama/llama3.3:70b"
+        self.model: str = "ollama/llama3.2:3b"  # small fallback; App overrides from config
         self._initial_model: str | None = None  # set by App.get_default_screen before compose()
         self.paid_for: list[str] = []  # empty = fully free; ["final-report"] = hybrid
         self.depth: str = "STANDARD"

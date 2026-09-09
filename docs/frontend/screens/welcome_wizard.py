@@ -21,6 +21,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
 from frontend.config_io import load_config, save_config, Config, ProviderConfig
+from frontend.providers import by_name as _provider_entry
 
 
 # --- provider catalog (subset of providers.py for the wizard) ---
@@ -34,15 +35,22 @@ WIZARD_PROVIDERS = [
     {"id": "omniroute",  "label": "OmniRoute (gateway)",   "desc": "Local gateway. Auto-routes across 43 providers. No per-provider keys.", "key_needed": False, "base_url": "http://localhost:20128/v1",     "default_model": "auto"},
 ]
 
-# Curated model lists per provider
+# Curated model lists per provider — FALLBACK ONLY. The model step asks
+# the endpoint what it actually serves (ollama /api/tags, openai /models,
+# …) via frontend.models_catalog; the curated list is used when the
+# endpoint is unreachable or returns nothing.
 WIZARD_MODELS: dict[str, list[str]] = {
-    "ollama":     ["llama3.3:70b", "qwen2.5:72b", "deepseek-r1:70b", "mistral-large", "gemma3:27b", "phi4:14b"],
+    "ollama":     ["llama3.2:3b", "llama3.2:8b", "llama3.3:70b", "qwen2.5:72b", "deepseek-r1:70b"],
     "anthropic":  ["claude-sonnet-4-5", "claude-haiku-4", "claude-opus-4"],
     "openai":     ["gpt-4o", "gpt-4o-mini", "o3-mini"],
     "openrouter": ["google/gemini-2.0-flash-001", "meta-llama/llama-3.1-8b-instruct", "anthropic/claude-3-5-haiku", "mistralai/mistral-small"],
     "google_ai_studio": ["gemini-2.0-flash", "gemini-2.5-pro-preview"],
     "omniroute":  ["auto", "kimi/kimi-latest", "meta-llama/llama-3.3-70b-instruct"],
 }
+
+# Live discovery results per provider id, filled by the async fetch on
+# step 1. Read by _models_for(); falls back to WIZARD_MODELS when absent.
+_LIVE_MODELS: dict[str, list[str]] = {}
 
 
 class WelcomeWizardScreen(ModalScreen):
@@ -115,6 +123,76 @@ class WelcomeWizardScreen(ModalScreen):
 
     def on_mount(self) -> None:
         self.redraw()
+        # Prewarm live model discovery for the default provider so step 1
+        # shows REAL installed models (ollama /api/tags) instead of the
+        # curated fallback. Runs in a worker thread — never blocks the UI;
+        # a dead endpoint just leaves the fallback list in place.
+        if self._can_spawn_worker():
+            self.run_worker(self._prewarm_models(), exclusive=False,
+                            group="wizard-models", exit_on_error=False)
+
+    def _can_spawn_worker(self) -> bool:
+        """True only when this screen is attached to a running App.
+        Bare __new__-constructed instances (smoke tests introspect them)
+        have no message pump — workers must not be spawned there."""
+        try:
+            return self.app is not None and self._parent is not None
+        except Exception:
+            return False
+
+    async def _prewarm_models(self) -> None:
+        import asyncio
+        from frontend.models_catalog import fetch_models_result
+        try:
+            result = await asyncio.to_thread(fetch_models_result, "ollama")
+        except Exception:
+            return
+        if result.status == "ok" and result.models:
+            _LIVE_MODELS["ollama"] = list(result.models)
+            # If the user is already on step 1, refresh the list live.
+            if self._step == 1 and self._provider \
+                    and self._provider["id"] == "ollama":
+                self._model_cursor = min(self._model_cursor,
+                                         len(result.models) - 1)
+                self._render_step()
+
+    def _kick_live_models(self, pid: str) -> None:
+        """Fire a background discovery fetch for the provider the user just
+        picked, so step 1's list is LIVE (ollama /api/tags, openai /models…)
+        rather than the curated fallback. Never blocks — the step renders
+        with fallback immediately and re-renders when the fetch lands.
+        Skips silently when not attached to a running app (bare smoke
+        instances have no message pump to spawn workers on)."""
+        if pid in _LIVE_MODELS:  # already have (or fetching) live data
+            return
+        if not self._can_spawn_worker():
+            return
+        import asyncio
+        from frontend.models_catalog import fetch_models_result
+        entry = _provider_entry(pid)
+        if entry is None:
+            return
+
+        async def _fetch() -> None:
+            try:
+                result = await asyncio.to_thread(
+                    fetch_models_result, pid,
+                    base_url=entry.base_url, force=False)
+            except Exception:
+                return
+            if result.status == "ok" and result.models:
+                _LIVE_MODELS[pid] = list(result.models)
+                if (self._step == 1 and self._provider
+                        and self._provider["id"] == pid):
+                    self._model_cursor = min(self._model_cursor,
+                                             len(result.models) - 1)
+                    self._render_step()
+
+        try:
+            self.run_worker(_fetch(), exclusive=False,
+                            group=f"wizard-models-{pid}", exit_on_error=False)
+        except Exception:
+            pass  # never let discovery break the wizard
 
     def on_focus(self, _event) -> None:  # noqa: N802 — Textual handler name
         # Guard against the hidden key Input grabbing focus on mount: a
@@ -208,21 +286,32 @@ class WelcomeWizardScreen(ModalScreen):
             lines.append(f"\n[yellow]⚠ {self._pending_error}[/]")
         return "\n".join(lines)
 
+    def _models_for(self, pid: str) -> list[str]:
+        """Models offered on step 1: live discovery results when the
+        endpoint answered, else the curated list."""
+        live = _LIVE_MODELS.get(pid)
+        if live:
+            return live
+        return WIZARD_MODELS.get(pid, [])
+
     def _model_step(self) -> str:
         if not self._provider:
             return ""
         pid = self._provider["id"]
-        models = WIZARD_MODELS.get(pid, [self._provider["default_model"]])
+        models = self._models_for(pid) or [self._provider["default_model"]]
         lines = [
             f"[bold]Provider:[/] [cyan]{self._provider['label']}[/]\n",
             "[bold]Choose a model:[/]\n",
         ]
-        for m in models:
-            marker = "[green]✓[/]" if m == self._provider["default_model"] else " "
-            lines.append(f"  {marker} [cyan]{m}[/]")
+        for i, m in enumerate(models):
+            marker = "[bold cyan]▶[/]" if i == self._model_cursor else " "
+            lines.append(f"  {marker} {m}")
         current = self._model_input or self._provider["default_model"]
         lines.append("\n[bold cyan]Type> " + current + "[/]")
-        lines.append("[dim]Type a model name and press Enter (blank = default).[/]")
+        lines.append("[dim]↑/↓ pick · type a model name · Enter (blank = default)[/]")
+        if not _LIVE_MODELS.get(pid):
+            lines.append("[dim]· showing suggested models — live list unavailable" +
+                         (" (is the server running?)" if pid == "ollama" else "") + "[/]")
         if self._pending_error:
             lines.append(f"\n[yellow]⚠ {self._pending_error}[/]")
         return "\n".join(lines)
@@ -275,15 +364,23 @@ class WelcomeWizardScreen(ModalScreen):
     def _resolve_model(self) -> str | None:
         """Return the chosen model for the provider.
 
-        Blank input → the provider's default model. Otherwise the typed
-        name must be in the provider's curated model list (case-insensitive).
+        Blank input → the FIRST LIVE model when discovery answered (the
+        user's server actually serves it), else the curated default.
+        Typed names must be in the provider's model list — live results
+        first, curated list second (case-insensitive).
         """
         if not self._provider:
             return None
+        pid = self._provider["id"]
         query = self._model_input.strip().lower()
         if not query:
+            # Blank Enter: the first LIVE model when discovery answered
+            # (this server really serves it), else the curated default.
+            live = _LIVE_MODELS.get(pid)
+            if live:
+                return live[self._model_cursor % len(live)]
             return self._provider["default_model"]
-        for m in WIZARD_MODELS.get(self._provider["id"], []):
+        for m in self._models_for(pid):
             if m.lower() == query:
                 return m
         return None
@@ -307,11 +404,16 @@ class WelcomeWizardScreen(ModalScreen):
             if provider is not self._provider:
                 self._provider = provider
                 self._model_input = ""
+                self._model_cursor = 0
+                self._kick_live_models(provider["id"])
             self._pending_error = ""
             self._step = 1
             self.redraw()
             return
         if self._step == 1:
+            # Blank input resolves via _resolve_model (first live model,
+            # else the curated default). A moved cursor already set
+            # _model_input in on_key, so nothing to stuff here.
             model = self._resolve_model()
             if model is None:
                 self._pending_error = "unknown model — pick one from the list (or leave blank for default)"
@@ -425,7 +527,21 @@ class WelcomeWizardScreen(ModalScreen):
                 event.stop()
                 self._render_step()
         elif self._step == 1:
-            if event.key == "backspace":
+            models = self._models_for(
+                self._provider["id"] if self._provider else "")
+            if event.key == "up":
+                if models:
+                    self._model_cursor = (self._model_cursor - 1) % len(models)
+                    self._model_input = models[self._model_cursor]
+                self._pending_error = ""
+                handled = True
+            elif event.key == "down":
+                if models:
+                    self._model_cursor = (self._model_cursor + 1) % len(models)
+                    self._model_input = models[self._model_cursor]
+                self._pending_error = ""
+                handled = True
+            elif event.key == "backspace":
                 self._model_input = self._model_input[:-1]
                 self._pending_error = ""
                 handled = True

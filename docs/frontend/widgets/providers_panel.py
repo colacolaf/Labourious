@@ -58,6 +58,7 @@ from frontend.providers import (
     recommended,
     status_for,
 )
+from frontend.theme import ANSI as _THEME_ANSI
 from frontend.utils.ansi import (
     DEFAULT_WIDTH,
     fit_to,
@@ -67,17 +68,24 @@ from frontend.utils.ansi import (
 )
 
 
-# ANSI tokens — mirror style.tcss palette.
-_FG = "\x1b[38;2;212;212;212m"
-_DIM = "\x1b[38;2;110;120;135m"
-_FAINT = "\x1b[38;2;80;88;100m"
-_BRAND = "\x1b[1;38;2;140;220;220m"
-_OK = "\x1b[38;2;140;210;150m"
-_WARN = "\x1b[38;2;230;200;130m"
-_ERR = "\x1b[38;2;230;140;140m"
-_BG_SURFACE = "\x1b[48;2;22;26;33m"
-_BG_HOVER = "\x1b[48;2;30;36;46m"
+# ANSI tokens — single source of truth: frontend/theme.py (mirrors style.tcss).
+# Focused/selected rows highlight with a neutral background bar + bold white
+# name; brand cyan is identity-only.
+def _sgr(key: str) -> str:
+    return f"\x1b[{_THEME_ANSI[key]}m"
+
+
+_FG = _sgr("fg")
+_DIM = _sgr("fg3")
+_FAINT = _sgr("faint")
+_BRAND = "\x1b[1;38;2;232;232;232m"   # bold near-white — focus, not cyan
+_OK = _sgr("ok")
+_WARN = _sgr("warn")
+_ERR = _sgr("err")
+_BG_SURFACE = _sgr("bg_card")
+_BG_HOVER = _sgr("bg_sel")
 _RESET = "\x1b[0m"
+_HOVER_BG = _sgr("bg_hover")
 _UL = "\u2500"  # ─
 _CARET_OPEN = "\u25be"  # ▾
 _CARET_CLOSED = "\u25b8"  # ▸
@@ -125,6 +133,10 @@ class ProvidersPanel(Widget):
         self._key_present: dict[str, bool] = {}
         self._focus_idx: int = 0
         self._last_width: int = 0
+        # Mouse-click bookkeeping: the painted line records (from the last
+        # _repaint) + the last clicked row, so "click again to expand" works.
+        self._last_render_rows: list[dict] = []
+        self._last_click_idx: int | None = None
 
     # ---------------------------------------------------- public API
     def update(
@@ -181,8 +193,30 @@ class ProvidersPanel(Widget):
             self._last_width = self.size.width or self._last_width
             self.query_one("#providers-chips", Static).update(
                 self._render_chips())
-            self.query_one("#providers-tiers", Static).update(
-                self._render_tiers())
+            tiers_text = self._render_tiers()
+            self.query_one("#providers-tiers", Static).update(tiers_text)
+            # Record the painted line ranges of each provider row so mouse
+            # clicks can be mapped back to a row index (see _row_line_index).
+            records: list[dict] = []
+            idx_so_far = 0
+            line_no = 1  # +1: the chips line occupies y=0
+            for tier in TIER_ORDER:
+                entries = by_tier(tier)  # type: ignore[arg-type]
+                if self._filter_tier is not None and tier != self._filter_tier:
+                    continue
+                line_no += 1  # tier header line
+                for entry in entries:
+                    rows = 1
+                    if self._expanded == entry.name:
+                        rows += self._expanded_line_count(entry)
+                    records.append({
+                        "kind": "row", "idx": idx_so_far,
+                        "y0": line_no, "y1": line_no + rows,
+                    })
+                    line_no += rows
+                    idx_so_far += 1
+                line_no += 1  # blank separator line after each tier
+            self._last_render_rows = records
         except Exception:
             pass  # not yet composed
 
@@ -218,6 +252,13 @@ class ProvidersPanel(Widget):
             return len(ALL_PROVIDERS)
         return len(by_tier(self._filter_tier))  # type: ignore[arg-type]
 
+    def _expanded_line_count(self, entry) -> int:
+        """Lines the expanded pane adds under a provider row (used for
+        click-hit-testing). Keep in sync with _render_expanded()."""
+        has_auth = entry.env_var is not None
+        # top + base URL + model + auth? + status + separator + actions + bottom
+        return 7 + (1 if has_auth else 1)
+
     # ---------------------------------------------------- tier list
     def _render_tiers(self) -> str:
         out: list[str] = []
@@ -247,6 +288,20 @@ class ProvidersPanel(Widget):
         return (f"  {_FAINT}{label}{_RESET}"
                 f"  {_FAINT}{_UL * rule}{_RESET}")
 
+    # ---- mouse support: click a provider row to focus + expand it ----------
+    # The rows live in one Static as ANSI text, so clicks are mapped back to
+    # the row under the mouse via the same render order used to paint.
+    def _row_line_index(self) -> int:
+        """Absolute line index of the provider row under self.mouse_y, or -1."""
+        rows = self._last_render_rows  # painted line records, see _repaint
+        y = self.mouse_y
+        if y is None:
+            return -1
+        for rec in rows:
+            if rec["kind"] == "row" and rec["y0"] <= y < rec["y1"]:
+                return rec["idx"]
+        return -1
+
     # ---------------------------------------------------- collapsed row
     def _row_status_text(self, entry: ProviderEntry, status) -> str:
         if entry.tier == "local":
@@ -264,8 +319,9 @@ class ProvidersPanel(Widget):
         is_open = self._expanded == entry.name
         caret = _CARET_OPEN if is_open else _CARET_CLOSED
         dot = _dot(status.state)
-        # Focus bar marker (left rail)
-        focus_bar = f"{_BRAND}\u2588{_RESET}" if is_focused else " "
+        # Focus bar marker (left rail) — neutral; bright enough to find,
+        # quiet enough to scan past.
+        focus_bar = f"{_FG}\u2588{_RESET}" if is_focused else " "
         # open rows: brand-colored name; collapsed muted ones when no key
         if is_open:
             name_styled = f"{_BRAND}{entry.display}{_RESET}"
@@ -299,15 +355,34 @@ class ProvidersPanel(Widget):
         rows.append(self._exp_field(bar, "base URL",
                                     entry.base_url or "(set your custom URL)",
                                     width))
-        # model
-        if entry.models:
-            models_str = "  ".join(entry.models[:5])
-            if len(entry.models) > 5:
-                models_str += f"  +{len(entry.models) - 5}"
+        # model — LIVE list when discovery has answered for this provider
+        # (cached, filled by SettingsScreen's prewarm worker), otherwise
+        # the curated fallback with an honest 'showing defaults' hint.
+        live = None
+        try:
+            from frontend.models_catalog import cached_models
+            live = cached_models(entry.name, entry.base_url)
+        except Exception:
+            live = None
+        if live is not None and live.status == "ok" and live.models:
+            models_str = "  ".join(live.models[:5])
+            if len(live.models) > 5:
+                models_str += f"  +{len(live.models) - 5}"
+            avail_hint = f"{_FAINT}installed: {models_str}{_RESET}"
+        else:
+            if entry.models:
+                models_str = "  ".join(entry.models[:5])
+                if len(entry.models) > 5:
+                    models_str += f"  +{len(entry.models) - 5}"
+                avail_hint = f"{_FAINT}suggested: {models_str}{_RESET}"
+            else:
+                models_str = ""
+                avail_hint = ""
+        if entry.models or (live is not None and live.models):
             rows.append(self._exp_field(bar, "model",
                                         f"\u25be {entry.default_model}",
                                         width,
-                                        hint=f"{_FAINT}available: {models_str}{_RESET}"))
+                                        hint=avail_hint))
         # auth
         if entry.env_var is None:
             auth_field = f"{_OK}none{_RESET}  {_FAINT}[no-key]{_RESET}"

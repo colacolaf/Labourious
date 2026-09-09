@@ -88,11 +88,11 @@ class ProviderSetup(Widget):
             return "endpoint"
         return "endpoint · OpenAI-compatible override (blank = official API)"
 
-    def _models_line(self) -> str:
-        models = self._entry.models
+    def _models_line(self, models: tuple[str, ...] | list[str] | None = None) -> str:
+        models = self._entry.models if models is None else models
         if not models:
             return "type any model id this endpoint serves"
-        shown = "  ".join(models[:5])
+        shown = "  ".join(list(models)[:5])
         if len(models) > 5:
             shown += f"  +{len(models) - 5}"
         return shown
@@ -120,9 +120,12 @@ class ProviderSetup(Widget):
                 placeholder=e.base_url or "https://…/v1",
                 id="prv-endpoint",
             )
-            # Model — dropdown-style input seeded with the default.
+            # Model — input seeded with the default. The 'available' line
+            # refreshes with LIVE models fetched from the endpoint
+            # (ollama /api/tags, openai /models, …) via _refresh_models();
+            # until that lands it shows the curated fallback list.
             yield Static(f"model · available: {self._models_line()}",
-                         classes="omni-label")
+                         classes="omni-label", id="prv-models-label")
             yield Input(
                 value=e.default_model,
                 placeholder=e.default_model,
@@ -150,15 +153,75 @@ class ProviderSetup(Widget):
 
     def on_mount(self) -> None:
         self.query_one("#prv-endpoint", Input).focus()
+        self._refresh_models()
+
+    # ------------------------------------------------------------- live model discovery
+    def _refresh_models(self, *, force: bool = False) -> None:
+        """Fetch the endpoint's live model list in a worker thread and
+        update the 'available' line. Falls back to the curated list with
+        an honest hint when the endpoint is unreachable."""
+        endpoint = ""
+        try:
+            endpoint = self.query_one("#prv-endpoint", Input).value.strip()
+        except Exception:
+            pass
+        key = ""
+        if self._entry.env_var:
+            try:
+                key = self.query_one("#prv-key", Input).value.strip()
+            except Exception:
+                pass
+        # Only spawn when attached to a running app (bare instances in
+        # smokes have no message pump).
+        if self.is_attached:
+            self.app.run_worker(
+                self._fetch_models_worker(endpoint, key, force), exclusive=True,
+                group="prv-models", exit_on_error=False,
+            )
+
+    async def _fetch_models_worker(self, endpoint: str, key: str,
+                                   force: bool) -> None:
+        from frontend.models_catalog import fetch_models_result
+        try:
+            result = await asyncio.to_thread(
+                fetch_models_result,
+                self._entry.name,
+                base_url=endpoint or None,
+                api_key=key or None,
+                force=force,
+            )
+        except Exception:
+            return  # never let discovery break the form
+        try:
+            label = self.query_one("#prv-models-label", Static)
+        except Exception:
+            return
+        if result.status == "ok":
+            label.update(
+                f"model · available: {self._models_line(result.models)}"
+                f"  \u00b7 {result.detail}")
+        else:
+            hint = {
+                "unreachable": "endpoint down — showing curated defaults",
+                "auth": "key needed to list models — showing curated defaults",
+                "error": result.detail[:80],
+            }.get(result.status, result.detail[:80])
+            label.update(
+                f"model · available: {self._models_line(result.fallback)}"
+                f"  \u00b7 {hint}")
 
     # ------------------------------------------------------------- events
-    def on_input_changed(self, _event: Input.Changed) -> None:
+    def on_input_changed(self, event: Input.Changed) -> None:
         # Any edit invalidates the prior probe; Save must correspond to what
         # the user is actually about to persist.
         self._tested_fingerprint = None
         self._set_save_enabled(False)
         if not self._testing:
             self._set_status("\u25cb not tested")
+        # Endpoint/key edits re-point discovery; worker group is exclusive
+        # so rapid typing collapses into one in-flight fetch.
+        if event.input.id in ("prv-endpoint", "prv-key"):
+            self._refresh_models(force=True)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "prv-test":

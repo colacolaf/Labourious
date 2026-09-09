@@ -11,16 +11,23 @@ contents.
 The picker has:
     Header  — breadcrumb ("Settings / providers / add")
     Search  — slash-prefixed typed filter ("/ro" → groq, openrouter)
-    List    — scrollable rows of (name, description) with a cyan
-              selection bar + tint on the focused row.
+    List    — rows of (name, description); the selected row gets a
+              neutral bar. Rows are real widgets: hover highlight and
+              mouse click-to-select work natively (click the selected
+              row again to confirm).
+
+Mouse contract:
+    click row        → select it
+    click again      → confirm (posts PickerOverlay.Selected)
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from textual.widgets import RichLog, Static
 from textual.containers import Vertical
+from textual.message import Message
+from textual.widgets import Static
 
 
 @dataclass(frozen=True)
@@ -31,23 +38,28 @@ class PickerItem:
 
 
 class PickerOverlay(Vertical):
-    """Renders a single column with search + filtered list of PickerItem.
+    """Search + filtered list of PickerItem.
 
     Search is live: any key the user types against the body filters
     items by `label` substring (case-insensitive). Empty filter shows
-    all items. Up/Down navigates. Enter selects and emits a posted
-    message (PickerOverlay.Selected) the SettingsScreen listens to.
+    all items. Up/Down navigates. Enter (or clicking the selected row)
+    selects and posts `PickerOverlay.Selected`, which SettingsScreen
+    listens for.
     """
 
-    class Selected(Static.__mro__[0].__bases__[0]):  # type: ignore[misc]
-        """Posted when the user picks an item. Carries PickerItem.key.
+    class Selected(Message):
+        """Posted when the user picks an item. Carries PickerItem.key."""
 
-        Implemented as a plain class so we don't import textual.message
-        (some versions differ in import path); SettingsScreen checks
-        `isinstance(msg, PickerOverlay.Selected)`.
-        """
         def __init__(self, key: str) -> None:
+            super().__init__()
             self.key = key
+
+    # ANSI tokens — muted palette from frontend/theme.py.
+    _FG = "\x1b[38;2;212;212;212m"
+    _DIM = "\x1b[38;2;110;120;135m"
+    _FAINT = "\x1b[38;2;80;88;100m"
+    _BRAND = "\x1b[1;38;2;140;220;220m"
+    _RESET = "\x1b[0m"
 
     def __init__(
         self,
@@ -69,8 +81,8 @@ class PickerOverlay(Vertical):
         slug = self._breadcrumb.replace("/", "-")
         yield Static(self._render_breadcrumb(), markup=False, classes="picker-breadcrumb")
         yield Static(self._render_search(),     markup=False, classes="picker-search")
-        yield RichLog(wrap=False, highlight=False, markup=False,
-                      classes="picker-list", id=f"picker-{slug}")
+        with Vertical(classes="picker-list", id=f"picker-{slug}"):
+            yield Vertical(id="picker-rows")
 
     def on_mount(self) -> None:
         # First paint of the list
@@ -79,30 +91,19 @@ class PickerOverlay(Vertical):
     # --------------------------------------------------------------- rendering
     def _render_breadcrumb(self) -> str:
         return (
-            "\x1b[38;2;110;120;135m"
-            f"Settings / {self._breadcrumb}\x1b[0m"
+            f"{self._DIM}"
+            f"Settings / {self._breadcrumb}{self._RESET}"
         )
 
     def _render_search(self) -> str:
-        cursor = "\x1b[1;38;2;140;220;220m▌\x1b[0m" if self._filter or True else ""
+        cursor = f"{self._BRAND}▌{self._RESET}"
         return (
-            "\x1b[1;38;2;140;220;220m/\x1b[0m"
-            f"\x1b[38;2;212;212;212m{self._filter}\x1b[0m"
+            f"{self._BRAND}/{self._RESET}"
+            f"{self._FG}{self._filter}{self._RESET}"
             f"{cursor}"
             "  "
-            "\x1b[38;2;110;120;135m"
-            f"type to filter  ({(len(self._visible))}/{len(self._items)})\x1b[0m"
-        )
-
-    def _render_list_row(self, item: PickerItem, selected: bool) -> str:
-        marker = "│" if selected else " "
-        bar_color = "1;38;2;140;220;220" if selected else "38;2;110;120;135"
-        name_color = "1;38;2;140;220;220" if selected else "38;2;212;212;212"
-        desc_color = "38;2;160;165;175" if selected else "38;2;110;120;135"
-        return (
-            f"\x1b[{bar_color}m  {marker}  \x1b[0m"
-            f"\x1b[{name_color}m{item.label}\x1b[0m"
-            f"\x1b[{desc_color}m   {item.description}\x1b[0m"
+            f"{self._DIM}"
+            f"type to filter  ({(len(self._visible))}/{len(self._items)}){self._RESET}"
         )
 
     def _refilter(self) -> None:
@@ -118,27 +119,47 @@ class PickerOverlay(Vertical):
         self._repaint()
 
     def _repaint(self) -> None:
+        """Rebuild the row widgets. Rows are real Statics so hover and
+        mouse clicks work natively instead of being ANSI-painted text.
+
+        Rows carry their index via the `_picker_idx` attribute (NOT via
+        widget ids): Textual mounts are async, so re-mounting ided rows
+        during a rapid ↑/↓ cycle can race the removal of the previous
+        batch and raise DuplicateIds."""
         try:
-            log = self.query_one(RichLog)
+            rows = self.query_one("#picker-rows", Vertical)
         except Exception:
             return
-        log.clear()
+        rows.remove_children()
         if not self._visible:
-            log.write("\x1b[38;2;110;120;135m  (no matches)\x1b[0m")
+            rows.mount(Static(
+                f"{self._DIM}  (no matches){self._RESET}",
+                markup=False, classes="picker-empty-row"))
             return
         for i, it in enumerate(self._visible):
-            log.write(self._render_list_row(it, selected=(i == self._index)))
+            selected = (i == self._index)
+            marker = "▌" if selected else " "
+            text = (
+                f" {marker}  {it.label}   "
+                f"{self._DIM}{it.description}{self._RESET}"
+            )
+            row = Static(
+                text,
+                markup=False,
+                classes="picker-row" + (" sel" if selected else ""),
+            )
+            row._picker_idx = i
+            rows.mount(row)
+        self._refresh_search_widget()
 
     # --------------------------------------------------------------- input handlers
     def type_char(self, ch: str) -> None:
         if ch and ch.isprintable():
             self._filter += ch
-            self._refresh_search_widget()
             self._refilter()
 
     def backspace(self) -> None:
         self._filter = self._filter[:-1]
-        self._refresh_search_widget()
         self._refilter()
 
     def select_next(self) -> None:
@@ -156,6 +177,27 @@ class PickerOverlay(Vertical):
         if not self._visible:
             return None
         return self._visible[self._index]
+
+    # --------------------------------------------------------------- mouse
+    def on_click(self, event) -> None:  # noqa: N802 — Textual handler name
+        """Click a row: select it; clicking the already-selected row
+        confirms the pick. Clicks on chrome (breadcrumb/search) are
+        ignored."""
+        # Walk up from the clicked Static to find a picker row (rows are
+        # identified by their _picker_idx attribute, not widget ids).
+        target = event.widget
+        while target is not None and target is not self:
+            idx = getattr(target, "_picker_idx", None)
+            if idx is not None:
+                event.stop()
+                if 0 <= idx < len(self._visible):
+                    if idx == self._index:
+                        self.post_message(self.Selected(self._visible[idx].key))
+                    else:
+                        self._index = idx
+                        self._repaint()
+                return
+            target = target.parent
 
     def _refresh_search_widget(self) -> None:
         try:

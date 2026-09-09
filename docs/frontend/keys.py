@@ -66,8 +66,9 @@ BINDING_CATALOG: tuple[dict, ...] = (
         ("e / ⏎",        "Edit field row",          ""),
         ("Tab",          "Save & advance",          "to next row"),
         ("1 / 2",        "Pick toggle",             "depth · compressed"),
-        ("↑ / ↓",        "Rail",                     "between sections"),
-        ("→ / ←",        "Section",                  "between fields"),
+        ("↑ / ↓",        "Move",                    "rail sections or pane rows"),
+        ("→",            "Enter section pane",      "from the rail"),
+        ("←",            "Back to rail",            "from the pane"),
     )},
     {"group": "History",   "note": "modal scope",      "entries": _entries(
         ("Esc",     "Back to chat",                  ""),
@@ -133,9 +134,9 @@ STRIP_BY_SCREEN: dict[str, tuple] = {
             ("Ctrl+S",        "save & close"),
             ("Ctrl+N",        "+ add"),
             ("Ctrl+D",        "remove"),
-            ("Tab",           "save & advance"),
-            ("↑/↓", "rail"),
-            ("→/←", "section"),
+            ("↑/↓", "move"),
+            ("→",   "enter pane"),
+            ("←",   "rail"),
         )),
         ("exit", (
             ("Esc", "back"),
@@ -173,6 +174,8 @@ L3_PROVIDERS_STRIP: tuple = (
         ("↑/↓", "navigate"),
         ("⏎",     "expand"),
         ("Tab",   "filter"),
+        ("→",     "enter pane"),
+        ("←",     "rail"),
     )),
     ("actions", (
         ("e",       "edit / test"),

@@ -82,6 +82,10 @@ section("3. All key names are portable across terminals")
 PORTABLE_KEYS = {
     "ctrl+q", "ctrl+l", "ctrl+r", "ctrl+s", "ctrl+d", "ctrl+n", "ctrl+enter",
     "ctrl+k", "ctrl+f", "ctrl+h",
+    # ctrl+o / ctrl+y are deliberate mirrors of ctrl+n / ctrl+d (real
+    # terminals / tmux configs eat ctrl+n / ctrl+p Readline keys) —
+    # see settings.py BINDINGS comment.
+    "ctrl+o", "ctrl+y",
     "escape", "esc", "enter", "space", "tab",
     "pagedown", "pageup",
     "up", "down", "left", "right",

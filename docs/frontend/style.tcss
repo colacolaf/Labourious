@@ -332,10 +332,26 @@ Screen.-narrow     #sidebar { width: 18; }
     padding: 0 1 0 2;
 }
 
+.rail-item:hover {
+    background: #161b23;
+}
+
+/* Selected rail item — neutral bar, no bright cyan background. */
 .rail-item.sel {
-    color: #8cdcdc;
+    color: #e8e8e8;
     text-style: bold;
-    background: #131c22;
+    background: #1c232d;
+}
+
+/* Section selected but focus living in the body pane — dimmer bar so
+   the eye follows the pane, not the rail. */
+.rail-item.sel-pane {
+    color: #a0a5af;
+    background: #141922;
+}
+
+.rail-item.sel:hover {
+    background: #1c232d;
 }
 
 /* Main pane — SectionCard lives here */
@@ -409,13 +425,39 @@ Screen.-narrow     #sidebar { width: 18; }
     border-bottom: solid #2a3441;
 }
 
+/* Picker rows are real widgets (click + hover), not ANSI text. */
 .picker-list {
-    background: #0e1014;
-    color: #d4d4d4;
     height: auto;
     max-height: 20;
     overflow-y: auto;
     padding: 0 1 1 1;
+}
+
+#picker-rows {
+    height: auto;
+}
+
+.picker-row {
+    height: 1;
+    color: #a0a5af;
+    padding: 0 1;
+}
+
+.picker-row:hover {
+    background: #161b23;
+    color: #e8e8e8;
+}
+
+.picker-row.sel {
+    background: #1c232d;
+    color: #e8e8e8;
+    text-style: bold;
+}
+
+.picker-empty-row {
+    height: 1;
+    color: #6e7887;
+    padding: 0 1;
 }
 
 /* ProvidersPanel — the L3 accordion on Settings → Providers.
@@ -433,6 +475,28 @@ Screen.-narrow     #sidebar { width: 18; }
 .providers-tiers {
     height: auto;
     padding: 0 1;
+}
+
+#settings-providers-panel {
+    height: 1fr;
+}
+
+#provider-setup-form,
+#omniroute-setup-form {
+    height: 1fr;
+    overflow-y: auto;
+}
+
+#settings-providers-panel.providers-panel { height: 1fr; }
+
+/* The panel's inner Statics paint ANSI rows; give the widget a real
+   height and let the scroll container do the scrolling. */
+#providers-tiers {
+    height: auto;
+}
+
+#providers-scroll > #providers-tiers {
+    height: auto;
 }
 
 /* ---------- Setting row visual classes (used by inline ANSI text) ---------- */
@@ -741,4 +805,126 @@ StatusStrip > StatusStripRight {
     color: #8cdcdc;
     text-style: bold;
     padding: 0 1;
+}
+
+/* =============================================================== */
+/* ============= Global de-blue (theme backstop) ================== */
+/* The registered `labourious` theme already re-points $primary away
+   from Textual's default blue; these rules pin the handful of widgets
+   the theme variables don't reach. Brand cyan stays reserved for
+   identity (titles, logo) — never for focus or selection. */
+
+Button {
+    background: #161b23;
+    color: #d4d4d4;
+    border: tall #465262;
+    min-width: 12;
+    height: auto;
+}
+
+Button:hover {
+    background: #1c232d;
+    color: #f0f0f0;
+    border: tall #6e7887;
+}
+
+Button:focus {
+    border: tall #a0a5af;
+    text-style: bold;
+}
+
+Button:focus:hover {
+    background: #1c232d;
+    color: #f0f0f0;
+    border: tall #a0a5af;
+}
+
+Button:disabled {
+    background: #11141a;
+    color: #4a5361;
+    border: tall #2a3441;
+    text-style: none;
+}
+
+Input {
+    background: #11141a;
+    color: #d4d4d4;
+    border: tall #2a3441;
+}
+
+Input:focus {
+    border: tall #a0a5af;
+}
+
+Input > .input--placeholder {
+    color: #4a5361;
+}
+
+Input > .input--cursor {
+    color: #0e1014;
+    background: #d4d4d4;
+}
+
+Input > .input--selection {
+    background: #2a3441;
+    color: #e8e8e8;
+}
+
+Scrollbar {
+    background: #0e1014;
+}
+
+Collapsible > .collapsible--arrow {
+    color: #a0a5af;
+}
+
+Collapsible > .collapsible--arrow-collapsed {
+    color: #a0a5af;
+}
+
+/* Horizontal rule widgets inherit brand color in Textual defaults. */
+Rule {
+    color: #2a3441;
+    margin: 0;
+}
+
+FooterKey {
+    color: #a0a5af;
+}
+
+FooterKey:hover {
+    color: #e8e8e8;
+}
+
+Static.label,
+.label {
+    color: #6e7887;
+}
+
+Placeholder {
+    background: #11141a;
+    color: #6e7887;
+}
+
+/* ---------- Settings: mouse affordances on body rows ---------- */
+/* SectionCard's body is a RichLog — rows there are plain text and
+   stay keyboard/click-neutral; the card-level hover/focus bar is a
+   screen concern (see settings.py). SettingsScreen rows that ARE
+   clickable widgets get their affordance here. */
+
+ClickRow {
+    height: 1;
+    color: #a0a5af;
+    padding: 0 1;
+}
+
+ClickRow:hover {
+    background: #161b23;
+    color: #e8e8e8;
+}
+
+ClickRow:focus {
+    background: #1c232d;
+    color: #e8e8e8;
+    text-style: bold;
 }
