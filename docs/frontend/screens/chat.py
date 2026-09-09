@@ -39,7 +39,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Footer, Header, Input, Static
+from textual.widgets import Input, Static
 
 # Make the sibling `runtime/` package importable when this screen is loaded
 # via `python docs/frontend/app.py`. With docs/ on sys.path, both `frontend.X`
@@ -47,6 +47,12 @@ from textual.widgets import Footer, Header, Input, Static
 _THIS = Path(__file__).resolve()
 if str(_THIS.parents[2]) not in sys.path:
     sys.path.insert(0, str(_THIS.parents[2]))   # docs/
+
+from frontend.widgets.chat_command_palette import (  # type: ignore
+    CommandPalette, CommandItem, COMMANDS,
+)
+from frontend.widgets.chat_controls import ChatControls  # type: ignore
+from frontend.widgets.chat_header import ChatHeader  # type: ignore
 
 from frontend.widgets import (  # type: ignore
     ActivityPanel, CostWidget, CitationChip, ConnectionBanner,
@@ -71,21 +77,28 @@ from frontend.config_io import load_config, save_config, Config, CONFIG_PATH  # 
 # --------------------------------------------------------------------------- #
 # Welcome screen (idle state — first launch)
 # --------------------------------------------------------------------------- #
+# The template renders {placeholders} for live session state (model, depth,
+# compressed, paid routing) so the card is always honest about config.
 WELCOME_TEMPLATE = """\
 # Welcome
 
-**{state_badge}** · model **·** `{model}` · depth **·** {depth} · compressed **·** {compressed} · paid-for **·** {paid_for}
+**{state_badge}** · model `{model}` · depth {depth} · compressed {compressed} · paid-for {paid_for}
 
-Pick a ticker below to start the flagship flow, or type your own prompt:
+Pick a ticker below to start the flagship flow, or type your own research prompt:
+- `analyze NVDA` — flagship f1 flow on a ticker
+- `compare NVDA and AMD` — the ticker detector picks the first symbol
 
-Or set up first:
-- `/model <provider/name>` — switch the default model
-- `/depth STANDARD|DEEP` — set the depth for the next run
-- `/paid-for <agents>` — toggle per-agent paid routing
+Or drive the session from the prompt with `/` commands (type `/` to see
+the command palette popup):
+
+- `/model <provider/model>` — switch the default model
+- `/depth STANDARD|DEEP` — analysis depth for the next run
+- `/paid-for <agents>` — per-agent paid routing (hybrid)
+- `/settings` · `/history` · `/help` · `/clear` · `/quit`
 
 Quick actions:
-- `Ctrl+O` open Settings · `Ctrl+Y` open History · `?` open Help
-- or type `s` then Enter (`/settings`), `h` then Enter (`/history`)
+- `Ctrl+O` open Settings · `Ctrl+Y` open History · `?` keyboard shortcuts
+- the ⚙ / ? nodes sit right on the chat bar, next to depth + model
 """
 QUICK_ACTION_HINT = (
     "(press `Tab` to focus the input — then type a prompt and press `Enter`)"
@@ -152,13 +165,12 @@ class ChatScreen(Screen):
         # Configurable via Settings → streaming → typewriter_ms.
         self.stream_typewriter_ms: int = 0
         # Last ThesisWritten event captured (used to populate the
-        # Last ThesisWritten event captured (used to populate the
         # citation chip with real data, not just a count).
         self._last_thesis: dict | None = None
 
     # --------------------------------------------------------------- compose
     def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
+        yield ChatHeader(id="chat-header")
         with Horizontal(id="body"):
             with Vertical(id="sidebar"):
                 yield ActivityPanel(id="activity")
@@ -169,9 +181,12 @@ class ChatScreen(Screen):
                 yield ConnectionBanner(id="banner")
                 yield VerticalScroll(id="chat-log")
         yield Input(
-            placeholder="> analyze NVDA at $890  (try `/help` for commands)",
+            placeholder="> analyze NVDA at $890  (type / for commands)",
             id="prompt",
         )
+        # Control nodes on the chat bar: depth cycle, compressed toggle,
+        # model cycle, per-agent deep link, ⚙ settings, ? help.
+        yield ChatControls(id="chat-controls")
         # Ticker shortcut chips — only useful when the chat-log is empty;
         # the screen hides them as soon as a flow starts. See
         # `_sync_shortcuts_visibility`.
@@ -217,6 +232,19 @@ class ChatScreen(Screen):
             self.query_one(StatusStrip).set_status(msg)
         except Exception:
             pass
+
+    def _refresh_chat_controls(self) -> None:
+        """Repaint the chat-bar control nodes from live session state.
+        Called whenever depth / compressed / model changes (the set_*
+        methods already funnel through _update_footer_hint)."""
+        try:
+            self.query_one("#chat-controls", ChatControls).refresh_labels(
+                depth=self.depth,
+                compressed=self.compressed,
+                model=self.model,
+            )
+        except Exception:
+            pass  # controls not mounted yet
 
     def set_model(self, model: str) -> None:
         self.model = model
@@ -377,6 +405,207 @@ class ChatScreen(Screen):
         pressing Enter in the prompt did nothing.
         """
         await self.action_submit()
+
+    # ------------------------------------------------- slash-command palette
+    # Typing "/" as the first character of the prompt mounts a popup right
+    # above the input listing every command that still matches. ↑/↓ pick,
+    # Tab completes, Enter runs, Esc closes. The popup lives only while the
+    # value starts with "/" — any other input dismisses it.
+    # (Handlers live directly below on_input_submitted.)
+    def _palette_for(self) -> CommandPalette | None:
+        """The mounted palette, or None."""
+        try:
+            return self.query_one("#chat-command-palette", CommandPalette)
+        except Exception:
+            return None
+
+    def _sync_command_palette(self) -> None:
+        """Mount / filter / dismiss the slash palette based on the input."""
+        prompt = self.query_one("#prompt", Input)
+        value = prompt.value
+        palette = self._palette_for()
+        if value.startswith("/"):
+            frag = value[1:]
+            if palette is None:
+                palette = CommandPalette(id="chat-command-palette")
+                self.query_one("#chat-pane", Vertical).mount(palette)
+                # Keep keyboard focus in the input — the palette is display
+                # chrome, not a focus target.
+                self.set_focus(prompt)
+            palette.set_filter(frag)
+        elif palette is not None:
+            palette.remove()
+
+    def _close_command_palette(self) -> None:
+        palette = self._palette_for()
+        if palette is not None:
+            palette.remove()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Live-sync the slash palette while the user types."""
+        if event.input.id == "prompt":
+            self._sync_command_palette()
+
+    def key_tab(self) -> None:
+        """Fallback `key_tab` hook. Tab handling while the palette is open
+        lives in on_key below (the screen receives unhandled keys from the
+        focused Input); this is a safety net for when focus has moved off
+        the input but the palette is still mounted."""
+        palette = self._palette_for()
+        if palette is not None:
+            palette.complete()
+
+    def on_key(self, event) -> None:
+        """Palette navigation while the prompt Input has focus.
+
+        The Input has no ↑/↓/Tab/Esc bindings of its own, so those keys
+        bubble up to the screen. We intercept them ONLY while the palette
+        is open; every other key passes through untouched.
+        """
+        palette = self._palette_for()
+        if palette is None:
+            return
+        if not self.query_one("#prompt", Input).has_focus:
+            return
+        if event.key == "down":
+            palette.move_selection(1)
+            event.stop()
+            event.prevent_default()
+        elif event.key == "up":
+            palette.move_selection(-1)
+            event.stop()
+            event.prevent_default()
+        elif event.key == "tab":
+            palette.complete()
+            event.stop()
+            event.prevent_default()
+        elif event.key == "escape":
+            self._close_command_palette()
+            event.stop()
+            event.prevent_default()
+        elif event.key == "right" and palette.completion_text():
+            # → at end-of-line completes too (familiar from shells).
+            prompt = self.query_one("#prompt", Input)
+            if prompt.cursor_position >= len(prompt.value):
+                palette.complete()
+                event.stop()
+                event.prevent_default()
+
+    def on_command_palette_picked(self, event: CommandPalette.Picked) -> None:
+        """Enter (or double-click) on a palette row: fill the input with the
+        command and execute it through the normal submit path."""
+        event.stop()
+        self._close_command_palette()
+        prompt = self.query_one("#prompt", Input)
+        prompt.value = event.command
+        self.set_focus(prompt)
+        self.run_worker(self.action_submit(), exclusive=False)
+
+    def on_command_palette_complete(self, event: CommandPalette.Complete) -> None:
+        """Tab on a palette row: fill the input, keep the palette open so
+        arguments can be typed after the command name."""
+        event.stop()
+        prompt = self.query_one("#prompt", Input)
+        prompt.value = event.text
+        prompt.cursor_position = len(event.text)
+        self.set_focus(prompt)
+        self._sync_command_palette()
+
+    def on_command_palette_dismissed(self, event: CommandPalette.Dismissed) -> None:
+        event.stop()
+        self._close_command_palette()
+
+    # ------------------------------------------------- chat-bar control nodes
+    def on_chat_controls_depth_pressed(self, event: ChatControls.DepthPressed) -> None:
+        """Depth node: cycle SCAN → STANDARD → DEEP (persists via set_depth)."""
+        event.stop()
+        order = ("SCAN", "STANDARD", "DEEP")
+        nxt = order[(order.index(self.depth) + 1) % len(order)] \
+            if self.depth in order else "STANDARD"
+        self.set_depth(nxt)
+        self._set_status_flash(f"depth → {nxt}", ok=True, duration_s=2.0)
+
+    def on_chat_controls_compressed_pressed(self, event: ChatControls.CompressedPressed) -> None:
+        """Compressed node: toggle the flag (persists via set_compressed)."""
+        event.stop()
+        self.set_compressed(not self.compressed)
+        self._set_status_flash(
+            f"compressed → {'on' if self.compressed else 'off'}",
+            ok=True, duration_s=2.0)
+
+    def on_chat_controls_model_pressed(self, event: ChatControls.ModelPressed) -> None:
+        """Model node: cycle through models this setup can actually run —
+        one default per configured provider (catalog order), then the
+        current model if it isn't among them. Persists via set_model,
+        exactly like /model."""
+        event.stop()
+        candidates: list[str] = []
+        try:
+            cfg = load_config()
+            for name in cfg.providers:
+                from frontend.providers import by_name as _by_name
+                entry = _by_name(name)
+                if entry is not None and entry.models:
+                    mid = f"{name}/{entry.models[0]}"
+                elif entry is not None and entry.default_model:
+                    mid = f"{name}/{entry.default_model}"
+                else:
+                    mid = f"{name}/{name}"
+                if mid not in candidates:
+                    candidates.append(mid)
+        except Exception:
+            pass
+        # Ensure the current model is in the list so cycling is stable.
+        if self.model and self.model not in candidates:
+            candidates.insert(0, self.model)
+        if not candidates:
+            return
+        idx = candidates.index(self.model) if self.model in candidates else -1
+        nxt = candidates[(idx + 1) % len(candidates)]
+        self.set_model(nxt)
+        self._set_status_flash(f"model → {nxt}", ok=True, duration_s=2.0)
+
+    def on_chat_controls_per_agent_pressed(self, event: ChatControls.PerAgentPressed) -> None:
+        """Per-agent node: open Settings pre-focused on the per-agent section
+        (the screen that owns the per-agent model editor)."""
+        event.stop()
+        from frontend.screens.settings import SettingsScreen, SECTIONS
+        self.app.push_screen(SettingsScreen())
+        try:
+            scr = self.app.screen
+            if type(scr).__name__ == "SettingsScreen":
+                scr._rail_index = SECTIONS.index("per-agent")
+                scr._refresh_rail_selection()
+                scr._swap_card("per-agent")
+                scr._refresh_head()
+                scr._update_strip()
+        except Exception:
+            pass
+
+    def on_chat_controls_settings_pressed(self, event: ChatControls.SettingsPressed) -> None:
+        """⚙ node — same as Ctrl+O / `s`: open the Settings modal."""
+        event.stop()
+        self.app.action_open_settings()
+
+    def on_chat_controls_help_pressed(self, event: ChatControls.HelpPressed) -> None:
+        """? node — same as `?`: open the keyboard-shortcuts modal."""
+        event.stop()
+        self.app.action_open_help()
+
+    def on_button_pressed(self, event) -> None:
+        """Top-right corner buttons in the header (⚙ / ?). Only handles
+        the hdr-* ids; Button.Pressed from other widgets bubbles through
+        untouched."""
+        btn_id = getattr(event.button, "id", None)
+        if btn_id == "hdr-settings":
+            event.stop()
+            self.app.action_open_settings()
+            # Refocus the prompt so typing continues seamlessly.
+            self.set_focus(self.query_one("#prompt", Input))
+        elif btn_id == "hdr-help":
+            event.stop()
+            self.app.action_open_help()
+            self.set_focus(self.query_one("#prompt", Input))
 
     async def action_clear_chat(self) -> None:
         await self.query_one("#chat-log", VerticalScroll).remove_children()
@@ -923,6 +1152,12 @@ class ChatScreen(Screen):
         if result:
             self.reload_config_from_disk()
         self._update_footer_hint()
+        # A user who just finished onboarding wants to type, not to learn
+        # keymaps — put the cursor in the prompt. (Plain startup keeps the
+        # input unfocused so `s`/`h`/`?` single-letter shortcuts stay live;
+        # the welcome card tells those users to press Tab first.)
+        if result:
+            self.set_focus(self.query_one("#prompt", Input))
 
     def _show_welcome(self, force: bool = False) -> None:
         log = self.query_one("#chat-log", VerticalScroll)
@@ -1034,6 +1269,8 @@ class ChatScreen(Screen):
             f"· {cost_segment}"
         )
         self.set_status_footer(base + suffix)
+        # Keep the chat-bar control nodes in lockstep with the footer.
+        self._refresh_chat_controls()
 
     def _connector_footer_segment(self) -> str:
         """Roll up the connector state across every bubble that's mounted and

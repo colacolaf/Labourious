@@ -71,7 +71,7 @@ class Config:
     per_agent_model: dict[str, str] = field(default_factory=dict)
     hybrid_paid_for: list[str] = field(default_factory=list)
     connectors: dict[str, ConnectorConfig] = field(default_factory=dict)
-    defaults_depth: Literal["STANDARD", "DEEP"] = "STANDARD"
+    defaults_depth: Literal["SCAN", "STANDARD", "DEEP"] = "STANDARD"
     defaults_compressed: bool = False
     # Persistent watchlist used by f10 (daily briefing) when no
     # --watchlist flag is supplied. Empty list = "no watchlist
@@ -238,8 +238,8 @@ def validate_field(section: str, key: str, value: str) -> str | None:
         return validate_model_id(value)
     if section == "defaults":
         if key == "depth":
-            if value not in ("STANDARD", "DEEP"):
-                return "depth must be STANDARD or DEEP"
+            if value not in ("SCAN", "STANDARD", "DEEP"):
+                return "depth must be SCAN, STANDARD or DEEP"
             return None
         if key == "compressed":
             if value not in ("true", "false"):
@@ -281,7 +281,7 @@ def _validate(cfg: Config) -> None:
     for n in cfg.connectors:
         if not name_re.match(n):
             raise ConfigValidationError(f"Invalid connector name: {n!r}")
-    if cfg.defaults_depth not in ("STANDARD", "DEEP"):
+    if cfg.defaults_depth not in ("SCAN", "STANDARD", "DEEP"):
         raise ConfigValidationError(f"Invalid depth: {cfg.defaults_depth!r}")
     if cfg.stream_typewriter_ms < 0 or cfg.stream_typewriter_ms > 500:
         raise ConfigValidationError(

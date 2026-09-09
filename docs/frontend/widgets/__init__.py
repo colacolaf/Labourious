@@ -4,6 +4,11 @@ frontend/widgets — shared widget exports.
 from __future__ import annotations
 
 from .activity_panel import ActivityPanel                  # type: ignore
+from .chat_command_palette import (                        # type: ignore
+    CommandPalette, CommandItem, COMMANDS,
+)
+from .chat_controls import ChatControls                    # type: ignore
+from .chat_header import ChatHeader                        # type: ignore
 from .citation_chip import CitationChip                    # type: ignore
 from .connection_banner import ConnectionBanner            # type: ignore
 from .cost_widget import CostWidget                        # type: ignore
@@ -28,6 +33,11 @@ from .ticker_shortcuts import (                            # type: ignore
 __all__ = [
     "ActivityPanel",
     "CitationChip",
+    "ChatControls",
+    "ChatHeader",
+    "CommandItem",
+    "CommandPalette",
+    "COMMANDS",
     "ConnectionBanner",
     "CostWidget",
     "DEFAULT_TICKERS",

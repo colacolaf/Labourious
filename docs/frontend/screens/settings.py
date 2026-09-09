@@ -496,11 +496,13 @@ class SettingsScreen(Screen):
             return
         # 2) Provider rows — the panel is one ANSI-painted Static, so map
         # the click position back to a row index via the panel's paint
-        # records (works whichever descendant was clicked).
+        # records (works whichever descendant was clicked). The absolute
+        # screen Y rides on the event; Widget has no mouse_y in Textual 8
+        # (that AttributeError was the crash on every panel click).
         target = widget
         while target is not None and target is not self:
             if isinstance(target, ProvidersPanel):
-                idx = target._row_line_index()
+                idx = target._row_line_index(event.screen_y)
                 if idx >= 0:
                     self._nav_scope = "pane"
                     self._provider_focus_idx = idx

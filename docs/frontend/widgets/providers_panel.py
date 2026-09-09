@@ -197,9 +197,12 @@ class ProvidersPanel(Widget):
             self.query_one("#providers-tiers", Static).update(tiers_text)
             # Record the painted line ranges of each provider row so mouse
             # clicks can be mapped back to a row index (see _row_line_index).
+            # Line numbers are CONTENT lines of the `#providers-tiers` Static
+            # (line 0 = first tier header) — the chips line lives in its own
+            # sibling Static, so it must NOT be counted here.
             records: list[dict] = []
             idx_so_far = 0
-            line_no = 1  # +1: the chips line occupies y=0
+            line_no = 0
             for tier in TIER_ORDER:
                 entries = by_tier(tier)  # type: ignore[arg-type]
                 if self._filter_tier is not None and tier != self._filter_tier:
@@ -291,14 +294,33 @@ class ProvidersPanel(Widget):
     # ---- mouse support: click a provider row to focus + expand it ----------
     # The rows live in one Static as ANSI text, so clicks are mapped back to
     # the row under the mouse via the same render order used to paint.
-    def _row_line_index(self) -> int:
-        """Absolute line index of the provider row under self.mouse_y, or -1."""
+    #
+    # Textual 8 note: Widget has NO `mouse_y` attribute (the old code
+    # crashed with AttributeError on every click). The absolute screen Y
+    # arrives on the Click/MouseMove event instead (event.screen_y), so the
+    # caller passes it in. We convert it to a content line of the painted
+    # `#providers-tiers` Static: the widget's `region.y` is its top edge in
+    # screen coordinates with the parent scroll offset already applied, so
+    # `screen_y - region.y` IS the painted line — no extra scroll math.
+    def _row_line_index(self, screen_y: int | None = None) -> int:
+        """Index (into the visible provider list) of the row painted at the
+        absolute screen line *screen_y*, or -1 when unknown / outside a row."""
+        if screen_y is None:
+            return -1
         rows = self._last_render_rows  # painted line records, see _repaint
-        y = self.mouse_y
-        if y is None:
+        if not rows:
+            return -1
+        try:
+            tiers = self.query_one("#providers-tiers", Static)
+            origin_y = tiers.region.y
+        except Exception:
+            origin_y = self.region.y
+        try:
+            line = int(screen_y) - int(origin_y)
+        except Exception:
             return -1
         for rec in rows:
-            if rec["kind"] == "row" and rec["y0"] <= y < rec["y1"]:
+            if rec.get("kind") == "row" and rec["y0"] <= line < rec["y1"]:
                 return rec["idx"]
         return -1
 
