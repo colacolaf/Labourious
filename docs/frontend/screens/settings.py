@@ -67,6 +67,7 @@ from frontend.widgets.omniroute_setup import OmniRouteSetup
 from frontend.widgets.provider_setup import ProviderSetup
 from frontend.keys_storage import get_key, set_key, delete_key, key_present
 from frontend.models_catalog import fetch_models_result
+from frontend.utils.ansi import to_text
 from frontend.providers import (
     ALL_PROVIDERS, by_name, by_tier, TIER_ORDER, total_count,
     status_for, ProviderEntry,
@@ -851,7 +852,7 @@ class SettingsScreen(Screen):
         )
         try:
             h = self.query_one("#settings-head", Static)
-            h.update(head)
+            h.update(to_text(head))
         except Exception:
             pass
 
@@ -901,7 +902,7 @@ class SettingsScreen(Screen):
             )
         try:
             f = self.query_one("#settings-foot", Static)
-            f.update(foot)
+            f.update(to_text(foot))
         except Exception:
             pass
 
@@ -1705,7 +1706,7 @@ class SettingsScreen(Screen):
         try:
             head = self.query_one("#settings-head", Static)
             # Override the head with a status line:
-            head.update("\x1b[38;2;230;200;130m● " + msg + "\x1b[0m")
+            head.update(to_text("\x1b[38;2;230;200;130m● " + msg + "\x1b[0m"))
         except Exception:
             pass
 

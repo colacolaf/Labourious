@@ -37,6 +37,7 @@ from textual.widget import Widget
 from textual.widgets import Static
 
 from frontend.connectors_catalog import ConnectorEntry, ALL_CONNECTORS, by_name
+from frontend.utils.ansi import to_text
 
 # ---- ANSI tokens (mirror style.tcss) ----------------------------------------
 _RESET   = "\x1b[0m"
@@ -270,15 +271,15 @@ class BubbleConnectorStrip(Static):
 
     def update_state(self, st: ConnectorStripState) -> None:
         self._state = st
-        self.update(render_line(st, width=self._width))
+        self.update(to_text(render_line(st, width=self._width)))
 
     def record_fired(self, **kw) -> None:
         self._state.record_fired(**kw)
-        self.update(render_line(self._state, width=self._width))
+        self.update(to_text(render_line(self._state, width=self._width)))
 
     def record_failed(self, **kw) -> None:
         self._state.record_failed(**kw)
-        self.update(render_line(self._state, width=self._width))
+        self.update(to_text(render_line(self._state, width=self._width)))
 
 
 # ----------------------------------------------------------- footer chip helper

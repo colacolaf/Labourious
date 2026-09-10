@@ -26,6 +26,7 @@ from frontend.config_io import cfg_path_str, mtime_str, load_config
 
 # Catalog brought in from the single source of truth.
 from frontend.keys import BINDING_CATALOG
+from frontend.utils.ansi import to_text
 
 # Tokens mirrored from style.tcss so we can write ANSI inline where needed.
 _FG_DIM = "\x1b[38;2;110;120;135m"
@@ -91,7 +92,7 @@ class HelpCard(Static):
                     text = f"\x1b[38;2;140;220;220m{entry['key']:<10}\x1b[0m \x1b[38;2;212;212;212m{entry['label']}\x1b[0m \x1b[38;2;110;120;135m— {entry['hint']}\x1b[0m"
                 else:
                     text = f"\x1b[38;2;140;220;220m{entry['key']:<10}\x1b[0m \x1b[38;2;212;212;212m{entry['label']}\x1b[0m"
-                yield Static(text, classes="help-row")
+                yield Static(to_text(text), classes="help-row")
 
 
 class HelpModalScreen(Screen):
@@ -169,17 +170,21 @@ class HelpModalScreen(Screen):
     def compose(self) -> ComposeResult:
         # HEAD
         yield Static(
-            f"  \x1b[38;2;140;220;220m●\x1b[0m  Labourious / help        "
-            f"\x1b[38;2;110;120;135m·\x1b[0m  "
-            f"\x1b[38;2;140;220;220m?\x1b[0m\x1b[38;2;110;120;135m toggle this modal ·\x1b[0m "
-            f"\x1b[38;2;140;220;220mEsc\x1b[0m\x1b[38;2;110;120;135m close\x1b[0m",
+            to_text(
+                f"  \x1b[38;2;140;220;220m●\x1b[0m  Labourious / help        "
+                f"\x1b[38;2;110;120;135m·\x1b[0m  "
+                f"\x1b[38;2;140;220;220m?\x1b[0m\x1b[38;2;110;120;135m toggle this modal ·\x1b[0m "
+                f"\x1b[38;2;140;220;220mEsc\x1b[0m\x1b[38;2;110;120;135m close\x1b[0m"
+            ),
             classes="help-modal-head",
         )
         # INTRO
         yield Static(
-            "  Keyboard shortcuts — grouped by where they apply.  "
-            f"\x1b[38;2;110;120;135m{len(BINDING_CATALOG)} groups · "
-            f"{sum(len(g['entries']) for g in BINDING_CATALOG)} keys\x1b[0m",
+            to_text(
+                "  Keyboard shortcuts — grouped by where they apply.  "
+                f"\x1b[38;2;110;120;135m{len(BINDING_CATALOG)} groups · "
+                f"{sum(len(g['entries']) for g in BINDING_CATALOG)} keys\x1b[0m"
+            ),
             classes="help-modal-intro",
         )
         # BODY (scrollable grid)
@@ -197,9 +202,11 @@ class HelpModalScreen(Screen):
                         yield HelpCard(g)
         # Source-of-truth signature (one thin line, sits above the strip).
         yield Static(
-            f"  \x1b[38;2;110;120;135m"
-            f"source:\x1b[0m \x1b[38;2;212;212;212mdocs/frontend/keys.py\x1b[0m"
-            f"\x1b[38;2;110;120;135m  ·  {self._path}  ·  {self._mtime}\x1b[0m",
+            to_text(
+                f"  \x1b[38;2;110;120;135m"
+                f"source:\x1b[0m \x1b[38;2;212;212;212mdocs/frontend/keys.py\x1b[0m"
+                f"\x1b[38;2;110;120;135m  ·  {self._path}  ·  {self._mtime}\x1b[0m"
+            ),
             classes="help-modal-sig",
         )
         # Universal StatusStrip at the very bottom — shows help-modal keys.

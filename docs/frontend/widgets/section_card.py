@@ -16,7 +16,8 @@ from textual.containers import Vertical
 from textual.message import Message
 from textual.widgets import RichLog, Static
 
-from frontend.utils.ansi import visible_len
+from frontend.utils.ansi import to_text, visible_len
+from frontend.widgets.ansi_log import AnsiRichLog
 
 
 class SectionCard(Vertical):
@@ -50,8 +51,12 @@ class SectionCard(Vertical):
     def compose(self):
         # Slug the title so the id has no slashes (Textual validator).
         slug = self._title.lower().replace("/", "-").replace(" ", "-")
-        yield Static(self._render_header(), markup=False, classes="section-card-head")
-        yield RichLog(wrap=False, highlight=False, markup=False,
+        # to_text: header carries ANSI SGR codes — must become a rich Text
+        # or Textual paints the escapes as literal garbage.
+        yield Static(to_text(self._render_header()), markup=False, classes="section-card-head")
+        # AnsiRichLog: rows are hand-rendered ANSI strings (SettingRow etc.);
+        # plain RichLog paints the escapes as literal garbage.
+        yield AnsiRichLog(wrap=False, highlight=False, markup=False,
                       classes="section-card-body", id=f"body-{slug}")
 
     def on_mount(self) -> None:
@@ -78,7 +83,7 @@ class SectionCard(Vertical):
     def _render_header_now(self) -> None:
         try:
             head = self.query_one(".section-card-head", Static)
-            head.update(self._render_header())
+            head.update(to_text(self._render_header()))
         except Exception:
             pass
 
@@ -112,7 +117,7 @@ class SectionCard(Vertical):
         self._meta = meta
         try:
             head = self.query_one(".section-card-head", Static)
-            head.update(self._render_header())
+            head.update(to_text(self._render_header()))
         except Exception:
             pass  # not yet mounted; will pick up on remount
 
@@ -120,7 +125,7 @@ class SectionCard(Vertical):
         self._title = title
         try:
             head = self.query_one(".section-card-head", Static)
-            head.update(self._render_header())
+            head.update(to_text(self._render_header()))
         except Exception:
             pass
 
@@ -134,7 +139,7 @@ class SectionCard(Vertical):
     def write_row(self, line: str) -> None:
         b = self.body()
         if b is not None:
-            b.write(line)
+            b.write(to_text(line))
 
     def write_blank(self) -> None:
         b = self.body()
@@ -153,7 +158,7 @@ class SectionCard(Vertical):
             # Record the body line this +add row occupies so on_click can
             # hit-test it. RichLog line 0 is the first write after clear().
             self._add_row_lines.add(len(b.lines))
-            b.write(line)
+            b.write(to_text(line))
 
     def on_click(self, event) -> None:  # noqa: N802 — Textual handler name
         """Mouse support: a click on a RichLog-painted '+ add' row opens
@@ -202,7 +207,7 @@ class SectionCard(Vertical):
         except Exception:
             pass
         slug = self._title.lower().replace("/", "-").replace(" ", "-")
-        body = RichLog(
+        body = AnsiRichLog(
             wrap=False, highlight=False, markup=False,
             classes="section-card-body",
             id=f"body-{slug}",

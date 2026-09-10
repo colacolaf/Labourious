@@ -25,6 +25,8 @@ from __future__ import annotations
 from textual.containers import Horizontal
 from textual.widgets import Static
 
+from frontend.utils.ansi import to_text
+
 # ANSI tokens — mirror style.tcss `.footer--key` / `.brand` / `.fg3`
 _RESET   = "\x1b[0m"
 _DIM     = "\x1b[38;2;110;120;135m"   # FG3 — group label, soft
@@ -87,7 +89,7 @@ class StatusStripRight(Static):
 
     def update_mode(self, mode: str) -> None:
         self._mode = mode
-        self.update(render_help_tag(mode))
+        self.update(to_text(render_help_tag(mode)))
 
 
 class StatusStripLeft(Static):
@@ -107,7 +109,7 @@ class StatusStripLeft(Static):
         super().__init__("", markup=False, id=id or "status-left")
 
     def update_groups(self, groups) -> None:
-        self.update(render_pairs_line(groups))
+        self.update(to_text(render_pairs_line(groups)))
 
 
 class StatusStrip(Horizontal):

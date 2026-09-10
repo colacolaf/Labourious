@@ -36,6 +36,8 @@ from textual.containers import Vertical
 from textual.message import Message
 from textual.widgets import Input, Static
 
+from frontend.utils.ansi import to_text
+
 
 # Source of truth for valid chars. Must match config_io._validate().
 _MODEL_RE = re.compile(r"^[a-z0-9_-]+/[a-z0-9._:/-]{1,80}$", re.IGNORECASE)
@@ -133,7 +135,7 @@ class InlineTextEditor(Vertical):
     def compose(self) -> ComposeResult:
         # Helper line — shows validation errors or the normal hint.
         yield Static(
-            self._render_help(),
+            to_text(self._render_help()),
             markup=False,
             classes="editor-help",
             id=f"help-{slug(self.editor_id)}",
@@ -148,7 +150,9 @@ class InlineTextEditor(Vertical):
         # Preset chips below.
         if self._presets:
             yield Static(
-                "\x1b[38;2;110;120;135m  ⎯ " + "   ".join(self._presets) + "\x1b[0m",
+                to_text(
+                    "\x1b[38;2;110;120;135m  ⎯ " + "   ".join(self._presets) + "\x1b[0m"
+                ),
                 markup=False,
                 classes="editor-presets",
             )
@@ -222,7 +226,7 @@ class InlineTextEditor(Vertical):
         self.add_class("err")
         try:
             s = self.query_one(f"#help-{slug(self.editor_id)}", Static)
-            s.update(self._render_help())
+            s.update(to_text(self._render_help()))
         except Exception:
             pass
 
@@ -231,7 +235,7 @@ class InlineTextEditor(Vertical):
         self.remove_class("err")
         try:
             s = self.query_one(f"#help-{slug(self.editor_id)}", Static)
-            s.update(self._render_help())
+            s.update(to_text(self._render_help()))
         except Exception:
             pass
 
@@ -278,8 +282,10 @@ class InlineToggleEditor(Vertical):
 
     def compose(self) -> ComposeResult:
         yield Static(
-            "\x1b[38;2;110;120;135m  Tab cycle · 1 / 2 pick · "
-            "auto-saves · Esc done\x1b[0m",
+            to_text(
+                "\x1b[38;2;110;120;135m  Tab cycle · 1 / 2 pick · "
+                "auto-saves · Esc done\x1b[0m"
+            ),
             markup=False,
             classes="toggle-help",
             id=f"toggle-help-{slug(self.editor_id)}",
@@ -360,4 +366,4 @@ class InlineToggleEditor(Vertical):
                 )
             else:
                 parts.append("\x1b[38;2;110;120;135m  " + opt + "  \x1b[0m")
-        d.update("  " + "  ".join(parts))
+        d.update(to_text("  " + "  ".join(parts)))

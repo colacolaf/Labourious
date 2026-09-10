@@ -28,6 +28,8 @@ from textual.containers import Vertical
 from textual.message import Message
 from textual.widgets import Static
 
+from frontend.utils.ansi import to_text
+
 
 @dataclass(frozen=True)
 class CommandItem:
@@ -146,7 +148,9 @@ class CommandPalette(Vertical):
     def _repaint(self) -> None:
         try:
             hint = self.query_one(".cmdpal-hint", Static)
-            hint.update(self._render_hint())
+            # to_text: the hint embeds ANSI SGR codes — a raw str would
+            # paint them as literal [38;2;…m garbage in Textual 8.
+            hint.update(to_text(self._render_hint()))
         except Exception:
             pass
         try:
@@ -156,7 +160,7 @@ class CommandPalette(Vertical):
         rows.remove_children()
         if not self._visible:
             rows.mount(Static(
-                "\x1b[38;2;110;120;135m  (no matching command)\x1b[0m",
+                to_text("\x1b[38;2;110;120;135m  (no matching command)\x1b[0m"),
                 markup=False, classes="cmdpal-row-empty"))
             return
         for i, cmd in enumerate(self._visible):
@@ -168,7 +172,7 @@ class CommandPalette(Vertical):
                 f"{arg}"
                 f"  \x1b[38;2;110;120;135m{cmd.description}\x1b[0m"
             )
-            row = Static(text, markup=False,
+            row = Static(to_text(text), markup=False,
                          classes="cmdpal-row" + (" sel" if selected else ""))
             row._cmdpal_idx = i
             rows.mount(row)

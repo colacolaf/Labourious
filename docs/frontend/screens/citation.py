@@ -36,7 +36,10 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import RichLog, Static
 
+from frontend.widgets.ansi_log import AnsiRichLog
+
 from frontend.utils import platform as _plat
+from frontend.utils.ansi import to_text
 # Re-bind for readability; the screen calls _plat.<fn> so tests can
 # monkey-patch _plat.open_in_browser and have it stick.
 copy_to_clipboard = _plat.copy_to_clipboard
@@ -242,7 +245,7 @@ class CitationModalScreen(Screen):
         yield Static("", markup=False, classes="modal-head", id="citation-head")
         with Horizontal(id="citation-body-row"):
             with Vertical(id="citation-body", classes="modal-body"):
-                yield RichLog(
+                yield AnsiRichLog(
                     wrap=False, highlight=False, markup=False,
                     classes="modal-body-log", id="citation-body-log",
                 )
@@ -299,7 +302,7 @@ class CitationModalScreen(Screen):
         )
         try:
             h = self.query_one("#citation-head", Static)
-            h.update(head)
+            h.update(to_text(head))
         except Exception:
             pass
 
@@ -368,7 +371,7 @@ class CitationModalScreen(Screen):
         # update defensively to avoid leaving stale text on a leftover mount).
         try:
             f = self.query_one("#citation-foot", Static)
-            f.update(foot)
+            f.update(to_text(foot))
         except Exception:
             pass
 
@@ -512,7 +515,7 @@ class CitationModalScreen(Screen):
         else:
             ansi = f"\x1b[{_FG3}m\u25cf {msg}\x1b[0m"
         try:
-            t.update(ansi)
+            t.update(to_text(ansi))
         except Exception:
             pass
 

@@ -254,7 +254,9 @@ Button.ticker_chip {
     padding: 0 2;
     margin: 0 1 0 0;
     min-width: 7;
-    height: 1;
+    /* height: auto, NOT 1 — the round border eats 2 rows (border-box), so
+       height: 1 left 0 content rows and the chip labels never painted. */
+    height: auto;
 }
 
 Button.ticker_chip:hover {
@@ -661,7 +663,18 @@ InlineTextEditor .editor-input,
 
 .omni-actions Button {
     min-width: 18;
-    height: 1;
+    /* auto, not 1 — border-box sizing + the global tall Button border
+       would leave 0 content rows (empty label). Same fix as ticker chips. */
+    height: auto;
+    margin: 0 1 0 0;
+}
+
+/* ProviderSetup action row shares the omni-actions styling (its own
+   DEFAULT_CSS loses the cascade to the global Button rules). */
+.prv-actions Button,
+.prv-actions > Button {
+    min-width: 18;
+    height: auto;
     margin: 0 1 0 0;
 }
 
@@ -789,7 +802,9 @@ HelpCard > .help-card-rows > .help-row {
 StatusStrip {
     background: #11141a;
     color: #a0a5af;
-    height: 1;
+    /* 2, not 1: border-box sizing means border-top consumes the only row
+       at height 1 and the actual hints paint off-screen. */
+    height: 2;
     border-top: solid #2a3441;
 }
 
@@ -837,6 +852,33 @@ Button:focus:hover {
     background: #1c232d;
     color: #f0f0f0;
     border: tall #a0a5af;
+}
+
+/* Chat-bar control nodes (depth/compressed/model/⚙/? ) and the header's
+   ⚙/? buttons are borderless 1-row flats. Widget DEFAULT_CSS loses to
+   these app-level Button rules in Textual's cascade, so pin them here —
+   otherwise the global tall border makes the buttons 3 rows tall and
+   they overflow/overpaint their strips (empty-box artifact). */
+#chat-controls > Button,
+ChatHeader > Button {
+    border: none;
+    height: 1;
+    min-width: 3;
+    width: auto;
+    padding: 0 1;
+    background: transparent;
+}
+
+#chat-controls > Button:hover,
+ChatHeader > Button:hover {
+    background: #1c232d;
+    color: #f0f0f0;
+}
+
+#chat-controls > Button:focus,
+ChatHeader > Button:focus {
+    border: none;
+    text-style: bold;
 }
 
 Button:disabled {

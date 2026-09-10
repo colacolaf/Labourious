@@ -16,8 +16,22 @@ from __future__ import annotations
 
 import re
 
+from rich.text import Text as _RichText
+
 # Any CSI escape sequence (SGR colors, cursor moves, …).
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+
+
+def to_text(s: str):
+    """Convert an inline-ANSI string to a ``rich.text.Text``.
+
+    Textual 8 does NOT interpret ANSI SGR sequences in ``Static`` or
+    ``RichLog`` content — a raw string paints its escapes as literal
+    ``[38;2;110;120;135m`` garbage (the "ghost text" class of bugs).
+    Every widget that paints a hand-rendered ANSI string must funnel it
+    through this helper so the escapes become real style spans.
+    """
+    return _RichText.from_ansi(s)
 
 # Terminal width the panel renders assume when the real width is unknown
 # (headless smokes, __main__ previews). Conservative: narrow terminals

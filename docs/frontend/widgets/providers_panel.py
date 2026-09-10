@@ -63,6 +63,7 @@ from frontend.utils.ansi import (
     DEFAULT_WIDTH,
     fit_to,
     reset_at_end,
+    to_text,
     two_columns,
     visible_len,
 )
@@ -191,10 +192,12 @@ class ProvidersPanel(Widget):
         """Render the whole panel from current state."""
         try:
             self._last_width = self.size.width or self._last_width
+            # to_text: rows are hand-rendered ANSI — a raw str would paint
+            # the escapes as literal [38;2;…m ghost text.
             self.query_one("#providers-chips", Static).update(
-                self._render_chips())
+                to_text(self._render_chips()))
             tiers_text = self._render_tiers()
-            self.query_one("#providers-tiers", Static).update(tiers_text)
+            self.query_one("#providers-tiers", Static).update(to_text(tiers_text))
             # Record the painted line ranges of each provider row so mouse
             # clicks can be mapped back to a row index (see _row_line_index).
             # Line numbers are CONTENT lines of the `#providers-tiers` Static

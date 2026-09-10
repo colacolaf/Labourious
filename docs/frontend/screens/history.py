@@ -42,6 +42,9 @@ from textual.message import Message
 from textual.screen import Screen
 from textual.widgets import RichLog, Static
 
+from frontend.widgets.ansi_log import AnsiRichLog
+from frontend.utils.ansi import to_text
+
 from frontend.history_io import (
     DEFAULT_DB,
     ThesisRow,
@@ -272,16 +275,16 @@ class HistoryScreen(Screen):
     # ---------------------------------------------------------- compose
     def compose(self) -> ComposeResult:
         # Header strip
-        yield Static(self._render_head(), markup=False, id="history-head")
+        yield Static(to_text(self._render_head()), markup=False, id="history-head")
         # Ticker pill bar (cross-flow filter)
-        yield Static(self._render_pill_bar(), markup=False, id="history-pills")
+        yield Static(to_text(self._render_pill_bar()), markup=False, id="history-pills")
         # Body: card list left + detail right
         with Horizontal(id="history-body"):
             with Vertical(id="history-list-pane"):
-                yield RichLog(wrap=False, highlight=False, markup=False,
+                yield AnsiRichLog(wrap=False, highlight=False, markup=False,
                               id="card-list")
             with Vertical(id="history-detail-pane"):
-                yield Static(self._render_index_detail(), markup=False, id="history-detail")
+                yield Static(to_text(self._render_index_detail()), markup=False, id="history-detail")
         # Footer strip — universal StatusStrip (replaces per-screen foot Static).
         from frontend.widgets.status_strip import StatusStrip   # type: ignore
         yield StatusStrip()
@@ -573,13 +576,13 @@ class HistoryScreen(Screen):
         # Head
         try:
             h = self.query_one("#history-head", Static)
-            h.update(self._render_head())
+            h.update(to_text(self._render_head()))
         except Exception:
             pass
         # Pill bar
         try:
             p = self.query_one("#history-pills", Static)
-            p.update(self._render_pill_bar())
+            p.update(to_text(self._render_pill_bar()))
         except Exception:
             pass
         # List
@@ -590,17 +593,17 @@ class HistoryScreen(Screen):
             if self._mode == "drill":
                 visible = self._visible_rows()
                 if visible:
-                    d.update(self._render_drill_detail(visible[min(self._index, len(visible)-1)]))
+                    d.update(to_text(self._render_drill_detail(visible[min(self._index, len(visible)-1)])))
                 else:
-                    d.update(self._render_empty_state_detail())
+                    d.update(to_text(self._render_empty_state_detail()))
             else:
-                d.update(self._render_index_detail())
+                d.update(to_text(self._render_index_detail()))
         except Exception:
             pass
         if rerender_foot:
             try:
                 f = self.query_one("#history-foot", Static)
-                f.update(self._render_foot())
+                f.update(to_text(self._render_foot()))
             except Exception:
                 pass
 

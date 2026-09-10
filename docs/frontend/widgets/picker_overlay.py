@@ -29,6 +29,8 @@ from textual.containers import Vertical
 from textual.message import Message
 from textual.widgets import Static
 
+from frontend.utils.ansi import to_text
+
 
 @dataclass(frozen=True)
 class PickerItem:
@@ -79,8 +81,8 @@ class PickerOverlay(Vertical):
     def compose(self):
         # Slug the breadcrumb so the id has no slashes (Textual validator).
         slug = self._breadcrumb.replace("/", "-")
-        yield Static(self._render_breadcrumb(), markup=False, classes="picker-breadcrumb")
-        yield Static(self._render_search(),     markup=False, classes="picker-search")
+        yield Static(to_text(self._render_breadcrumb()), markup=False, classes="picker-breadcrumb")
+        yield Static(to_text(self._render_search()),     markup=False, classes="picker-search")
         with Vertical(classes="picker-list", id=f"picker-{slug}"):
             yield Vertical(id="picker-rows")
 
@@ -133,7 +135,7 @@ class PickerOverlay(Vertical):
         rows.remove_children()
         if not self._visible:
             rows.mount(Static(
-                f"{self._DIM}  (no matches){self._RESET}",
+                to_text(f"{self._DIM}  (no matches){self._RESET}"),
                 markup=False, classes="picker-empty-row"))
             return
         for i, it in enumerate(self._visible):
@@ -144,7 +146,7 @@ class PickerOverlay(Vertical):
                 f"{self._DIM}{it.description}{self._RESET}"
             )
             row = Static(
-                text,
+                to_text(text),
                 markup=False,
                 classes="picker-row" + (" sel" if selected else ""),
             )
@@ -202,6 +204,6 @@ class PickerOverlay(Vertical):
     def _refresh_search_widget(self) -> None:
         try:
             s = self.query_one(".picker-search", Static)
-            s.update(self._render_search())
+            s.update(to_text(self._render_search()))
         except Exception:
             pass
