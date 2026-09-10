@@ -26,7 +26,7 @@ HTTP only — no real Wikipedia API. Scope mirrors the public surface:
 
 The pilot runs:
 
-    PYTHONPATH=docs python3 docs/runtime/smokes/wikipedia_smoke.py
+    python3 docs/runtime/smokes/wikipedia_smoke.py
 
 It uses a `FakeOpener` that pattern-matches URLs and returns canned
 JSON / HTML for each variant. No real network access required.
@@ -251,6 +251,9 @@ def _parse_html_for(title: str):
 # --------------------------------------------------------------------------- #
 # Bootstrap
 # --------------------------------------------------------------------------- #
+DOCS = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, DOCS)
+
 from runtime.tools.wikipedia import (  # noqa: E402
     WikipediaTool, _strip_html, _looks_like_company, _is_corporate_ticker,
 )

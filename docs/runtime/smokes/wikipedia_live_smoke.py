@@ -24,7 +24,7 @@ Coverage (4 live tickers across 3 sectors):
 
 Run:
 
-    PYTHONPATH=docs python3 docs/runtime/smokes/wikipedia_live_smoke.py
+    python3 docs/runtime/smokes/wikipedia_live_smoke.py
 
 The pilot drops the standard HTTP_PROXY/HTTPS_PROXY env vars so a clean
 network reaches Wikipedia; behind a proxy that hard-binds .wikipedia.org,
@@ -70,6 +70,9 @@ def skip(label: str, reason: str) -> None:
     _TOTAL += 1
     print(f"  skip  | {label}  ({reason})")
 
+
+DOCS = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, DOCS)
 
 from runtime.tools.wikipedia import WikipediaTool  # noqa: E402
 

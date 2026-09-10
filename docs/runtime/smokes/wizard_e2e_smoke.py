@@ -17,7 +17,7 @@ Scenarios:
   E. Keyed provider (anthropic): select + model + type API key -> saved via
      keys_storage (file backend in this env) + api_key_env recorded.
 
-Run: PYTHONPATH=docs python3 docs/runtime/smokes/wizard_e2e_smoke.py
+Run: python3 docs/runtime/smokes/wizard_e2e_smoke.py
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ os.environ["LABOURIOUS_TEST"] = "1"
 _TMP_CFG = _TMP / "config.json"
 _TMP_CFG.write_text("{}")
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from frontend.app import LabouriousApp
 from frontend.screens.welcome_wizard import WelcomeWizardScreen

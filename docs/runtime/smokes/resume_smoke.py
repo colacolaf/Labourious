@@ -32,7 +32,7 @@ The pilot focuses on the FIVE discrete contracts:
 
 The pilot runs itself with:
 
-    PYTHONPATH=docs python3 docs/runtime/smokes/resume_smoke.py
+    python3 docs/runtime/smokes/resume_smoke.py
 
 The pilot mutates ``_RESUME_PARTIAL_ENVELOPES`` and writes to disk
 under a tmp base dir so it doesn't pollute the project's real
@@ -77,6 +77,9 @@ def step(label: str, ok: bool, *, hint: str = "") -> None:
 # ---------------------------------------------------------------------------
 # Bootstrap — redirect project-state mutations under a tmp dir.
 # ---------------------------------------------------------------------------
+DOCS = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, DOCS)
+
 from runtime import runtime as rt  # noqa: E402
 from runtime.events import AgentFinished, AgentStarted  # noqa: E402
 

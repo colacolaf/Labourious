@@ -1,5 +1,7 @@
 __pycache__
 *.pyc
 *.db
+*.egg-info/
+.DS_Store
 docs/runtime/.runs/
 

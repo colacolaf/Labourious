@@ -20,7 +20,7 @@ The pilot focuses on the *contract*:
      retry-aware opener assigned.
 
 Usage:
-    PYTHONPATH=docs python3 docs/runtime/smokes/retry_smoke.py
+    python3 docs/runtime/smokes/retry_smoke.py
 
 Exits non-zero on first hard failure; assertions accumulate so the
 pilot can be read top-to-bottom with a tail summary.
@@ -28,6 +28,7 @@ pilot can be read top-to-bottom with a tail summary.
 
 from __future__ import annotations
 
+import os
 import socket
 import sys
 import urllib.error
@@ -61,6 +62,9 @@ def step(label: str, ok: bool, *, hint: str = "") -> None:
 # ---------------------------------------------------------------------------
 # Imports
 # ---------------------------------------------------------------------------
+DOCS = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, DOCS)
+
 from runtime.retry import (
     DEFAULT_MAX_RETRY_AFTER_S,
     DEFAULT_RETRY_EXCEPTIONS,

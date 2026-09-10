@@ -25,6 +25,13 @@ import os, sys, importlib
 DOCS = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, DOCS)
 
+# This smoke only asserts construction/routing/costs — it never hits the
+# network. Both httpx fallback adapters raise AuthMissing at construction
+# when no key is resolvable, so seed dummy keys (setdefault: real env keys
+# still win) to keep the smoke hermetic on machines without credentials.
+os.environ.setdefault("ANTHROPIC_API_KEY", "sk-test-smoke-dummy")
+os.environ.setdefault("OPENAI_API_KEY", "sk-test-smoke-dummy")
+
 passes = 0
 fails = 0
 

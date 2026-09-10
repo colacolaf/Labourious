@@ -51,7 +51,7 @@ What the pilot asserts (one section per assertion group):
 
 The pilot runs itself with:
 
-    PYTHONPATH=docs python3 docs/runtime/smokes/packs_smoke.py
+    python3 docs/runtime/smokes/packs_smoke.py
 
 Exits non-zero on first hard failure; assertions accumulate so the
 pilot can be read top-to-bottom + tail summary printed.
@@ -91,6 +91,9 @@ def step(label: str, ok: bool, *, hint: str = "") -> None:
 # ---------------------------------------------------------------------------
 # 1. Bootstrap
 # ---------------------------------------------------------------------------
+DOCS = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, DOCS)
+
 from runtime import packs as packs_mod  # type: ignore
 from runtime.packs import (
     PACKS_DIR,

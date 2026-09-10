@@ -29,6 +29,7 @@ import asyncio
 import os
 import sys
 import tempfile
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -52,6 +53,12 @@ _cio.CONFIG_PATH = _TMP_CFG
 
 _OK = 0
 _FAIL = 0
+
+# Fresh as_of relative to *now* — the hardcoded date this smoke originally used
+# rots past the 2-day quotes freshness tier and fails once real time moves on.
+_FRESH_AS_OF = (datetime.now(timezone.utc) - timedelta(hours=1)).strftime(
+    "%Y-%m-%dT%H:%M:%SZ"
+)
 
 
 def step(label: str, ok: bool) -> None:
@@ -81,7 +88,7 @@ state = ConnectorStripState()
 state.record_fired(
     tool="quotes",
     status="SUCCESS",
-    as_of="2026-08-22T15:00:00Z",
+    as_of=_FRESH_AS_OF,
     note="23 rows OHLCV",
 )
 step("chip for quotes created", "quotes" in state.chips)
@@ -94,7 +101,7 @@ step("chip is recommended (yfinance)", chip.is_recommended is True)
 state.record_fired(
     tool="sec_edgar",
     status="SUCCESS",
-    as_of="2026-08-22T15:00:00Z",
+    as_of=_FRESH_AS_OF,
     note="10-K + 10-Q",
 )
 step("second chip (sec_edgar) created", "sec_edgar" in state.chips)
@@ -124,9 +131,9 @@ section("3. render_line output")
 
 state3 = ConnectorStripState()
 state3.record_fired(tool="quotes", status="SUCCESS",
-                    as_of="2026-08-22T15:00:00Z", note="23 rows")
+                    as_of=_FRESH_AS_OF, note="23 rows")
 state3.record_fired(tool="sec_edgar", status="SUCCESS",
-                    as_of="2026-08-22T15:00:00Z", note="10-K")
+                    as_of=_FRESH_AS_OF, note="10-K")
 
 line = render_line(state3, width=200)
 step("render_line contains the via prefix", "via:" in line)
@@ -197,7 +204,7 @@ async def _run_strip_test():
         # Record a connector named "quotes" (short label from catalog)
         strip.record_fired(
             tool="quotes", status="SUCCESS",
-            as_of="2026-08-22T15:00:00Z", note="23 rows OHLCV",
+            as_of=_FRESH_AS_OF, note="23 rows OHLCV",
         )
         await pilot.pause(0.05)
         updated = strip.visual
@@ -207,7 +214,7 @@ async def _run_strip_test():
         # Fire a second
         strip.record_fired(
             tool="sec_edgar", status="SUCCESS",
-            as_of="2026-08-22T15:00:00Z", note="10-K retrieved",
+            as_of=_FRESH_AS_OF, note="10-K retrieved",
         )
         await pilot.pause(0.05)
         updated2 = strip.visual
@@ -313,7 +320,7 @@ async def _run_apply_event_tests():
             tool="quotes",
             requested_by_agent="senior-analyst",
             status="SUCCESS",
-            as_of="2026-08-22T15:00:00Z",
+            as_of=_FRESH_AS_OF,
             note="23 rows OHLCV",
             data_summary="23 rows",
         )
@@ -351,7 +358,7 @@ async def _run_apply_event_tests():
             tool="transcripts",
             requested_by_agent=None,
             status="SUCCESS",
-            as_of="2026-08-22T15:00:00Z",
+            as_of=_FRESH_AS_OF,
             note="Q3 transcript",
             data_summary="Q3 transcript",
         )
@@ -367,7 +374,7 @@ async def _run_apply_event_tests():
             tool="quotes",
             requested_by_agent="nonexistent-agent",
             status="SUCCESS",
-            as_of="2026-08-22T15:00:00Z",
+            as_of=_FRESH_AS_OF,
             note="should fallback",
             data_summary="fallback",
         )
@@ -404,7 +411,7 @@ for tool, status, note in tools:
         state_multi.record_failed(tool=tool, error=note)
     else:
         state_multi.record_fired(tool=tool, status=status,
-                                 as_of="2026-08-22T15:00:00Z", note=note)
+                                 as_of=_FRESH_AS_OF, note=note)
 
 step("5 chips in state", len(state_multi.chips) == 5)
 counts = state_multi.summary_counts()

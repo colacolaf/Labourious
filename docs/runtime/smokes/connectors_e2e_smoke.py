@@ -13,7 +13,6 @@ prose. Without an LLM in the loop (which is independent) we verify that:
 """
 from __future__ import annotations
 import sys, importlib.util, pathlib
-from runtime.events import ConnectorRequested, ConnectorCompleted, ConnectorFailed
 
 OK = 0; FAIL = 0
 def step(label, cond):
@@ -30,6 +29,8 @@ if _pkg_init.exists():
     _spec = importlib.util.spec_from_file_location("runtime", _pkg_init)
     _pkg = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_pkg)
     sys.modules["runtime"] = _pkg
+
+from runtime.events import ConnectorRequested, ConnectorCompleted, ConnectorFailed
 spec = importlib.util.spec_from_file_location("rt", "docs/runtime/runtime.py")
 rt = importlib.util.module_from_spec(spec); spec.loader.exec_module(rt)
 

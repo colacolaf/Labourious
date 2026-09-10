@@ -53,7 +53,7 @@ and prints section headers, run counts, and a pass/fail summary.
 Exits non-zero on first hard failure; assertions accumulate.
 
 Usage:
-    PYTHONPATH=docs python3 docs/runtime/smokes/citation_hard_smoke.py
+    python3 docs/runtime/smokes/citation_hard_smoke.py
 """
 
 from __future__ import annotations
@@ -99,6 +99,9 @@ def step(label: str, ok: bool, *, hint: str = "") -> None:
 # ----------------------------------------------------------------------------
 # Bootstrap runtime + URL fetcher patching
 # ----------------------------------------------------------------------------
+DOCS = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, DOCS)
+
 from runtime import citations as cite_mod
 from runtime.snippets import SnippetMetadata
 
